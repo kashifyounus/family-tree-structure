@@ -63,6 +63,8 @@ export type FamilyGraphNode = {
     label?: string;
     isFocal?: boolean;
     isDeceased?: boolean;
+    hasUnexpandedParents?: boolean;
+    hasUnexpandedChildren?: boolean;
   };
 };
 
@@ -108,6 +110,7 @@ export type CreatePersonAndUnionInput = {
   gender: Gender;
   birthDate?: string;
   deathDate?: string;
+  photoUrl?: string;
   bio?: string;
   isLiving?: boolean;
   relationshipType?: RelationshipType;
@@ -116,4 +119,25 @@ export type CreatePersonAndUnionInput = {
   existingUnionId?: string;
   secondParentId?: string;
   marriageDate?: string;
+};
+
+export type UpdatePersonInput = {
+  personId: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: Gender;
+  birthDate?: string | null;
+  deathDate?: string | null;
+  photoUrl?: string | null;
+  bio?: string | null;
+  isLiving?: boolean;
+  privacyLevel?: PrivacyLevel;
+};
+
+export type UpdateUnionInput = {
+  unionId: string;
+  marriageDate?: string | null;
+  divorceDate?: string | null;
+  isActive?: boolean;
+  sequenceOrder?: number;
 };

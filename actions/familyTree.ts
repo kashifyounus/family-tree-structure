@@ -1,13 +1,25 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateFamilyCode } from "@/lib/familyCode";
-import { buildFamilyGraph } from "@/lib/graphLayout";
+import {
+  buildExpansionSubgraph,
+  buildFamilyGraph,
+  collectIncludedPersonIds,
+} from "@/lib/graphLayout";
+import { mergeFamilyGraphs } from "@/lib/graphMerge";
 import {
   computeAuntsAndUncles,
   computeRelationshipPath,
   type UnionRecord,
 } from "@/lib/kinship";
+import { canEditTree } from "@/lib/auth";
+import { getAuthContext } from "@/lib/auth.server";
+import {
+  maskPersonDetails,
+  maskPersonSummary,
+} from "@/lib/privacy";
 import { birthYearFromPerson, toPersonSummary } from "@/lib/personMapper";
 import type {
   CreatePersonAndUnionInput,
@@ -15,6 +27,8 @@ import type {
   PersonDetails,
   RelationshipPath,
   SearchResult,
+  UpdatePersonInput,
+  UpdateUnionInput,
 } from "@/types/family";
 import type { Person, Prisma } from "@prisma/client";
 
@@ -40,6 +54,23 @@ async function loadAllUnions(): Promise<UnionRecord[]> {
   }));
 }
 
+async function loadPeopleForFocal(
+  focalId: string,
+  unions: UnionRecord[],
+  generationsUp: number,
+  generationsDown: number,
+): Promise<Person[]> {
+  const included = collectIncludedPersonIds(
+    focalId,
+    unions,
+    generationsUp,
+    generationsDown,
+  );
+  return prisma.person.findMany({
+    where: { id: { in: [...included] } },
+  });
+}
+
 async function uniqueFamilyCode(): Promise<string> {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateFamilyCode();
@@ -51,7 +82,34 @@ async function uniqueFamilyCode(): Promise<string> {
   throw new Error("Unable to generate unique family code");
 }
 
-export async function getPersonDetails(personId: string): Promise<PersonDetails | null> {
+async function requireEditor(): Promise<void> {
+  const auth = await getAuthContext();
+  if (!canEditTree(auth.role)) {
+    throw new Error("You do not have permission to modify this tree.");
+  }
+}
+
+async function maskGraph(graph: FamilyGraph): Promise<FamilyGraph> {
+  const viewer = await getAuthContext();
+  return {
+    ...graph,
+    nodes: graph.nodes.map((n) => ({
+      ...n,
+      data: {
+        ...n.data,
+        person: n.data.person
+          ? maskPersonSummary(n.data.person, viewer)
+          : undefined,
+      },
+    })),
+  };
+}
+
+export async function getPersonDetails(
+  personId: string,
+): Promise<PersonDetails | null> {
+  const viewer = await getAuthContext();
+
   const person = await prisma.person.findUnique({
     where: { id: personId },
     include: {
@@ -118,11 +176,13 @@ export async function getPersonDetails(personId: string): Promise<PersonDetails 
     peopleById,
   );
 
-  return {
+  const details: PersonDetails = {
     person: toPersonSummary(person),
     unions,
     computed,
   };
+
+  return maskPersonDetails(details, viewer);
 }
 
 export async function getPersonDetailsByFamilyCode(
@@ -133,13 +193,57 @@ export async function getPersonDetailsByFamilyCode(
   return getPersonDetails(person.id);
 }
 
-export async function getFamilyGraph(familyCode: string): Promise<FamilyGraph | null> {
+export async function getFamilyGraph(
+  familyCode: string,
+): Promise<FamilyGraph | null> {
   const focal = await prisma.person.findUnique({ where: { familyCode } });
   if (!focal) return null;
 
-  const allPeople = await prisma.person.findMany();
   const unions = await loadAllUnions();
-  return buildFamilyGraph(focal, allPeople, unions, 2, 2);
+  const people = await loadPeopleForFocal(focal.id, unions, 2, 2);
+  const graph = buildFamilyGraph(focal, people, unions, 2, 2);
+  return maskGraph(graph);
+}
+
+export async function expandFamilyGraph(
+  anchorPersonId: string,
+  direction: "up" | "down" | "both",
+  anchorPosition: { x: number; y: number },
+  currentGraph: FamilyGraph,
+): Promise<FamilyGraph | null> {
+  const viewer = await getAuthContext();
+  const anchor = await prisma.person.findUnique({
+    where: { id: anchorPersonId },
+  });
+  if (!anchor) return null;
+
+  const unions = await loadAllUnions();
+  const included = collectIncludedPersonIds(anchor.id, unions, 2, 2);
+  const people = await prisma.person.findMany({
+    where: { id: { in: [...included] } },
+  });
+
+  const extension = buildExpansionSubgraph(
+    anchor,
+    people,
+    unions,
+    direction,
+    anchorPosition,
+  );
+
+  const merged = mergeFamilyGraphs(currentGraph, extension);
+  return {
+    ...merged,
+    nodes: merged.nodes.map((n) => ({
+      ...n,
+      data: {
+        ...n.data,
+        person: n.data.person
+          ? maskPersonSummary(n.data.person, viewer)
+          : undefined,
+      },
+    })),
+  };
 }
 
 export async function searchMembers(query: string): Promise<SearchResult[]> {
@@ -189,9 +293,13 @@ export async function searchMembers(query: string): Promise<SearchResult[]> {
 export async function createPersonAndUnion(
   data: CreatePersonAndUnionInput,
 ): Promise<{ personId: string; familyCode: string }> {
+  await requireEditor();
+
   const familyCode = await uniqueFamilyCode();
   const birthDate = data.birthDate ? new Date(data.birthDate) : undefined;
   const deathDate = data.deathDate ? new Date(data.deathDate) : undefined;
+  const isLiving =
+    data.isLiving ?? (data.deathDate ? false : true);
 
   const related = await prisma.person.findUnique({
     where: { id: data.relatedPersonId },
@@ -208,25 +316,25 @@ export async function createPersonAndUnion(
       gender: data.gender,
       birthDate,
       deathDate,
+      photoUrl: data.photoUrl,
       bio: data.bio,
-      isLiving: data.isLiving ?? true,
+      isLiving,
     },
   });
 
   if (data.mode === "spouse") {
     const spouseCount = await prisma.union.count({
       where: {
-        OR: [
-          { partner1Id: related.id },
-          { partner2Id: related.id },
-        ],
+        OR: [{ partner1Id: related.id }, { partner2Id: related.id }],
       },
     });
     await prisma.union.create({
       data: {
         partner1Id: related.id,
         partner2Id: newPerson.id,
-        marriageDate: data.marriageDate ? new Date(data.marriageDate) : undefined,
+        marriageDate: data.marriageDate
+          ? new Date(data.marriageDate)
+          : undefined,
         isActive: true,
         sequenceOrder: spouseCount,
       },
@@ -257,13 +365,88 @@ export async function createPersonAndUnion(
     });
   }
 
+  revalidatePath(`/tree/${related.familyCode}`);
+  revalidatePath(`/tree/${familyCode}`);
+
   return { personId: newPerson.id, familyCode };
+}
+
+export async function updatePerson(
+  input: UpdatePersonInput,
+): Promise<{ familyCode: string }> {
+  await requireEditor();
+
+  const existing = await prisma.person.findUnique({
+    where: { id: input.personId },
+  });
+  if (!existing) throw new Error("Person not found");
+
+  await prisma.person.update({
+    where: { id: input.personId },
+    data: {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      gender: input.gender,
+      birthDate:
+        input.birthDate === null
+          ? null
+          : input.birthDate
+            ? new Date(input.birthDate)
+            : undefined,
+      deathDate:
+        input.deathDate === null
+          ? null
+          : input.deathDate
+            ? new Date(input.deathDate)
+            : undefined,
+      photoUrl: input.photoUrl,
+      bio: input.bio,
+      isLiving: input.isLiving,
+      privacyLevel: input.privacyLevel,
+    },
+  });
+
+  revalidatePath(`/tree/${existing.familyCode}`);
+  return { familyCode: existing.familyCode };
+}
+
+export async function updateUnion(input: UpdateUnionInput): Promise<void> {
+  await requireEditor();
+
+  const union = await prisma.union.findUnique({
+    where: { id: input.unionId },
+    include: { partner1: true },
+  });
+  if (!union) throw new Error("Union not found");
+
+  await prisma.union.update({
+    where: { id: input.unionId },
+    data: {
+      marriageDate:
+        input.marriageDate === null
+          ? null
+          : input.marriageDate
+            ? new Date(input.marriageDate)
+            : undefined,
+      divorceDate:
+        input.divorceDate === null
+          ? null
+          : input.divorceDate
+            ? new Date(input.divorceDate)
+            : undefined,
+      isActive: input.isActive,
+      sequenceOrder: input.sequenceOrder,
+    },
+  });
+
+  revalidatePath(`/tree/${union.partner1.familyCode}`);
 }
 
 export async function getRelationshipBetween(
   fromPersonId: string,
   toPersonId: string,
 ): Promise<RelationshipPath | null> {
+  const viewer = await getAuthContext();
   const [from, to] = await Promise.all([
     prisma.person.findUnique({ where: { id: fromPersonId } }),
     prisma.person.findUnique({ where: { id: toPersonId } }),
@@ -272,7 +455,12 @@ export async function getRelationshipBetween(
 
   const people = await prisma.person.findMany();
   const unions = await loadAllUnions();
-  return computeRelationshipPath(from, to, people, unions);
+  const path = computeRelationshipPath(from, to, people, unions);
+  return {
+    ...path,
+    from: maskPersonSummary(path.from, viewer),
+    to: maskPersonSummary(path.to, viewer),
+  };
 }
 
 export async function listMembersForPicker(): Promise<SearchResult[]> {
@@ -287,4 +475,27 @@ export async function listMembersForPicker(): Promise<SearchResult[]> {
     lastName: p.lastName,
     birthYear: birthYearFromPerson(p),
   }));
+}
+
+export async function listUnionOptionsForPerson(
+  personId: string,
+): Promise<{ id: string; label: string }[]> {
+  const person = await prisma.person.findUnique({
+    where: { id: personId },
+    include: {
+      unionsAsPartner1: { include: { partner1: true, partner2: true } },
+      unionsAsPartner2: { include: { partner1: true, partner2: true } },
+    },
+  });
+  if (!person) return [];
+
+  const unions = [...person.unionsAsPartner1, ...person.unionsAsPartner2];
+  return unions.map((u) => {
+    const other =
+      u.partner1Id === personId ? u.partner2 : u.partner1;
+    return {
+      id: u.id,
+      label: `${person.firstName} & ${other.firstName} (union #${u.sequenceOrder + 1})`,
+    };
+  });
 }

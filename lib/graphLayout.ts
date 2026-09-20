@@ -5,6 +5,7 @@ import type {
   PersonSummary,
 } from "@/types/family";
 import type { UnionRecord } from "@/lib/kinship";
+import { getExplorationHints } from "@/lib/graphExplore";
 import { toPersonSummary } from "@/lib/personMapper";
 import type { Person } from "@prisma/client";
 
@@ -16,6 +17,7 @@ function personNode(
   x: number,
   y: number,
   isFocal: boolean,
+  hints?: { hasUnexpandedParents?: boolean; hasUnexpandedChildren?: boolean },
 ): FamilyGraphNode {
   return {
     id: person.id,
@@ -25,87 +27,101 @@ function personNode(
       person,
       isFocal,
       isDeceased: !person.isLiving || !!person.deathDate,
+      hasUnexpandedParents: hints?.hasUnexpandedParents,
+      hasUnexpandedChildren: hints?.hasUnexpandedChildren,
     },
   };
 }
 
-function collectAncestors(
-  personId: string,
+export function collectIncludedPersonIds(
+  focalId: string,
   unions: UnionRecord[],
-  depth: number,
-  maxDepth: number,
-  visited: Set<string>,
-  acc: Set<string>,
-): void {
-  if (depth >= maxDepth || visited.has(personId)) return;
-  visited.add(personId);
+  generationsUp: number,
+  generationsDown: number,
+): Set<string> {
+  const included = new Set<string>([focalId]);
 
-  const parentUnions = unions.filter((u) =>
-    u.childships.some((c) => c.childId === personId),
-  );
-  for (const u of parentUnions) {
-    acc.add(u.partner1Id);
-    acc.add(u.partner2Id);
-    collectAncestors(u.partner1Id, unions, depth + 1, maxDepth, visited, acc);
-    collectAncestors(u.partner2Id, unions, depth + 1, maxDepth, visited, acc);
-  }
-}
-
-function collectDescendants(
-  personId: string,
-  unions: UnionRecord[],
-  depth: number,
-  maxDepth: number,
-  visited: Set<string>,
-  acc: Set<string>,
-): void {
-  if (depth >= maxDepth || visited.has(`d-${personId}`)) return;
-  visited.add(`d-${personId}`);
-
-  const spouseUnions = unions.filter(
-    (u) => u.partner1Id === personId || u.partner2Id === personId,
-  );
-  for (const u of spouseUnions) {
-    for (const cs of u.childships) {
-      acc.add(cs.childId);
-      collectDescendants(cs.childId, unions, depth + 1, maxDepth, visited, acc);
+  function collectAncestors(
+    personId: string,
+    depth: number,
+    visited: Set<string>,
+  ): void {
+    if (depth >= generationsUp || visited.has(`a-${personId}`)) return;
+    visited.add(`a-${personId}`);
+    const parentUnions = unions.filter((u) =>
+      u.childships.some((c) => c.childId === personId),
+    );
+    for (const u of parentUnions) {
+      included.add(u.partner1Id);
+      included.add(u.partner2Id);
+      collectAncestors(u.partner1Id, depth + 1, visited);
+      collectAncestors(u.partner2Id, depth + 1, visited);
     }
   }
-}
 
-export function buildFamilyGraph(
-  focal: Person,
-  allPeople: Person[],
-  unions: UnionRecord[],
-  generationsUp = 2,
-  generationsDown = 2,
-): FamilyGraph {
-  const peopleById = new Map(allPeople.map((p) => [p.id, p]));
-  const included = new Set<string>([focal.id]);
+  function collectDescendants(
+    personId: string,
+    depth: number,
+    visited: Set<string>,
+  ): void {
+    if (depth >= generationsDown || visited.has(`d-${personId}`)) return;
+    visited.add(`d-${personId}`);
+    const spouseUnions = unions.filter(
+      (u) => u.partner1Id === personId || u.partner2Id === personId,
+    );
+    for (const u of spouseUnions) {
+      included.add(u.partner1Id);
+      included.add(u.partner2Id);
+      for (const cs of u.childships) {
+        included.add(cs.childId);
+        collectDescendants(cs.childId, depth + 1, visited);
+      }
+    }
+  }
 
-  collectAncestors(focal.id, unions, 0, generationsUp, new Set(), included);
-  collectDescendants(
-    focal.id,
-    unions,
-    0,
-    generationsDown,
-    new Set(),
-    included,
-  );
+  collectAncestors(focalId, 0, new Set());
+  collectDescendants(focalId, 0, new Set());
 
   const focalUnions = unions.filter(
-    (u) => u.partner1Id === focal.id || u.partner2Id === focal.id,
+    (u) => u.partner1Id === focalId || u.partner2Id === focalId,
   );
   for (const u of focalUnions) {
     included.add(u.partner1Id);
     included.add(u.partner2Id);
   }
 
+  return included;
+}
+
+function layoutFocalCentric(
+  focal: Person,
+  peopleById: Map<string, Person>,
+  unions: UnionRecord[],
+  included: Set<string>,
+  isFocal: boolean,
+  originX = 0,
+  originY = 0,
+): { nodes: FamilyGraphNode[]; edges: FamilyGraphEdge[] } {
   const nodes: FamilyGraphNode[] = [];
   const edges: FamilyGraphEdge[] = [];
-
   const focalSummary = toPersonSummary(focal);
-  nodes.push(personNode(focalSummary, 0, 0, true));
+
+  const hintsFor = (personId: string) =>
+    getExplorationHints(personId, included, unions);
+
+  nodes.push(
+    personNode(
+      focalSummary,
+      originX,
+      originY,
+      isFocal,
+      hintsFor(focal.id),
+    ),
+  );
+
+  const focalUnions = unions.filter(
+    (u) => u.partner1Id === focal.id || u.partner2Id === focal.id,
+  );
 
   const spouses = focalUnions
     .map((u) =>
@@ -118,7 +134,13 @@ export function buildFamilyGraph(
   spouses.forEach((spouse, index) => {
     const offset = (index + 1) * H_SPACING * (index % 2 === 0 ? 1 : -1);
     nodes.push(
-      personNode(toPersonSummary(spouse), offset, 0, false),
+      personNode(
+        toPersonSummary(spouse),
+        originX + offset,
+        originY,
+        false,
+        hintsFor(spouse.id),
+      ),
     );
     edges.push({
       id: `spouse-${focal.id}-${spouse.id}`,
@@ -142,9 +164,17 @@ export function buildFamilyGraph(
     .filter((p): p is Person => !!p);
 
   parents.forEach((parent, index) => {
-    const x = (index - (parents.length - 1) / 2) * H_SPACING;
+    const x = originX + (index - (parents.length - 1) / 2) * H_SPACING;
     if (!nodes.find((n) => n.id === parent.id)) {
-      nodes.push(personNode(toPersonSummary(parent), x, -V_SPACING, false));
+      nodes.push(
+        personNode(
+          toPersonSummary(parent),
+          x,
+          originY - V_SPACING,
+          false,
+          hintsFor(parent.id),
+        ),
+      );
     }
     edges.push({
       id: `parent-${parent.id}-${focal.id}`,
@@ -165,11 +195,18 @@ export function buildFamilyGraph(
   for (const group of childrenByUnion) {
     group.children.forEach((child, index) => {
       const x =
+        originX +
         (index - (group.children.length - 1) / 2) * H_SPACING +
         childRow * 40;
       if (!nodes.find((n) => n.id === child.id)) {
         nodes.push(
-          personNode(toPersonSummary(child), x, V_SPACING, false),
+          personNode(
+            toPersonSummary(child),
+            x,
+            originY + V_SPACING,
+            false,
+            hintsFor(child.id),
+          ),
         );
       }
       edges.push({
@@ -188,11 +225,77 @@ export function buildFamilyGraph(
     if (nodes.find((n) => n.id === personId)) continue;
     const p = peopleById.get(personId);
     if (!p) continue;
-    nodes.push(personNode(toPersonSummary(p), H_SPACING * 2, V_SPACING, false));
+    nodes.push(
+      personNode(
+        toPersonSummary(p),
+        originX + H_SPACING * 2,
+        originY + V_SPACING,
+        false,
+        hintsFor(p.id),
+      ),
+    );
   }
+
+  return { nodes, edges };
+}
+
+export function buildFamilyGraph(
+  focal: Person,
+  allPeople: Person[],
+  unions: UnionRecord[],
+  generationsUp = 2,
+  generationsDown = 2,
+): FamilyGraph {
+  const included = collectIncludedPersonIds(
+    focal.id,
+    unions,
+    generationsUp,
+    generationsDown,
+  );
+  const peopleById = new Map(allPeople.map((p) => [p.id, p]));
+  const { nodes, edges } = layoutFocalCentric(
+    focal,
+    peopleById,
+    unions,
+    included,
+    true,
+  );
 
   return {
     focalPersonId: focal.id,
+    nodes,
+    edges,
+  };
+}
+
+export function buildExpansionSubgraph(
+  anchor: Person,
+  people: Person[],
+  unions: UnionRecord[],
+  direction: "up" | "down" | "both",
+  anchorPosition: { x: number; y: number },
+): FamilyGraph {
+  const gensUp = direction === "up" || direction === "both" ? 1 : 0;
+  const gensDown = direction === "down" || direction === "both" ? 1 : 0;
+  const included = collectIncludedPersonIds(
+    anchor.id,
+    unions,
+    gensUp + 1,
+    gensDown + 1,
+  );
+  const peopleById = new Map(people.map((p) => [p.id, p]));
+  const { nodes, edges } = layoutFocalCentric(
+    anchor,
+    peopleById,
+    unions,
+    included,
+    false,
+    anchorPosition.x,
+    anchorPosition.y,
+  );
+
+  return {
+    focalPersonId: anchor.id,
     nodes,
     edges,
   };

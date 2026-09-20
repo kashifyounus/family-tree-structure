@@ -4,6 +4,7 @@ import {
   getFamilyGraph,
   getPersonDetailsByFamilyCode,
 } from "@/actions/familyTree";
+import { getSession } from "@/actions/auth";
 import { TreeView } from "@/components/TreeView";
 
 type PageProps = {
@@ -14,9 +15,10 @@ export default async function TreePage({ params }: PageProps) {
   const { familyCode } = await params;
   const decoded = decodeURIComponent(familyCode);
 
-  const [graph, details] = await Promise.all([
+  const [graph, details, session] = await Promise.all([
     getFamilyGraph(decoded),
     getPersonDetailsByFamilyCode(decoded),
+    getSession(),
   ]);
 
   if (!graph || !details) {
@@ -35,6 +37,7 @@ export default async function TreePage({ params }: PageProps) {
         familyCode={decoded}
         initialGraph={graph}
         initialDetails={details}
+        session={session}
       />
     </div>
   );
