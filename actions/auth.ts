@@ -29,12 +29,12 @@ export async function signIn(
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 
 export async function signOut(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(AUTH_COOKIE_NAME);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
 }

@@ -33,7 +33,7 @@ export function ReportsDashboard({
   household,
 }: ReportsDashboardProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2" data-testid="reports-dashboard">
       <section className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           Age demographics

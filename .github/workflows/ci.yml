@@ -1,0 +1,56 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://kinship:kinship@localhost:5432/kinship?schema=public
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kinship
+          POSTGRES_PASSWORD: kinship
+          POSTGRES_DB: kinship
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kinship -d kinship"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prisma Generate
+        run: npx prisma generate
+
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed database
+        run: npm run db:seed
+
+      - name: Run Linter & Type Check
+        run: npm run lint && npx tsc --noEmit
+
+      - name: Run Unit Tests
+        run: npm run test
+
+      - name: Build Next.js Project
+        run: npm run build

@@ -90,17 +90,22 @@ export function PersonDrawer({
         className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
         role="dialog"
         aria-labelledby="person-drawer-title"
+        data-testid="person-drawer"
       >
         <header className="flex items-center justify-between border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
           <div>
             <h2
               id="person-drawer-title"
+              data-testid="person-drawer-title"
               className="text-lg font-semibold text-zinc-900 dark:text-zinc-50"
             >
               {formatEnglishDisplayName(person)}
             </h2>
             {urduName && (
-              <p className="mt-1 text-lg leading-relaxed text-zinc-800 dark:text-zinc-200">
+              <p
+                className="mt-1 text-lg leading-relaxed text-zinc-800 dark:text-zinc-200"
+                data-testid="person-urdu-name"
+              >
                 <UrduText>{urduName}</UrduText>
               </p>
             )}
@@ -124,6 +129,7 @@ export function PersonDrawer({
               type="button"
               onClick={() => setSpouseOpen(true)}
               className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+              data-testid="add-spouse-btn"
             >
               + Add spouse
             </button>
@@ -131,6 +137,7 @@ export function PersonDrawer({
               type="button"
               onClick={() => setChildOpen(true)}
               className="rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50 dark:border-indigo-900 dark:text-indigo-300"
+              data-testid="add-child-btn"
             >
               + Add child
             </button>
@@ -198,7 +205,10 @@ export function PersonDrawer({
             )}
           </section>
 
-          <section className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
+          <section
+            className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800"
+            data-testid="geography-section"
+          >
             <h3 className="text-sm font-semibold">Geography</h3>
             <dl className="mt-2 grid grid-cols-2 gap-2 text-xs">
               <div>

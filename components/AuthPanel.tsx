@@ -58,6 +58,7 @@ export function AuthPanel({ session, onSessionChange }: AuthPanelProps) {
         <label className="sr-only" htmlFor="auth-email">Email</label>
         <input
           id="auth-email"
+          data-testid="auth-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -69,6 +70,7 @@ export function AuthPanel({ session, onSessionChange }: AuthPanelProps) {
         <label className="sr-only" htmlFor="auth-password">Password</label>
         <input
           id="auth-password"
+          data-testid="auth-password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -78,6 +80,7 @@ export function AuthPanel({ session, onSessionChange }: AuthPanelProps) {
       </div>
       <button
         type="submit"
+        data-testid="auth-submit"
         disabled={isPending}
         className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
       >

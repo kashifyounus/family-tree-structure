@@ -14,12 +14,12 @@ Modern family tree web application built with **Next.js 15**, **TypeScript**, **
 ```bash
 docker compose up -d
 npm install
-npx prisma migrate dev --name init
+npx prisma migrate dev --name init_family_tree_v2
 npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and use sample code **FAM-10004** (Kwame Mensah).
+Open [http://localhost:3000](http://localhost:3000) and use sample code **FAM-10004** (Hassan Khan). Reports: `/tree/FAM-10004/reports`.
 
 ### Demo sign-in (cookie session)
 
@@ -50,3 +50,10 @@ Open [http://localhost:3000](http://localhost:3000) and use sample code **FAM-10
 - `npm run db:migrate` — apply migrations
 - `npm run db:seed` — load demo polygamous family dataset
 - `npm run build` — production build
+- `npm run test` — Jest unit tests (kinship, privacy, reporting)
+- `npm run test:e2e` — Playwright E2E (requires Postgres + seed via global setup)
+- `npm run typecheck` — TypeScript `--noEmit`
+
+## CI
+
+GitHub Actions workflow `.github/workflows/ci.yml` runs lint, typecheck, unit tests, Prisma migrate/seed, and production build on `main` PRs.

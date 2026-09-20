@@ -54,6 +54,7 @@ export function SearchBar({
         <Search className="h-4 w-4 shrink-0 text-zinc-400" aria-hidden />
         <input
           id="member-search"
+          data-testid="member-search"
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
