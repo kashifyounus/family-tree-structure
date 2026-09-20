@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum RelationshipType {
+  BIOLOGICAL
+  ADOPTED
+  STEP
+}
+
+enum PrivacyLevel {
+  PUBLIC
+  TREE
+  IMMEDIATE_FAMILY
+  PRIVATE
+}
+
+model Person {
+  id           String       @id @default(cuid())
+  familyCode   String       @unique
+  firstName    String
+  lastName     String
+  gender       Gender       @default(UNKNOWN)
+  birthDate    DateTime?
+  deathDate    DateTime?
+  photoUrl     String?
+  bio          String?
+  isLiving     Boolean      @default(true)
+  privacyLevel PrivacyLevel @default(TREE)
+
+  unionsAsPartner1 Union[] @relation("Partner1")
+  unionsAsPartner2 Union[] @relation("Partner2")
+  childships       Childship[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([familyCode])
+  @@index([lastName, firstName])
+}
+
+model Union {
+  id            String    @id @default(cuid())
+  partner1Id    String
+  partner2Id    String
+  marriageDate  DateTime?
+  divorceDate   DateTime?
+  isActive      Boolean   @default(true)
+  sequenceOrder Int       @default(0)
+
+  partner1   Person      @relation("Partner1", fields: [partner1Id], references: [id], onDelete: Cascade)
+  partner2   Person      @relation("Partner2", fields: [partner2Id], references: [id], onDelete: Cascade)
+  childships Childship[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partner1Id])
+  @@index([partner2Id])
+}
+
+model Childship {
+  id               String           @id @default(cuid())
+  unionId          String
+  childId          String
+  relationshipType RelationshipType @default(BIOLOGICAL)
+
+  union Union  @relation(fields: [unionId], references: [id], onDelete: Cascade)
+  child Person @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([unionId, childId])
+  @@index([childId])
+  @@index([unionId])
+}
