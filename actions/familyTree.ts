@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateFamilyCode } from "@/lib/familyCode";
+import { buildHusbandFamilyReport } from "@/lib/household";
 import {
   buildExpansionSubgraph,
   buildFamilyGraph,
@@ -30,14 +31,14 @@ import type {
   UpdatePersonInput,
   UpdateUnionInput,
 } from "@/types/family";
-import type { Person, Prisma } from "@prisma/client";
+import type { Person, Prisma, RelationshipType } from "@prisma/client";
 
 async function loadAllUnions(): Promise<UnionRecord[]> {
   const unions = await prisma.union.findMany({
     include: {
       partner1: true,
       partner2: true,
-      childships: { include: { child: true } },
+      children: { include: { child: true } },
     },
   });
   return unions.map((u) => ({
@@ -46,7 +47,7 @@ async function loadAllUnions(): Promise<UnionRecord[]> {
     partner2Id: u.partner2Id,
     partner1: u.partner1,
     partner2: u.partner2,
-    childships: u.childships.map((c) => ({
+    childships: u.children.map((c) => ({
       childId: c.childId,
       child: c.child,
       relationshipType: c.relationshipType,
@@ -105,6 +106,35 @@ async function maskGraph(graph: FamilyGraph): Promise<FamilyGraph> {
   };
 }
 
+function mapUnionToSummary(
+  u: {
+    id: string;
+    partner1: Person;
+    partner2: Person;
+    marriageDate: Date | null;
+    divorceDate: Date | null;
+    isActive: boolean;
+    children: {
+      child: Person;
+      relationshipType: string;
+    }[];
+  },
+) {
+  return {
+    id: u.id,
+    partner1: toPersonSummary(u.partner1),
+    partner2: toPersonSummary(u.partner2),
+    marriageDate: u.marriageDate?.toISOString() ?? null,
+    divorceDate: u.divorceDate?.toISOString() ?? null,
+    isActive: u.isActive,
+    children: u.children.map((c) => ({
+      ...toPersonSummary(c.child),
+      relationshipType: c.relationshipType as RelationshipType,
+      unionId: u.id,
+    })),
+  };
+}
+
 export async function getPersonDetails(
   personId: string,
 ): Promise<PersonDetails | null> {
@@ -119,7 +149,7 @@ export async function getPersonDetails(
             include: {
               partner1: true,
               partner2: true,
-              childships: { include: { child: true } },
+              children: { include: { child: true } },
             },
           },
         },
@@ -128,42 +158,32 @@ export async function getPersonDetails(
         include: {
           partner1: true,
           partner2: true,
-          childships: { include: { child: true } },
+          children: { include: { child: true } },
         },
-        orderBy: { sequenceOrder: "asc" },
+        orderBy: { marriageDate: "asc" },
       },
       unionsAsPartner2: {
         include: {
           partner1: true,
           partner2: true,
-          childships: { include: { child: true } },
+          children: { include: { child: true } },
         },
-        orderBy: { sequenceOrder: "asc" },
+        orderBy: { marriageDate: "asc" },
       },
     },
   });
 
   if (!person) return null;
 
-  const unionMap = new Map<string, (typeof person.unionsAsPartner1)[0]>();
+  const unionMap = new Map<
+    string,
+    (typeof person.unionsAsPartner1)[0]
+  >();
   for (const u of [...person.unionsAsPartner1, ...person.unionsAsPartner2]) {
     unionMap.set(u.id, u);
   }
 
-  const unions = [...unionMap.values()].map((u) => ({
-    id: u.id,
-    partner1: toPersonSummary(u.partner1),
-    partner2: toPersonSummary(u.partner2),
-    marriageDate: u.marriageDate?.toISOString() ?? null,
-    divorceDate: u.divorceDate?.toISOString() ?? null,
-    isActive: u.isActive,
-    sequenceOrder: u.sequenceOrder,
-    children: u.childships.map((c) => ({
-      ...toPersonSummary(c.child),
-      relationshipType: c.relationshipType,
-      unionId: u.id,
-    })),
-  }));
+  const unions = [...unionMap.values()].map(mapUnionToSummary);
 
   const allUnions = await loadAllUnions();
   const allPeople = await prisma.person.findMany();
@@ -176,10 +196,24 @@ export async function getPersonDetails(
     peopleById,
   );
 
+  const husbandUnions = await prisma.union.findMany({
+    where: {
+      OR: [{ partner1Id: person.id }, { partner2Id: person.id }],
+    },
+    include: {
+      partner1: true,
+      partner2: true,
+      children: { include: { child: true } },
+    },
+    orderBy: { marriageDate: "asc" },
+  });
+  const household = buildHusbandFamilyReport(person, husbandUnions);
+
   const details: PersonDetails = {
     person: toPersonSummary(person),
     unions,
     computed,
+    household,
   };
 
   return maskPersonDetails(details, viewer);
@@ -195,13 +229,14 @@ export async function getPersonDetailsByFamilyCode(
 
 export async function getFamilyGraph(
   familyCode: string,
+  depth = 2,
 ): Promise<FamilyGraph | null> {
   const focal = await prisma.person.findUnique({ where: { familyCode } });
   if (!focal) return null;
 
   const unions = await loadAllUnions();
-  const people = await loadPeopleForFocal(focal.id, unions, 2, 2);
-  const graph = buildFamilyGraph(focal, people, unions, 2, 2);
+  const people = await loadPeopleForFocal(focal.id, unions, depth, depth);
+  const graph = buildFamilyGraph(focal, people, unions, depth, depth);
   return maskGraph(graph);
 }
 
@@ -246,6 +281,22 @@ export async function expandFamilyGraph(
   };
 }
 
+export async function expandFamilyGraphFromPerson(
+  personId: string,
+  familyCode: string,
+): Promise<FamilyGraph | null> {
+  const graph = await getFamilyGraph(familyCode, 2);
+  if (!graph) return null;
+  const node = graph.nodes.find((n) => n.id === personId);
+  if (!node) return graph;
+  return expandFamilyGraph(
+    personId,
+    "both",
+    node.position,
+    graph,
+  );
+}
+
 export async function searchMembers(query: string): Promise<SearchResult[]> {
   const trimmed = query.trim();
   if (!trimmed) return [];
@@ -264,11 +315,16 @@ export async function searchMembers(query: string): Promise<SearchResult[]> {
           { familyCode: { contains: trimmed, mode: "insensitive" } },
           { firstName: { contains: trimmed, mode: "insensitive" } },
           { lastName: { contains: trimmed, mode: "insensitive" } },
+          { nickname: { contains: trimmed, mode: "insensitive" } },
+          { urduFirstName: { contains: trimmed, mode: "insensitive" } },
+          { urduLastName: { contains: trimmed, mode: "insensitive" } },
           {
             AND: trimmed.split(/\s+/).map((part) => ({
               OR: [
                 { firstName: { contains: part, mode: "insensitive" } },
                 { lastName: { contains: part, mode: "insensitive" } },
+                { urduFirstName: { contains: part, mode: "insensitive" } },
+                { urduLastName: { contains: part, mode: "insensitive" } },
               ],
             })),
           },
@@ -286,8 +342,33 @@ export async function searchMembers(query: string): Promise<SearchResult[]> {
     familyCode: p.familyCode,
     firstName: p.firstName,
     lastName: p.lastName,
+    nickname: p.nickname,
+    urduFirstName: p.urduFirstName,
+    urduLastName: p.urduLastName,
     birthYear: birthYearFromPerson(p),
   }));
+}
+
+function personCreateFields(data: CreatePersonAndUnionInput) {
+  return {
+    title: data.title,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    nickname: data.nickname,
+    urduFirstName: data.urduFirstName,
+    urduLastName: data.urduLastName,
+    gender: data.gender,
+    birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
+    deathDate: data.deathDate ? new Date(data.deathDate) : undefined,
+    photoUrl: data.photoUrl,
+    bio: data.bio,
+    occupation: data.occupation,
+    motherTongue: data.motherTongue,
+    birthPlace: data.birthPlace,
+    currentCity: data.currentCity,
+    permanentCity: data.permanentCity,
+    homeTown: data.homeTown,
+  };
 }
 
 export async function createPersonAndUnion(
@@ -296,10 +377,6 @@ export async function createPersonAndUnion(
   await requireEditor();
 
   const familyCode = await uniqueFamilyCode();
-  const birthDate = data.birthDate ? new Date(data.birthDate) : undefined;
-  const deathDate = data.deathDate ? new Date(data.deathDate) : undefined;
-  const isLiving =
-    data.isLiving ?? (data.deathDate ? false : true);
 
   const related = await prisma.person.findUnique({
     where: { id: data.relatedPersonId },
@@ -311,23 +388,11 @@ export async function createPersonAndUnion(
   const newPerson = await prisma.person.create({
     data: {
       familyCode,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      gender: data.gender,
-      birthDate,
-      deathDate,
-      photoUrl: data.photoUrl,
-      bio: data.bio,
-      isLiving,
+      ...personCreateFields(data),
     },
   });
 
   if (data.mode === "spouse") {
-    const spouseCount = await prisma.union.count({
-      where: {
-        OR: [{ partner1Id: related.id }, { partner2Id: related.id }],
-      },
-    });
     await prisma.union.create({
       data: {
         partner1Id: related.id,
@@ -336,7 +401,6 @@ export async function createPersonAndUnion(
           ? new Date(data.marriageDate)
           : undefined,
         isActive: true,
-        sequenceOrder: spouseCount,
       },
     });
   } else {
@@ -347,7 +411,6 @@ export async function createPersonAndUnion(
           partner1Id: related.id,
           partner2Id: data.secondParentId,
           isActive: true,
-          sequenceOrder: 0,
         },
       });
       unionId = union.id;
@@ -367,6 +430,7 @@ export async function createPersonAndUnion(
 
   revalidatePath(`/tree/${related.familyCode}`);
   revalidatePath(`/tree/${familyCode}`);
+  revalidatePath(`/tree/${related.familyCode}/reports`);
 
   return { personId: newPerson.id, familyCode };
 }
@@ -384,8 +448,12 @@ export async function updatePerson(
   await prisma.person.update({
     where: { id: input.personId },
     data: {
+      title: input.title,
       firstName: input.firstName,
       lastName: input.lastName,
+      nickname: input.nickname,
+      urduFirstName: input.urduFirstName,
+      urduLastName: input.urduLastName,
       gender: input.gender,
       birthDate:
         input.birthDate === null
@@ -401,12 +469,18 @@ export async function updatePerson(
             : undefined,
       photoUrl: input.photoUrl,
       bio: input.bio,
-      isLiving: input.isLiving,
+      occupation: input.occupation,
+      motherTongue: input.motherTongue,
       privacyLevel: input.privacyLevel,
+      birthPlace: input.birthPlace,
+      currentCity: input.currentCity,
+      permanentCity: input.permanentCity,
+      homeTown: input.homeTown,
     },
   });
 
   revalidatePath(`/tree/${existing.familyCode}`);
+  revalidatePath(`/tree/${existing.familyCode}/reports`);
   return { familyCode: existing.familyCode };
 }
 
@@ -435,7 +509,6 @@ export async function updateUnion(input: UpdateUnionInput): Promise<void> {
             ? new Date(input.divorceDate)
             : undefined,
       isActive: input.isActive,
-      sequenceOrder: input.sequenceOrder,
     },
   });
 
@@ -473,6 +546,9 @@ export async function listMembersForPicker(): Promise<SearchResult[]> {
     familyCode: p.familyCode,
     firstName: p.firstName,
     lastName: p.lastName,
+    nickname: p.nickname,
+    urduFirstName: p.urduFirstName,
+    urduLastName: p.urduLastName,
     birthYear: birthYearFromPerson(p),
   }));
 }
@@ -483,19 +559,26 @@ export async function listUnionOptionsForPerson(
   const person = await prisma.person.findUnique({
     where: { id: personId },
     include: {
-      unionsAsPartner1: { include: { partner1: true, partner2: true } },
-      unionsAsPartner2: { include: { partner1: true, partner2: true } },
+      unionsAsPartner1: {
+        include: { partner1: true, partner2: true },
+        orderBy: { marriageDate: "asc" },
+      },
+      unionsAsPartner2: {
+        include: { partner1: true, partner2: true },
+        orderBy: { marriageDate: "asc" },
+      },
     },
   });
   if (!person) return [];
 
   const unions = [...person.unionsAsPartner1, ...person.unionsAsPartner2];
-  return unions.map((u) => {
+  return unions.map((u, index) => {
     const other =
       u.partner1Id === personId ? u.partner2 : u.partner1;
+    const year = u.marriageDate?.getFullYear();
     return {
       id: u.id,
-      label: `${person.firstName} & ${other.firstName} (union #${u.sequenceOrder + 1})`,
+      label: `${person.firstName} & ${other.firstName}${year ? ` (${year})` : ""} · union ${index + 1}`,
     };
   });
 }

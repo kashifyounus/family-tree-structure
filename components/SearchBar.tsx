@@ -82,6 +82,14 @@ export function SearchBar({
               >
                 <span>
                   {r.firstName} {r.lastName}
+                  {r.nickname && (
+                    <span className="text-zinc-400"> &quot;{r.nickname}&quot;</span>
+                  )}
+                  {(r.urduFirstName || r.urduLastName) && (
+                    <span className="ml-2 font-urdu text-zinc-500" dir="rtl">
+                      {[r.urduFirstName, r.urduLastName].filter(Boolean).join(" ")}
+                    </span>
+                  )}
                   {r.birthYear != null && (
                     <span className="ml-2 text-zinc-400">b. {r.birthYear}</span>
                   )}

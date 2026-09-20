@@ -67,7 +67,6 @@ export function AddChildModal({
             unionMode === "new"
               ? String(fd.get("secondParentId") || "") || undefined
               : undefined,
-          isLiving: !fd.get("deathDate"),
         });
         onSuccess(result.familyCode);
         onClose();
@@ -150,12 +149,11 @@ export function AddChildModal({
               name="gender"
               required
               className={inputClassName}
-              defaultValue="UNKNOWN"
+              defaultValue="MALE"
             >
               <option value="MALE">Male</option>
               <option value="FEMALE">Female</option>
               <option value="OTHER">Other</option>
-              <option value="UNKNOWN">Unknown</option>
             </select>
           </div>
           <div>

@@ -21,6 +21,14 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) and use sample code **FAM-10004** (Kwame Mensah).
 
+### Demo sign-in (cookie session)
+
+| Email | Password | Role |
+|-------|----------|------|
+| `viewer@kinship.local` | `viewer` | Read-only (living members masked) |
+| `contributor@kinship.local` | `contributor` | Add/edit spouses, children, profiles |
+| `admin@kinship.local` | `admin` | Full access |
+
 ## Environment
 
 | Variable       | Description                          |

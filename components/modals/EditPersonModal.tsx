@@ -6,6 +6,7 @@ import { updatePerson, updateUnion } from "@/actions/familyTree";
 import type { PersonDetails } from "@/types/family";
 import { Modal } from "@/components/modals/Modal";
 import { inputClassName, labelClassName } from "@/components/modals/formStyles";
+import { UrduText } from "@/components/UrduText";
 
 type EditPersonModalProps = {
   open: boolean;
@@ -37,15 +38,24 @@ export function EditPersonModal({
       try {
         await updatePerson({
           personId: person.id,
+          title: String(fd.get("title") || "") || null,
           firstName: String(fd.get("firstName") ?? ""),
           lastName: String(fd.get("lastName") ?? ""),
+          nickname: String(fd.get("nickname") || "") || null,
+          urduFirstName: String(fd.get("urduFirstName") || "") || null,
+          urduLastName: String(fd.get("urduLastName") || "") || null,
           gender: fd.get("gender") as Gender,
           birthDate: String(fd.get("birthDate") || "") || null,
           deathDate: String(fd.get("deathDate") || "") || null,
           photoUrl: String(fd.get("photoUrl") || "") || null,
           bio: String(fd.get("bio") || "") || null,
-          isLiving: fd.get("isLiving") === "on",
+          occupation: String(fd.get("occupation") || "") || null,
+          motherTongue: String(fd.get("motherTongue") || "") || null,
           privacyLevel: fd.get("privacyLevel") as PrivacyLevel,
+          birthPlace: String(fd.get("birthPlace") || "") || null,
+          currentCity: String(fd.get("currentCity") || "") || null,
+          permanentCity: String(fd.get("permanentCity") || "") || null,
+          homeTown: String(fd.get("homeTown") || "") || null,
         });
 
         if (primaryUnion) {
@@ -105,9 +115,27 @@ export function EditPersonModal({
         )}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelClassName} htmlFor="edit-firstName">
-              First name
-            </label>
+            <label className={labelClassName} htmlFor="edit-title">Title</label>
+            <input
+              id="edit-title"
+              name="title"
+              defaultValue={person.title ?? ""}
+              className={inputClassName}
+            />
+          </div>
+          <div>
+            <label className={labelClassName} htmlFor="edit-nickname">Nickname</label>
+            <input
+              id="edit-nickname"
+              name="nickname"
+              defaultValue={person.nickname ?? ""}
+              className={inputClassName}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClassName} htmlFor="edit-firstName">First name</label>
             <input
               id="edit-firstName"
               name="firstName"
@@ -117,9 +145,7 @@ export function EditPersonModal({
             />
           </div>
           <div>
-            <label className={labelClassName} htmlFor="edit-lastName">
-              Last name
-            </label>
+            <label className={labelClassName} htmlFor="edit-lastName">Last name</label>
             <input
               id="edit-lastName"
               name="lastName"
@@ -129,11 +155,33 @@ export function EditPersonModal({
             />
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-3" dir="rtl">
+          <div>
+            <label className={labelClassName} htmlFor="edit-urduFirstName">
+              <UrduText>Urdu first name</UrduText>
+            </label>
+            <input
+              id="edit-urduFirstName"
+              name="urduFirstName"
+              defaultValue={person.urduFirstName ?? ""}
+              className={`${inputClassName} font-urdu`}
+            />
+          </div>
+          <div>
+            <label className={labelClassName} htmlFor="edit-urduLastName">
+              <UrduText>Urdu last name</UrduText>
+            </label>
+            <input
+              id="edit-urduLastName"
+              name="urduLastName"
+              defaultValue={person.urduLastName ?? ""}
+              className={`${inputClassName} font-urdu`}
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelClassName} htmlFor="edit-gender">
-              Gender
-            </label>
+            <label className={labelClassName} htmlFor="edit-gender">Gender</label>
             <select
               id="edit-gender"
               name="gender"
@@ -143,13 +191,10 @@ export function EditPersonModal({
               <option value="MALE">Male</option>
               <option value="FEMALE">Female</option>
               <option value="OTHER">Other</option>
-              <option value="UNKNOWN">Unknown</option>
             </select>
           </div>
           <div>
-            <label className={labelClassName} htmlFor="edit-privacyLevel">
-              Privacy
-            </label>
+            <label className={labelClassName} htmlFor="edit-privacyLevel">Privacy</label>
             <select
               id="edit-privacyLevel"
               name="privacyLevel"
@@ -157,17 +202,14 @@ export function EditPersonModal({
               className={inputClassName}
             >
               <option value="PUBLIC">Public</option>
-              <option value="TREE">Tree members</option>
-              <option value="IMMEDIATE_FAMILY">Immediate family</option>
+              <option value="MEMBERS_ONLY">Members only</option>
               <option value="PRIVATE">Private</option>
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelClassName} htmlFor="edit-birthDate">
-              Birth date
-            </label>
+            <label className={labelClassName} htmlFor="edit-birthDate">Birth date</label>
             <input
               id="edit-birthDate"
               name="birthDate"
@@ -177,9 +219,7 @@ export function EditPersonModal({
             />
           </div>
           <div>
-            <label className={labelClassName} htmlFor="edit-deathDate">
-              Death date
-            </label>
+            <label className={labelClassName} htmlFor="edit-deathDate">Death date</label>
             <input
               id="edit-deathDate"
               name="deathDate"
@@ -189,18 +229,46 @@ export function EditPersonModal({
             />
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            name="isLiving"
-            defaultChecked={person.isLiving}
-          />
-          Living
-        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClassName} htmlFor="edit-birthPlace">Birth place</label>
+            <input
+              id="edit-birthPlace"
+              name="birthPlace"
+              defaultValue={person.birthPlace ?? ""}
+              className={inputClassName}
+            />
+          </div>
+          <div>
+            <label className={labelClassName} htmlFor="edit-currentCity">Current city</label>
+            <input
+              id="edit-currentCity"
+              name="currentCity"
+              defaultValue={person.currentCity ?? ""}
+              className={inputClassName}
+            />
+          </div>
+          <div>
+            <label className={labelClassName} htmlFor="edit-permanentCity">Permanent city</label>
+            <input
+              id="edit-permanentCity"
+              name="permanentCity"
+              defaultValue={person.permanentCity ?? ""}
+              className={inputClassName}
+            />
+          </div>
+          <div>
+            <label className={labelClassName} htmlFor="edit-homeTown">Home town</label>
+            <input
+              id="edit-homeTown"
+              name="homeTown"
+              defaultValue={person.homeTown ?? ""}
+              className={inputClassName}
+            />
+          </div>
+        </div>
         <div>
-          <label className={labelClassName} htmlFor="edit-photoUrl">
-            Photo URL
-          </label>
+          <label className={labelClassName} htmlFor="edit-photoUrl">Photo URL</label>
           <input
             id="edit-photoUrl"
             name="photoUrl"
@@ -210,9 +278,7 @@ export function EditPersonModal({
           />
         </div>
         <div>
-          <label className={labelClassName} htmlFor="edit-bio">
-            Bio
-          </label>
+          <label className={labelClassName} htmlFor="edit-bio">Bio</label>
           <textarea
             id="edit-bio"
             name="bio"
@@ -225,8 +291,7 @@ export function EditPersonModal({
         {primaryUnion && (
           <fieldset className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
             <legend className="px-1 text-xs font-medium text-zinc-600">
-              Primary union ({primaryUnion.partner1.firstName} &{" "}
-              {primaryUnion.partner2.firstName})
+              Primary union
             </legend>
             <div className="grid grid-cols-2 gap-3">
               <div>

@@ -40,7 +40,6 @@ export function AddSpouseModal({
           photoUrl: String(fd.get("photoUrl") || "") || undefined,
           bio: String(fd.get("bio") || "") || undefined,
           marriageDate: String(fd.get("marriageDate") || "") || undefined,
-          isLiving: !fd.get("deathDate"),
         });
         onSuccess(result.familyCode);
         onClose();
@@ -122,12 +121,11 @@ export function AddSpouseModal({
             name="gender"
             required
             className={inputClassName}
-            defaultValue="UNKNOWN"
+            defaultValue="MALE"
           >
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
             <option value="OTHER">Other</option>
-            <option value="UNKNOWN">Unknown</option>
           </select>
         </div>
         <div className="grid grid-cols-2 gap-3">

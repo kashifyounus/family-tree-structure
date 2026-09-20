@@ -11,7 +11,6 @@ enum Gender {
   MALE
   FEMALE
   OTHER
-  UNKNOWN
 }
 
 enum RelationshipType {
@@ -22,65 +21,82 @@ enum RelationshipType {
 
 enum PrivacyLevel {
   PUBLIC
-  TREE
-  IMMEDIATE_FAMILY
+  MEMBERS_ONLY
   PRIVATE
 }
 
 model Person {
-  id           String       @id @default(cuid())
-  familyCode   String       @unique
-  firstName    String
-  lastName     String
-  gender       Gender       @default(UNKNOWN)
-  birthDate    DateTime?
-  deathDate    DateTime?
-  photoUrl     String?
-  bio          String?
-  isLiving     Boolean      @default(true)
-  privacyLevel PrivacyLevel @default(TREE)
+  id            String       @id @default(uuid()) @db.Uuid
+  familyCode    String       @unique @map("family_code") @db.VarChar(20)
 
-  unionsAsPartner1 Union[] @relation("Partner1")
-  unionsAsPartner2 Union[] @relation("Partner2")
+  title         String?      @db.VarChar(50)
+  firstName     String       @map("first_name") @db.VarChar(100)
+  lastName      String       @map("last_name") @db.VarChar(100)
+  nickname      String?      @db.VarChar(100)
+
+  urduFirstName String?      @map("urdu_first_name") @db.VarChar(100)
+  urduLastName  String?      @map("urdu_last_name") @db.VarChar(100)
+
+  gender        Gender
+  birthDate     DateTime?    @map("birth_date") @db.Date
+  deathDate     DateTime?    @map("death_date") @db.Date
+  photoUrl      String?      @map("photo_url")
+  bio           String?
+
+  occupation    String?      @db.VarChar(100)
+  motherTongue  String?      @map("mother_tongue") @db.VarChar(50)
+  privacyLevel  PrivacyLevel @default(MEMBERS_ONLY) @map("privacy_level")
+
+  birthPlace    String?      @map("birth_place") @db.VarChar(150)
+  currentCity   String?      @map("current_city") @db.VarChar(150)
+  permanentCity String?      @map("permanent_city") @db.VarChar(150)
+  homeTown      String?      @map("home_town") @db.VarChar(150)
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  unionsAsPartner1 Union[]    @relation("Partner1")
+  unionsAsPartner2 Union[]    @relation("Partner2")
   childships       Childship[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   @@index([familyCode])
-  @@index([lastName, firstName])
+  @@index([gender])
+  @@index([currentCity])
+  @@index([homeTown])
+  @@index([urduFirstName])
+  @@index([urduLastName])
+  @@map("persons")
 }
 
 model Union {
-  id            String    @id @default(cuid())
-  partner1Id    String
-  partner2Id    String
-  marriageDate  DateTime?
-  divorceDate   DateTime?
-  isActive      Boolean   @default(true)
-  sequenceOrder Int       @default(0)
+  id           String    @id @default(uuid()) @db.Uuid
+  partner1Id   String    @map("partner_1_id") @db.Uuid
+  partner2Id   String    @map("partner_2_id") @db.Uuid
+  marriageDate DateTime? @map("marriage_date") @db.Date
+  divorceDate  DateTime? @map("divorce_date") @db.Date
+  isActive     Boolean   @default(true) @map("is_active")
 
-  partner1   Person      @relation("Partner1", fields: [partner1Id], references: [id], onDelete: Cascade)
-  partner2   Person      @relation("Partner2", fields: [partner2Id], references: [id], onDelete: Cascade)
-  childships Childship[]
+  partner1     Person      @relation("Partner1", fields: [partner1Id], references: [id], onDelete: Cascade)
+  partner2     Person      @relation("Partner2", fields: [partner2Id], references: [id], onDelete: Cascade)
+  children     Childship[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  @@unique([partner1Id, partner2Id])
   @@index([partner1Id])
   @@index([partner2Id])
+  @@map("unions")
 }
 
 model Childship {
-  id               String           @id @default(cuid())
-  unionId          String
-  childId          String
-  relationshipType RelationshipType @default(BIOLOGICAL)
+  id               String           @id @default(uuid()) @db.Uuid
+  unionId          String           @map("union_id") @db.Uuid
+  childId          String           @map("child_id") @db.Uuid
+  relationshipType RelationshipType @default(BIOLOGICAL) @map("relationship_type")
 
   union Union  @relation(fields: [unionId], references: [id], onDelete: Cascade)
   child Person @relation(fields: [childId], references: [id], onDelete: Cascade)
 
   @@unique([unionId, childId])
-  @@index([childId])
   @@index([unionId])
+  @@index([childId])
+  @@map("children")
 }

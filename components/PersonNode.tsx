@@ -3,6 +3,8 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import clsx from "clsx";
 import type { PersonSummary } from "@/types/family";
+import { formatUrduName } from "@/lib/personMapper";
+import { UrduText } from "@/components/UrduText";
 
 export type PersonNodeData = {
   person?: PersonSummary;
@@ -50,6 +52,11 @@ export function PersonNode({
           <p className="truncate text-[10px] font-mono text-zinc-500">
             {person.familyCode}
           </p>
+          {formatUrduName(person) && (
+            <p className="truncate text-[11px] text-zinc-600 dark:text-zinc-400">
+              <UrduText>{formatUrduName(person)}</UrduText>
+            </p>
+          )}
         </div>
       </div>
       <div className="mt-1 flex flex-wrap gap-1">

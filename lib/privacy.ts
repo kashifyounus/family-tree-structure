@@ -1,7 +1,6 @@
 import type { PrivacyLevel } from "@prisma/client";
 import type { AuthContext, UserRole } from "@/lib/auth";
 import type {
-  ComputedRelations,
   KinshipRelative,
   PersonDetails,
   PersonSummary,
@@ -44,6 +43,13 @@ export function maskPersonSummary(
     deathDate: null,
     bio: null,
     photoUrl: null,
+    birthPlace: null,
+    currentCity: null,
+    permanentCity: null,
+    homeTown: null,
+    age: birthYearOnly(person.birthDate)
+      ? new Date().getFullYear() - parseInt(birthYearOnly(person.birthDate)!, 10)
+      : null,
     firstName: person.firstName,
     lastName: person.lastName,
   };
@@ -114,6 +120,15 @@ export function maskPersonDetails(
         maskKinshipRelative(r, viewer),
       ),
     },
+    household: details.household
+      ? {
+          ...details.household,
+          byWife: details.household.byWife.map((g) => ({
+            ...g,
+            children: g.children.map((c) => maskPersonSummary(c, viewer)),
+          })),
+        }
+      : null,
   };
 }
 
@@ -136,5 +151,5 @@ export function canViewExactDates(
   if (role === "ADMIN") return true;
   if (privacyLevel === "PUBLIC") return true;
   if (role === "GUEST" || role === "VIEWER") return false;
-  return role === "CONTRIBUTOR" && privacyLevel === "TREE";
+  return role === "CONTRIBUTOR" && privacyLevel === "MEMBERS_ONLY";
 }

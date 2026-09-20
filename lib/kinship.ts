@@ -16,7 +16,7 @@ export type PersonWithChildships = Person & {
       partner2Id: string;
       partner1: Person;
       partner2: Person;
-      childships: { childId: string; child: Person }[];
+      children: { childId: string; child: Person }[];
     };
   }[];
 };
@@ -29,6 +29,24 @@ export type UnionRecord = {
   partner2: Person;
   childships: { childId: string; child: Person; relationshipType: string }[];
 };
+
+function childUnionContext(u: UnionRecord) {
+  return {
+    unionId: u.id,
+    relationshipType: "BIOLOGICAL",
+    union: {
+      id: u.id,
+      partner1Id: u.partner1Id,
+      partner2Id: u.partner2Id,
+      partner1: u.partner1,
+      partner2: u.partner2,
+      children: u.childships.map((c) => ({
+        childId: c.childId,
+        child: c.child,
+      })),
+    },
+  };
+}
 
 export function getParentIdsFromUnions(
   personId: string,
@@ -69,7 +87,7 @@ export function getSiblings(
   const siblings = new Map<string, SiblingInfo>();
 
   for (const cs of unionsAsChild) {
-    for (const other of cs.union.childships) {
+    for (const other of cs.union.children) {
       if (other.childId === personId) continue;
       siblings.set(other.childId, {
         person: other.child,
@@ -164,11 +182,7 @@ export function computeAuntsAndUncles(
     );
     const fatherSiblings = getSiblings(
       father.id,
-      fatherAsChildUnions.map((u) => ({
-        unionId: u.id,
-        relationshipType: "BIOLOGICAL",
-        union: u,
-      })),
+      fatherAsChildUnions.map(childUnionContext),
       allUnions,
     );
     for (const s of fatherSiblings) {
@@ -184,11 +198,7 @@ export function computeAuntsAndUncles(
     );
     const motherSiblings = getSiblings(
       mother.id,
-      motherAsChildUnions.map((u) => ({
-        unionId: u.id,
-        relationshipType: "BIOLOGICAL",
-        union: u,
-      })),
+      motherAsChildUnions.map(childUnionContext),
       allUnions,
     );
     for (const s of motherSiblings) {

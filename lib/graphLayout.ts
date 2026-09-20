@@ -26,7 +26,7 @@ function personNode(
     data: {
       person,
       isFocal,
-      isDeceased: !person.isLiving || !!person.deathDate,
+      isDeceased: !!person.deathDate || !person.isLiving,
       hasUnexpandedParents: hints?.hasUnexpandedParents,
       hasUnexpandedChildren: hints?.hasUnexpandedChildren,
     },

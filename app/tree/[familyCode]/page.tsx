@@ -31,7 +31,15 @@ export default async function TreePage({ params }: PageProps) {
         <Link href="/" className="text-sm font-semibold text-indigo-600">
           ← Kinship Graph
         </Link>
-        <span className="text-xs text-zinc-500">Pan · zoom · tap nodes</span>
+        <div className="flex items-center gap-3 text-xs text-zinc-500">
+          <Link
+            href={`/tree/${decoded}/reports`}
+            className="font-medium text-indigo-600 hover:underline"
+          >
+            Reports
+          </Link>
+          <span>Pan · zoom · tap nodes</span>
+        </div>
       </nav>
       <TreeView
         familyCode={decoded}
