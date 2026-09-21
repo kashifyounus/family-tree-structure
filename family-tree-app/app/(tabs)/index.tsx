@@ -1,5 +1,9 @@
 import { Link } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import { useStorage } from "@/context/StorageContext";
+import { buildLocalReports } from "@/lib/db/localReports";
 
 import {
   APP_NAME,
@@ -9,6 +13,15 @@ import {
 } from "@/constants/appMeta";
 
 export default function HomeScreen() {
+  const { mode, localMemberCount } = useStorage();
+  const [living, setLiving] = useState(0);
+
+  useEffect(() => {
+    if (mode === "local") {
+      setLiving(buildLocalReports().livingCount);
+    }
+  }, [mode, localMemberCount]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{APP_NAME}</Text>
@@ -32,6 +45,16 @@ export default function HomeScreen() {
       <Link href="/(tabs)/members" asChild>
         <Pressable style={styles.secondaryBtn}>
           <Text style={styles.secondaryBtnText}>Member directory</Text>
+        </Pressable>
+      </Link>
+      {mode === "local" && (
+        <Text style={styles.stats}>
+          On this device: {localMemberCount} members · {living} living
+        </Text>
+      )}
+      <Link href="/(tabs)/reports" asChild>
+        <Pressable style={styles.secondaryBtn}>
+          <Text style={styles.secondaryBtnText}>Reports & analytics</Text>
         </Pressable>
       </Link>
     </View>
@@ -83,5 +106,10 @@ const styles = StyleSheet.create({
   secondaryBtnText: {
     color: "#4338ca",
     fontWeight: "600",
+  },
+  stats: {
+    fontSize: 13,
+    color: "#52525b",
+    marginTop: 4,
   },
 });

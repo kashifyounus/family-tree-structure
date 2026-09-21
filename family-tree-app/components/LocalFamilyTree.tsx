@@ -1,5 +1,6 @@
+import { useRouter } from "expo-router";
 import { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   getLocalMemberByFamilyCode,
@@ -11,6 +12,7 @@ type LocalFamilyTreeProps = {
 };
 
 export function LocalFamilyTree({ familyCode }: LocalFamilyTreeProps) {
+  const router = useRouter();
   const focal = useMemo(
     () => getLocalMemberByFamilyCode(familyCode),
     [familyCode],
@@ -33,7 +35,15 @@ export function LocalFamilyTree({ familyCode }: LocalFamilyTreeProps) {
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-      <View style={styles.focalCard}>
+      <Pressable
+        style={styles.focalCard}
+        onPress={() =>
+          router.push({
+            pathname: "/member/[personId]",
+            params: { personId: focal.id, code: focal.familyCode },
+          })
+        }
+      >
         <Text style={styles.focalName}>
           {focal.firstName} {focal.lastName}
         </Text>
@@ -44,7 +54,8 @@ export function LocalFamilyTree({ familyCode }: LocalFamilyTreeProps) {
           </Text>
         )}
         <Text style={styles.meta}>{focal.gender}</Text>
-      </View>
+        <Text style={styles.tapHint}>Tap for full profile</Text>
+      </Pressable>
 
       <Text style={styles.sectionTitle}>Unions & children (on this device)</Text>
       {unions.length === 0 ? (
@@ -91,6 +102,7 @@ const styles = StyleSheet.create({
   code: { fontFamily: "SpaceMono", color: "#4f46e5", marginTop: 4 },
   urdu: { fontSize: 18, marginTop: 8, color: "#3f3f46" },
   meta: { marginTop: 8, fontSize: 12, color: "#71717a" },
+  tapHint: { marginTop: 8, fontSize: 11, color: "#4f46e5" },
   sectionTitle: {
     marginTop: 20,
     marginBottom: 8,

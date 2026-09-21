@@ -5,12 +5,14 @@ import {
   FlatList,
   Modal,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
 
 import { useStorage } from "@/context/StorageContext";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
@@ -19,6 +21,10 @@ import type { Gender, MemberRecord } from "@/lib/data/types";
 export default function MembersScreen() {
   const router = useRouter();
   const { mode, dataRevision, bumpDataRevision } = useStorage();
+  const auth = useAuth();
+  const canCreate =
+    mode === "local" ||
+    (mode === "online" && auth.token && auth.role !== "VIEWER");
   const [query, setQuery] = useState("");
   const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,9 +114,11 @@ export default function MembersScreen() {
           <Text style={styles.searchBtnText}>Go</Text>
         </Pressable>
       </View>
-      {mode === "local" && (
+      {canCreate && (
         <Pressable style={styles.addBtn} onPress={() => setCreateOpen(true)}>
-          <Text style={styles.addBtnText}>+ Add local member</Text>
+          <Text style={styles.addBtnText}>
+            + Add member {mode === "local" ? "(SQLite)" : "(server)"}
+          </Text>
         </Pressable>
       )}
       {loading ? (
@@ -122,13 +130,16 @@ export default function MembersScreen() {
           data={members}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 24 }}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={() => void load(query)} />
+          }
           renderItem={({ item }) => (
             <Pressable
               style={styles.card}
               onPress={() =>
                 router.push({
-                  pathname: "/(tabs)/tree",
-                  params: { familyCode: item.familyCode },
+                  pathname: "/member/[personId]",
+                  params: { personId: item.id, code: item.familyCode },
                 })
               }
               onLongPress={() => {

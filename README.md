@@ -13,7 +13,7 @@ Mobile-friendly family tree web application built with **Next.js 15**, **TypeScr
 
 ## Mobile app (Expo / Android)
 
-See [`family-tree-app/README.md`](family-tree-app/README.md) for the React Native client and APK build via EAS.
+See [`family-tree-app/README.md`](family-tree-app/README.md) for the React Native client (per-device **SQLite** or **online PostgreSQL via API**) and APK build via EAS.
 
 ## Quick start
 

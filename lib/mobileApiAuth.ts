@@ -34,3 +34,14 @@ export function requireMobileAuth(header: string | null): AuthContext {
   }
   return ctx;
 }
+
+export function optionalMobileAuth(header: string | null): AuthContext {
+  return (
+    authFromAuthorizationHeader(header) ?? {
+      isAuthenticated: false,
+      role: "GUEST",
+      userId: null,
+      displayName: null,
+    }
+  );
+}

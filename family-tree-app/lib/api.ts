@@ -96,3 +96,90 @@ export async function fetchMembers(query = ""): Promise<DashboardMember[]> {
   );
   return data.members;
 }
+
+export type OnlinePersonSummary = {
+  id: string;
+  familyCode: string;
+  firstName: string;
+  lastName: string;
+  nickname: string | null;
+  urduFirstName: string | null;
+  urduLastName: string | null;
+  gender: "MALE" | "FEMALE" | "OTHER";
+  birthDate: string | null;
+  deathDate: string | null;
+  currentCity: string | null;
+  occupation: string | null;
+  bio: string | null;
+  isLiving: boolean;
+  age: number | null;
+};
+
+export type OnlinePersonDetails = {
+  person: OnlinePersonSummary;
+  unions: {
+    id: string;
+    partner1: OnlinePersonSummary;
+    partner2: OnlinePersonSummary;
+    children: (OnlinePersonSummary & { relationshipType?: string })[];
+  }[];
+  computed?: {
+    fullSiblings: { firstName: string; lastName: string; familyCode: string }[];
+    halfSiblings: { firstName: string; lastName: string; familyCode: string }[];
+    paternalUncles?: { firstName: string; lastName: string; familyCode: string }[];
+    maternalUncles?: { firstName: string; lastName: string; familyCode: string }[];
+  };
+};
+
+export async function fetchOnlinePersonByCode(
+  familyCode: string,
+): Promise<OnlinePersonDetails | null> {
+  try {
+    const data = await apiFetch<{ details: OnlinePersonDetails }>(
+      `/api/mobile/person/by-code/${encodeURIComponent(familyCode)}`,
+    );
+    return data.details;
+  } catch {
+    return null;
+  }
+}
+
+export type OnlineReports = {
+  city: { currentCity: { label: string; count: number }[] } | null;
+  ages: { range: string; count: number }[];
+  household: {
+    wifeCount: number;
+    totalChildren: number;
+    byWife: { wifeName: string; childrenCount: number }[];
+  } | null;
+  focalFamilyCode: string;
+};
+
+export async function fetchOnlineReports(
+  familyCode: string,
+): Promise<OnlineReports | null> {
+  try {
+    return await apiFetch<OnlineReports>(
+      `/api/mobile/reports/${encodeURIComponent(familyCode)}`,
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function createMemberOnline(input: {
+  firstName: string;
+  lastName: string;
+  gender: string;
+  urduFirstName?: string;
+  urduLastName?: string;
+  currentCity?: string;
+  occupation?: string;
+  bio?: string;
+}): Promise<{ familyCode: string }> {
+  const data = await apiFetch<{ familyCode: string; personId?: string }>(
+    "/api/mobile/members/create",
+    { method: "POST", body: JSON.stringify(input) },
+  );
+  return { familyCode: data.familyCode };
+}

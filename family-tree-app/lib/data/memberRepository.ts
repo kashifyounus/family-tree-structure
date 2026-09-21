@@ -1,4 +1,4 @@
-import { fetchMembers, type DashboardMember } from "@/lib/api";
+import { createMemberOnline, fetchMembers, type DashboardMember } from "@/lib/api";
 import {
   createLocalMember,
   deleteLocalMember,
@@ -39,10 +39,16 @@ export async function createMember(
   mode: StorageMode,
   input: CreateMemberInput,
 ): Promise<MemberRecord> {
-  if (mode !== "local") {
-    throw new Error("Create member on device is only available in local SQLite mode.");
+  if (mode === "local") {
+    return createLocalMember(input);
   }
-  return createLocalMember(input);
+  const created = await createMemberOnline(input);
+  const list = await fetchMembers(created.familyCode);
+  const found = list.find((m) => m.familyCode === created.familyCode);
+  if (!found) {
+    throw new Error("Member created but could not refresh list");
+  }
+  return fromDashboard(found);
 }
 
 export async function removeMember(

@@ -2,8 +2,13 @@
 
 React Native **Expo SDK 57** app (`family-tree-app`) for the same backend as the Next.js web project.
 
-## Features (v1)
+## Features
 
+- **6 tabs**: Home, Members, Tree, Reports, Tools, Account
+- **Member profile** — view/edit (local), add spouse & child (local), computed kinship (online)
+- **Reports** — city & age charts (local SQLite or online API)
+- **Tools** — export/import JSON backup, member compare (local)
+- **Pull-to-refresh** on member list
 - **Dual storage** (Account tab):
   - **Local SQLite** — each device has its own `mughals_family.db` (offline, private)
   - **Online API** — shared **PostgreSQL** on the server (via Next.js `/api/mobile/*`, not direct DB from the phone)

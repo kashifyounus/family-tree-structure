@@ -66,6 +66,32 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="reports"
+        options={{
+          title: "Reports",
+          tabBarIcon: ({ color }) => (
+            <SymbolView
+              name={{ ios: "chart.bar.fill", android: "bar_chart", web: "bar_chart" }}
+              tintColor={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="tools"
+        options={{
+          title: "Tools",
+          tabBarIcon: ({ color }) => (
+            <SymbolView
+              name={{ ios: "wrench.and.screwdriver.fill", android: "build", web: "build" }}
+              tintColor={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="account"
         options={{
           title: "Account",

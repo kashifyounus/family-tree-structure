@@ -25,6 +25,42 @@ export type CreateMemberInput = {
   urduFirstName?: string;
   urduLastName?: string;
   currentCity?: string;
+  occupation?: string;
+  bio?: string;
+  birthDate?: string;
+  deathDate?: string;
+  birthPlace?: string;
+  homeTown?: string;
+};
+
+export type UpdateMemberInput = Partial<CreateMemberInput> & {
+  personId: string;
+};
+
+export type AddSpouseInput = {
+  relatedPersonId: string;
+  firstName: string;
+  lastName: string;
+  gender: Gender;
+  marriageDate?: string;
+};
+
+export type AddChildInput = {
+  parentPersonId: string;
+  unionId?: string;
+  secondParentId?: string;
+  firstName: string;
+  lastName: string;
+  gender: Gender;
+};
+
+export type ReportBucket = { label: string; count: number };
+
+export type LocalReports = {
+  memberCount: number;
+  livingCount: number;
+  cities: ReportBucket[];
+  ages: ReportBucket[];
 };
 
 export type LocalUnionView = {
