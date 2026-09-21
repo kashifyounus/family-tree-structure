@@ -33,6 +33,12 @@ export default async function TreePage({ params }: PageProps) {
         </Link>
         <div className="flex items-center gap-3 text-xs text-zinc-500">
           <Link
+            href="/dashboard"
+            className="font-medium text-indigo-600 hover:underline"
+          >
+            Dashboard
+          </Link>
+          <Link
             href={`/tree/${decoded}/reports`}
             className="font-medium text-indigo-600 hover:underline"
           >
