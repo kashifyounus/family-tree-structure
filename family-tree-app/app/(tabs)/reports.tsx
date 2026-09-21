@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { copy } from "@/content/businessCopy";
 import { SimpleBarChart } from "@/components/SimpleBarChart";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { useStorage } from "@/context/StorageContext";
@@ -47,9 +48,7 @@ export default function ReportsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.banner}>
-        {mode === "local"
-          ? "Stats from SQLite on this device"
-          : "Stats from shared PostgreSQL (API)"}
+        {mode === "local" ? copy.reports.bannerPrivate : copy.reports.bannerCloud}
       </Text>
       {mode === "online" && (
         <View style={styles.row}>
@@ -57,10 +56,10 @@ export default function ReportsScreen() {
             style={styles.input}
             value={code}
             onChangeText={setCode}
-            placeholder="Focal family code"
+            placeholder={copy.reports.focalReference}
           />
           <Pressable style={styles.btn} onPress={() => void load()}>
-            <Text style={styles.btnText}>Load</Text>
+            <Text style={styles.btnText}>{copy.reports.loadInsights}</Text>
           </Pressable>
         </View>
       )}
@@ -69,10 +68,10 @@ export default function ReportsScreen() {
       ) : mode === "local" && local ? (
         <>
           <Text style={styles.stat}>
-            {local.memberCount} members · {local.livingCount} living
+            {copy.reports.membersLiving(local.memberCount, local.livingCount)}
           </Text>
-          <SimpleBarChart title="Current city" data={local.cities} />
-          <SimpleBarChart title="Age groups" data={local.ages} />
+          <SimpleBarChart title={copy.reports.chartCity} data={local.cities} />
+          <SimpleBarChart title={copy.reports.chartAge} data={local.ages} />
         </>
       ) : online ? (
         <>

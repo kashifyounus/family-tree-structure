@@ -5,6 +5,7 @@ import { Button, Card, Text } from "react-native-paper";
 
 import { BrandLogo } from "@/components/BrandLogo";
 import { Screen } from "@/components/ui/Screen";
+import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { buildLocalReports } from "@/lib/db/localReports";
@@ -26,7 +27,7 @@ export default function HomeScreen() {
     }
   }, [mode, localMemberCount]);
 
-  const focalCode =
+  const branchReference =
     mode === "local" && localAccount.session
       ? localAccount.session.focalFamilyCode
       : DEFAULT_FAMILY_CODE;
@@ -37,43 +38,44 @@ export default function HomeScreen() {
       <Text variant="bodyMedium" style={styles.meta}>
         v{APP_VERSION} · {APP_OWNER}
       </Text>
+      <Text variant="bodyMedium" style={styles.tagline}>{copy.app.tagline}</Text>
       {localAccount.session && mode === "local" && (
         <Card mode="elevated" style={styles.card}>
           <Card.Content>
-            <Text variant="titleMedium">Hello, {localAccount.session.displayName}</Text>
-            <Text variant="bodySmall">Your code: {localAccount.session.focalFamilyCode}</Text>
+            <Text variant="titleMedium">
+              {copy.home.greeting(localAccount.session.displayName)}
+            </Text>
+            <Text variant="bodySmall">
+              {copy.home.yourReference(localAccount.session.focalFamilyCode)}
+            </Text>
           </Card.Content>
         </Card>
       )}
-      <Text variant="bodyLarge" style={styles.body}>
-        Explore members, immersive tree view, analytics, and secure backups — designed
-        for professional family record keeping.
-      </Text>
       <View style={styles.actions}>
         <Link href="/(tabs)/tree" asChild>
           <Button mode="contained" icon="family-tree">
-            Open family tree
+            {copy.home.openTree}
           </Button>
         </Link>
-        <Link href={`/(tabs)/tree?familyCode=${focalCode}`} asChild>
+        <Link href={`/(tabs)/tree?familyCode=${branchReference}`} asChild>
           <Button mode="outlined" icon="account-group">
-            My focal branch
+            {copy.home.yourBranch}
           </Button>
         </Link>
         <Link href="/(tabs)/members" asChild>
           <Button mode="outlined" icon="account-multiple">
-            Member directory
+            {copy.home.directory}
           </Button>
         </Link>
         <Link href="/(tabs)/reports" asChild>
           <Button mode="outlined" icon="chart-bar">
-            Reports
+            {copy.home.insights}
           </Button>
         </Link>
       </View>
       {mode === "local" && (
         <Text variant="bodySmall" style={styles.stats}>
-          On this device: {localMemberCount} members · {living} living
+          {copy.home.statsPrivate(localMemberCount, living)}
         </Text>
       )}
     </Screen>
@@ -81,9 +83,14 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  meta: { textAlign: "center", color: "#64748b", marginBottom: 8 },
+  meta: { textAlign: "center", color: "#64748b" },
+  tagline: {
+    textAlign: "center",
+    lineHeight: 22,
+    color: "#475569",
+    marginVertical: 12,
+  },
   card: { borderRadius: 16 },
-  body: { lineHeight: 24, color: "#334155", marginVertical: 12 },
   actions: { gap: 10, marginTop: 8 },
   stats: { marginTop: 16, color: "#64748b", textAlign: "center" },
 });

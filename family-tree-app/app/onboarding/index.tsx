@@ -14,6 +14,7 @@ import {
 } from "react-native-paper";
 import Animated, { SlideInRight, SlideOutLeft } from "react-native-reanimated";
 
+import { copy } from "@/content/businessCopy";
 import { BrandLogo } from "@/components/BrandLogo";
 import { AppCard } from "@/components/ui/AppCard";
 import { Screen } from "@/components/ui/Screen";
@@ -80,7 +81,9 @@ export default function OnboardingScreen() {
         gender,
       });
       storage.bumpDataRevision();
-      showSuccess(`Welcome, ${session.displayName}. Your family code is ${session.focalFamilyCode}.`);
+      showSuccess(
+        copy.onboarding.welcomeNamed(session.displayName, session.focalFamilyCode),
+      );
       go("done");
     } catch (e) {
       showError(e);
@@ -95,10 +98,10 @@ export default function OnboardingScreen() {
       await storage.setApiUrl(apiUrl);
       const err = await auth.signIn(serverEmail.trim(), serverPassword);
       if (err) {
-        showError(err, "Sign in failed");
+        showError(err);
         return;
       }
-      showSuccess("Connected to your family server.");
+      showSuccess(copy.onboarding.cloudConnected);
       go("done");
     } catch (e) {
       showError(e);
@@ -109,7 +112,7 @@ export default function OnboardingScreen() {
 
   const onSkipOnlineAuth = async () => {
     await storage.setApiUrl(apiUrl);
-    showSuccess("API URL saved. You can sign in later from Account.");
+    showSuccess(copy.onboarding.addressSaved);
     go("done");
   };
 
@@ -127,13 +130,12 @@ export default function OnboardingScreen() {
         {step === "welcome" && (
           <AppCard>
             <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">Welcome</Text>
+              <Text variant="titleLarge">{copy.onboarding.welcomeTitle}</Text>
               <Text variant="bodyMedium" style={styles.muted}>
-                Build and explore your family tree with a polished, offline-first
-                experience — or connect to your shared server when you are ready.
+                {copy.onboarding.welcomeBody}
               </Text>
               <Button mode="contained" onPress={() => go("mode")}>
-                Get started
+                {copy.onboarding.getStarted}
               </Button>
             </Card.Content>
           </AppCard>
@@ -142,28 +144,26 @@ export default function OnboardingScreen() {
         {step === "mode" && (
           <AppCard>
             <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">How should we store your data?</Text>
+              <Text variant="titleLarge">{copy.onboarding.chooseStorageTitle}</Text>
               <Text variant="bodyMedium" style={styles.muted}>
-                Local SQLite keeps everything on this phone. Online mode uses your
-                Mughal&apos;s Family Tree server API (you can add it later even if you
-                start local).
+                {copy.onboarding.chooseStorageBody}
               </Text>
               <View style={styles.modeCards}>
                 <Chip
-                  icon="database"
+                  icon="home-heart"
                   selected={mode === "local"}
-                  onPress={() => onChooseMode("local")}
+                  onPress={() => void onChooseMode("local")}
                   style={styles.chip}
                 >
-                  Local SQLite (private)
+                  {copy.onboarding.privateChoice}
                 </Chip>
                 <Chip
                   icon="cloud"
                   selected={mode === "online"}
-                  onPress={() => onChooseMode("online")}
+                  onPress={() => void onChooseMode("online")}
                   style={styles.chip}
                 >
-                  Online API (shared)
+                  {copy.onboarding.cloudChoice}
                 </Chip>
               </View>
               <Button onPress={() => go("welcome")}>Back</Button>
@@ -174,27 +174,30 @@ export default function OnboardingScreen() {
         {step === "local" && (
           <AppCard>
             <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">Create your local account</Text>
+              <Text variant="titleLarge">{copy.onboarding.registerTitle}</Text>
               <Text variant="bodySmall" style={styles.muted}>
-                We&apos;ll register you on this device and create your focal family
-                member so you can grow the tree immediately.
+                {copy.onboarding.registerBody}
               </Text>
-              <TextInput label="Display name" value={displayName} onChangeText={setDisplayName} />
               <TextInput
-                label="Email"
+                label={copy.onboarding.displayName}
+                value={displayName}
+                onChangeText={setDisplayName}
+              />
+              <TextInput
+                label={copy.onboarding.email}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
               <TextInput
-                label="Password"
+                label={copy.onboarding.password}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
               />
               <Text variant="labelLarge" style={styles.section}>
-                You (focal person)
+                {copy.onboarding.startingMember}
               </Text>
               <TextInput label="First name" value={firstName} onChangeText={setFirstName} />
               <TextInput label="Last name" value={lastName} onChangeText={setLastName} />
@@ -202,13 +205,13 @@ export default function OnboardingScreen() {
                 value={gender}
                 onValueChange={(v) => setGender(v as Gender)}
                 buttons={[
-                  { value: "MALE", label: "Male" },
-                  { value: "FEMALE", label: "Female" },
-                  { value: "OTHER", label: "Other" },
+                  { value: "MALE", label: copy.gender.MALE },
+                  { value: "FEMALE", label: copy.gender.FEMALE },
+                  { value: "OTHER", label: copy.gender.OTHER },
                 ]}
               />
               <Button mode="contained" loading={busy} onPress={() => void onRegisterLocal()}>
-                Create account & tree
+                {copy.onboarding.createProfile}
               </Button>
               <Button onPress={() => go("mode")}>Back</Button>
             </Card.Content>
@@ -218,14 +221,15 @@ export default function OnboardingScreen() {
         {step === "online" && (
           <AppCard>
             <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">Connect to server</Text>
+              <Text variant="titleLarge">{copy.onboarding.cloudTitle}</Text>
+              <Text variant="bodySmall" style={styles.muted}>{copy.onboarding.cloudBody}</Text>
               <TextInput
-                label="API base URL"
+                label={copy.account.connectionAddress}
                 value={apiUrl}
                 onChangeText={setApiUrl}
                 autoCapitalize="none"
               />
-              <HelperText type="info">Example: https://your-site.com</HelperText>
+              <HelperText type="info">https://your-family-site.com</HelperText>
               <TextInput
                 label="Email"
                 value={serverEmail}
@@ -239,9 +243,11 @@ export default function OnboardingScreen() {
                 secureTextEntry
               />
               <Button mode="contained" loading={busy} onPress={() => void onOnlineSetup()}>
-                Sign in & continue
+                {copy.onboarding.signInContinue}
               </Button>
-              <Button onPress={() => void onSkipOnlineAuth()}>Save URL only</Button>
+              <Button onPress={() => void onSkipOnlineAuth()}>
+                {copy.onboarding.saveAddressOnly}
+              </Button>
               <Button onPress={() => go("mode")}>Back</Button>
             </Card.Content>
           </AppCard>
@@ -250,13 +256,12 @@ export default function OnboardingScreen() {
         {step === "done" && (
           <AppCard>
             <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">You&apos;re all set</Text>
+              <Text variant="titleLarge">{copy.onboarding.completeTitle}</Text>
               <Text variant="bodyMedium" style={styles.muted}>
-                Open the tree, add relatives, run reports, and back up your SQLite
-                database to Google Drive from Tools (Android).
+                {copy.onboarding.completeBody}
               </Text>
               <Button mode="contained" onPress={() => void finish()}>
-                Enter app
+                {copy.onboarding.enterApp}
               </Button>
             </Card.Content>
           </AppCard>

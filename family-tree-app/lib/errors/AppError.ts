@@ -1,3 +1,6 @@
+import { copy } from "@/content/businessCopy";
+import { toPresentedAppError } from "@/lib/errors/presentError";
+
 export type AppErrorCode =
   | "UNKNOWN"
   | "NETWORK"
@@ -26,10 +29,9 @@ export class AppError extends Error {
   }
 }
 
-export function toAppError(error: unknown, fallback = "Something went wrong"): AppError {
-  if (error instanceof AppError) return error;
-  if (error instanceof Error) {
-    return new AppError("UNKNOWN", fallback, { cause: error, technical: error.message });
-  }
-  return new AppError("UNKNOWN", fallback, { cause: error });
+export function toAppError(
+  error: unknown,
+  fallback = copy.errors.generic,
+): AppError {
+  return toPresentedAppError(error, fallback);
 }

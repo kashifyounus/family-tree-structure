@@ -2,6 +2,8 @@ import { useRouter } from "expo-router";
 import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { copy } from "@/content/businessCopy";
+import { formatGender } from "@/lib/format/gender";
 import {
   getLocalMemberByFamilyCode,
   getLocalUnionsForPerson,
@@ -18,7 +20,7 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
     () => getLocalMemberByFamilyCode(familyCode),
     [familyCode],
   );
-  const unions = useMemo(
+  const marriages = useMemo(
     () => (focal ? getLocalUnionsForPerson(focal.id) : []),
     [focal],
   );
@@ -26,10 +28,7 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
   if (!focal) {
     return (
       <View style={styles.empty}>
-        <Text style={styles.emptyText}>
-          No local member with code {familyCode}. Try another code or add a
-          member in the Members tab.
-        </Text>
+        <Text style={styles.emptyText}>{copy.tree.notFound}</Text>
       </View>
     );
   }
@@ -57,35 +56,34 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
             {focal.urduFirstName} {focal.urduLastName}
           </Text>
         )}
-        <Text style={styles.meta}>{focal.gender}</Text>
-        <Text style={styles.tapHint}>Tap for full profile</Text>
+        <Text style={styles.meta}>{formatGender(focal.gender)}</Text>
+        <Text style={styles.tapHint}>{copy.tree.tapProfile}</Text>
       </Pressable>
 
-      <Text style={styles.sectionTitle}>Unions & children (on this device)</Text>
-      {unions.length === 0 ? (
-        <Text style={styles.hint}>No unions recorded yet for this person.</Text>
+      <Text style={[styles.sectionTitle, immersive && styles.sectionTitleImmersive]}>
+        {copy.tree.marriagesSection}
+      </Text>
+      {marriages.length === 0 ? (
+        <Text style={styles.hint}>{copy.tree.noMarriages}</Text>
       ) : (
-        unions.map((u) => (
-          <View key={u.id} style={styles.unionCard}>
-            <Text style={styles.unionTitle}>
-              {u.partner1Name} & {u.partner2Name}
+        marriages.map((m) => (
+          <View key={m.id} style={styles.marriageCard}>
+            <Text style={styles.marriageTitle}>
+              {copy.tree.marriageTo(m.partner1Name, m.partner2Name)}
             </Text>
-            {u.children.length === 0 ? (
-              <Text style={styles.hint}>No children in this union.</Text>
+            {m.children.length === 0 ? (
+              <Text style={styles.hint}>{copy.tree.noChildrenInMarriage}</Text>
             ) : (
-              u.children.map((c) => (
+              m.children.map((c) => (
                 <Text key={c.id} style={styles.childLine}>
-                  · {c.name} ({c.familyCode})
+                  · {copy.tree.childLine(c.name, c.familyCode)}
                 </Text>
               ))
             )}
           </View>
         ))
       )}
-      <Text style={styles.footerNote}>
-        Local SQLite mode keeps all data on this phone only. Switch to Online in
-        Account to use the shared PostgreSQL database via API.
-      </Text>
+      <Text style={styles.footerNote}>{copy.tree.privateFooter}</Text>
     </ScrollView>
   );
 }
@@ -96,7 +94,7 @@ const styles = StyleSheet.create({
   content: { padding: 12, paddingBottom: 32 },
   contentImmersive: { paddingBottom: 48, flexGrow: 1 },
   empty: { flex: 1, padding: 20, justifyContent: "center" },
-  emptyText: { textAlign: "center", color: "#71717a", lineHeight: 20 },
+  emptyText: { textAlign: "center", color: "#cbd5e1", lineHeight: 22 },
   focalCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -116,7 +114,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#18181b",
   },
-  unionCard: {
+  sectionTitleImmersive: { color: "#e2e8f0" },
+  marriageCard: {
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 12,
@@ -124,13 +123,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e4e4e7",
   },
-  unionTitle: { fontWeight: "600", color: "#18181b" },
+  marriageTitle: { fontWeight: "600", color: "#18181b" },
   childLine: { marginTop: 4, fontSize: 13, color: "#3f3f46" },
   hint: { fontSize: 12, color: "#a1a1aa", marginTop: 4 },
   footerNote: {
     marginTop: 24,
     fontSize: 11,
     lineHeight: 16,
-    color: "#71717a",
+    color: "#94a3b8",
   },
 });

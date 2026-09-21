@@ -12,7 +12,10 @@ import {
   View,
 } from "react-native";
 
+import { copy } from "@/content/businessCopy";
+import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
+import { formatGender } from "@/lib/format/gender";
 import {
   addChild,
   addSpouse,
@@ -26,6 +29,7 @@ import type { PersonBundle } from "@/lib/data/personService";
 export default function MemberDetailScreen() {
   const router = useRouter();
   const { mode, bumpDataRevision } = useStorage();
+  const { showError, showSuccess } = useAppFeedback();
   const { personId, code } = useLocalSearchParams<{
     personId: string;
     code?: string;
@@ -78,7 +82,7 @@ export default function MemberDetailScreen() {
   if (!bundle) {
     return (
       <View style={styles.centered}>
-        <Text>Member not found.</Text>
+        <Text>{copy.profile.notFound}</Text>
       </View>
     );
   }
@@ -98,8 +102,9 @@ export default function MemberDetailScreen() {
       setEditing(false);
       bumpDataRevision();
       void reload();
+      showSuccess(copy.success.saved);
     } catch (e) {
-      Alert.alert("Save failed", e instanceof Error ? e.message : "Error");
+      showError(e);
     }
   };
 
@@ -117,20 +122,20 @@ export default function MemberDetailScreen() {
       bumpDataRevision();
       void reload();
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed");
+      showError(e);
     }
   };
 
   const submitChild = () => {
-    const unions = unionOptions(mode, m.id);
-    if (unions.length === 0) {
-      Alert.alert("No union", "Add a spouse first.");
+    const marriages = unionOptions(mode, m.id);
+    if (marriages.length === 0) {
+      Alert.alert(copy.profile.addChild, copy.profile.needMarriageFirst);
       return;
     }
     try {
       addChild(mode, {
         parentPersonId: m.id,
-        unionId: unions[0].id,
+        unionId: marriages[0].id,
         firstName: chFirst.trim(),
         lastName: chLast.trim(),
         gender: "MALE",
@@ -141,7 +146,7 @@ export default function MemberDetailScreen() {
       bumpDataRevision();
       void reload();
     } catch (e) {
-      Alert.alert("Error", e instanceof Error ? e.message : "Failed");
+      showError(e);
     }
   };
 
@@ -154,18 +159,20 @@ export default function MemberDetailScreen() {
       {(m.urduFirstName || m.urduLastName) && (
         <Text style={styles.urdu}>{m.urduFirstName} {m.urduLastName}</Text>
       )}
-      <Text style={styles.meta}>{m.gender}</Text>
+      <Text style={styles.meta}>{formatGender(m.gender)}</Text>
 
       {canEditLocal && (
         <View style={styles.actions}>
           <Pressable style={styles.btn} onPress={() => setEditing((v) => !v)}>
-            <Text style={styles.btnText}>{editing ? "Cancel edit" : "Edit"}</Text>
+            <Text style={styles.btnText}>
+              {editing ? copy.profile.cancelEdit : copy.profile.editProfile}
+            </Text>
           </Pressable>
           <Pressable style={styles.btn} onPress={() => setSpouseOpen(true)}>
-            <Text style={styles.btnText}>+ Spouse</Text>
+            <Text style={styles.btnText}>+ {copy.profile.addSpouse}</Text>
           </Pressable>
           <Pressable style={styles.btn} onPress={() => setChildOpen(true)}>
-            <Text style={styles.btnText}>+ Child</Text>
+            <Text style={styles.btnText}>+ {copy.profile.addChild}</Text>
           </Pressable>
         </View>
       )}
@@ -177,19 +184,19 @@ export default function MemberDetailScreen() {
           <TextInput style={styles.input} value={city} onChangeText={setCity} placeholder="City" />
           <TextInput style={styles.input} value={bio} onChangeText={setBio} placeholder="Bio" multiline />
           <Pressable style={styles.primary} onPress={saveEdit}>
-            <Text style={styles.primaryText}>Save</Text>
+            <Text style={styles.primaryText}>{copy.profile.saveChanges}</Text>
           </Pressable>
         </View>
       )}
 
-      <Text style={styles.section}>Unions & children</Text>
+      <Text style={styles.section}>{copy.profile.marriagesSection}</Text>
       {bundle.unions.length === 0 ? (
-        <Text style={styles.hint}>No unions yet.</Text>
+        <Text style={styles.hint}>{copy.profile.noMarriages}</Text>
       ) : (
         bundle.unions.map((u) => (
           <View key={u.id} style={styles.card}>
             <Text style={styles.unionTitle}>
-              {u.partner1Name} & {u.partner2Name}
+              {copy.tree.marriageTo(u.partner1Name, u.partner2Name)}
             </Text>
             {u.children.map((c) => (
               <Pressable
@@ -210,15 +217,15 @@ export default function MemberDetailScreen() {
 
       {bundle.onlineDetails?.computed && (
         <>
-          <Text style={styles.section}>Computed kinship (online)</Text>
+          <Text style={styles.section}>{copy.profile.kinshipOnline}</Text>
           {bundle.onlineDetails.computed.fullSiblings?.map((s) => (
             <Text key={s.familyCode} style={styles.child}>
-              Full sibling: {s.firstName} {s.lastName}
+              {copy.profile.fullSibling(`${s.firstName} ${s.lastName}`)}
             </Text>
           ))}
           {bundle.onlineDetails.computed.halfSiblings?.map((s) => (
             <Text key={s.familyCode} style={styles.child}>
-              Half sibling: {s.firstName} {s.lastName}
+              {copy.profile.halfSibling(`${s.firstName} ${s.lastName}`)}
             </Text>
           ))}
         </>
@@ -233,13 +240,13 @@ export default function MemberDetailScreen() {
           })
         }
       >
-        <Text style={styles.secondaryText}>Open in tree view</Text>
+        <Text style={styles.secondaryText}>{copy.profile.openInTree}</Text>
       </Pressable>
 
       <Modal visible={spouseOpen} animationType="slide" transparent>
         <View style={styles.modalBg}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Add spouse</Text>
+            <Text style={styles.modalTitle}>{copy.profile.addSpouse}</Text>
             <TextInput style={styles.input} placeholder="First name" value={spFirst} onChangeText={setSpFirst} />
             <TextInput style={styles.input} placeholder="Last name" value={spLast} onChangeText={setSpLast} />
             <Pressable style={styles.primary} onPress={submitSpouse}>
@@ -255,7 +262,7 @@ export default function MemberDetailScreen() {
       <Modal visible={childOpen} animationType="slide" transparent>
         <View style={styles.modalBg}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Add child</Text>
+            <Text style={styles.modalTitle}>{copy.profile.addChild}</Text>
             <TextInput style={styles.input} placeholder="First name" value={chFirst} onChangeText={setChFirst} />
             <TextInput style={styles.input} placeholder="Last name" value={chLast} onChangeText={setChLast} />
             <Pressable style={styles.primary} onPress={submitChild}>

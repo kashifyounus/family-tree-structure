@@ -7,8 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { copy } from "@/content/businessCopy";
 import { APP_OWNER_EMAIL } from "@/constants/appMeta";
 import { getAuthToken, loginApi, setAuthToken } from "@/lib/api";
+import { presentUserMessage } from "@/lib/errors/presentError";
 
 type AuthState = {
   loading: boolean;
@@ -38,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     const res = await loginApi(email, password);
     if (!res.ok || !("token" in res)) {
-      return res.error ?? "Sign in failed";
+      return presentUserMessage(new Error(res.error), copy.errors.auth);
     }
     await setAuthToken(res.token);
     setToken(res.token);

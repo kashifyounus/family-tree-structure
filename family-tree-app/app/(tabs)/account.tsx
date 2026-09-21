@@ -11,6 +11,7 @@ import {
 } from "react-native-paper";
 
 import { Screen } from "@/components/ui/Screen";
+import { copy } from "@/content/businessCopy";
 import {
   APP_OWNER,
   APP_OWNER_EMAIL,
@@ -39,14 +40,14 @@ export default function AccountScreen() {
 
   const onSignIn = async () => {
     if (storage.mode !== "online") {
-      showInfo("Switch data source to Online to sign in against the server.");
+      showInfo(copy.storage.switchToCloudHint);
       return;
     }
     setSubmitting(true);
     try {
       const err = await auth.signIn(email.trim(), password);
       if (err) showError(err);
-      else showSuccess("Signed in to server");
+      else showSuccess(copy.success.signedIn);
     } finally {
       setSubmitting(false);
     }
@@ -55,9 +56,7 @@ export default function AccountScreen() {
   const setMode = async (mode: StorageMode) => {
     await storage.setMode(mode);
     showInfo(
-      mode === "local"
-        ? "Local SQLite — data stays on this device. You can still connect the API below."
-        : "Online API — shared family data via your server.",
+      mode === "local" ? copy.storage.switchToPrivateInfo : copy.storage.switchToCloudInfo,
     );
   };
 
@@ -76,12 +75,14 @@ export default function AccountScreen() {
       {storage.mode === "local" && localAccount.session && (
         <Card mode="elevated" style={styles.card}>
           <Card.Content style={styles.gap}>
-            <Text variant="titleMedium">Local account</Text>
+            <Text variant="titleMedium">{copy.account.householdProfile}</Text>
             <Text variant="bodyLarge">{localAccount.session.displayName}</Text>
             <Text variant="bodySmall">{localAccount.session.email}</Text>
-            <Text variant="labelSmall">Focal code: {localAccount.session.focalFamilyCode}</Text>
+            <Text variant="labelSmall">
+              {copy.account.memberReference}: {localAccount.session.focalFamilyCode}
+            </Text>
             <Button mode="outlined" onPress={() => void localAccount.signOut()}>
-              Sign out (local)
+              {copy.account.signOutDevice}
             </Button>
           </Card.Content>
         </Card>
@@ -89,20 +90,17 @@ export default function AccountScreen() {
 
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.gap}>
-          <Text variant="titleMedium">Data source</Text>
-          <Text variant="bodySmall" style={styles.muted}>
-            Start with SQLite on device, then connect your API anytime without losing
-            local records.
-          </Text>
+          <Text variant="titleMedium">{copy.storage.whereRecordsKept}</Text>
+          <Text variant="bodySmall" style={styles.muted}>{copy.storage.privateHelp}</Text>
           <SegmentedButtons
             value={storage.mode}
             onValueChange={(v) => void setMode(v as StorageMode)}
             buttons={[
-              { value: "local", label: "SQLite", icon: "database" },
-              { value: "online", label: "API", icon: "cloud" },
+              { value: "local", label: copy.storage.privateArchiveShort, icon: "home-heart" },
+              { value: "online", label: copy.storage.familyCloudShort, icon: "cloud" },
             ]}
           />
-          <Text variant="bodySmall">Local records: {storage.localMemberCount}</Text>
+          <Text variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</Text>
           {storage.mode === "local" && (
             <Button
               mode="outlined"
@@ -110,10 +108,10 @@ export default function AccountScreen() {
               onPress={() => {
                 const code = seedLocalDemoFamily();
                 storage.bumpDataRevision();
-                showSuccess(`Demo loaded — ${code}`);
+                showSuccess(copy.account.loadSampleSuccess(code));
               }}
             >
-              Load demo family
+              {copy.account.loadSampleFamily}
             </Button>
           )}
         </Card.Content>
@@ -121,32 +119,34 @@ export default function AccountScreen() {
 
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.gap}>
-          <Text variant="titleMedium">Server API (optional)</Text>
+          <Text variant="titleMedium">{copy.account.connectionAddress}</Text>
+          <Text variant="bodySmall" style={styles.muted}>
+            {copy.account.connectionAddressHelp}
+          </Text>
           <TextInput
             mode="outlined"
-            label="API base URL"
+            label={copy.account.connectionAddress}
             value={apiDraft}
             onChangeText={setApiDraft}
             autoCapitalize="none"
           />
           <Button mode="contained-tonal" onPress={() => void storage.setApiUrl(apiDraft)}>
-            Save API URL
+            {copy.account.saveConnection}
           </Button>
-          <Text variant="labelSmall" style={styles.mono}>{storage.apiUrl}</Text>
         </Card.Content>
       </Card>
 
       {storage.mode === "online" && (
         <Card mode="elevated" style={styles.card}>
           <Card.Content style={styles.gap}>
-            <Text variant="titleMedium">Server sign-in</Text>
+            <Text variant="titleMedium">{copy.account.familyCloudSignIn}</Text>
             {auth.token ? (
               <>
-                <Text variant="titleSmall">Signed in</Text>
+                <Text variant="titleSmall">{copy.account.signedIn}</Text>
                 {auth.displayName && <Text>{auth.displayName}</Text>}
                 {auth.role && <Text variant="labelMedium">{auth.role}</Text>}
                 <Button mode="outlined" textColor="#b91c1c" onPress={() => void auth.signOut()}>
-                  Sign out
+                  {copy.account.signOut}
                 </Button>
               </>
             ) : (
@@ -188,7 +188,6 @@ const styles = StyleSheet.create({
   card: { borderRadius: 16, marginBottom: 12 },
   gap: { gap: 10 },
   muted: { color: "#64748b", lineHeight: 20 },
-  mono: { fontFamily: "SpaceMono" },
   divider: { marginVertical: 12 },
   footer: { textAlign: "center", color: "#64748b", marginBottom: 24 },
 });

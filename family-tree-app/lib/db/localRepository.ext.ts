@@ -1,3 +1,4 @@
+import { copy } from "@/content/businessCopy";
 import { getDatabase } from "@/lib/db/database";
 import { uniqueFamilyCode } from "@/lib/db/familyCode";
 import type {
@@ -158,7 +159,7 @@ export function addLocalChild(input: AddChildInput): MemberRecord {
     );
   }
   if (!unionId) {
-    throw new Error("Select a union or second parent for the child");
+    throw new Error(copy.errors.needMarriageForChild);
   }
 
   const childId = newId();
@@ -199,7 +200,7 @@ export function listLocalUnionOptions(personId: string): { id: string; label: st
       otherId,
     ]);
     const name = other ? `${other.first_name} ${other.last_name}` : "Partner";
-    return { id: u.id, label: `${name} · union ${index + 1}` };
+    return { id: u.id, label: `Marriage ${index + 1} · ${name}` };
   });
 }
 

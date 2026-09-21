@@ -1,4 +1,5 @@
-import { AppError, toAppError } from "@/lib/errors/AppError";
+import { AppError } from "@/lib/errors/AppError";
+import { toAppError } from "@/lib/errors/presentError";
 
 describe("AppError", () => {
   it("maps unknown errors to user-friendly messages", () => {

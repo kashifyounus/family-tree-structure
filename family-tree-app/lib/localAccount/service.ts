@@ -2,6 +2,7 @@ import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import { z } from "zod";
 
+import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
 import { createLocalMember } from "@/lib/db/localRepository";
 import { getDatabase } from "@/lib/db/database";
@@ -65,7 +66,10 @@ export async function registerLocalAccount(
 ): Promise<LocalAccountSession> {
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) {
-    throw new AppError("VALIDATION", parsed.error.issues[0]?.message ?? "Invalid input");
+    throw new AppError(
+      "VALIDATION",
+      parsed.error.issues[0]?.message ?? copy.errors.validation,
+    );
   }
   const data = parsed.data;
   const db = getDatabase();
@@ -75,7 +79,7 @@ export async function registerLocalAccount(
     [data.email.trim()],
   );
   if (existing) {
-    throw new AppError("VALIDATION", "An account with this email already exists on this device.");
+    throw new AppError("VALIDATION", copy.errors.duplicateEmail);
   }
 
   const focal = createLocalMember({
@@ -108,7 +112,7 @@ export async function registerLocalAccount(
     [id],
   );
   if (!inserted) {
-    throw new AppError("STORAGE", "Failed to create local account.");
+    throw new AppError("STORAGE", copy.errors.storage);
   }
   const session = mapRow(inserted);
   await SecureStore.setItemAsync(SESSION_KEY, session.id);
@@ -125,11 +129,11 @@ export async function signInLocalAccount(
     [email.trim()],
   );
   if (!row) {
-    throw new AppError("AUTH", "No local account found for this email.");
+    throw new AppError("AUTH", copy.errors.memberMissing);
   }
   const hash = await hashPassword(email, password);
   if (hash !== row.password_hash) {
-    throw new AppError("AUTH", "Incorrect password.");
+    throw new AppError("AUTH", copy.errors.wrongPassword);
   }
   const session = mapRow(row);
   await SecureStore.setItemAsync(SESSION_KEY, session.id);

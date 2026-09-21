@@ -5,6 +5,7 @@ import { ActivityIndicator, IconButton, Text } from "react-native-paper";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { copy } from "@/content/businessCopy";
 import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
@@ -31,7 +32,7 @@ export default function TreeScreen() {
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.topBar}>
         <Text variant="labelLarge" style={styles.title}>
-          Family tree
+          {copy.tree.title}
         </Text>
         <IconButton
           icon={toolbarOpen ? "chevron-up" : "tune"}
@@ -42,7 +43,7 @@ export default function TreeScreen() {
       {toolbarOpen && (
         <View style={styles.toolbar}>
           <Text variant="labelSmall">
-            {isLocal ? "Local SQLite" : "Online graph"}
+            {isLocal ? copy.tree.privateView : copy.tree.sharedView}
           </Text>
           <Text variant="bodySmall" style={styles.code}>
             {loadedCode}

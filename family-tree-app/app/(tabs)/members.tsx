@@ -12,9 +12,11 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { copy } from "@/content/businessCopy";
 import { useAuth } from "@/context/AuthContext";
-
+import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
+import { formatGender } from "@/lib/format/gender";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
 import type { Gender, MemberRecord } from "@/lib/data/types";
 
@@ -22,6 +24,7 @@ export default function MembersScreen() {
   const router = useRouter();
   const { mode, dataRevision, bumpDataRevision } = useStorage();
   const auth = useAuth();
+  const { showError } = useAppFeedback();
   const canCreate =
     mode === "local" ||
     (mode === "online" && auth.token && auth.role !== "VIEWER");
@@ -41,11 +44,12 @@ export default function MembersScreen() {
       const list = await listMembers(mode, q);
       setMembers(list);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load members");
+      setError(copy.errors.generic);
+      showError(e);
     } finally {
       setLoading(false);
     }
-  }, [mode]);
+  }, [mode, showError]);
 
   useEffect(() => {
     void load("");
@@ -63,14 +67,14 @@ export default function MembersScreen() {
       setLastName("");
       bumpDataRevision();
     } catch (e) {
-      Alert.alert("Create failed", e instanceof Error ? e.message : "Error");
+      showError(e);
     }
   };
 
   const onDelete = (member: MemberRecord) => {
     Alert.alert(
-      "Delete member",
-      `Remove ${member.firstName} ${member.lastName} from this device?`,
+      copy.members.removeTitle,
+      copy.members.removeConfirm(`${member.firstName} ${member.lastName}`),
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -82,10 +86,7 @@ export default function MembersScreen() {
                 await removeMember(mode, member.id);
                 bumpDataRevision();
               } catch (e) {
-                Alert.alert(
-                  "Delete failed",
-                  e instanceof Error ? e.message : "Error",
-                );
+                showError(e);
               }
             })();
           },
@@ -97,14 +98,12 @@ export default function MembersScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.modeBanner}>
-        {mode === "local"
-          ? "SQLite on this device — private, offline"
-          : "Online — shared PostgreSQL via API"}
+        {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
       </Text>
       <View style={styles.searchRow}>
         <TextInput
           style={styles.input}
-          placeholder="Search name or family code"
+          placeholder={copy.members.searchPlaceholder}
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={() => void load(query)}
@@ -116,9 +115,7 @@ export default function MembersScreen() {
       </View>
       {canCreate && (
         <Pressable style={styles.addBtn} onPress={() => setCreateOpen(true)}>
-          <Text style={styles.addBtnText}>
-            + Add member {mode === "local" ? "(SQLite)" : "(server)"}
-          </Text>
+          <Text style={styles.addBtnText}>+ {copy.members.addMember}</Text>
         </Pressable>
       )}
       {loading ? (
@@ -151,19 +148,17 @@ export default function MembersScreen() {
               </Text>
               <Text style={styles.code}>{item.familyCode}</Text>
               <Text style={styles.meta}>
-                {item.gender}
+                {formatGender(item.gender)}
                 {item.currentCity ? ` · ${item.currentCity}` : ""}
               </Text>
               {mode === "local" && (
-                <Text style={styles.longPress}>Long-press to delete</Text>
+                <Text style={styles.longPress}>{copy.members.longPressDelete}</Text>
               )}
             </Pressable>
           )}
           ListEmptyComponent={
             <Text style={styles.empty}>
-              {mode === "local"
-                ? "No local members yet. Add one or load demo data from Account."
-                : "No members found. Check API URL and sign-in."}
+              {mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
             </Text>
           }
         />
@@ -172,7 +167,7 @@ export default function MembersScreen() {
       <Modal visible={createOpen} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>New local member</Text>
+            <Text style={styles.modalTitle}>{copy.members.newMemberTitle}</Text>
             <TextInput
               style={styles.input}
               placeholder="First name"
@@ -199,7 +194,7 @@ export default function MembersScreen() {
               ))}
             </View>
             <Pressable style={styles.inBtn} onPress={() => void onCreate()}>
-              <Text style={styles.inBtnText}>Save to SQLite</Text>
+              <Text style={styles.inBtnText}>{copy.members.saveMember}</Text>
             </Pressable>
             <Pressable onPress={() => setCreateOpen(false)}>
               <Text style={styles.cancel}>Cancel</Text>

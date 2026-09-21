@@ -5,6 +5,7 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 
+import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
 import { copyDatabaseToCache } from "@/lib/backup/exportDatabase";
 
@@ -17,10 +18,7 @@ function ensureGoogleConfigured() {
   if (configured) return;
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
   if (!webClientId) {
-    throw new AppError(
-      "BACKUP",
-      "Google Drive backup is not configured. Set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in your environment.",
-    );
+    throw new AppError("BACKUP", copy.errors.backupNotConfigured);
   }
   GoogleSignin.configure({
     webClientId,
@@ -33,7 +31,7 @@ function ensureGoogleConfigured() {
 async function getAccessToken(): Promise<string> {
   ensureGoogleConfigured();
   if (Platform.OS !== "android") {
-    throw new AppError("BACKUP", "Google Drive backup is supported on Android only.");
+    throw new AppError("BACKUP", copy.errors.backup);
   }
   try {
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
@@ -43,19 +41,19 @@ async function getAccessToken(): Promise<string> {
     }
     const tokens = await GoogleSignin.getTokens();
     if (!tokens.accessToken) {
-      throw new AppError("AUTH", "Google sign-in did not return an access token.");
+      throw new AppError("AUTH", copy.errors.auth);
     }
     return tokens.accessToken;
   } catch (error) {
     if (isErrorWithCode(error)) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        throw new AppError("AUTH", "Google sign-in was cancelled.");
+        throw new AppError("AUTH", copy.errors.authCancelled);
       }
       if (error.code === statusCodes.IN_PROGRESS) {
-        throw new AppError("AUTH", "Google sign-in already in progress.");
+        throw new AppError("AUTH", copy.errors.auth);
       }
     }
-    throw new AppError("BACKUP", "Google sign-in failed.", { cause: error });
+    throw new AppError("BACKUP", copy.errors.backup, { cause: error });
   }
 }
 
@@ -95,7 +93,7 @@ export async function backupDatabaseToGoogleDrive(): Promise<string> {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new AppError("BACKUP", "Google Drive upload failed.", {
+    throw new AppError("BACKUP", copy.errors.backup, {
       technical: text,
     });
   }

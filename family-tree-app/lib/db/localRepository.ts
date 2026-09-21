@@ -1,3 +1,5 @@
+import { copy } from "@/content/businessCopy";
+import { AppError } from "@/lib/errors/AppError";
 import { getDatabase } from "@/lib/db/database";
 import { uniqueFamilyCode } from "@/lib/db/familyCode";
 import type {
@@ -112,9 +114,7 @@ export function deleteLocalMember(personId: string): void {
   );
 
   if (unionChildCount && unionChildCount.count > 0) {
-    throw new Error(
-      "Cannot delete: member is linked to children through a union.",
-    );
+    throw new AppError("VALIDATION", copy.errors.deleteLinkedChildren);
   }
 
   const asChild = db.getFirstSync<{ count: number }>(
@@ -122,7 +122,7 @@ export function deleteLocalMember(personId: string): void {
     [personId],
   );
   if (asChild && asChild.count > 0) {
-    throw new Error("Cannot delete: member is recorded as a child in a union.");
+    throw new AppError("VALIDATION", copy.errors.deleteLinkedAsChild);
   }
 
   db.runSync("DELETE FROM persons WHERE id = ?", [personId]);
