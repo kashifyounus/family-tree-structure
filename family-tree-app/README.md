@@ -4,20 +4,32 @@ React Native **Expo SDK 57** app (`family-tree-app`) for the same backend as the
 
 ## Features (v1)
 
+- **Dual storage** (Account tab):
+  - **Local SQLite** — each device has its own `mughals_family.db` (offline, private)
+  - **Online API** — shared **PostgreSQL** on the server (via Next.js `/api/mobile/*`, not direct DB from the phone)
 - **Home** — shortcuts to tree and members
-- **Members** — search directory via `/api/mobile/members`
-- **Tree** — embedded web tree (`/tree/[code]`) optimized for mobile
-- **Account** — sign-in (`kashifyounus@mughals.local` / `mughal`)
+- **Members** — search; add/delete when in local mode
+- **Tree** — local union/child summary (SQLite) or embedded web graph (online)
+- **Account** — storage mode, API URL, demo seed, server sign-in when online
 
 ## Prerequisites
 
 1. Web app running with PostgreSQL seeded (`npm run dev` from repo root).
 2. Mobile API routes under `app/api/mobile/*` (included in monorepo).
 
-## Configure API URL
+## Storage modes
+
+| Mode | Data lives | Internet | Edits on phone |
+|------|------------|----------|----------------|
+| **Local SQLite** | This device only | Not required | Add/delete members; demo seed |
+| **Online API** | Server PostgreSQL | Required | Read via API; use web dashboard for full CRUD |
+
+Default on first launch: **Local SQLite**.
+
+## Configure API URL (online mode only)
 
 ```bash
-cp .env.example .env
+cp env.example .env
 ```
 
 Set `EXPO_PUBLIC_API_URL` to your reachable backend:

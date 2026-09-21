@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -10,34 +12,89 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 
-import { fetchMembers, type DashboardMember } from "@/lib/api";
+import { useStorage } from "@/context/StorageContext";
+import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
+import type { Gender, MemberRecord } from "@/lib/data/types";
 
 export default function MembersScreen() {
   const router = useRouter();
+  const { mode, dataRevision, bumpDataRevision } = useStorage();
   const [query, setQuery] = useState("");
-  const [members, setMembers] = useState<DashboardMember[]>([]);
+  const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState<Gender>("MALE");
 
   const load = useCallback(async (q: string) => {
     setLoading(true);
     setError(null);
     try {
-      const list = await fetchMembers(q);
+      const list = await listMembers(mode, q);
       setMembers(list);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load members");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     void load("");
-  }, [load]);
+  }, [load, dataRevision, mode]);
+
+  const onCreate = async () => {
+    try {
+      await createMember(mode, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        gender,
+      });
+      setCreateOpen(false);
+      setFirstName("");
+      setLastName("");
+      bumpDataRevision();
+    } catch (e) {
+      Alert.alert("Create failed", e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const onDelete = (member: MemberRecord) => {
+    Alert.alert(
+      "Delete member",
+      `Remove ${member.firstName} ${member.lastName} from this device?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              try {
+                await removeMember(mode, member.id);
+                bumpDataRevision();
+              } catch (e) {
+                Alert.alert(
+                  "Delete failed",
+                  e instanceof Error ? e.message : "Error",
+                );
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.modeBanner}>
+        {mode === "local"
+          ? "SQLite on this device — private, offline"
+          : "Online — shared PostgreSQL via API"}
+      </Text>
       <View style={styles.searchRow}>
         <TextInput
           style={styles.input}
@@ -51,6 +108,11 @@ export default function MembersScreen() {
           <Text style={styles.searchBtnText}>Go</Text>
         </Pressable>
       </View>
+      {mode === "local" && (
+        <Pressable style={styles.addBtn} onPress={() => setCreateOpen(true)}>
+          <Text style={styles.addBtnText}>+ Add local member</Text>
+        </Pressable>
+      )}
       {loading ? (
         <ActivityIndicator style={{ marginTop: 24 }} />
       ) : error ? (
@@ -69,6 +131,9 @@ export default function MembersScreen() {
                   params: { familyCode: item.familyCode },
                 })
               }
+              onLongPress={() => {
+                if (mode === "local") onDelete(item);
+              }}
             >
               <Text style={styles.name}>
                 {item.firstName} {item.lastName}
@@ -78,19 +143,71 @@ export default function MembersScreen() {
                 {item.gender}
                 {item.currentCity ? ` · ${item.currentCity}` : ""}
               </Text>
+              {mode === "local" && (
+                <Text style={styles.longPress}>Long-press to delete</Text>
+              )}
             </Pressable>
           )}
           ListEmptyComponent={
-            <Text style={styles.empty}>No members found.</Text>
+            <Text style={styles.empty}>
+              {mode === "local"
+                ? "No local members yet. Add one or load demo data from Account."
+                : "No members found. Check API URL and sign-in."}
+            </Text>
           }
         />
       )}
+
+      <Modal visible={createOpen} animationType="slide" transparent>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>New local member</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="First name"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Last name"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+            <View style={styles.genderRow}>
+              {(["MALE", "FEMALE", "OTHER"] as Gender[]).map((g) => (
+                <Pressable
+                  key={g}
+                  style={[styles.genderChip, gender === g && styles.genderActive]}
+                  onPress={() => setGender(g)}
+                >
+                  <Text style={gender === g ? styles.genderActiveText : undefined}>
+                    {g}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <Pressable style={styles.inBtn} onPress={() => void onCreate()}>
+              <Text style={styles.inBtnText}>Save to SQLite</Text>
+            </Pressable>
+            <Pressable onPress={() => setCreateOpen(false)}>
+              <Text style={styles.cancel}>Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: "#fff" },
+  modeBanner: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#4338ca",
+    marginBottom: 10,
+  },
   searchRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
   input: {
     flex: 1,
@@ -100,6 +217,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
+    marginBottom: 8,
   },
   searchBtn: {
     backgroundColor: "#4f46e5",
@@ -108,6 +226,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   searchBtnText: { color: "#fff", fontWeight: "600" },
+  addBtn: {
+    backgroundColor: "#eef2ff",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  addBtnText: { color: "#4338ca", fontWeight: "600" },
   card: {
     padding: 14,
     borderRadius: 12,
@@ -119,6 +245,37 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: "600", color: "#18181b" },
   code: { fontFamily: "SpaceMono", fontSize: 12, color: "#4f46e5", marginTop: 4 },
   meta: { fontSize: 12, color: "#71717a", marginTop: 4 },
+  longPress: { fontSize: 10, color: "#a1a1aa", marginTop: 6 },
   error: { color: "#dc2626", marginTop: 12 },
   empty: { textAlign: "center", color: "#71717a", marginTop: 24 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalCard: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 12 },
+  genderRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  genderChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e4e4e7",
+  },
+  genderActive: { backgroundColor: "#4f46e5", borderColor: "#4f46e5" },
+  genderActiveText: { color: "#fff", fontWeight: "600" },
+  inBtn: {
+    backgroundColor: "#4f46e5",
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  inBtnText: { color: "#fff", fontWeight: "600" },
+  cancel: { textAlign: "center", marginTop: 12, color: "#71717a" },
 });

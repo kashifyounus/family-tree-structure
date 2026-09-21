@@ -10,23 +10,29 @@ import {
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
-import { getApiBaseUrl } from "@/lib/api";
+import { useStorage } from "@/context/StorageContext";
 
 export default function TreeScreen() {
   const insets = useSafeAreaInsets();
+  const { mode, apiUrl, dataRevision } = useStorage();
   const params = useLocalSearchParams<{ familyCode?: string }>();
   const [code, setCode] = useState(params.familyCode ?? DEFAULT_FAMILY_CODE);
   const [loadedCode, setLoadedCode] = useState(code);
 
   const uri = useMemo(() => {
-    const base = getApiBaseUrl();
-    return `${base}/tree/${encodeURIComponent(loadedCode)}`;
-  }, [loadedCode]);
+    return `${apiUrl}/tree/${encodeURIComponent(loadedCode)}`;
+  }, [apiUrl, loadedCode]);
+
+  const isLocal = mode === "local";
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.toolbar}>
+        <Text style={styles.mode}>
+          {isLocal ? "📱 Local SQLite (this device)" : "☁️ Online (PostgreSQL API)"}
+        </Text>
         <Text style={styles.label}>Family code</Text>
         <TextInput
           style={styles.input}
@@ -36,20 +42,31 @@ export default function TreeScreen() {
           onSubmitEditing={() => setLoadedCode(code.trim())}
           returnKeyType="go"
         />
-        <Text style={styles.hint}>Pan, pinch, and tap nodes in the web tree view.</Text>
+        <Text style={styles.hint}>
+          {isLocal
+            ? "Family structure stored in your on-device database."
+            : "Interactive graph from the web app (pan, pinch, tap)."}
+        </Text>
       </View>
-      <WebView
-        source={{ uri }}
-        style={styles.webview}
-        startInLoadingState
-        renderLoading={() => (
-          <View style={styles.loading}>
-            <ActivityIndicator size="large" color="#4f46e5" />
-          </View>
-        )}
-        allowsBackForwardNavigationGestures
-        setSupportMultipleWindows={false}
-      />
+      {isLocal ? (
+        <LocalFamilyTree
+          key={`${loadedCode}-${dataRevision}`}
+          familyCode={loadedCode.trim()}
+        />
+      ) : (
+        <WebView
+          source={{ uri }}
+          style={styles.webview}
+          startInLoadingState
+          renderLoading={() => (
+            <View style={styles.loading}>
+              <ActivityIndicator size="large" color="#4f46e5" />
+            </View>
+          )}
+          allowsBackForwardNavigationGestures
+          setSupportMultipleWindows={false}
+        />
+      )}
     </View>
   );
 }
@@ -63,6 +80,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e4e4e7",
   },
+  mode: { fontSize: 12, fontWeight: "600", color: "#4f46e5", marginBottom: 6 },
   label: { fontSize: 11, color: "#71717a", marginBottom: 4 },
   input: {
     borderWidth: 1,

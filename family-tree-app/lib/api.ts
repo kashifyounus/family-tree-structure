@@ -1,8 +1,25 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 
 const TOKEN_KEY = "mughals_auth_token";
+const API_URL_KEY = "mughals_api_base_url";
+
+let apiUrlOverride: string | null = null;
+
+export async function loadApiUrlOverride(): Promise<string | null> {
+  apiUrlOverride = await AsyncStorage.getItem(API_URL_KEY);
+  return apiUrlOverride;
+}
+
+export async function saveApiUrlOverride(url: string): Promise<void> {
+  apiUrlOverride = url;
+  await AsyncStorage.setItem(API_URL_KEY, url);
+}
 
 export function getApiBaseUrl(): string {
+  if (apiUrlOverride) {
+    return apiUrlOverride.replace(/\/$/, "");
+  }
   const url = process.env.EXPO_PUBLIC_API_URL;
   if (!url) {
     return "http://localhost:3000";

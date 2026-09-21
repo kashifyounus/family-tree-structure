@@ -14,9 +14,10 @@ export default function HomeScreen() {
       <Text style={styles.title}>{APP_NAME}</Text>
       <Text style={styles.meta}>v{APP_VERSION} · {APP_OWNER}</Text>
       <Text style={styles.body}>
-        Mobile companion for the Mughal family tree. Browse members, open the
-        interactive tree, and sign in to manage records (same roles as the web
-        dashboard).
+        Use local SQLite on this phone for private offline records, or switch
+        to Online in Account to sync with the shared PostgreSQL database via
+        API. Browse members, view the tree, and manage local data without an
+        internet connection.
       </Text>
       <Link href="/(tabs)/tree" asChild>
         <Pressable style={styles.primaryBtn}>
