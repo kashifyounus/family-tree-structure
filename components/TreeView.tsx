@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { APP_NAME } from "@/lib/appMeta";
 import { useRouter } from "next/navigation";
 import { getFamilyGraph, getPersonDetails } from "@/actions/familyTree";
 import type { FamilyGraph, PersonDetails } from "@/types/family";
@@ -31,6 +32,14 @@ export function TreeView({
   const [drawerOpen, setDrawerOpen] = useState(true);
   const [, startTransition] = useTransition();
 
+  useEffect(() => {
+    const narrow = window.matchMedia("(max-width: 1023px)");
+    const apply = () => setDrawerOpen(!narrow.matches);
+    apply();
+    narrow.addEventListener("change", apply);
+    return () => narrow.removeEventListener("change", apply);
+  }, []);
+
   const canEdit = canEditTree(session.role);
 
   const refreshTree = useCallback(() => {
@@ -58,12 +67,12 @@ export function TreeView({
   );
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col gap-3 p-4 lg:flex-row">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col gap-3 p-3 sm:p-4 lg:flex-row">
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-              Kinship Graph
+            <h1 className="text-lg font-semibold text-zinc-900 sm:text-xl dark:text-zinc-50">
+              {APP_NAME}
             </h1>
             <p className="text-sm text-zinc-500">
               Focal member:{" "}
@@ -80,7 +89,7 @@ export function TreeView({
             onSessionChange={() => router.refresh()}
           />
         </div>
-        <div className="min-h-[320px] flex-1">
+        <div className="min-h-[45dvh] flex-1 sm:min-h-[320px]">
           <TreeCanvas
             graph={graph}
             onSelectPerson={focusPerson}
@@ -89,13 +98,15 @@ export function TreeView({
         </div>
       </div>
       <div className="flex w-full shrink-0 flex-col gap-3 lg:w-80">
-        <RelationshipCalculator focalPersonId={details.person.id} />
+        <div className="hidden lg:block">
+          <RelationshipCalculator focalPersonId={details.person.id} />
+        </div>
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium lg:hidden dark:border-zinc-700"
+          className="rounded-lg border border-zinc-200 px-3 py-2.5 text-sm font-medium touch-manipulation lg:hidden dark:border-zinc-700"
         >
-          Open profile drawer
+          Open member profile
         </button>
       </div>
       <PersonDrawer

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { APP_NAME } from "@/lib/appMeta";
 import {
   getFamilyGraph,
   getPersonDetailsByFamilyCode,
@@ -27,11 +28,11 @@ export default async function TreePage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-black">
-      <nav className="flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-950">
+      <nav className="flex min-h-14 flex-wrap items-center justify-between gap-2 border-b border-zinc-200 bg-white px-3 py-2 sm:px-4 dark:border-zinc-800 dark:bg-zinc-950">
         <Link href="/" className="text-sm font-semibold text-indigo-600">
-          ← Kinship Graph
+          ← {APP_NAME}
         </Link>
-        <div className="flex items-center gap-3 text-xs text-zinc-500">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 sm:gap-3">
           <Link
             href="/dashboard"
             className="font-medium text-indigo-600 hover:underline"
@@ -44,7 +45,7 @@ export default async function TreePage({ params }: PageProps) {
           >
             Reports
           </Link>
-          <span>Pan · zoom · tap nodes</span>
+          <span className="hidden sm:inline">Pan · pinch · tap nodes</span>
         </div>
       </nav>
       <TreeView

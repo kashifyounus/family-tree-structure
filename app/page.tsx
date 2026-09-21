@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
 import { SearchBar } from "@/components/SearchBar";
+import { APP_NAME, APP_OWNER, APP_TAGLINE, APP_VERSION } from "@/lib/appMeta";
+import { prisma } from "@/lib/prisma";
 
 export default async function HomePage() {
   let sampleCode: string | null = null;
@@ -14,18 +15,16 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-indigo-50 to-white dark:from-zinc-950 dark:to-black">
-      <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center">
+    <main className="min-h-full bg-gradient-to-b from-indigo-50 to-white dark:from-zinc-950 dark:to-black">
+      <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-10 text-center sm:py-16">
         <p className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200">
-          Modern family tree
+          v{APP_VERSION} · {APP_OWNER}
         </p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl">
-          Kinship Graph
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-5xl">
+          {APP_NAME}
         </h1>
-        <p className="mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-400">
-          Polygamy-aware unions, half-siblings, and automatically computed
-          paternal and maternal aunts and uncles — built for large, complex
-          families.
+        <p className="mt-4 max-w-xl text-base text-zinc-600 dark:text-zinc-400 sm:text-lg">
+          {APP_TAGLINE}
         </p>
 
         <div className="mt-10 flex w-full max-w-md flex-col gap-3">

@@ -1,5 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Noto_Nastaliq_Urdu } from "next/font/google";
+import { AppFooter } from "@/components/AppFooter";
+import { APP_DESCRIPTION, APP_NAME } from "@/lib/appMeta";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,9 +21,19 @@ const notoUrdu = Noto_Nastaliq_Urdu({
 });
 
 export const metadata: Metadata = {
-  title: "Kinship Graph",
-  description:
-    "Modern family tree with polygamy support, union-based children, and computed extended kinship.",
+  title: {
+    default: APP_NAME,
+    template: `%s · ${APP_NAME}`,
+  },
+  description: APP_DESCRIPTION,
+  applicationName: APP_NAME,
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -32,9 +44,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoUrdu.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${notoUrdu.variable} flex min-h-dvh flex-col antialiased`}
       >
-        {children}
+        <div className="flex-1">{children}</div>
+        <AppFooter />
       </body>
     </html>
   );

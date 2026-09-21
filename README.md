@@ -1,6 +1,8 @@
-# Kinship Graph (family-tree-structure)
+# Mughal's Family Tree (family-tree-structure)
 
-Modern family tree web application built with **Next.js 15**, **TypeScript**, **PostgreSQL**, **Prisma**, **Tailwind CSS**, and **React Flow**.
+**Version 1.0.0** · Owner **Kashif Younus** (`kashifyounus@mughals.local`)
+
+Mobile-friendly family tree web application built with **Next.js 15**, **TypeScript**, **PostgreSQL**, **Prisma**, **Tailwind CSS**, and **React Flow**.
 
 ## Features
 
@@ -25,9 +27,11 @@ Open [http://localhost:3000](http://localhost:3000) and use sample code **FAM-10
 
 | Email | Password | Role |
 |-------|----------|------|
-| `viewer@kinship.local` | `viewer` | Read-only (living members masked) |
-| `contributor@kinship.local` | `contributor` | Add/edit spouses, children, profiles |
-| `admin@kinship.local` | `admin` | Full access |
+| `kashifyounus@mughals.local` | `mughal` | Owner / admin |
+| `contributor@mughals.local` | `contributor` | Add/edit spouses, children, profiles |
+| `viewer@mughals.local` | `viewer` | Read-only (living members masked) |
+
+Legacy `@kinship.local` demo accounts remain enabled for older bookmarks.
 
 ## Environment
 

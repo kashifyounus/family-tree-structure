@@ -87,7 +87,7 @@ export function PersonDrawer({
         onClick={onClose}
       />
       <aside
-        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="safe-bottom fixed inset-y-0 right-0 z-50 flex h-[100dvh] w-full max-w-md flex-col border-l border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
         role="dialog"
         aria-labelledby="person-drawer-title"
         data-testid="person-drawer"

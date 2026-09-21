@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_NAME } from "@/lib/appMeta";
 import type { AuthContext } from "@/lib/auth";
 import { canEditTree } from "@/lib/auth";
 import { AuthPanel } from "@/components/AuthPanel";
@@ -29,7 +30,7 @@ export function DashboardShell({
               href="/"
               className="text-xs font-semibold uppercase tracking-wide text-indigo-600"
             >
-              Kinship Graph
+              {APP_NAME}
             </Link>
             <nav className="mt-2 flex flex-wrap gap-3 text-sm">
               <Link

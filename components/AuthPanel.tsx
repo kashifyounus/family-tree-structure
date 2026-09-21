@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { signIn, signOut } from "@/actions/auth";
-import type { AuthContext } from "@/lib/auth";
+import { APP_OWNER_EMAIL } from "@/lib/appMeta";
+import { DEMO_AUTH_HINT, type AuthContext } from "@/lib/auth";
 import { inputClassName } from "@/components/modals/formStyles";
 
 type AuthPanelProps = {
@@ -11,8 +12,8 @@ type AuthPanelProps = {
 };
 
 export function AuthPanel({ session, onSessionChange }: AuthPanelProps) {
-  const [email, setEmail] = useState("contributor@kinship.local");
-  const [password, setPassword] = useState("contributor");
+  const [email, setEmail] = useState(APP_OWNER_EMAIL);
+  const [password, setPassword] = useState("mughal");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -43,7 +44,7 @@ export function AuthPanel({ session, onSessionChange }: AuthPanelProps) {
 
   return (
     <form
-      className="flex flex-wrap items-end gap-2"
+      className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end"
       onSubmit={(e) => {
         e.preventDefault();
         startTransition(async () => {
@@ -87,9 +88,8 @@ export function AuthPanel({ session, onSessionChange }: AuthPanelProps) {
         {isPending ? "…" : "Sign in"}
       </button>
       {error && <p className="w-full text-xs text-red-600">{error}</p>}
-      <p className="w-full text-[10px] text-zinc-500">
-        Demo: viewer@kinship.local / viewer · contributor@kinship.local /
-        contributor · admin@kinship.local / admin
+      <p className="w-full text-[10px] leading-relaxed text-zinc-500">
+        {DEMO_AUTH_HINT}
       </p>
     </form>
   );

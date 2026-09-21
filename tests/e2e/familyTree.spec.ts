@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const FOCAL_CODE = "FAM-10004";
 
-test.describe("Kinship Graph E2E", () => {
+test.describe("Mughal's Family Tree E2E", () => {
   test("tree page loads and drawer shows English, Urdu, and geography", async ({
     page,
   }) => {

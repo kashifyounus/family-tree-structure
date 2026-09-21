@@ -87,8 +87,8 @@ export function MemberAdminPanel({
         <p className="font-semibold">Sign in to manage records</p>
         <p className="mt-2 text-amber-800/90 dark:text-amber-200/90">
           Use the sign-in form above with{" "}
-          <span className="font-mono">contributor@kinship.local</span> /{" "}
-          <span className="font-mono">contributor</span> (or admin) to create,
+          <span className="font-mono">contributor@mughals.local</span> /{" "}
+          <span className="font-mono">contributor</span> (or owner admin) to create,
           update, and delete family members.
         </p>
         <p className="mt-4">
@@ -152,8 +152,8 @@ export function MemberAdminPanel({
         </p>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <table className="min-w-full text-left text-sm">
+      <div className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <table className="min-w-[520px] w-full text-left text-sm">
           <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
             <tr>
               <th className="px-4 py-3">Name</th>

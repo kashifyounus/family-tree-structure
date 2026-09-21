@@ -114,8 +114,8 @@ function TreeCanvasInner({
           Loading branch…
         </div>
       )}
-      <p className="pointer-events-none absolute left-3 top-3 z-10 text-[10px] text-zinc-500">
-        Double-click nodes with ↑/↓ badges to expand
+      <p className="pointer-events-none absolute left-2 top-2 z-10 max-w-[70%] text-[10px] leading-snug text-zinc-500 sm:left-3 sm:top-3">
+        Tap a node for profile · double-tap ↑/↓ to expand
       </p>
       <ReactFlow
         nodes={nodes}
@@ -126,16 +126,22 @@ function TreeCanvasInner({
         onNodeDoubleClick={onNodeDoubleClick}
         nodeTypes={nodeTypes}
         fitView
-        minZoom={0.2}
-        maxZoom={1.5}
+        minZoom={0.15}
+        maxZoom={2}
+        panOnScroll
+        zoomOnPinch
+        zoomOnDoubleClick={false}
         proOptions={{ hideAttribution: true }}
       >
         <Background gap={16} color="#e4e4e7" />
-        <Controls showInteractive={false} />
+        <Controls
+          showInteractive={false}
+          className="!bottom-2 !left-2 scale-90 sm:scale-100"
+        />
         <MiniMap
           pannable
           zoomable
-          className="!bg-white dark:!bg-zinc-900"
+          className="!hidden !bg-white md:!block dark:!bg-zinc-900"
           nodeColor={(n) =>
             (n.data as PersonNodeData).isFocal ? "#6366f1" : "#a1a1aa"
           }

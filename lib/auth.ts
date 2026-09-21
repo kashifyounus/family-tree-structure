@@ -1,3 +1,5 @@
+import { APP_OWNER, APP_OWNER_EMAIL } from "@/lib/appMeta";
+
 export type UserRole = "GUEST" | "VIEWER" | "CONTRIBUTOR" | "ADMIN";
 
 export type AuthContext = {
@@ -13,11 +15,29 @@ const DEMO_USERS: Record<
   string,
   { password: string; role: UserRole; userId: string; displayName: string }
 > = {
+  [APP_OWNER_EMAIL.toLowerCase()]: {
+    password: "mughal",
+    role: "ADMIN",
+    userId: "user-kashif",
+    displayName: APP_OWNER,
+  },
+  "viewer@mughals.local": {
+    password: "viewer",
+    role: "VIEWER",
+    userId: "user-viewer",
+    displayName: "Family Viewer",
+  },
+  "contributor@mughals.local": {
+    password: "contributor",
+    role: "CONTRIBUTOR",
+    userId: "user-contributor",
+    displayName: "Family Contributor",
+  },
   "viewer@kinship.local": {
     password: "viewer",
     role: "VIEWER",
     userId: "user-viewer",
-    displayName: "Tree Viewer",
+    displayName: "Family Viewer",
   },
   "contributor@kinship.local": {
     password: "contributor",
@@ -32,6 +52,9 @@ const DEMO_USERS: Record<
     displayName: "Tree Admin",
   },
 };
+
+export const DEMO_AUTH_HINT =
+  `Owner: ${APP_OWNER_EMAIL} / mughal · contributor@mughals.local / contributor · viewer@mughals.local / viewer`;
 
 export function parseAuthCookie(value: string | undefined): AuthContext | null {
   if (!value) return null;
