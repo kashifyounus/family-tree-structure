@@ -5,3 +5,7 @@ flows:
   - flows/*
 includeTags:
   - smoke
+
+platform:
+  android:
+    disableAnimations: true
