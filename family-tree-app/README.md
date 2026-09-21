@@ -57,7 +57,11 @@ npx expo start
 
 Press `a` for Android emulator or scan QR with Expo Go.
 
-## Build APK (EAS — recommended)
+## Build APK
+
+### Option A — EAS (recommended for sharing)
+
+Requires a free [Expo](https://expo.dev) account.
 
 ```bash
 npm install -g eas-cli
@@ -72,6 +76,29 @@ eas build -p android --profile preview
 ```
 
 When the build finishes, download the **APK** from the Expo dashboard.
+
+### Option B — Local Gradle (no Expo login)
+
+1. Install **Android SDK** (Android Studio or [command-line tools](https://developer.android.com/studio#command-tools)) and set `ANDROID_HOME`.
+2. Set your backend URL (baked into the JS bundle at build time):
+
+```bash
+cp env.example .env
+# edit EXPO_PUBLIC_API_URL — use https://your-site.com or http://YOUR_LAN_IP:3000
+```
+
+3. Build:
+
+```bash
+chmod +x scripts/build-apk-local.sh
+./scripts/build-apk-local.sh
+```
+
+Output: `android/app/build/outputs/apk/release/app-release.apk` (~100 MB universal APK).
+
+**Note:** Release builds use the debug keystore from the generated `android/` project (fine for family testing). For Play Store, configure a release keystore and use EAS or your own signing.
+
+**Online API after install:** You can also change the API URL in the app **Account** tab without rebuilding; local SQLite mode works fully offline.
 
 ## Tech stack
 
