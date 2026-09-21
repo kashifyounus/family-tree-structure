@@ -101,6 +101,7 @@ export default function ToolsScreen() {
               <Text variant="titleMedium">{copy.tools.driveTitle}</Text>
               <Text variant="bodySmall" style={styles.help}>{copy.tools.driveBody}</Text>
               <Button
+                testID="tools-drive-backup"
                 mode="contained"
                 icon="google-drive"
                 loading={driveBusy}
@@ -117,7 +118,12 @@ export default function ToolsScreen() {
               <Text variant="bodySmall" style={styles.help}>
                 {copy.tools.fileBackupBody(localMemberCount)}
               </Text>
-              <Button mode="contained" icon="export" onPress={() => void exportDb()}>
+              <Button
+                testID="tools-export-file"
+                mode="contained"
+                icon="export"
+                onPress={() => void exportDb()}
+              >
                 {copy.tools.exportFile}
               </Button>
               <TextInput

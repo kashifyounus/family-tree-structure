@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
+import { Alert, FlatList, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  Alert,
-  FlatList,
-  Modal,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
+  Button,
+  Card,
+  Dialog,
+  FAB,
+  Portal,
+  Searchbar,
+  SegmentedButtons,
   Text,
   TextInput,
-  View,
-} from "react-native";
-import { useRouter } from "expo-router";
+} from "react-native-paper";
+
 import { copy } from "@/content/businessCopy";
 import { useAuth } from "@/context/AuthContext";
 import { useAppFeedback } from "@/context/ErrorContext";
@@ -24,7 +26,7 @@ export default function MembersScreen() {
   const router = useRouter();
   const { mode, dataRevision, bumpDataRevision } = useStorage();
   const auth = useAuth();
-  const { showError } = useAppFeedback();
+  const { showError, showSuccess } = useAppFeedback();
   const canCreate =
     mode === "local" ||
     (mode === "online" && auth.token && auth.role !== "VIEWER");
@@ -37,19 +39,22 @@ export default function MembersScreen() {
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState<Gender>("MALE");
 
-  const load = useCallback(async (q: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const list = await listMembers(mode, q);
-      setMembers(list);
-    } catch (e) {
-      setError(copy.errors.generic);
-      showError(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [mode, showError]);
+  const load = useCallback(
+    async (q: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const list = await listMembers(mode, q);
+        setMembers(list);
+      } catch (e) {
+        setError(copy.errors.generic);
+        showError(e);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [mode, showError],
+  );
 
   useEffect(() => {
     void load("");
@@ -66,6 +71,7 @@ export default function MembersScreen() {
       setFirstName("");
       setLastName("");
       bumpDataRevision();
+      showSuccess(copy.success.saved);
     } catch (e) {
       showError(e);
     }
@@ -76,9 +82,9 @@ export default function MembersScreen() {
       copy.members.removeTitle,
       copy.members.removeConfirm(`${member.firstName} ${member.lastName}`),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: copy.reports.cancel, style: "cancel" },
         {
-          text: "Delete",
+          text: copy.reports.delete,
           style: "destructive",
           onPress: () => {
             void (async () => {
@@ -96,42 +102,38 @@ export default function MembersScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.modeBanner}>
-        {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
-      </Text>
-      <View style={styles.searchRow}>
-        <TextInput
-          style={styles.input}
+    <View style={styles.root} testID="members-screen">
+      <View style={styles.header}>
+        <Text variant="labelMedium" style={styles.banner}>
+          {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
+        </Text>
+        <Searchbar
+          testID="members-search"
           placeholder={copy.members.searchPlaceholder}
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={() => void load(query)}
-          returnKeyType="search"
+          onIconPress={() => void load(query)}
+          style={styles.search}
         />
-        <Pressable style={styles.searchBtn} onPress={() => void load(query)}>
-          <Text style={styles.searchBtnText}>Go</Text>
-        </Pressable>
       </View>
-      {canCreate && (
-        <Pressable style={styles.addBtn} onPress={() => setCreateOpen(true)}>
-          <Text style={styles.addBtnText}>+ {copy.members.addMember}</Text>
-        </Pressable>
-      )}
-      {loading ? (
-        <ActivityIndicator style={{ marginTop: 24 }} />
+
+      {loading && members.length === 0 ? (
+        <ActivityIndicator style={styles.loader} />
       ) : error ? (
-        <Text style={styles.error}>{error}</Text>
+        <Text variant="bodyMedium" style={styles.error}>{error}</Text>
       ) : (
         <FlatList
+          testID="members-list"
           data={members}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 24 }}
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={() => void load(query)} />
-          }
-          renderItem={({ item }) => (
-            <Pressable
+          contentContainerStyle={styles.listContent}
+          refreshing={loading}
+          onRefresh={() => void load(query)}
+          renderItem={({ item, index }) => (
+            <Card
+              testID={index === 0 ? "members-first-card" : undefined}
+              mode="elevated"
               style={styles.card}
               onPress={() =>
                 router.push({
@@ -143,145 +145,96 @@ export default function MembersScreen() {
                 if (mode === "local") onDelete(item);
               }}
             >
-              <Text style={styles.name}>
-                {item.firstName} {item.lastName}
-              </Text>
-              <Text style={styles.code}>{item.familyCode}</Text>
-              <Text style={styles.meta}>
-                {formatGender(item.gender)}
-                {item.currentCity ? ` · ${item.currentCity}` : ""}
-              </Text>
-              {mode === "local" && (
-                <Text style={styles.longPress}>{copy.members.longPressDelete}</Text>
-              )}
-            </Pressable>
+              <Card.Content>
+                <Text variant="titleMedium">
+                  {item.firstName} {item.lastName}
+                </Text>
+                <Text variant="labelSmall" style={styles.reference}>
+                  {copy.account.memberReference}: {item.familyCode}
+                </Text>
+                <Text variant="bodySmall" style={styles.meta}>
+                  {formatGender(item.gender)}
+                  {item.currentCity ? ` · ${item.currentCity}` : ""}
+                </Text>
+                {mode === "local" && (
+                  <Text variant="labelSmall" style={styles.longPress}>
+                    {copy.members.longPressDelete}
+                  </Text>
+                )}
+              </Card.Content>
+            </Card>
           )}
           ListEmptyComponent={
-            <Text style={styles.empty}>
+            <Text variant="bodyMedium" style={styles.empty}>
               {mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
             </Text>
           }
         />
       )}
 
-      <Modal visible={createOpen} animationType="slide" transparent>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{copy.members.newMemberTitle}</Text>
+      <Portal>
+        <Dialog visible={createOpen} onDismiss={() => setCreateOpen(false)}>
+          <Dialog.Title>{copy.members.newMemberTitle}</Dialog.Title>
+          <Dialog.Content style={styles.dialogContent}>
             <TextInput
-              style={styles.input}
-              placeholder="First name"
+              testID="members-create-first"
+              mode="outlined"
+              label="First name"
               value={firstName}
               onChangeText={setFirstName}
             />
             <TextInput
-              style={styles.input}
-              placeholder="Last name"
+              testID="members-create-last"
+              mode="outlined"
+              label="Last name"
               value={lastName}
               onChangeText={setLastName}
             />
-            <View style={styles.genderRow}>
-              {(["MALE", "FEMALE", "OTHER"] as Gender[]).map((g) => (
-                <Pressable
-                  key={g}
-                  style={[styles.genderChip, gender === g && styles.genderActive]}
-                  onPress={() => setGender(g)}
-                >
-                  <Text style={gender === g ? styles.genderActiveText : undefined}>
-                    {g}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-            <Pressable style={styles.inBtn} onPress={() => void onCreate()}>
-              <Text style={styles.inBtnText}>{copy.members.saveMember}</Text>
-            </Pressable>
-            <Pressable onPress={() => setCreateOpen(false)}>
-              <Text style={styles.cancel}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+            <SegmentedButtons
+              value={gender}
+              onValueChange={(v) => setGender(v as Gender)}
+              buttons={[
+                { value: "MALE", label: copy.gender.MALE },
+                { value: "FEMALE", label: copy.gender.FEMALE },
+                { value: "OTHER", label: copy.gender.OTHER },
+              ]}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setCreateOpen(false)}>{copy.reports.cancel}</Button>
+            <Button testID="members-create-save" mode="contained" onPress={() => void onCreate()}>
+              {copy.members.saveMember}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {canCreate && !createOpen && (
+        <FAB
+          testID="members-add"
+          icon="plus"
+          style={styles.fab}
+          onPress={() => setCreateOpen(true)}
+          label={copy.members.addMember}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#fff" },
-  modeBanner: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#4338ca",
-    marginBottom: 10,
-  },
-  searchRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  searchBtn: {
-    backgroundColor: "#4f46e5",
-    paddingHorizontal: 16,
-    justifyContent: "center",
-    borderRadius: 10,
-  },
-  searchBtnText: { color: "#fff", fontWeight: "600" },
-  addBtn: {
-    backgroundColor: "#eef2ff",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  addBtnText: { color: "#4338ca", fontWeight: "600" },
-  card: {
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    marginBottom: 8,
-    backgroundColor: "#fafafa",
-  },
-  name: { fontSize: 16, fontWeight: "600", color: "#18181b" },
-  code: { fontFamily: "SpaceMono", fontSize: 12, color: "#4f46e5", marginTop: 4 },
-  meta: { fontSize: 12, color: "#71717a", marginTop: 4 },
-  longPress: { fontSize: 10, color: "#a1a1aa", marginTop: 6 },
-  error: { color: "#dc2626", marginTop: 12 },
-  empty: { textAlign: "center", color: "#71717a", marginTop: 24 },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  modalCard: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 12 },
-  genderRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  genderChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-  },
-  genderActive: { backgroundColor: "#4f46e5", borderColor: "#4f46e5" },
-  genderActiveText: { color: "#fff", fontWeight: "600" },
-  inBtn: {
-    backgroundColor: "#4f46e5",
-    padding: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  inBtnText: { color: "#fff", fontWeight: "600" },
-  cancel: { textAlign: "center", marginTop: 12, color: "#71717a" },
+  root: { flex: 1, backgroundColor: "#f8fafc" },
+  header: { padding: 16, paddingBottom: 8, gap: 10 },
+  banner: { color: "#4f46e5" },
+  search: { elevation: 0, backgroundColor: "#fff" },
+  loader: { marginTop: 32 },
+  listContent: { padding: 16, paddingBottom: 88 },
+  card: { marginBottom: 10, borderRadius: 16 },
+  reference: { color: "#4f46e5", marginTop: 4, fontFamily: "SpaceMono" },
+  meta: { color: "#64748b", marginTop: 4 },
+  longPress: { color: "#94a3b8", marginTop: 8 },
+  error: { color: "#b91c1c", padding: 16 },
+  empty: { textAlign: "center", color: "#64748b", marginTop: 32, paddingHorizontal: 16 },
+  dialogContent: { gap: 12 },
+  fab: { position: "absolute", right: 16, bottom: 16 },
 });

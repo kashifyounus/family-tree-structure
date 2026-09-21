@@ -1,0 +1,38 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+---
+# Prerequisite: run 01-onboarding or have a private-archive profile with at least one member
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    text: "Members"
+- extendedWaitUntil:
+    visible:
+      id: members-screen
+    timeout: 10000
+- tapOn:
+    id: members-first-card
+- extendedWaitUntil:
+    visible:
+      id: member-profile-screen
+    timeout: 10000
+- tapOn:
+    id: member-add-spouse
+- tapOn:
+    id: member-spouse-first
+- inputText: "Fatima"
+- tapOn:
+    id: member-spouse-last
+- inputText: "Khan"
+- tapOn:
+    id: member-spouse-save
+- extendedWaitUntil:
+    visible:
+      text: "Marriage:"
+    timeout: 10000
+- assertVisible:
+    text: "Fatima"

@@ -108,6 +108,7 @@ Output: `android/app/build/outputs/apk/release/app-release.apk` (~100 MB unive
 - **Error handling** — `AppError`, global snackbar feedback, root error boundary
 - **Google Drive backup** (Android) — native sign-in + SQLite file upload (`Tools` tab)
 - **Jest** — `npm test` in `family-tree-app`
+- **Maestro** — `npm run test:e2e` (Android UI smoke flows; see `maestro/README.md`)
 
 ## Tech stack
 

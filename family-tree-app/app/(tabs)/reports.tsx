@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
-  ScrollView,
-  StyleSheet,
+  Button,
+  Card,
   Text,
   TextInput,
-  Pressable,
-  View,
-} from "react-native";
+} from "react-native-paper";
 
-import { copy } from "@/content/businessCopy";
 import { SimpleBarChart } from "@/components/SimpleBarChart";
+import { Screen } from "@/components/ui/Screen";
+import { copy } from "@/content/businessCopy";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
+import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
 import { loadReports } from "@/lib/data/personService";
 import { buildLocalReports } from "@/lib/db/localReports";
@@ -20,6 +21,7 @@ import type { OnlineReports } from "@/lib/api";
 
 export default function ReportsScreen() {
   const { mode } = useStorage();
+  const { showError } = useAppFeedback();
   const [code, setCode] = useState(DEFAULT_FAMILY_CODE);
   const [loading, setLoading] = useState(false);
   const [local, setLocal] = useState<LocalReports | null>(null);
@@ -36,62 +38,82 @@ export default function ReportsScreen() {
         setOnline(data);
         setLocal(null);
       }
+    } catch (e) {
+      showError(e);
+      setOnline(null);
     } finally {
       setLoading(false);
     }
-  }, [code, mode]);
+  }, [code, mode, showError]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.banner}>
+    <Screen testID="reports-screen">
+      <Text variant="titleLarge" style={styles.title}>Family insights</Text>
+      <Text variant="labelMedium" style={styles.banner}>
         {mode === "local" ? copy.reports.bannerPrivate : copy.reports.bannerCloud}
       </Text>
+
       {mode === "online" && (
         <View style={styles.row}>
           <TextInput
+            testID="reports-reference-input"
+            mode="outlined"
             style={styles.input}
             value={code}
             onChangeText={setCode}
             placeholder={copy.reports.focalReference}
           />
-          <Pressable style={styles.btn} onPress={() => void load()}>
-            <Text style={styles.btnText}>{copy.reports.loadInsights}</Text>
-          </Pressable>
+          <Button
+            testID="reports-refresh"
+            mode="contained"
+            onPress={() => void load()}
+          >
+            {copy.reports.loadInsights}
+          </Button>
         </View>
       )}
+
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 24 }} />
+        <ActivityIndicator style={styles.loader} />
       ) : mode === "local" && local ? (
-        <>
-          <Text style={styles.stat}>
-            {copy.reports.membersLiving(local.memberCount, local.livingCount)}
-          </Text>
+        <View style={styles.section}>
+          <Card mode="elevated" style={styles.statCard}>
+            <Card.Content>
+              <Text variant="titleMedium">
+                {copy.reports.membersLiving(local.memberCount, local.livingCount)}
+              </Text>
+            </Card.Content>
+          </Card>
           <SimpleBarChart title={copy.reports.chartCity} data={local.cities} />
           <SimpleBarChart title={copy.reports.chartAge} data={local.ages} />
-        </>
+        </View>
       ) : online ? (
-        <>
+        <View style={styles.section}>
           {online.household && (
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Household</Text>
-              <Text>
-                {online.household.wifeCount} spouse union(s) ·{" "}
-                {online.household.totalChildren} children
-              </Text>
-              {online.household.byWife.map((w) => (
-                <Text key={w.wifeName} style={styles.line}>
-                  {w.wifeName}: {w.childrenCount} child(ren)
+            <Card mode="elevated" style={styles.card}>
+              <Card.Content style={styles.cardGap}>
+                <Text variant="titleMedium">{copy.reports.householdTitle}</Text>
+                <Text variant="bodyMedium">
+                  {copy.reports.householdSummary(
+                    online.household.wifeCount,
+                    online.household.totalChildren,
+                  )}
                 </Text>
-              ))}
-            </View>
+                {online.household.byWife.map((w) => (
+                  <Text key={w.wifeName} variant="bodySmall" style={styles.line}>
+                    {copy.reports.householdLine(w.wifeName, w.childrenCount)}
+                  </Text>
+                ))}
+              </Card.Content>
+            </Card>
           )}
           {online.city && (
             <SimpleBarChart
-              title="Current city (network)"
+              title={copy.reports.chartCityCloud}
               data={online.city.currentCity.map((c) => ({
                 label: c.label,
                 count: c.count,
@@ -99,46 +121,27 @@ export default function ReportsScreen() {
             />
           )}
           <SimpleBarChart
-            title="Age groups (network)"
+            title={copy.reports.chartAgeCloud}
             data={online.ages.map((a) => ({ label: a.range, count: a.count }))}
           />
-        </>
+        </View>
       ) : (
-        <Text style={styles.hint}>No report data. Check API URL and family code.</Text>
+        <Text variant="bodyMedium" style={styles.hint}>{copy.reports.noDataCloud}</Text>
       )}
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: { padding: 16, paddingBottom: 32 },
-  banner: { fontSize: 12, fontWeight: "600", color: "#4338ca", marginBottom: 12 },
-  row: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-  },
-  btn: {
-    backgroundColor: "#4f46e5",
-    paddingHorizontal: 16,
-    justifyContent: "center",
-    borderRadius: 8,
-  },
-  btnText: { color: "#fff", fontWeight: "600" },
-  stat: { fontSize: 15, fontWeight: "600", marginBottom: 12 },
-  card: {
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    marginBottom: 12,
-  },
-  cardTitle: { fontWeight: "700", marginBottom: 6 },
-  line: { fontSize: 13, color: "#52525b", marginTop: 4 },
-  hint: { color: "#71717a", marginTop: 16 },
+  title: { marginBottom: 4 },
+  banner: { color: "#4f46e5", marginBottom: 12 },
+  row: { flexDirection: "row", gap: 8, alignItems: "center", marginBottom: 12 },
+  input: { flex: 1 },
+  loader: { marginTop: 24 },
+  section: { gap: 4 },
+  statCard: { borderRadius: 16, marginBottom: 8 },
+  card: { borderRadius: 16, marginBottom: 8 },
+  cardGap: { gap: 6 },
+  line: { color: "#52525b" },
+  hint: { color: "#64748b", marginTop: 16 },
 });

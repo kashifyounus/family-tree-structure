@@ -134,7 +134,11 @@ export default function OnboardingScreen() {
               <Text variant="bodyMedium" style={styles.muted}>
                 {copy.onboarding.welcomeBody}
               </Text>
-              <Button mode="contained" onPress={() => go("mode")}>
+              <Button
+                testID="onboarding-get-started"
+                mode="contained"
+                onPress={() => go("mode")}
+              >
                 {copy.onboarding.getStarted}
               </Button>
             </Card.Content>
@@ -150,6 +154,7 @@ export default function OnboardingScreen() {
               </Text>
               <View style={styles.modeCards}>
                 <Chip
+                  testID="onboarding-choose-private"
                   icon="home-heart"
                   selected={mode === "local"}
                   onPress={() => void onChooseMode("local")}
@@ -179,11 +184,13 @@ export default function OnboardingScreen() {
                 {copy.onboarding.registerBody}
               </Text>
               <TextInput
+                testID="onboarding-display-name"
                 label={copy.onboarding.displayName}
                 value={displayName}
                 onChangeText={setDisplayName}
               />
               <TextInput
+                testID="onboarding-email"
                 label={copy.onboarding.email}
                 value={email}
                 onChangeText={setEmail}
@@ -191,16 +198,27 @@ export default function OnboardingScreen() {
                 keyboardType="email-address"
               />
               <TextInput
+                testID="onboarding-password"
                 label={copy.onboarding.password}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
               />
+              <TextInput
+                testID="onboarding-first-name"
+                label="First name"
+                value={firstName}
+                onChangeText={setFirstName}
+              />
+              <TextInput
+                testID="onboarding-last-name"
+                label="Last name"
+                value={lastName}
+                onChangeText={setLastName}
+              />
               <Text variant="labelLarge" style={styles.section}>
                 {copy.onboarding.startingMember}
               </Text>
-              <TextInput label="First name" value={firstName} onChangeText={setFirstName} />
-              <TextInput label="Last name" value={lastName} onChangeText={setLastName} />
               <SegmentedButtons
                 value={gender}
                 onValueChange={(v) => setGender(v as Gender)}
@@ -210,7 +228,12 @@ export default function OnboardingScreen() {
                   { value: "OTHER", label: copy.gender.OTHER },
                 ]}
               />
-              <Button mode="contained" loading={busy} onPress={() => void onRegisterLocal()}>
+              <Button
+                testID="onboarding-create-profile"
+                mode="contained"
+                loading={busy}
+                onPress={() => void onRegisterLocal()}
+              >
                 {copy.onboarding.createProfile}
               </Button>
               <Button onPress={() => go("mode")}>Back</Button>
@@ -260,7 +283,7 @@ export default function OnboardingScreen() {
               <Text variant="bodyMedium" style={styles.muted}>
                 {copy.onboarding.completeBody}
               </Text>
-              <Button mode="contained" onPress={() => void finish()}>
+              <Button testID="onboarding-enter-app" mode="contained" onPress={() => void finish()}>
                 {copy.onboarding.enterApp}
               </Button>
             </Card.Content>

@@ -185,6 +185,18 @@ export const copy = {
       `${members} members · ${living} recorded as living`,
     chartCity: "Where members live today",
     chartAge: "Age groups",
+    chartCityCloud: "Where members live (family cloud)",
+    chartAgeCloud: "Age groups (family cloud)",
+    householdTitle: "Household overview",
+    householdSummary: (marriages: number, children: number) =>
+      `${marriages} marriage${marriages === 1 ? "" : "s"} recorded · ${children} child${children === 1 ? "" : "ren"}`,
+    householdLine: (name: string, count: number) =>
+      `${name}: ${count} child${count === 1 ? "" : "ren"}`,
+    noDataCloud:
+      "No insights are available yet. Check your family website address, member reference, and sign-in in Account.",
+    searchMembers: "Search",
+    cancel: "Cancel",
+    delete: "Remove",
   },
 
   gender: {

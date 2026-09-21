@@ -1,0 +1,24 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    text: "Tools"
+- extendedWaitUntil:
+    visible:
+      id: tools-screen
+    timeout: 10000
+- assertVisible:
+    text: "Save copy to Google Drive"
+- tapOn:
+    id: tools-export-file
+# Share sheet may appear — flow verifies export action is reachable without crash
+- extendedWaitUntil:
+    visible:
+      id: tools-screen
+    timeout: 8000

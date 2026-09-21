@@ -151,7 +151,11 @@ export default function MemberDetailScreen() {
   };
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      testID="member-profile-screen"
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+    >
       <Text style={styles.name}>
         {m.firstName} {m.lastName}
       </Text>
@@ -168,7 +172,11 @@ export default function MemberDetailScreen() {
               {editing ? copy.profile.cancelEdit : copy.profile.editProfile}
             </Text>
           </Pressable>
-          <Pressable style={styles.btn} onPress={() => setSpouseOpen(true)}>
+          <Pressable
+            testID="member-add-spouse"
+            style={styles.btn}
+            onPress={() => setSpouseOpen(true)}
+          >
             <Text style={styles.btnText}>+ {copy.profile.addSpouse}</Text>
           </Pressable>
           <Pressable style={styles.btn} onPress={() => setChildOpen(true)}>
@@ -247,10 +255,22 @@ export default function MemberDetailScreen() {
         <View style={styles.modalBg}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>{copy.profile.addSpouse}</Text>
-            <TextInput style={styles.input} placeholder="First name" value={spFirst} onChangeText={setSpFirst} />
-            <TextInput style={styles.input} placeholder="Last name" value={spLast} onChangeText={setSpLast} />
-            <Pressable style={styles.primary} onPress={submitSpouse}>
-              <Text style={styles.primaryText}>Save</Text>
+            <TextInput
+              testID="member-spouse-first"
+              style={styles.input}
+              placeholder="First name"
+              value={spFirst}
+              onChangeText={setSpFirst}
+            />
+            <TextInput
+              testID="member-spouse-last"
+              style={styles.input}
+              placeholder="Last name"
+              value={spLast}
+              onChangeText={setSpLast}
+            />
+            <Pressable testID="member-spouse-save" style={styles.primary} onPress={submitSpouse}>
+              <Text style={styles.primaryText}>{copy.profile.saveChanges}</Text>
             </Pressable>
             <Pressable onPress={() => setSpouseOpen(false)}>
               <Text style={styles.cancel}>Cancel</Text>
