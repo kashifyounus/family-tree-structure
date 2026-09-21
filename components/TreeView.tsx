@@ -12,6 +12,7 @@ import { PersonDrawer } from "@/components/PersonDrawer";
 import { SearchBar } from "@/components/SearchBar";
 import { RelationshipCalculator } from "@/components/RelationshipCalculator";
 import { AuthPanel } from "@/components/AuthPanel";
+import { MobileGraphMemberStrip } from "@/components/tree/MobileGraphMemberStrip";
 
 type TreeViewProps = {
   familyCode: string;
@@ -29,15 +30,15 @@ export function TreeView({
   const router = useRouter();
   const [graph, setGraph] = useState(initialGraph);
   const [details, setDetails] = useState<PersonDetails>(initialDetails);
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    const narrow = window.matchMedia("(max-width: 1023px)");
-    const apply = () => setDrawerOpen(!narrow.matches);
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const apply = () => setDrawerOpen(wide.matches);
     apply();
-    narrow.addEventListener("change", apply);
-    return () => narrow.removeEventListener("change", apply);
+    wide.addEventListener("change", apply);
+    return () => wide.removeEventListener("change", apply);
   }, []);
 
   const canEdit = canEditTree(session.role);
@@ -52,63 +53,89 @@ export function TreeView({
     });
   }, [details.person.id, familyCode, router]);
 
-  const focusPerson = useCallback(
-    (personId: string) => {
-      startTransition(async () => {
-        const next = await getPersonDetails(personId);
-        if (!next) return;
-        setDetails(next);
+  const focusPerson = useCallback((personId: string) => {
+    startTransition(async () => {
+      const next = await getPersonDetails(personId);
+      if (!next) return;
+      setDetails(next);
+      const narrow = window.matchMedia("(max-width: 1023px)").matches;
+      if (narrow) {
         setDrawerOpen(true);
-        const g = await getFamilyGraph(next.person.familyCode);
-        if (g) setGraph(g);
-      });
-    },
-    [],
-  );
+      }
+      const g = await getFamilyGraph(next.person.familyCode);
+      if (g) setGraph(g);
+    });
+  }, []);
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col gap-3 p-3 sm:p-4 lg:flex-row">
-      <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-zinc-900 sm:text-xl dark:text-zinc-50">
-              {APP_NAME}
-            </h1>
-            <p className="text-sm text-zinc-500">
-              Focal member:{" "}
-              <span className="font-mono text-indigo-600 dark:text-indigo-400">
-                {familyCode}
-              </span>
-            </p>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.25rem] lg:pb-0">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2 sm:gap-3 sm:p-4 lg:flex-row">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
+          <div className="shrink-0 space-y-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="truncate text-base font-semibold text-zinc-900 sm:text-xl dark:text-zinc-50">
+                  {APP_NAME}
+                </h1>
+                <p className="text-xs text-zinc-500 sm:text-sm">
+                  Focal{" "}
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                    {familyCode}
+                  </span>
+                </p>
+              </div>
+              <SearchBar className="w-full sm:max-w-md" />
+            </div>
+            <details className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
+              <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-zinc-700 touch-manipulation dark:text-zinc-300">
+                Account & sign-in
+              </summary>
+              <div className="border-t border-zinc-100 px-3 py-2 dark:border-zinc-800">
+                <AuthPanel
+                  session={session}
+                  onSessionChange={() => router.refresh()}
+                />
+              </div>
+            </details>
+            <div className="hidden rounded-xl border border-zinc-200 bg-white p-3 lg:block dark:border-zinc-800 dark:bg-zinc-950">
+              <AuthPanel
+                session={session}
+                onSessionChange={() => router.refresh()}
+              />
+            </div>
           </div>
-          <SearchBar className="w-full sm:max-w-md" />
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950">
-          <AuthPanel
-            session={session}
-            onSessionChange={() => router.refresh()}
-          />
-        </div>
-        <div className="min-h-[45dvh] flex-1 sm:min-h-[320px]">
-          <TreeCanvas
+
+          <div className="relative min-h-0 flex-1">
+            <TreeCanvas
+              graph={graph}
+              onSelectPerson={focusPerson}
+              onGraphChange={setGraph}
+            />
+          </div>
+
+          <MobileGraphMemberStrip
             graph={graph}
-            onSelectPerson={focusPerson}
-            onGraphChange={setGraph}
+            selectedId={details.person.id}
+            onSelect={focusPerson}
           />
         </div>
-      </div>
-      <div className="flex w-full shrink-0 flex-col gap-3 lg:w-80">
-        <div className="hidden lg:block">
+
+        <div className="hidden w-80 shrink-0 flex-col gap-3 lg:flex">
           <RelationshipCalculator focalPersonId={details.person.id} />
         </div>
+      </div>
+
+      <div className="safe-bottom fixed bottom-0 left-0 right-0 z-30 flex gap-2 border-t border-zinc-200 bg-white/95 p-2 backdrop-blur lg:hidden dark:border-zinc-800 dark:bg-zinc-950/95">
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="rounded-lg border border-zinc-200 px-3 py-2.5 text-sm font-medium touch-manipulation lg:hidden dark:border-zinc-700"
+          className="flex-1 rounded-xl bg-indigo-600 px-3 py-3 text-sm font-semibold text-white touch-manipulation"
+          data-testid="mobile-open-profile"
         >
-          Open member profile
+          {details.person.firstName} · Profile
         </button>
       </div>
+
       <PersonDrawer
         details={details}
         open={drawerOpen}

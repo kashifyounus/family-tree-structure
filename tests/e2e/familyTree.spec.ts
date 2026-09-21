@@ -39,6 +39,17 @@ test.describe("Mughal's Family Tree E2E", () => {
     });
   });
 
+  test("mobile viewport shows tree nodes and member strip", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/tree/${FOCAL_CODE}`);
+    await expect(page.getByTestId("tree-canvas")).toBeVisible();
+    await expect(page.locator(".react-flow__node").first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByTestId("mobile-member-strip")).toBeVisible();
+    await expect(page.getByTestId("mobile-open-profile")).toBeVisible();
+  });
+
   test("contributor sign-in reveals mutation actions in drawer", async ({
     page,
     context,

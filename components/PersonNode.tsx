@@ -12,6 +12,7 @@ export type PersonNodeData = {
   isDeceased?: boolean;
   hasUnexpandedParents?: boolean;
   hasUnexpandedChildren?: boolean;
+  onExpandBranch?: (direction: "up" | "down" | "both") => void;
 };
 
 export function PersonNode({
@@ -26,7 +27,7 @@ export function PersonNode({
   return (
     <div
       className={clsx(
-        "min-w-[140px] rounded-xl border-2 bg-white px-3 py-2 shadow-md transition-shadow dark:bg-zinc-900",
+        "min-w-[120px] max-w-[160px] rounded-xl border-2 bg-white px-2.5 py-2 shadow-md transition-shadow sm:min-w-[140px] dark:bg-zinc-900",
         nodeData.isFocal
           ? "border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-900"
           : "border-zinc-200 dark:border-zinc-700",
@@ -66,20 +67,30 @@ export function PersonNode({
           </span>
         )}
         {nodeData.hasUnexpandedParents && (
-          <span
-            className="inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200"
-            title="Double-click to load more ancestors"
+          <button
+            type="button"
+            className="touch-manipulation rounded bg-amber-100 px-2 py-1 text-[9px] font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200"
+            title="Load more ancestors"
+            onClick={(e) => {
+              e.stopPropagation();
+              nodeData.onExpandBranch?.("up");
+            }}
           >
-            ↑ More
-          </span>
+            ↑ Ancestors
+          </button>
         )}
         {nodeData.hasUnexpandedChildren && (
-          <span
-            className="inline-block rounded bg-sky-100 px-1.5 py-0.5 text-[9px] font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-200"
-            title="Double-click to load more descendants"
+          <button
+            type="button"
+            className="touch-manipulation rounded bg-sky-100 px-2 py-1 text-[9px] font-medium text-sky-800 dark:bg-sky-950 dark:text-sky-200"
+            title="Load more descendants"
+            onClick={(e) => {
+              e.stopPropagation();
+              nodeData.onExpandBranch?.("down");
+            }}
           >
-            ↓ More
-          </span>
+            ↓ Descendants
+          </button>
         )}
       </div>
       <Handle type="source" position={Position.Bottom} className="!bg-indigo-400" />

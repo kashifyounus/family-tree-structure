@@ -32,6 +32,27 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+body:has(.tree-shell) footer {
+  display: none;
+}
+
+body:has(.tree-shell) > div.flex-1 {
+  min-height: 100dvh;
+}
+
+.tree-canvas-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  touch-action: none;
+}
+
+.tree-canvas-host .react-flow {
+  width: 100%;
+  height: 100%;
+}
+
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .safe-bottom {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));

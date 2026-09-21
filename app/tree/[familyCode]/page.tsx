@@ -27,8 +27,8 @@ export default async function TreePage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-100 dark:bg-black">
-      <nav className="flex min-h-14 flex-wrap items-center justify-between gap-2 border-b border-zinc-200 bg-white px-3 py-2 sm:px-4 dark:border-zinc-800 dark:bg-zinc-950">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-100 dark:bg-black">
+      <nav className="z-20 flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-zinc-200 bg-white px-3 py-2 sm:px-4 dark:border-zinc-800 dark:bg-zinc-950">
         <Link href="/" className="text-sm font-semibold text-indigo-600">
           ← {APP_NAME}
         </Link>
