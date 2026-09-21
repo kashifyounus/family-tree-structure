@@ -13,6 +13,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { RelationshipCalculator } from "@/components/RelationshipCalculator";
 import { AuthPanel } from "@/components/AuthPanel";
 import { MobileGraphMemberStrip } from "@/components/tree/MobileGraphMemberStrip";
+import { MobileTreeListPanel } from "@/components/tree/MobileTreeListPanel";
+import { TreeCanvasContainer } from "@/components/tree/TreeCanvasContainer";
 
 type TreeViewProps = {
   familyCode: string;
@@ -20,6 +22,8 @@ type TreeViewProps = {
   initialDetails: PersonDetails;
   session: AuthContext;
 };
+
+type MobileTreeMode = "graph" | "list";
 
 export function TreeView({
   familyCode,
@@ -31,6 +35,7 @@ export function TreeView({
   const [graph, setGraph] = useState(initialGraph);
   const [details, setDetails] = useState<PersonDetails>(initialDetails);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileMode, setMobileMode] = useState<MobileTreeMode>("graph");
   const [, startTransition] = useTransition();
 
   useEffect(() => {
@@ -68,9 +73,9 @@ export function TreeView({
   }, []);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[4.25rem] lg:pb-0">
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2 sm:gap-3 sm:p-4 lg:flex-row">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden pb-[4.25rem] lg:pb-0">
+      <div className="flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2 sm:gap-3 sm:p-4 lg:flex-row">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3">
           <div className="shrink-0 space-y-2">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
@@ -86,6 +91,34 @@ export function TreeView({
               </div>
               <SearchBar className="w-full sm:max-w-md" />
             </div>
+
+            <div className="flex gap-2 lg:hidden">
+              <button
+                type="button"
+                onClick={() => setMobileMode("graph")}
+                className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold touch-manipulation ${
+                  mobileMode === "graph"
+                    ? "bg-indigo-600 text-white"
+                    : "border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900"
+                }`}
+                data-testid="mobile-tree-mode-graph"
+              >
+                Graph
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileMode("list")}
+                className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold touch-manipulation ${
+                  mobileMode === "list"
+                    ? "bg-indigo-600 text-white"
+                    : "border border-zinc-200 bg-white text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900"
+                }`}
+                data-testid="mobile-tree-mode-list"
+              >
+                List
+              </button>
+            </div>
+
             <details className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
               <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-zinc-700 touch-manipulation dark:text-zinc-300">
                 Account & sign-in
@@ -105,19 +138,32 @@ export function TreeView({
             </div>
           </div>
 
-          <div className="relative min-h-0 flex-1">
-            <TreeCanvas
+          {mobileMode === "list" ? (
+            <MobileTreeListPanel
               graph={graph}
-              onSelectPerson={focusPerson}
-              onGraphChange={setGraph}
+              selectedId={details.person.id}
+              onSelect={focusPerson}
+            />
+          ) : null}
+
+          <div
+            className={`flex min-h-0 flex-1 flex-col overflow-hidden ${
+              mobileMode === "list" ? "hidden lg:flex" : ""
+            }`}
+          >
+            <TreeCanvasContainer>
+              <TreeCanvas
+                graph={graph}
+                onSelectPerson={focusPerson}
+                onGraphChange={setGraph}
+              />
+            </TreeCanvasContainer>
+            <MobileGraphMemberStrip
+              graph={graph}
+              selectedId={details.person.id}
+              onSelect={focusPerson}
             />
           </div>
-
-          <MobileGraphMemberStrip
-            graph={graph}
-            selectedId={details.person.id}
-            onSelect={focusPerson}
-          />
         </div>
 
         <div className="hidden w-80 shrink-0 flex-col gap-3 lg:flex">

@@ -2,6 +2,7 @@
 
 import { useReactFlow } from "@xyflow/react";
 import { useEffect } from "react";
+import { useTreeCanvasSize } from "@/components/tree/TreeCanvasContainer";
 
 type FitViewOnGraphChangeProps = {
   nodeCount: number;
@@ -13,14 +14,25 @@ export function FitViewOnGraphChange({
   padding = 0.2,
 }: FitViewOnGraphChangeProps) {
   const { fitView } = useReactFlow();
+  const canvasSize = useTreeCanvasSize();
+  const sizeKey = canvasSize
+    ? `${canvasSize.width}x${canvasSize.height}`
+    : "pending";
 
   useEffect(() => {
     if (nodeCount === 0) return;
-    const id = requestAnimationFrame(() => {
-      fitView({ padding, duration: 200, maxZoom: 1.15, minZoom: 0.12 });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [nodeCount, padding, fitView]);
+    if (canvasSize && canvasSize.height < 50) return;
+    const run = () =>
+      fitView({ padding, duration: 200, maxZoom: 1.1, minZoom: 0.1 });
+    const id = requestAnimationFrame(run);
+    const t1 = window.setTimeout(run, 150);
+    const t2 = window.setTimeout(run, 600);
+    return () => {
+      cancelAnimationFrame(id);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [nodeCount, padding, fitView, sizeKey, canvasSize]);
 
   useEffect(() => {
     const onResize = () => {
