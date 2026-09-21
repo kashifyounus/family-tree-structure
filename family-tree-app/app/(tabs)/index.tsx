@@ -1,7 +1,7 @@
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, Card, Text } from "react-native-paper";
+import { Button, Card, Text, useTheme } from "react-native-paper";
 
 import { BrandLogo } from "@/components/BrandLogo";
 import { Screen } from "@/components/ui/Screen";
@@ -17,6 +17,7 @@ import {
 } from "@/constants/appMeta";
 
 export default function HomeScreen() {
+  const theme = useTheme();
   const { mode, localMemberCount } = useStorage();
   const localAccount = useLocalAccount();
   const [living, setLiving] = useState(0);
@@ -35,10 +36,12 @@ export default function HomeScreen() {
   return (
     <Screen testID="home-screen">
       <BrandLogo size={72} />
-      <Text variant="bodyMedium" style={styles.meta}>
+      <Text variant="bodyMedium" style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}>
         v{APP_VERSION} · {APP_OWNER}
       </Text>
-      <Text variant="bodyMedium" style={styles.tagline}>{copy.app.tagline}</Text>
+      <Text variant="bodyMedium" style={{ textAlign: "center", lineHeight: 22, color: theme.colors.onSurface, marginVertical: 12 }}>
+        {copy.app.tagline}
+      </Text>
       {localAccount.session && mode === "local" && (
         <Card mode="elevated" style={styles.card}>
           <Card.Content>
@@ -74,7 +77,7 @@ export default function HomeScreen() {
         </Link>
       </View>
       {mode === "local" && (
-        <Text variant="bodySmall" style={styles.stats}>
+        <Text variant="bodySmall" style={{ marginTop: 16, color: theme.colors.onSurfaceVariant, textAlign: "center" }}>
           {copy.home.statsPrivate(localMemberCount, living)}
         </Text>
       )}
@@ -83,14 +86,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  meta: { textAlign: "center", color: "#64748b" },
-  tagline: {
-    textAlign: "center",
-    lineHeight: 22,
-    color: "#475569",
-    marginVertical: 12,
-  },
   card: { borderRadius: 16 },
   actions: { gap: 10, marginTop: 8 },
-  stats: { marginTop: 16, color: "#64748b", textAlign: "center" },
 });

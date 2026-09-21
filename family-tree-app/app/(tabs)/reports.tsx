@@ -5,10 +5,12 @@ import {
   Button,
   Card,
   Text,
-  TextInput,
+  useTheme,
 } from "react-native-paper";
 
 import { SimpleBarChart } from "@/components/SimpleBarChart";
+import { FormTextInput } from "@/components/ui/FormTextInput";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
@@ -20,6 +22,7 @@ import type { LocalReports } from "@/lib/data/types";
 import type { OnlineReports } from "@/lib/api";
 
 export default function ReportsScreen() {
+  const theme = useTheme();
   const { mode } = useStorage();
   const { showError } = useAppFeedback();
   const [code, setCode] = useState(DEFAULT_FAMILY_CODE);
@@ -51,26 +54,27 @@ export default function ReportsScreen() {
   }, [load]);
 
   return (
-    <Screen testID="reports-screen">
-      <Text variant="titleLarge" style={styles.title}>Family insights</Text>
-      <Text variant="labelMedium" style={styles.banner}>
-        {mode === "local" ? copy.reports.bannerPrivate : copy.reports.bannerCloud}
-      </Text>
+    <Screen testID="reports-screen" keyboardAvoiding>
+      <PageHeader
+        title={copy.reports.screenTitle}
+        subtitle={mode === "local" ? copy.reports.bannerPrivate : copy.reports.bannerCloud}
+      />
 
       {mode === "online" && (
         <View style={styles.row}>
-          <TextInput
+          <FormTextInput
             testID="reports-reference-input"
-            mode="outlined"
             style={styles.input}
+            label={copy.reports.focalReference}
             value={code}
             onChangeText={setCode}
-            placeholder={copy.reports.focalReference}
+            autoCapitalize="characters"
           />
           <Button
             testID="reports-refresh"
             mode="contained"
             onPress={() => void load()}
+            style={styles.refreshBtn}
           >
             {copy.reports.loadInsights}
           </Button>
@@ -83,7 +87,7 @@ export default function ReportsScreen() {
         <View style={styles.section}>
           <Card mode="elevated" style={styles.statCard}>
             <Card.Content>
-              <Text variant="titleMedium">
+              <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
                 {copy.reports.membersLiving(local.memberCount, local.livingCount)}
               </Text>
             </Card.Content>
@@ -104,7 +108,7 @@ export default function ReportsScreen() {
                   )}
                 </Text>
                 {online.household.byWife.map((w) => (
-                  <Text key={w.wifeName} variant="bodySmall" style={styles.line}>
+                  <Text key={w.wifeName} variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                     {copy.reports.householdLine(w.wifeName, w.childrenCount)}
                   </Text>
                 ))}
@@ -126,22 +130,21 @@ export default function ReportsScreen() {
           />
         </View>
       ) : (
-        <Text variant="bodyMedium" style={styles.hint}>{copy.reports.noDataCloud}</Text>
+        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+          {copy.reports.noDataCloud}
+        </Text>
       )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { marginBottom: 4 },
-  banner: { color: "#4f46e5", marginBottom: 12 },
-  row: { flexDirection: "row", gap: 8, alignItems: "center", marginBottom: 12 },
+  row: { flexDirection: "row", gap: 8, alignItems: "flex-start", marginBottom: 12 },
   input: { flex: 1 },
+  refreshBtn: { marginTop: 6 },
   loader: { marginTop: 24 },
   section: { gap: 4 },
   statCard: { borderRadius: 16, marginBottom: 8 },
   card: { borderRadius: 16, marginBottom: 8 },
   cardGap: { gap: 6 },
-  line: { color: "#52525b" },
-  hint: { color: "#64748b", marginTop: 16 },
 });

@@ -10,13 +10,14 @@ import {
   ProgressBar,
   SegmentedButtons,
   Text,
-  TextInput,
+  useTheme,
 } from "react-native-paper";
 import Animated, { SlideInRight, SlideOutLeft } from "react-native-reanimated";
 
 import { copy } from "@/content/businessCopy";
 import { BrandLogo } from "@/components/BrandLogo";
 import { AppCard } from "@/components/ui/AppCard";
+import { FormTextInput } from "@/components/ui/FormTextInput";
 import { Screen } from "@/components/ui/Screen";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useLocalAccount } from "@/context/LocalAccountContext";
@@ -30,6 +31,7 @@ type Step = "welcome" | "mode" | "local" | "online" | "done";
 const STEPS: Step[] = ["welcome", "mode", "local", "online", "done"];
 
 export default function OnboardingScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const storage = useStorage();
   const localAccount = useLocalAccount();
@@ -131,7 +133,7 @@ export default function OnboardingScreen() {
           <AppCard>
             <Card.Content style={styles.cardContent}>
               <Text variant="titleLarge">{copy.onboarding.welcomeTitle}</Text>
-              <Text variant="bodyMedium" style={styles.muted}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.welcomeBody}
               </Text>
               <Button
@@ -149,7 +151,7 @@ export default function OnboardingScreen() {
           <AppCard>
             <Card.Content style={styles.cardContent}>
               <Text variant="titleLarge">{copy.onboarding.chooseStorageTitle}</Text>
-              <Text variant="bodyMedium" style={styles.muted}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.chooseStorageBody}
               </Text>
               <View style={styles.modeCards}>
@@ -180,16 +182,16 @@ export default function OnboardingScreen() {
           <AppCard>
             <Card.Content style={styles.cardContent}>
               <Text variant="titleLarge">{copy.onboarding.registerTitle}</Text>
-              <Text variant="bodySmall" style={styles.muted}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.registerBody}
               </Text>
-              <TextInput
+              <FormTextInput
                 testID="onboarding-display-name"
                 label={copy.onboarding.displayName}
                 value={displayName}
                 onChangeText={setDisplayName}
               />
-              <TextInput
+              <FormTextInput
                 testID="onboarding-email"
                 label={copy.onboarding.email}
                 value={email}
@@ -197,20 +199,20 @@ export default function OnboardingScreen() {
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
-              <TextInput
+              <FormTextInput
                 testID="onboarding-password"
                 label={copy.onboarding.password}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
               />
-              <TextInput
+              <FormTextInput
                 testID="onboarding-first-name"
                 label="First name"
                 value={firstName}
                 onChangeText={setFirstName}
               />
-              <TextInput
+              <FormTextInput
                 testID="onboarding-last-name"
                 label="Last name"
                 value={lastName}
@@ -245,21 +247,22 @@ export default function OnboardingScreen() {
           <AppCard>
             <Card.Content style={styles.cardContent}>
               <Text variant="titleLarge">{copy.onboarding.cloudTitle}</Text>
-              <Text variant="bodySmall" style={styles.muted}>{copy.onboarding.cloudBody}</Text>
-              <TextInput
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{copy.onboarding.cloudBody}</Text>
+              <FormTextInput
                 label={copy.account.connectionAddress}
                 value={apiUrl}
                 onChangeText={setApiUrl}
                 autoCapitalize="none"
               />
               <HelperText type="info">https://your-family-site.com</HelperText>
-              <TextInput
+              <FormTextInput
                 label="Email"
                 value={serverEmail}
                 onChangeText={setServerEmail}
                 autoCapitalize="none"
+                keyboardType="email-address"
               />
-              <TextInput
+              <FormTextInput
                 label="Password"
                 value={serverPassword}
                 onChangeText={setServerPassword}
@@ -280,7 +283,7 @@ export default function OnboardingScreen() {
           <AppCard>
             <Card.Content style={styles.cardContent}>
               <Text variant="titleLarge">{copy.onboarding.completeTitle}</Text>
-              <Text variant="bodyMedium" style={styles.muted}>
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.completeBody}
               </Text>
               <Button testID="onboarding-enter-app" mode="contained" onPress={() => void finish()}>
@@ -298,7 +301,6 @@ const styles = StyleSheet.create({
   progress: { marginBottom: 16, borderRadius: 8 },
   step: { marginTop: 8 },
   cardContent: { gap: 12 },
-  muted: { color: "#64748b" },
   modeCards: { gap: 8 },
   chip: { alignSelf: "stretch", justifyContent: "flex-start" },
   section: { marginTop: 4 },

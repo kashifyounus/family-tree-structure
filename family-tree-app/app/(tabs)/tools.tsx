@@ -5,8 +5,10 @@ import {
 import * as Sharing from "expo-sharing";
 import { useState } from "react";
 import { Alert, StyleSheet } from "react-native";
-import { Button, Card, Text, TextInput } from "react-native-paper";
+import { Button, Card, Text, useTheme } from "react-native-paper";
 
+import { FormTextInput } from "@/components/ui/FormTextInput";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
@@ -19,6 +21,7 @@ import {
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
 
 export default function ToolsScreen() {
+  const theme = useTheme();
   const { mode, bumpDataRevision, localMemberCount } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
   const [importText, setImportText] = useState("");
@@ -92,14 +95,14 @@ export default function ToolsScreen() {
 
   return (
     <Screen testID="tools-screen">
-      <Text variant="headlineSmall" style={styles.title}>{copy.tools.title}</Text>
+      <PageHeader title={copy.tools.title} />
 
       {mode === "local" ? (
         <>
           <Card mode="elevated" style={styles.card}>
             <Card.Content style={styles.cardInner}>
               <Text variant="titleMedium">{copy.tools.driveTitle}</Text>
-              <Text variant="bodySmall" style={styles.help}>{copy.tools.driveBody}</Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.driveBody}</Text>
               <Button
                 testID="tools-drive-backup"
                 mode="contained"
@@ -115,7 +118,7 @@ export default function ToolsScreen() {
           <Card mode="elevated" style={styles.card}>
             <Card.Content style={styles.cardInner}>
               <Text variant="titleMedium">{copy.tools.fileBackupTitle}</Text>
-              <Text variant="bodySmall" style={styles.help}>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.tools.fileBackupBody(localMemberCount)}
               </Text>
               <Button
@@ -126,11 +129,10 @@ export default function ToolsScreen() {
               >
                 {copy.tools.exportFile}
               </Button>
-              <TextInput
-                mode="outlined"
+              <FormTextInput
                 multiline
                 numberOfLines={6}
-                placeholder={copy.tools.importPlaceholder}
+                label={copy.tools.importPlaceholder}
                 value={importText}
                 onChangeText={setImportText}
               />
@@ -143,19 +145,11 @@ export default function ToolsScreen() {
           <Card mode="elevated" style={styles.card}>
             <Card.Content style={styles.cardInner}>
               <Text variant="titleMedium">{copy.tools.compareTitle}</Text>
-              <Text variant="bodySmall" style={styles.help}>{copy.tools.compareHint}</Text>
-              <TextInput
-                mode="outlined"
-                label="Person A"
-                value={personA}
-                onChangeText={setPersonA}
-              />
-              <TextInput
-                mode="outlined"
-                label="Person B"
-                value={personB}
-                onChangeText={setPersonB}
-              />
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {copy.tools.compareHint}
+              </Text>
+              <FormTextInput label="Person A" value={personA} onChangeText={setPersonA} />
+              <FormTextInput label="Person B" value={personB} onChangeText={setPersonB} />
               <Button mode="outlined" onPress={relationHint}>
                 {copy.tools.compareButton}
               </Button>
@@ -163,15 +157,13 @@ export default function ToolsScreen() {
           </Card>
         </>
       ) : (
-        <Text variant="bodyMedium" style={styles.help}>{copy.tools.cloudOnly}</Text>
+        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.cloudOnly}</Text>
       )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { marginBottom: 8 },
   card: { marginBottom: 12, borderRadius: 16 },
   cardInner: { gap: 10 },
-  help: { color: "#64748b", lineHeight: 20 },
 });

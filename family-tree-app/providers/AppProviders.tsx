@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { StyleSheet } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -21,22 +22,24 @@ export function AppProviders({ children }: AppProvidersProps) {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <PaperProvider
-        theme={theme}
-        settings={{
-          icon: (props) => <MaterialCommunityIcons {...props} />,
-        }}
-      >
-        <AppErrorBoundary>
-          <ErrorProvider>
-            <StorageProvider>
-              <LocalAccountProvider>
-                <AuthProvider>{children}</AuthProvider>
-              </LocalAccountProvider>
-            </StorageProvider>
-          </ErrorProvider>
-        </AppErrorBoundary>
-      </PaperProvider>
+      <SafeAreaProvider>
+        <PaperProvider
+          theme={theme}
+          settings={{
+            icon: (props) => <MaterialCommunityIcons {...props} />,
+          }}
+        >
+          <AppErrorBoundary>
+            <ErrorProvider>
+              <StorageProvider>
+                <LocalAccountProvider>
+                  <AuthProvider>{children}</AuthProvider>
+                </LocalAccountProvider>
+              </StorageProvider>
+            </ErrorProvider>
+          </AppErrorBoundary>
+        </PaperProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

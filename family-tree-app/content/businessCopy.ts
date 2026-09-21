@@ -177,6 +177,7 @@ export const copy = {
   },
 
   reports: {
+    screenTitle: "Family insights",
     bannerPrivate: "Insights from your private archive on this device",
     bannerCloud: "Insights from your family cloud",
     focalReference: "Member reference for this branch",

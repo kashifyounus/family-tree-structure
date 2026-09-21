@@ -38,11 +38,23 @@ export const darkTheme: MD3Theme = {
   colors: {
     ...MD3DarkTheme.colors,
     primary: "#a5b4fc",
+    onPrimary: "#1e1b4b",
     secondary: "#fdba74",
     tertiary: "#5eead4",
     primaryContainer: "#312e81",
+    onPrimaryContainer: "#e0e7ff",
     background: "#0f172a",
+    onBackground: "#f1f5f9",
     surface: "#1e293b",
+    onSurface: "#f8fafc",
+    onSurfaceVariant: "#cbd5e1",
     surfaceVariant: "#334155",
+    outline: "#64748b",
+    elevation: {
+      ...MD3DarkTheme.colors.elevation,
+      level1: "#1e293b",
+      level2: "#243044",
+      level3: "#2a3549",
+    },
   },
 };

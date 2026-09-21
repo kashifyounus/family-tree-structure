@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, FlatList, StyleSheet, View } from "react-native";
+import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -11,9 +12,10 @@ import {
   Searchbar,
   SegmentedButtons,
   Text,
-  TextInput,
+  useTheme,
 } from "react-native-paper";
 
+import { FormTextInput } from "@/components/ui/FormTextInput";
 import { copy } from "@/content/businessCopy";
 import { useAuth } from "@/context/AuthContext";
 import { useAppFeedback } from "@/context/ErrorContext";
@@ -23,6 +25,9 @@ import { createMember, listMembers, removeMember } from "@/lib/data/memberReposi
 import type { Gender, MemberRecord } from "@/lib/data/types";
 
 export default function MembersScreen() {
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 56 + insets.bottom;
   const router = useRouter();
   const { mode, dataRevision, bumpDataRevision } = useStorage();
   const auth = useAuth();
@@ -101,10 +106,16 @@ export default function MembersScreen() {
     );
   };
 
+  const listBottom = tabBarHeight + 88;
+
   return (
-    <View style={styles.root} testID="members-screen">
+    <KeyboardAvoidingView
+      testID="members-screen"
+      style={[styles.root, { backgroundColor: theme.colors.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <View style={styles.header}>
-        <Text variant="labelMedium" style={styles.banner}>
+        <Text variant="labelLarge" style={{ color: theme.colors.primary }}>
           {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
         </Text>
         <Searchbar
@@ -114,20 +125,29 @@ export default function MembersScreen() {
           onChangeText={setQuery}
           onSubmitEditing={() => void load(query)}
           onIconPress={() => void load(query)}
-          style={styles.search}
+          elevation={1}
+          style={[styles.search, { backgroundColor: theme.colors.surfaceVariant }]}
+          inputStyle={{ color: theme.colors.onSurface }}
+          iconColor={theme.colors.onSurfaceVariant}
+          placeholderTextColor={theme.colors.onSurfaceVariant}
         />
       </View>
 
       {loading && members.length === 0 ? (
         <ActivityIndicator style={styles.loader} />
       ) : error ? (
-        <Text variant="bodyMedium" style={styles.error}>{error}</Text>
+        <Text variant="bodyMedium" style={{ color: theme.colors.error, padding: 16 }}>
+          {error}
+        </Text>
       ) : (
         <FlatList
           testID="members-list"
           data={members}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: listBottom }]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets
           refreshing={loading}
           onRefresh={() => void load(query)}
           renderItem={({ item, index }) => (
@@ -146,18 +166,18 @@ export default function MembersScreen() {
               }}
             >
               <Card.Content>
-                <Text variant="titleMedium">
+                <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
                   {item.firstName} {item.lastName}
                 </Text>
-                <Text variant="labelSmall" style={styles.reference}>
+                <Text variant="labelMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
                   {copy.account.memberReference}: {item.familyCode}
                 </Text>
-                <Text variant="bodySmall" style={styles.meta}>
+                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
                   {formatGender(item.gender)}
                   {item.currentCity ? ` · ${item.currentCity}` : ""}
                 </Text>
                 {mode === "local" && (
-                  <Text variant="labelSmall" style={styles.longPress}>
+                  <Text variant="labelSmall" style={{ color: theme.colors.outline, marginTop: 8 }}>
                     {copy.members.longPressDelete}
                   </Text>
                 )}
@@ -165,7 +185,10 @@ export default function MembersScreen() {
             </Card>
           )}
           ListEmptyComponent={
-            <Text variant="bodyMedium" style={styles.empty}>
+            <Text
+              variant="bodyMedium"
+              style={{ textAlign: "center", color: theme.colors.onSurfaceVariant, marginTop: 32 }}
+            >
               {mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
             </Text>
           }
@@ -175,31 +198,36 @@ export default function MembersScreen() {
       <Portal>
         <Dialog visible={createOpen} onDismiss={() => setCreateOpen(false)}>
           <Dialog.Title>{copy.members.newMemberTitle}</Dialog.Title>
-          <Dialog.Content style={styles.dialogContent}>
-            <TextInput
-              testID="members-create-first"
-              mode="outlined"
-              label="First name"
-              value={firstName}
-              onChangeText={setFirstName}
-            />
-            <TextInput
-              testID="members-create-last"
-              mode="outlined"
-              label="Last name"
-              value={lastName}
-              onChangeText={setLastName}
-            />
-            <SegmentedButtons
-              value={gender}
-              onValueChange={(v) => setGender(v as Gender)}
-              buttons={[
-                { value: "MALE", label: copy.gender.MALE },
-                { value: "FEMALE", label: copy.gender.FEMALE },
-                { value: "OTHER", label: copy.gender.OTHER },
-              ]}
-            />
-          </Dialog.Content>
+          <Dialog.ScrollArea style={styles.dialogScroll}>
+            <View style={styles.dialogContent}>
+              <FormTextInput
+                testID="members-create-first"
+                label="First name"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+              />
+              <FormTextInput
+                testID="members-create-last"
+                label="Last name"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+              />
+              <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+                {copy.onboarding.startingMember}
+              </Text>
+              <SegmentedButtons
+                value={gender}
+                onValueChange={(v) => setGender(v as Gender)}
+                buttons={[
+                  { value: "MALE", label: copy.gender.MALE },
+                  { value: "FEMALE", label: copy.gender.FEMALE },
+                  { value: "OTHER", label: copy.gender.OTHER },
+                ]}
+              />
+            </View>
+          </Dialog.ScrollArea>
           <Dialog.Actions>
             <Button onPress={() => setCreateOpen(false)}>{copy.reports.cancel}</Button>
             <Button testID="members-create-save" mode="contained" onPress={() => void onCreate()}>
@@ -213,28 +241,23 @@ export default function MembersScreen() {
         <FAB
           testID="members-add"
           icon="plus"
-          style={styles.fab}
+          style={[styles.fab, { bottom: tabBarHeight + 16 }]}
           onPress={() => setCreateOpen(true)}
           label={copy.members.addMember}
         />
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#f8fafc" },
-  header: { padding: 16, paddingBottom: 8, gap: 10 },
-  banner: { color: "#4f46e5" },
-  search: { elevation: 0, backgroundColor: "#fff" },
+  root: { flex: 1 },
+  header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, gap: 10 },
+  search: { borderRadius: 12 },
   loader: { marginTop: 32 },
-  listContent: { padding: 16, paddingBottom: 88 },
+  listContent: { paddingHorizontal: 16, paddingTop: 4 },
   card: { marginBottom: 10, borderRadius: 16 },
-  reference: { color: "#4f46e5", marginTop: 4, fontFamily: "SpaceMono" },
-  meta: { color: "#64748b", marginTop: 4 },
-  longPress: { color: "#94a3b8", marginTop: 8 },
-  error: { color: "#b91c1c", padding: 16 },
-  empty: { textAlign: "center", color: "#64748b", marginTop: 32, paddingHorizontal: 16 },
-  dialogContent: { gap: 12 },
-  fab: { position: "absolute", right: 16, bottom: 16 },
+  dialogScroll: { maxHeight: 360, paddingHorizontal: 0 },
+  dialogContent: { gap: 12, paddingHorizontal: 24, paddingVertical: 8 },
+  fab: { position: "absolute", right: 16 },
 });

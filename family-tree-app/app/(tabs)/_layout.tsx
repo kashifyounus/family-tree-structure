@@ -15,9 +15,22 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         headerShown: true,
         headerTitle: APP_NAME,
+        headerTitleStyle: {
+          color: theme.colors.onSurface,
+          fontWeight: "600",
+          fontSize: 17,
+        },
+        headerTintColor: theme.colors.onSurface,
+        headerShadowVisible: false,
         headerStyle: { backgroundColor: theme.colors.surface },
+        sceneStyle: { backgroundColor: theme.colors.background },
         tabBarStyle: Platform.select({
-          android: { paddingBottom: 6, height: 64, backgroundColor: theme.colors.surface },
+          android: {
+            paddingBottom: 6,
+            height: 64,
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.outlineVariant,
+          },
           default: { backgroundColor: theme.colors.surface },
         }),
       }}

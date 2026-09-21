@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Card, Text, useTheme } from "react-native-paper";
 
 import type { ReportBucket } from "@/lib/data/types";
 
@@ -8,47 +9,56 @@ type SimpleBarChartProps = {
 };
 
 export function SimpleBarChart({ title, data }: SimpleBarChartProps) {
+  const theme = useTheme();
   const max = Math.max(...data.map((d) => d.count), 1);
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.title}>{title}</Text>
-      {data.map((row) => (
-        <View key={row.label} style={styles.row}>
-          <Text style={styles.label} numberOfLines={1}>
-            {row.label}
-          </Text>
-          <View style={styles.barTrack}>
+    <Card mode="elevated" style={styles.card}>
+      <Card.Content>
+        <Text variant="titleMedium" style={{ color: theme.colors.onSurface, marginBottom: 12 }}>
+          {title}
+        </Text>
+        {data.map((row) => (
+          <View key={row.label} style={styles.row}>
+            <Text
+              variant="labelSmall"
+              numberOfLines={1}
+              style={[styles.label, { color: theme.colors.onSurfaceVariant }]}
+            >
+              {row.label}
+            </Text>
             <View
-              style={[styles.barFill, { width: `${(row.count / max) * 100}%` }]}
-            />
+              style={[styles.barTrack, { backgroundColor: theme.colors.surfaceVariant }]}
+            >
+              <View
+                style={[
+                  styles.barFill,
+                  {
+                    width: `${(row.count / max) * 100}%`,
+                    backgroundColor: theme.colors.primary,
+                  },
+                ]}
+              />
+            </View>
+            <Text variant="labelMedium" style={{ color: theme.colors.onSurface, width: 28, textAlign: "right" }}>
+              {row.count}
+            </Text>
           </View>
-          <Text style={styles.count}>{row.count}</Text>
-        </View>
-      ))}
-    </View>
+        ))}
+      </Card.Content>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    marginBottom: 12,
-  },
-  title: { fontWeight: "700", marginBottom: 10, color: "#18181b" },
-  row: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
-  label: { width: 72, fontSize: 11, color: "#52525b" },
+  card: { borderRadius: 16, marginBottom: 12 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
+  label: { width: 76 },
   barTrack: {
     flex: 1,
     height: 10,
-    backgroundColor: "#f4f4f5",
     borderRadius: 5,
     overflow: "hidden",
   },
-  barFill: { height: "100%", backgroundColor: "#6366f1", borderRadius: 5 },
-  count: { width: 24, textAlign: "right", fontSize: 11, fontWeight: "600" },
+  barFill: { height: "100%", borderRadius: 5 },
 });

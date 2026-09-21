@@ -8,6 +8,7 @@ import {
   SegmentedButtons,
   Text,
   TextInput,
+  useTheme,
 } from "react-native-paper";
 
 import { Screen } from "@/components/ui/Screen";
@@ -29,6 +30,7 @@ import { seedLocalDemoFamily } from "@/lib/db/seedLocalDemo";
 import type { StorageMode } from "@/lib/data/types";
 
 export default function AccountScreen() {
+  const theme = useTheme();
   const auth = useAuth();
   const localAccount = useLocalAccount();
   const storage = useStorage();
@@ -70,7 +72,9 @@ export default function AccountScreen() {
 
   return (
     <Screen testID="account-screen">
-      <Text variant="bodySmall" style={styles.version}>App v{APP_VERSION}</Text>
+      <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+        App v{APP_VERSION}
+      </Text>
 
       {storage.mode === "local" && localAccount.session && (
         <Card mode="elevated" style={styles.card}>
@@ -91,7 +95,9 @@ export default function AccountScreen() {
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.gap}>
           <Text variant="titleMedium">{copy.storage.whereRecordsKept}</Text>
-          <Text variant="bodySmall" style={styles.muted}>{copy.storage.privateHelp}</Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+            {copy.storage.privateHelp}
+          </Text>
           <SegmentedButtons
             value={storage.mode}
             onValueChange={(v) => void setMode(v as StorageMode)}
@@ -120,7 +126,7 @@ export default function AccountScreen() {
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.gap}>
           <Text variant="titleMedium">{copy.account.connectionAddress}</Text>
-          <Text variant="bodySmall" style={styles.muted}>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
             {copy.account.connectionAddressHelp}
           </Text>
           <TextInput
@@ -175,7 +181,7 @@ export default function AccountScreen() {
       )}
 
       <Divider style={styles.divider} />
-      <Text variant="bodySmall" style={styles.footer}>
+      <Text variant="bodySmall" style={{ textAlign: "center", color: theme.colors.onSurfaceVariant, marginBottom: 24 }}>
         {APP_OWNER} · {APP_OWNER_EMAIL}
       </Text>
     </Screen>
@@ -184,10 +190,7 @@ export default function AccountScreen() {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  version: { color: "#64748b", marginBottom: 8 },
   card: { borderRadius: 16, marginBottom: 12 },
   gap: { gap: 10 },
-  muted: { color: "#64748b", lineHeight: 20 },
   divider: { marginVertical: 12 },
-  footer: { textAlign: "center", color: "#64748b", marginBottom: 24 },
 });

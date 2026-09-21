@@ -1,17 +1,18 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
+  Button,
+  Card,
+  Dialog,
+  Portal,
   Text,
-  TextInput,
-  View,
-} from "react-native";
+  useTheme,
+} from "react-native-paper";
 
+import { FormTextInput } from "@/components/ui/FormTextInput";
+import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
@@ -27,6 +28,7 @@ import {
 import type { PersonBundle } from "@/lib/data/personService";
 
 export default function MemberDetailScreen() {
+  const theme = useTheme();
   const router = useRouter();
   const { mode, bumpDataRevision } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
@@ -51,10 +53,9 @@ export default function MemberDetailScreen() {
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const data =
-        code
-          ? await loadPersonByCode(mode, String(code))
-          : await loadPersonById(mode, String(personId));
+      const data = code
+        ? await loadPersonByCode(mode, String(code))
+        : await loadPersonById(mode, String(personId));
       setBundle(data);
       if (data) {
         setFirstName(data.member.firstName);
@@ -73,7 +74,7 @@ export default function MemberDetailScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator />
       </View>
     );
@@ -81,8 +82,8 @@ export default function MemberDetailScreen() {
 
   if (!bundle) {
     return (
-      <View style={styles.centered}>
-        <Text>{copy.profile.notFound}</Text>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+        <Text variant="bodyLarge">{copy.profile.notFound}</Text>
       </View>
     );
   }
@@ -129,7 +130,7 @@ export default function MemberDetailScreen() {
   const submitChild = () => {
     const marriages = unionOptions(mode, m.id);
     if (marriages.length === 0) {
-      Alert.alert(copy.profile.addChild, copy.profile.needMarriageFirst);
+      showError(copy.profile.needMarriageFirst);
       return;
     }
     try {
@@ -151,216 +152,184 @@ export default function MemberDetailScreen() {
   };
 
   return (
-    <ScrollView
-      testID="member-profile-screen"
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-    >
-      <Text style={styles.name}>
-        {m.firstName} {m.lastName}
-      </Text>
-      <Text style={styles.code}>{m.familyCode}</Text>
-      {(m.urduFirstName || m.urduLastName) && (
-        <Text style={styles.urdu}>{m.urduFirstName} {m.urduLastName}</Text>
-      )}
-      <Text style={styles.meta}>{formatGender(m.gender)}</Text>
+    <>
+      <Screen testID="member-profile-screen" keyboardAvoiding>
+        <Text variant="headlineMedium" style={{ color: theme.colors.onBackground }}>
+          {m.firstName} {m.lastName}
+        </Text>
+        <Text variant="labelLarge" style={{ color: theme.colors.primary, marginTop: 4 }}>
+          {copy.account.memberReference}: {m.familyCode}
+        </Text>
+        {(m.urduFirstName || m.urduLastName) && (
+          <Text variant="titleMedium" style={{ marginTop: 8, color: theme.colors.onSurface }}>
+            {m.urduFirstName} {m.urduLastName}
+          </Text>
+        )}
+        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 8 }}>
+          {formatGender(m.gender)}
+        </Text>
 
-      {canEditLocal && (
-        <View style={styles.actions}>
-          <Pressable style={styles.btn} onPress={() => setEditing((v) => !v)}>
-            <Text style={styles.btnText}>
+        {canEditLocal && (
+          <View style={styles.actions}>
+            <Button mode="outlined" onPress={() => setEditing((v) => !v)}>
               {editing ? copy.profile.cancelEdit : copy.profile.editProfile}
-            </Text>
-          </Pressable>
-          <Pressable
-            testID="member-add-spouse"
-            style={styles.btn}
-            onPress={() => setSpouseOpen(true)}
-          >
-            <Text style={styles.btnText}>+ {copy.profile.addSpouse}</Text>
-          </Pressable>
-          <Pressable style={styles.btn} onPress={() => setChildOpen(true)}>
-            <Text style={styles.btnText}>+ {copy.profile.addChild}</Text>
-          </Pressable>
-        </View>
-      )}
+            </Button>
+            <Button
+              testID="member-add-spouse"
+              mode="contained-tonal"
+              icon="heart"
+              onPress={() => setSpouseOpen(true)}
+            >
+              {copy.profile.addSpouse}
+            </Button>
+            <Button mode="contained-tonal" icon="baby-carriage" onPress={() => setChildOpen(true)}>
+              {copy.profile.addChild}
+            </Button>
+          </View>
+        )}
 
-      {editing && (
-        <View style={styles.card}>
-          <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} placeholder="First name" />
-          <TextInput style={styles.input} value={lastName} onChangeText={setLastName} placeholder="Last name" />
-          <TextInput style={styles.input} value={city} onChangeText={setCity} placeholder="City" />
-          <TextInput style={styles.input} value={bio} onChangeText={setBio} placeholder="Bio" multiline />
-          <Pressable style={styles.primary} onPress={saveEdit}>
-            <Text style={styles.primaryText}>{copy.profile.saveChanges}</Text>
-          </Pressable>
-        </View>
-      )}
+        {editing && (
+          <Card mode="elevated" style={styles.block}>
+            <Card.Content style={styles.gap}>
+              <FormTextInput label="First name" value={firstName} onChangeText={setFirstName} />
+              <FormTextInput label="Last name" value={lastName} onChangeText={setLastName} />
+              <FormTextInput label="City" value={city} onChangeText={setCity} />
+              <FormTextInput
+                label="Notes"
+                value={bio}
+                onChangeText={setBio}
+                multiline
+                numberOfLines={3}
+              />
+              <Button mode="contained" onPress={saveEdit}>
+                {copy.profile.saveChanges}
+              </Button>
+            </Card.Content>
+          </Card>
+        )}
 
-      <Text style={styles.section}>{copy.profile.marriagesSection}</Text>
-      {bundle.unions.length === 0 ? (
-        <Text style={styles.hint}>{copy.profile.noMarriages}</Text>
-      ) : (
-        bundle.unions.map((u) => (
-          <View key={u.id} style={styles.card}>
-            <Text style={styles.unionTitle}>
-              {copy.tree.marriageTo(u.partner1Name, u.partner2Name)}
+        <Text variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+          {copy.profile.marriagesSection}
+        </Text>
+        {bundle.unions.length === 0 ? (
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            {copy.profile.noMarriages}
+          </Text>
+        ) : (
+          bundle.unions.map((u) => (
+            <Card key={u.id} mode="elevated" style={styles.block}>
+              <Card.Content>
+                <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>
+                  {copy.tree.marriageTo(u.partner1Name, u.partner2Name)}
+                </Text>
+                {u.children.map((c) => (
+                  <Button
+                    key={c.id}
+                    mode="text"
+                    compact
+                    onPress={() =>
+                      router.push({
+                        pathname: "/member/[personId]",
+                        params: { personId: c.id, code: c.familyCode },
+                      })
+                    }
+                    labelStyle={{ textAlign: "left" }}
+                  >
+                    {c.name} ({c.familyCode})
+                  </Button>
+                ))}
+              </Card.Content>
+            </Card>
+          ))
+        )}
+
+        {bundle.onlineDetails?.computed && (
+          <>
+            <Text variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+              {copy.profile.kinshipOnline}
             </Text>
-            {u.children.map((c) => (
-              <Pressable
-                key={c.id}
-                onPress={() =>
-                  router.push({
-                    pathname: "/member/[personId]",
-                    params: { personId: c.id, code: c.familyCode },
-                  })
-                }
-              >
-                <Text style={styles.child}>· {c.name} ({c.familyCode})</Text>
-              </Pressable>
+            {bundle.onlineDetails.computed.fullSiblings?.map((s) => (
+              <Text key={s.familyCode} variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+                {copy.profile.fullSibling(`${s.firstName} ${s.lastName}`)}
+              </Text>
             ))}
-          </View>
-        ))
-      )}
+            {bundle.onlineDetails.computed.halfSiblings?.map((s) => (
+              <Text key={s.familyCode} variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+                {copy.profile.halfSibling(`${s.firstName} ${s.lastName}`)}
+              </Text>
+            ))}
+          </>
+        )}
 
-      {bundle.onlineDetails?.computed && (
-        <>
-          <Text style={styles.section}>{copy.profile.kinshipOnline}</Text>
-          {bundle.onlineDetails.computed.fullSiblings?.map((s) => (
-            <Text key={s.familyCode} style={styles.child}>
-              {copy.profile.fullSibling(`${s.firstName} ${s.lastName}`)}
-            </Text>
-          ))}
-          {bundle.onlineDetails.computed.halfSiblings?.map((s) => (
-            <Text key={s.familyCode} style={styles.child}>
-              {copy.profile.halfSibling(`${s.firstName} ${s.lastName}`)}
-            </Text>
-          ))}
-        </>
-      )}
+        <Button
+          mode="outlined"
+          icon="family-tree"
+          style={styles.treeBtn}
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/tree",
+              params: { familyCode: m.familyCode },
+            })
+          }
+        >
+          {copy.profile.openInTree}
+        </Button>
+      </Screen>
 
-      <Pressable
-        style={styles.secondary}
-        onPress={() =>
-          router.push({
-            pathname: "/(tabs)/tree",
-            params: { familyCode: m.familyCode },
-          })
-        }
-      >
-        <Text style={styles.secondaryText}>{copy.profile.openInTree}</Text>
-      </Pressable>
+      <Portal>
+        <Dialog visible={spouseOpen} onDismiss={() => setSpouseOpen(false)}>
+          <Dialog.Title>{copy.profile.addSpouse}</Dialog.Title>
+          <Dialog.ScrollArea style={styles.dialogScroll}>
+            <View style={styles.dialogInner}>
+              <FormTextInput
+                testID="member-spouse-first"
+                label="First name"
+                value={spFirst}
+                onChangeText={setSpFirst}
+              />
+              <FormTextInput
+                testID="member-spouse-last"
+                label="Last name"
+                value={spLast}
+                onChangeText={setSpLast}
+              />
+            </View>
+          </Dialog.ScrollArea>
+          <Dialog.Actions>
+            <Button onPress={() => setSpouseOpen(false)}>{copy.reports.cancel}</Button>
+            <Button testID="member-spouse-save" mode="contained" onPress={submitSpouse}>
+              {copy.profile.saveChanges}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
 
-      <Modal visible={spouseOpen} animationType="slide" transparent>
-        <View style={styles.modalBg}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{copy.profile.addSpouse}</Text>
-            <TextInput
-              testID="member-spouse-first"
-              style={styles.input}
-              placeholder="First name"
-              value={spFirst}
-              onChangeText={setSpFirst}
-            />
-            <TextInput
-              testID="member-spouse-last"
-              style={styles.input}
-              placeholder="Last name"
-              value={spLast}
-              onChangeText={setSpLast}
-            />
-            <Pressable testID="member-spouse-save" style={styles.primary} onPress={submitSpouse}>
-              <Text style={styles.primaryText}>{copy.profile.saveChanges}</Text>
-            </Pressable>
-            <Pressable onPress={() => setSpouseOpen(false)}>
-              <Text style={styles.cancel}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={childOpen} animationType="slide" transparent>
-        <View style={styles.modalBg}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{copy.profile.addChild}</Text>
-            <TextInput style={styles.input} placeholder="First name" value={chFirst} onChangeText={setChFirst} />
-            <TextInput style={styles.input} placeholder="Last name" value={chLast} onChangeText={setChLast} />
-            <Pressable style={styles.primary} onPress={submitChild}>
-              <Text style={styles.primaryText}>Save</Text>
-            </Pressable>
-            <Pressable onPress={() => setChildOpen(false)}>
-              <Text style={styles.cancel}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        <Dialog visible={childOpen} onDismiss={() => setChildOpen(false)}>
+          <Dialog.Title>{copy.profile.addChild}</Dialog.Title>
+          <Dialog.ScrollArea style={styles.dialogScroll}>
+            <View style={styles.dialogInner}>
+              <FormTextInput label="First name" value={chFirst} onChangeText={setChFirst} />
+              <FormTextInput label="Last name" value={chLast} onChangeText={setChLast} />
+            </View>
+          </Dialog.ScrollArea>
+          <Dialog.Actions>
+            <Button onPress={() => setChildOpen(false)}>{copy.reports.cancel}</Button>
+            <Button mode="contained" onPress={submitChild}>
+              {copy.profile.saveChanges}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: "#fafafa" },
-  content: { padding: 16, paddingBottom: 40 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  name: { fontSize: 24, fontWeight: "700" },
-  code: { fontFamily: "SpaceMono", color: "#4f46e5", marginTop: 4 },
-  urdu: { fontSize: 20, marginTop: 8 },
-  meta: { color: "#71717a", marginTop: 8 },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
-  btn: {
-    backgroundColor: "#eef2ff",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  btnText: { color: "#4338ca", fontWeight: "600", fontSize: 12 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
-    fontSize: 16,
-  },
-  primary: {
-    backgroundColor: "#4f46e5",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  primaryText: { color: "#fff", fontWeight: "600" },
-  section: { marginTop: 20, fontWeight: "700", fontSize: 16 },
-  hint: { color: "#a1a1aa", marginTop: 8 },
-  unionTitle: { fontWeight: "600" },
-  child: { marginTop: 4, color: "#4f46e5" },
-  secondary: {
-    marginTop: 24,
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#c7d2fe",
-    alignItems: "center",
-  },
-  secondaryText: { color: "#4338ca", fontWeight: "600" },
-  modalBg: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-  modalCard: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 12 },
-  cancel: { textAlign: "center", marginTop: 12, color: "#71717a" },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
+  block: { marginTop: 12, borderRadius: 16 },
+  gap: { gap: 10 },
+  section: { marginTop: 20 },
+  treeBtn: { marginTop: 24, marginBottom: 8 },
+  dialogScroll: { maxHeight: 280 },
+  dialogInner: { gap: 12, paddingHorizontal: 24, paddingVertical: 8 },
 });
