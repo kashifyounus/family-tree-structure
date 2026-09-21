@@ -11,6 +11,10 @@ Mobile-friendly family tree web application built with **Next.js 15**, **TypeScr
 - **Focal tree view** — pan/zoom graph with horizontal spouse layout and member detail drawer.
 - **Search** — by family code, name, or birth year.
 
+## Mobile app (Expo / Android)
+
+See [`family-tree-app/README.md`](family-tree-app/README.md) for the React Native client and APK build via EAS.
+
 ## Quick start
 
 ```bash
