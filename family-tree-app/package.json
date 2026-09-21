@@ -52,7 +52,8 @@
     "test:watch": "jest --watch",
     "test:e2e": "maestro test --config maestro/config.yaml maestro/flows",
     "test:e2e:smoke": "maestro test --config maestro/config.yaml maestro/flows --include-tags smoke",
-    "test:android:env": "bash scripts/test-android-env.sh"
+    "test:android:env": "bash scripts/test-android-env.sh",
+    "build:apk": "bash scripts/build-apk-local.sh"
   },
   "private": true
 }

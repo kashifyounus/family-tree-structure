@@ -25,6 +25,16 @@ cd android
 ./gradlew assembleRelease --no-daemon
 
 APK="$ROOT/android/app/build/outputs/apk/release/app-release.apk"
+OUT_NAME="Mughals-Family-Tree-$(node -p "require('./app.json').expo.version")-release.apk"
+DIST="$ROOT/dist"
+mkdir -p "$DIST"
+cp "$APK" "$DIST/$OUT_NAME"
+
 echo ""
 echo "APK: $APK"
-ls -lh "$APK"
+echo "Copy: $DIST/$OUT_NAME"
+ls -lh "$APK" "$DIST/$OUT_NAME"
+echo ""
+echo "Install: adb install -r \"$DIST/$OUT_NAME\""
+echo "Note: Release build uses debug keystore (fine for sideload). Use EAS or a release keystore for Play Store."
+echo "Set EXPO_PUBLIC_API_URL before building if you use Family cloud / online sync."
