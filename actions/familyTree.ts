@@ -28,6 +28,8 @@ import type {
   PersonDetails,
   RelationshipPath,
   SearchResult,
+  CreateStandalonePersonInput,
+  DashboardMember,
   UpdatePersonInput,
   UpdateUnionInput,
 } from "@/types/family";
@@ -349,7 +351,9 @@ export async function searchMembers(query: string): Promise<SearchResult[]> {
   }));
 }
 
-function personCreateFields(data: CreatePersonAndUnionInput) {
+function personCreateFields(
+  data: CreatePersonAndUnionInput | CreateStandalonePersonInput,
+) {
   return {
     title: data.title,
     firstName: data.firstName,
@@ -428,6 +432,7 @@ export async function createPersonAndUnion(
     });
   }
 
+  revalidatePath("/dashboard");
   revalidatePath(`/tree/${related.familyCode}`);
   revalidatePath(`/tree/${familyCode}`);
   revalidatePath(`/tree/${related.familyCode}/reports`);
@@ -479,6 +484,7 @@ export async function updatePerson(
     },
   });
 
+  revalidatePath("/dashboard");
   revalidatePath(`/tree/${existing.familyCode}`);
   revalidatePath(`/tree/${existing.familyCode}/reports`);
   return { familyCode: existing.familyCode };
@@ -534,6 +540,99 @@ export async function getRelationshipBetween(
     from: maskPersonSummary(path.from, viewer),
     to: maskPersonSummary(path.to, viewer),
   };
+}
+
+export async function listMembersForDashboard(
+  query = "",
+  limit = 50,
+): Promise<DashboardMember[]> {
+  const trimmed = query.trim();
+  const people = await prisma.person.findMany({
+    where: trimmed
+      ? {
+          OR: [
+            { familyCode: { contains: trimmed, mode: "insensitive" } },
+            { firstName: { contains: trimmed, mode: "insensitive" } },
+            { lastName: { contains: trimmed, mode: "insensitive" } },
+            { nickname: { contains: trimmed, mode: "insensitive" } },
+            { urduFirstName: { contains: trimmed, mode: "insensitive" } },
+            { urduLastName: { contains: trimmed, mode: "insensitive" } },
+          ],
+        }
+      : undefined,
+    take: limit,
+    orderBy: [{ updatedAt: "desc" }],
+  });
+
+  return people.map((p) => ({
+    id: p.id,
+    familyCode: p.familyCode,
+    firstName: p.firstName,
+    lastName: p.lastName,
+    nickname: p.nickname,
+    urduFirstName: p.urduFirstName,
+    urduLastName: p.urduLastName,
+    birthYear: birthYearFromPerson(p),
+    gender: p.gender,
+    currentCity: p.currentCity,
+    updatedAt: p.updatedAt.toISOString(),
+  }));
+}
+
+export async function createStandalonePerson(
+  data: CreateStandalonePersonInput,
+): Promise<{ personId: string; familyCode: string }> {
+  await requireEditor();
+
+  const familyCode = await uniqueFamilyCode();
+  const newPerson = await prisma.person.create({
+    data: {
+      familyCode,
+      ...personCreateFields(data),
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/tree/${familyCode}`);
+
+  return { personId: newPerson.id, familyCode };
+}
+
+export async function deletePerson(personId: string): Promise<void> {
+  await requireEditor();
+
+  const existing = await prisma.person.findUnique({
+    where: { id: personId },
+    include: {
+      unionsAsPartner1: { include: { children: true } },
+      unionsAsPartner2: { include: { children: true } },
+      childships: true,
+    },
+  });
+  if (!existing) throw new Error("Person not found");
+
+  const unionChildCount =
+    existing.unionsAsPartner1.reduce((n, u) => n + u.children.length, 0) +
+    existing.unionsAsPartner2.reduce((n, u) => n + u.children.length, 0);
+
+  if (unionChildCount > 0) {
+    throw new Error(
+      "Cannot delete: this person is linked to children through a union. Remove or reassign those relationships first.",
+    );
+  }
+
+  if (existing.childships.length > 0) {
+    throw new Error(
+      "Cannot delete: this person is recorded as a child in a union. Remove the child link from the tree first.",
+    );
+  }
+
+  const familyCode = existing.familyCode;
+  await prisma.person.delete({ where: { id: personId } });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/tree/${familyCode}`);
+  revalidatePath(`/tree/${familyCode}/reports`);
 }
 
 export async function listMembersForPicker(): Promise<SearchResult[]> {

@@ -28,8 +28,14 @@ export default async function HomePage() {
           families.
         </p>
 
-        <div className="mt-10 w-full max-w-md">
+        <div className="mt-10 flex w-full max-w-md flex-col gap-3">
           <SearchBar placeholder="Enter family code or name…" />
+          <Link
+            href="/login"
+            className="rounded-xl border border-indigo-200 bg-white px-5 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-50 dark:border-indigo-900 dark:bg-zinc-900 dark:text-indigo-300"
+          >
+            Sign in · Admin dashboard
+          </Link>
         </div>
 
         {sampleCode ? (

@@ -123,6 +123,32 @@ export type SearchResult = {
   birthYear: number | null;
 };
 
+export type DashboardMember = SearchResult & {
+  gender: Gender;
+  currentCity: string | null;
+  updatedAt: string;
+};
+
+export type CreateStandalonePersonInput = {
+  title?: string;
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  urduFirstName?: string;
+  urduLastName?: string;
+  gender: Gender;
+  birthDate?: string;
+  deathDate?: string;
+  photoUrl?: string;
+  bio?: string;
+  occupation?: string;
+  motherTongue?: string;
+  birthPlace?: string;
+  currentCity?: string;
+  permanentCity?: string;
+  homeTown?: string;
+};
+
 export type RelationshipPathStep = {
   fromId: string;
   toId: string;

@@ -30,6 +30,8 @@ export async function signIn(
     maxAge: 60 * 60 * 24 * 7,
   });
   revalidatePath("/", "layout");
+  revalidatePath("/dashboard");
+  revalidatePath("/login");
   return { ok: true };
 }
 
