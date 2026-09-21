@@ -1,6 +1,6 @@
 import * as SQLite from "expo-sqlite";
 
-const DB_NAME = "mughals_family.db";
+export const DB_NAME = "mughals_family.db";
 
 let database: SQLite.SQLiteDatabase | null = null;
 
@@ -56,6 +56,17 @@ CREATE TABLE IF NOT EXISTS children (
 
 CREATE INDEX IF NOT EXISTS idx_persons_family_code ON persons(family_code);
 CREATE INDEX IF NOT EXISTS idx_persons_name ON persons(last_name, first_name);
+
+CREATE TABLE IF NOT EXISTS local_accounts (
+  id TEXT PRIMARY KEY NOT NULL,
+  display_name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  password_hash TEXT NOT NULL,
+  focal_person_id TEXT NOT NULL,
+  focal_family_code TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (focal_person_id) REFERENCES persons(id) ON DELETE CASCADE
+);
 `;
 
 export function getDatabase(): SQLite.SQLiteDatabase {

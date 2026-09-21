@@ -1,12 +1,15 @@
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Button, Card, Text } from "react-native-paper";
 
+import { BrandLogo } from "@/components/BrandLogo";
+import { Screen } from "@/components/ui/Screen";
+import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { buildLocalReports } from "@/lib/db/localReports";
 
 import {
-  APP_NAME,
   APP_OWNER,
   APP_VERSION,
   DEFAULT_FAMILY_CODE,
@@ -14,6 +17,7 @@ import {
 
 export default function HomeScreen() {
   const { mode, localMemberCount } = useStorage();
+  const localAccount = useLocalAccount();
   const [living, setLiving] = useState(0);
 
   useEffect(() => {
@@ -22,94 +26,64 @@ export default function HomeScreen() {
     }
   }, [mode, localMemberCount]);
 
+  const focalCode =
+    mode === "local" && localAccount.session
+      ? localAccount.session.focalFamilyCode
+      : DEFAULT_FAMILY_CODE;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{APP_NAME}</Text>
-      <Text style={styles.meta}>v{APP_VERSION} · {APP_OWNER}</Text>
-      <Text style={styles.body}>
-        Use local SQLite on this phone for private offline records, or switch
-        to Online in Account to sync with the shared PostgreSQL database via
-        API. Browse members, view the tree, and manage local data without an
-        internet connection.
+    <Screen testID="home-screen">
+      <BrandLogo size={72} />
+      <Text variant="bodyMedium" style={styles.meta}>
+        v{APP_VERSION} · {APP_OWNER}
       </Text>
-      <Link href="/(tabs)/tree" asChild>
-        <Pressable style={styles.primaryBtn}>
-          <Text style={styles.primaryBtnText}>Open family tree</Text>
-        </Pressable>
-      </Link>
-      <Link href={`/(tabs)/tree?familyCode=${DEFAULT_FAMILY_CODE}`} asChild>
-        <Pressable style={styles.secondaryBtn}>
-          <Text style={styles.secondaryBtnText}>Demo ({DEFAULT_FAMILY_CODE})</Text>
-        </Pressable>
-      </Link>
-      <Link href="/(tabs)/members" asChild>
-        <Pressable style={styles.secondaryBtn}>
-          <Text style={styles.secondaryBtnText}>Member directory</Text>
-        </Pressable>
-      </Link>
+      {localAccount.session && mode === "local" && (
+        <Card mode="elevated" style={styles.card}>
+          <Card.Content>
+            <Text variant="titleMedium">Hello, {localAccount.session.displayName}</Text>
+            <Text variant="bodySmall">Your code: {localAccount.session.focalFamilyCode}</Text>
+          </Card.Content>
+        </Card>
+      )}
+      <Text variant="bodyLarge" style={styles.body}>
+        Explore members, immersive tree view, analytics, and secure backups — designed
+        for professional family record keeping.
+      </Text>
+      <View style={styles.actions}>
+        <Link href="/(tabs)/tree" asChild>
+          <Button mode="contained" icon="family-tree">
+            Open family tree
+          </Button>
+        </Link>
+        <Link href={`/(tabs)/tree?familyCode=${focalCode}`} asChild>
+          <Button mode="outlined" icon="account-group">
+            My focal branch
+          </Button>
+        </Link>
+        <Link href="/(tabs)/members" asChild>
+          <Button mode="outlined" icon="account-multiple">
+            Member directory
+          </Button>
+        </Link>
+        <Link href="/(tabs)/reports" asChild>
+          <Button mode="outlined" icon="chart-bar">
+            Reports
+          </Button>
+        </Link>
+      </View>
       {mode === "local" && (
-        <Text style={styles.stats}>
+        <Text variant="bodySmall" style={styles.stats}>
           On this device: {localMemberCount} members · {living} living
         </Text>
       )}
-      <Link href="/(tabs)/reports" asChild>
-        <Pressable style={styles.secondaryBtn}>
-          <Text style={styles.secondaryBtnText}>Reports & analytics</Text>
-        </Pressable>
-      </Link>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-    backgroundColor: "#fafafa",
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#18181b",
-  },
-  meta: {
-    fontSize: 13,
-    color: "#71717a",
-  },
-  body: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#3f3f46",
-    marginTop: 8,
-  },
-  primaryBtn: {
-    marginTop: 16,
-    backgroundColor: "#4f46e5",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  primaryBtnText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  secondaryBtn: {
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#c7d2fe",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  secondaryBtnText: {
-    color: "#4338ca",
-    fontWeight: "600",
-  },
-  stats: {
-    fontSize: 13,
-    color: "#52525b",
-    marginTop: 4,
-  },
+  meta: { textAlign: "center", color: "#64748b", marginBottom: 8 },
+  card: { borderRadius: 16 },
+  body: { lineHeight: 24, color: "#334155", marginVertical: 12 },
+  actions: { gap: 10, marginTop: 8 },
+  stats: { marginTop: 16, color: "#64748b", textAlign: "center" },
 });

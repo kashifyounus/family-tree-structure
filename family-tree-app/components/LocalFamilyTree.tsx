@@ -9,9 +9,10 @@ import {
 
 type LocalFamilyTreeProps = {
   familyCode: string;
+  immersive?: boolean;
 };
 
-export function LocalFamilyTree({ familyCode }: LocalFamilyTreeProps) {
+export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps) {
   const router = useRouter();
   const focal = useMemo(
     () => getLocalMemberByFamilyCode(familyCode),
@@ -34,7 +35,10 @@ export function LocalFamilyTree({ familyCode }: LocalFamilyTreeProps) {
   }
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={[styles.scroll, immersive && styles.scrollImmersive]}
+      contentContainerStyle={[styles.content, immersive && styles.contentImmersive]}
+    >
       <Pressable
         style={styles.focalCard}
         onPress={() =>
@@ -88,7 +92,9 @@ export function LocalFamilyTree({ familyCode }: LocalFamilyTreeProps) {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: "#f4f4f5" },
+  scrollImmersive: { backgroundColor: "#0f172a" },
   content: { padding: 12, paddingBottom: 32 },
+  contentImmersive: { paddingBottom: 48, flexGrow: 1 },
   empty: { flex: 1, padding: 20, justifyContent: "center" },
   emptyText: { textAlign: "center", color: "#71717a", lineHeight: 20 },
   focalCard: {

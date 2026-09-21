@@ -1,101 +1,106 @@
 import { useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, IconButton, Text } from "react-native-paper";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { LocalFamilyTree } from "@/components/LocalFamilyTree";
-import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
+import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 
 export default function TreeScreen() {
   const insets = useSafeAreaInsets();
   const { mode, apiUrl, dataRevision } = useStorage();
+  const localAccount = useLocalAccount();
   const params = useLocalSearchParams<{ familyCode?: string }>();
-  const [code, setCode] = useState(params.familyCode ?? DEFAULT_FAMILY_CODE);
-  const [loadedCode, setLoadedCode] = useState(code);
+  const defaultCode =
+    mode === "local" && localAccount.session
+      ? localAccount.session.focalFamilyCode
+      : "FAM-10004";
+  const [loadedCode] = useState(params.familyCode ?? defaultCode);
+  const [toolbarOpen, setToolbarOpen] = useState(false);
 
   const uri = useMemo(() => {
-    return `${apiUrl}/tree/${encodeURIComponent(loadedCode)}`;
+    return `${apiUrl}/tree/${encodeURIComponent(loadedCode)}?embed=1`;
   }, [apiUrl, loadedCode]);
 
   const isLocal = mode === "local";
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.toolbar}>
-        <Text style={styles.mode}>
-          {isLocal ? "📱 Local SQLite (this device)" : "☁️ Online (PostgreSQL API)"}
+    <View style={[styles.root, { paddingTop: insets.top }]}>
+      <View style={styles.topBar}>
+        <Text variant="labelLarge" style={styles.title}>
+          Family tree
         </Text>
-        <Text style={styles.label}>Family code</Text>
-        <TextInput
-          style={styles.input}
-          value={code}
-          onChangeText={setCode}
-          autoCapitalize="characters"
-          onSubmitEditing={() => setLoadedCode(code.trim())}
-          returnKeyType="go"
+        <IconButton
+          icon={toolbarOpen ? "chevron-up" : "tune"}
+          onPress={() => setToolbarOpen((v) => !v)}
+          accessibilityLabel="Tree options"
         />
-        <Text style={styles.hint}>
-          {isLocal
-            ? "Family structure stored in your on-device database."
-            : "Interactive graph from the web app (pan, pinch, tap)."}
-        </Text>
       </View>
-      {isLocal ? (
-        <LocalFamilyTree
-          key={`${loadedCode}-${dataRevision}`}
-          familyCode={loadedCode.trim()}
-        />
-      ) : (
-        <WebView
-          source={{ uri }}
-          style={styles.webview}
-          startInLoadingState
-          renderLoading={() => (
-            <View style={styles.loading}>
-              <ActivityIndicator size="large" color="#4f46e5" />
-            </View>
-          )}
-          allowsBackForwardNavigationGestures
-          setSupportMultipleWindows={false}
-        />
+      {toolbarOpen && (
+        <View style={styles.toolbar}>
+          <Text variant="labelSmall">
+            {isLocal ? "Local SQLite" : "Online graph"}
+          </Text>
+          <Text variant="bodySmall" style={styles.code}>
+            {loadedCode}
+          </Text>
+        </View>
       )}
+      <View style={styles.canvas}>
+        {isLocal ? (
+          <LocalFamilyTree
+            key={`${loadedCode}-${dataRevision}`}
+            familyCode={loadedCode.trim()}
+            immersive
+          />
+        ) : (
+          <WebView
+            source={{ uri }}
+            style={styles.webview}
+            startInLoadingState
+            renderLoading={() => (
+              <View style={styles.loading}>
+                <ActivityIndicator size="large" />
+              </View>
+            )}
+            allowsBackForwardNavigationGestures
+            setSupportMultipleWindows={false}
+            javaScriptEnabled
+            domStorageEnabled
+            scalesPageToFit
+          />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f4f4f5" },
+  root: { flex: 1, backgroundColor: "#0f172a" },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
+    backgroundColor: "#1e293b",
+  },
+  title: { color: "#e2e8f0", marginLeft: 8 },
   toolbar: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingBottom: 8,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e4e4e7",
+    backgroundColor: "#1e293b",
+    gap: 4,
   },
-  mode: { fontSize: 12, fontWeight: "600", color: "#4f46e5", marginBottom: 6 },
-  label: { fontSize: 11, color: "#71717a", marginBottom: 4 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    fontFamily: "SpaceMono",
-  },
-  hint: { fontSize: 11, color: "#a1a1aa", marginTop: 6 },
-  webview: { flex: 1 },
+  code: { color: "#94a3b8", fontFamily: "SpaceMono" },
+  canvas: { flex: 1, minHeight: 0 },
+  webview: { flex: 1, backgroundColor: "#f8fafc" },
   loading: {
     ...StyleSheet.absoluteFill,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f4f4f5",
+    backgroundColor: "#f8fafc",
   },
 });

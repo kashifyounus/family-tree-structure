@@ -100,6 +100,15 @@ Output: `android/app/build/outputs/apk/release/app-release.apk` (~100 MB unive
 
 **Online API after install:** You can also change the API URL in the app **Account** tab without rebuilding; local SQLite mode works fully offline.
 
+## UI & architecture (v1.1)
+
+- **[React Native Paper](https://callstack.github.io/react-native-paper/)** (Material Design 3) — single open-source UI system
+- Reusable `Screen`, `AppCard`, `BrandLogo` components
+- **Onboarding** — SQLite vs API, local registration + focal member, optional server sign-in
+- **Error handling** — `AppError`, global snackbar feedback, root error boundary
+- **Google Drive backup** (Android) — native sign-in + SQLite file upload (`Tools` tab)
+- **Jest** — `npm test` in `family-tree-app`
+
 ## Tech stack
 
 - Expo Router tabs

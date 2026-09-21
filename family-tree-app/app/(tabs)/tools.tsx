@@ -4,17 +4,13 @@ import {
 } from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useState } from "react";
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
+import { Button, Card, Text, TextInput } from "react-native-paper";
 
+import { Screen } from "@/components/ui/Screen";
+import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
+import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
 import { listLocalMembers } from "@/lib/db/localRepository";
 import {
   exportLocalDatabaseJson,
@@ -23,9 +19,11 @@ import {
 
 export default function ToolsScreen() {
   const { mode, bumpDataRevision, localMemberCount } = useStorage();
+  const { showError, showSuccess } = useAppFeedback();
   const [importText, setImportText] = useState("");
   const [personA, setPersonA] = useState("");
   const [personB, setPersonB] = useState("");
+  const [driveBusy, setDriveBusy] = useState(false);
 
   const exportDb = async () => {
     try {
@@ -41,7 +39,19 @@ export default function ToolsScreen() {
         Alert.alert("Exported", `Saved to ${path}`);
       }
     } catch (e) {
-      Alert.alert("Export failed", e instanceof Error ? e.message : "Error");
+      showError(e, "Export failed");
+    }
+  };
+
+  const backupToDrive = async () => {
+    setDriveBusy(true);
+    try {
+      const name = await backupDatabaseToGoogleDrive();
+      showSuccess(`Uploaded ${name} to Google Drive`);
+    } catch (e) {
+      showError(e);
+    } finally {
+      setDriveBusy(false);
     }
   };
 
@@ -83,107 +93,89 @@ export default function ToolsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Tools</Text>
+    <Screen testID="tools-screen">
+      <Text variant="headlineSmall" style={styles.title}>Tools</Text>
 
       {mode === "local" ? (
         <>
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Backup & restore (SQLite)</Text>
-            <Text style={styles.help}>
-              Export JSON backup ({localMemberCount} people on device). Import
-              replaces all local data.
-            </Text>
-            <Pressable style={styles.primary} onPress={() => void exportDb()}>
-              <Text style={styles.primaryText}>Export database</Text>
-            </Pressable>
-            <TextInput
-              style={styles.textarea}
-              multiline
-              placeholder="Paste backup JSON to import…"
-              value={importText}
-              onChangeText={setImportText}
-            />
-            <Pressable style={styles.secondary} onPress={importDb}>
-              <Text style={styles.secondaryText}>Import from JSON</Text>
-            </Pressable>
-          </View>
+          <Card mode="elevated" style={styles.card}>
+            <Card.Content style={styles.cardInner}>
+              <Text variant="titleMedium">Google Drive backup (Android)</Text>
+              <Text variant="bodySmall" style={styles.help}>
+                Upload a native copy of your SQLite database to your Google Drive
+                app folder. Requires Google Play Services and{" "}
+                EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID.
+              </Text>
+              <Button
+                mode="contained"
+                icon="google-drive"
+                loading={driveBusy}
+                onPress={() => void backupToDrive()}
+              >
+                Backup to Google Drive
+              </Button>
+            </Card.Content>
+          </Card>
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Find two members (local)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Person A code or name"
-              value={personA}
-              onChangeText={setPersonA}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Person B code or name"
-              value={personB}
-              onChangeText={setPersonB}
-            />
-            <Pressable style={styles.secondary} onPress={relationHint}>
-              <Text style={styles.secondaryText}>Compare</Text>
-            </Pressable>
-          </View>
+          <Card mode="elevated" style={styles.card}>
+            <Card.Content style={styles.cardInner}>
+              <Text variant="titleMedium">Backup & restore (JSON)</Text>
+              <Text variant="bodySmall" style={styles.help}>
+                Export JSON backup ({localMemberCount} people). Import replaces all
+                local data.
+              </Text>
+              <Button mode="contained" icon="export" onPress={() => void exportDb()}>
+                Export database
+              </Button>
+              <TextInput
+                mode="outlined"
+                multiline
+                numberOfLines={6}
+                placeholder="Paste backup JSON to import…"
+                value={importText}
+                onChangeText={setImportText}
+              />
+              <Button mode="outlined" onPress={importDb}>
+                Import from JSON
+              </Button>
+            </Card.Content>
+          </Card>
+
+          <Card mode="elevated" style={styles.card}>
+            <Card.Content style={styles.cardInner}>
+              <Text variant="titleMedium">Find two members (local)</Text>
+              <TextInput
+                mode="outlined"
+                label="Person A"
+                value={personA}
+                onChangeText={setPersonA}
+              />
+              <TextInput
+                mode="outlined"
+                label="Person B"
+                value={personB}
+                onChangeText={setPersonB}
+              />
+              <Button mode="outlined" onPress={relationHint}>
+                Compare
+              </Button>
+            </Card.Content>
+          </Card>
         </>
       ) : (
-        <Text style={styles.help}>
+        <Text variant="bodyMedium" style={styles.help}>
           Switch to Local SQLite in Account to export/import backups. Online mode
           uses the server database — open the web dashboard for advanced kinship
           tools.
         </Text>
       )}
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fafafa" },
-  content: { padding: 16, paddingBottom: 32 },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    marginBottom: 16,
-    gap: 8,
-  },
-  cardTitle: { fontWeight: "700", fontSize: 16 },
-  help: { fontSize: 13, lineHeight: 18, color: "#52525b" },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-  },
-  textarea: {
-    borderWidth: 1,
-    borderColor: "#e4e4e7",
-    borderRadius: 8,
-    padding: 10,
-    minHeight: 100,
-    fontSize: 12,
-    fontFamily: "SpaceMono",
-    textAlignVertical: "top",
-  },
-  primary: {
-    backgroundColor: "#4f46e5",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  primaryText: { color: "#fff", fontWeight: "600" },
-  secondary: {
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#c7d2fe",
-    alignItems: "center",
-  },
-  secondaryText: { color: "#4338ca", fontWeight: "600" },
+  title: { marginBottom: 8 },
+  card: { marginBottom: 12, borderRadius: 16 },
+  cardInner: { gap: 10 },
+  help: { color: "#64748b", lineHeight: 20 },
 });

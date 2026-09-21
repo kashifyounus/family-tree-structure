@@ -1,19 +1,13 @@
 import { useFonts } from "expo-font";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/components/useColorScheme";
-import { AuthProvider } from "@/context/AuthContext";
-import { StorageProvider } from "@/context/StorageContext";
+import { NavigationGate } from "@/components/NavigationGate";
+import { AppProviders } from "@/providers/AppProviders";
 
 export { ErrorBoundary } from "expo-router";
-
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-};
 
 SplashScreen.preventAutoHideAsync();
 
@@ -37,26 +31,17 @@ export default function RootLayout() {
   }
 
   return (
-    <StorageProvider>
-      <AuthProvider>
-        <RootLayoutNav />
-      </AuthProvider>
-    </StorageProvider>
-  );
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
-  return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="member/[personId]"
-          options={{ title: "Member profile", headerBackTitle: "Back" }}
-        />
-      </Stack>
-    </ThemeProvider>
+    <AppProviders>
+      <NavigationGate>
+        <Stack screenOptions={{ animation: "slide_from_right" }}>
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="member/[personId]"
+            options={{ title: "Member profile", headerBackTitle: "Back" }}
+          />
+        </Stack>
+      </NavigationGate>
+    </AppProviders>
   );
 }

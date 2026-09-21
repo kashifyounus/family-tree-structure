@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mughal's Family Tree",
     "slug": "mughals-family-tree",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "familytreeapp",
@@ -33,12 +33,13 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#4f46e5"
         }
       ],
       "expo-secure-store",
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true
