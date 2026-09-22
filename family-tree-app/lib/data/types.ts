@@ -13,6 +13,8 @@ export type MemberRecord = {
   gender: Gender;
   birthDate: string | null;
   deathDate: string | null;
+  birthPlace: string | null;
+  homeTown: string | null;
   currentCity: string | null;
   occupation: string | null;
   bio: string | null;
@@ -22,6 +24,7 @@ export type CreateMemberInput = {
   firstName: string;
   lastName: string;
   gender: Gender;
+  nickname?: string;
   urduFirstName?: string;
   urduLastName?: string;
   currentCity?: string;

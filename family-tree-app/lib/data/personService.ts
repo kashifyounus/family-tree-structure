@@ -5,6 +5,12 @@ import {
   type OnlinePersonDetails,
   type OnlineReports,
 } from "@/lib/api";
+import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
+import {
+  computeKinshipForPerson,
+  getParentsForPerson,
+} from "@/lib/kinship/kinshipCore";
+import type { ComputedRelations, KinshipPerson } from "@/lib/kinship/types";
 import type {
   AddChildInput,
   AddSpouseInput,
@@ -28,8 +34,87 @@ import {
 export type PersonBundle = {
   member: MemberRecord;
   unions: LocalUnionView[];
+  parents: KinshipPerson[];
+  computed: ComputedRelations | null;
   onlineDetails?: OnlinePersonDetails;
 };
+
+function enrichLocalBundle(member: MemberRecord): PersonBundle {
+  const { peopleById, allUnions, unionsAsChildFor } = loadKinshipDataset();
+  const unionsAsChild = unionsAsChildFor(member.id);
+  const parents = getParentsForPerson(member.id, unionsAsChild, peopleById);
+  const computed = computeKinshipForPerson(
+    member.id,
+    unionsAsChild,
+    allUnions,
+    peopleById,
+  );
+  return {
+    member,
+    unions: getLocalUnionsForPerson(member.id),
+    parents,
+    computed,
+  };
+}
+
+function mapOnlinePerson(m: OnlinePersonDetails["person"]): MemberRecord {
+  return {
+    id: m.id,
+    familyCode: m.familyCode,
+    firstName: m.firstName,
+    lastName: m.lastName,
+    nickname: m.nickname,
+    urduFirstName: m.urduFirstName,
+    urduLastName: m.urduLastName,
+    gender: m.gender,
+    birthDate: m.birthDate,
+    deathDate: m.deathDate,
+    birthPlace: (m as { birthPlace?: string | null }).birthPlace ?? null,
+    homeTown: (m as { homeTown?: string | null }).homeTown ?? null,
+    currentCity: m.currentCity,
+    occupation: m.occupation,
+    bio: m.bio,
+  };
+}
+
+function computedFromOnline(details: OnlinePersonDetails): ComputedRelations | null {
+  const c = details.computed;
+  if (!c) return null;
+  const toRel = (
+    items: { firstName: string; lastName: string; familyCode: string; id?: string }[],
+    label: string,
+    side: ComputedRelations["paternalUncles"][0]["side"],
+  ) =>
+    items.map((p) => ({
+      id: p.id ?? p.familyCode,
+      familyCode: p.familyCode,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      nickname: null,
+      urduFirstName: null,
+      urduLastName: null,
+      gender: "OTHER" as const,
+      birthDate: null,
+      deathDate: null,
+      currentCity: null,
+      birthPlace: null,
+      homeTown: null,
+      occupation: null,
+      bio: null,
+      kinshipLabel: label,
+      side,
+      degree: "unknown" as const,
+    }));
+
+  return {
+    fullSiblings: toRel(c.fullSiblings ?? [], "Full sibling", "neutral"),
+    halfSiblings: toRel(c.halfSiblings ?? [], "Half sibling", "neutral"),
+    paternalUncles: toRel(c.paternalUncles ?? [], "Paternal uncle", "paternal"),
+    paternalAunts: toRel((c as { paternalAunts?: typeof c.fullSiblings }).paternalAunts ?? [], "Paternal aunt", "paternal"),
+    maternalUncles: toRel(c.maternalUncles ?? [], "Maternal uncle", "maternal"),
+    maternalAunts: toRel((c as { maternalAunts?: typeof c.fullSiblings }).maternalAunts ?? [], "Maternal aunt", "maternal"),
+  };
+}
 
 export async function loadPersonById(
   mode: StorageMode,
@@ -38,7 +123,7 @@ export async function loadPersonById(
   if (mode !== "local") return null;
   const member = getLocalMemberById(personId);
   if (!member) return null;
-  return { member, unions: getLocalUnionsForPerson(member.id) };
+  return enrichLocalBundle(member);
 }
 
 export async function loadPersonByCode(
@@ -48,30 +133,14 @@ export async function loadPersonByCode(
   if (mode === "local") {
     const member = getLocalMemberByFamilyCode(familyCode);
     if (!member) return null;
-    return {
-      member,
-      unions: getLocalUnionsForPerson(member.id),
-    };
+    return enrichLocalBundle(member);
   }
   const data = await fetchOnlinePersonByCode(familyCode);
   if (!data) return null;
-  const m = data.person;
+  const member = mapOnlinePerson(data.person);
+  const parents: KinshipPerson[] = [];
   return {
-    member: {
-      id: m.id,
-      familyCode: m.familyCode,
-      firstName: m.firstName,
-      lastName: m.lastName,
-      nickname: m.nickname,
-      urduFirstName: m.urduFirstName,
-      urduLastName: m.urduLastName,
-      gender: m.gender,
-      birthDate: m.birthDate,
-      deathDate: m.deathDate,
-      currentCity: m.currentCity,
-      occupation: m.occupation,
-      bio: m.bio,
-    },
+    member,
     unions: data.unions.map((u) => ({
       id: u.id,
       partner1Name: `${u.partner1.firstName} ${u.partner1.lastName}`,
@@ -82,6 +151,8 @@ export async function loadPersonByCode(
         familyCode: c.familyCode,
       })),
     })),
+    parents,
+    computed: computedFromOnline(data),
     onlineDetails: data,
   };
 }
@@ -125,3 +196,4 @@ export async function loadReports(
   return null;
 }
 
+export { createMemberOnline };

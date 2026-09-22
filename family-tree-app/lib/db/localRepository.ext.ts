@@ -40,6 +40,8 @@ function mapRow(row: PersonRow): MemberRecord {
     gender: row.gender as Gender,
     birthDate: row.birth_date,
     deathDate: row.death_date,
+    birthPlace: row.birth_place,
+    homeTown: row.home_town,
     currentCity: row.current_city,
     occupation: row.occupation,
     bio: row.bio,

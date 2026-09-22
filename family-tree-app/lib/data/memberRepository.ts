@@ -18,6 +18,8 @@ function fromDashboard(m: DashboardMember): MemberRecord {
     gender: m.gender as MemberRecord["gender"],
     birthDate: null,
     deathDate: null,
+    birthPlace: null,
+    homeTown: null,
     currentCity: m.currentCity,
     occupation: null,
     bio: null,

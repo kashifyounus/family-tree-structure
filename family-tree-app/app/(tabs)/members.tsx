@@ -43,6 +43,8 @@ export default function MembersScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState<Gender>("MALE");
+  const [birthDate, setBirthDate] = useState("");
+  const [createCity, setCreateCity] = useState("");
 
   const load = useCallback(
     async (q: string) => {
@@ -71,10 +73,14 @@ export default function MembersScreen() {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         gender,
+        birthDate: birthDate.trim() || undefined,
+        currentCity: createCity.trim() || undefined,
       });
       setCreateOpen(false);
       setFirstName("");
       setLastName("");
+      setBirthDate("");
+      setCreateCity("");
       bumpDataRevision();
       showSuccess(copy.success.saved);
     } catch (e) {
@@ -215,8 +221,15 @@ export default function MembersScreen() {
                 autoCapitalize="words"
               />
               <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.onboarding.startingMember}
+                {copy.members.genderLabel}
               </Text>
+              <FormTextInput
+                label="Date of birth"
+                value={birthDate}
+                onChangeText={setBirthDate}
+                placeholder="YYYY-MM-DD"
+              />
+              <FormTextInput label="City" value={createCity} onChangeText={setCreateCity} />
               <SegmentedButtons
                 value={gender}
                 onValueChange={(v) => setGender(v as Gender)}

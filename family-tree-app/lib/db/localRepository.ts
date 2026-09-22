@@ -21,6 +21,8 @@ type PersonRow = {
   birth_date: string | null;
   death_date: string | null;
   current_city: string | null;
+  birth_place: string | null;
+  home_town: string | null;
   occupation: string | null;
   bio: string | null;
 };
@@ -37,6 +39,8 @@ function mapRow(row: PersonRow): MemberRecord {
     gender: row.gender as Gender,
     birthDate: row.birth_date,
     deathDate: row.death_date,
+    birthPlace: row.birth_place,
+    homeTown: row.home_town,
     currentCity: row.current_city,
     occupation: row.occupation,
     bio: row.bio,
@@ -79,9 +83,10 @@ export function createLocalMember(input: CreateMemberInput): MemberRecord {
   db.runSync(
     `INSERT INTO persons (
       id, family_code, first_name, last_name, gender,
-      urdu_first_name, urdu_last_name, current_city,
+      urdu_first_name, urdu_last_name, current_city, birth_date, death_date,
+      birth_place, home_town, occupation, bio, nickname,
       privacy_level, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'MEMBERS_ONLY', ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'MEMBERS_ONLY', ?, ?)`,
     [
       id,
       familyCode,
@@ -91,6 +96,13 @@ export function createLocalMember(input: CreateMemberInput): MemberRecord {
       input.urduFirstName ?? null,
       input.urduLastName ?? null,
       input.currentCity ?? null,
+      input.birthDate ?? null,
+      input.deathDate ?? null,
+      input.birthPlace ?? null,
+      input.homeTown ?? null,
+      input.occupation ?? null,
+      input.bio ?? null,
+      input.nickname ?? null,
       now,
       now,
     ],

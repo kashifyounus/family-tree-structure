@@ -11,12 +11,13 @@ import {
   useTheme,
 } from "react-native-paper";
 
+import { KinshipSections } from "@/components/KinshipSections";
+import { PersonFacts } from "@/components/PersonFacts";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
-import { formatGender } from "@/lib/format/gender";
 import {
   addChild,
   addSpouse,
@@ -42,6 +43,10 @@ export default function MemberDetailScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [birthPlace, setBirthPlace] = useState("");
+  const [homeTown, setHomeTown] = useState("");
+  const [occupation, setOccupation] = useState("");
   const [bio, setBio] = useState("");
   const [spouseOpen, setSpouseOpen] = useState(false);
   const [childOpen, setChildOpen] = useState(false);
@@ -61,6 +66,10 @@ export default function MemberDetailScreen() {
         setFirstName(data.member.firstName);
         setLastName(data.member.lastName);
         setCity(data.member.currentCity ?? "");
+        setBirthDate(data.member.birthDate ?? "");
+        setBirthPlace(data.member.birthPlace ?? "");
+        setHomeTown(data.member.homeTown ?? "");
+        setOccupation(data.member.occupation ?? "");
         setBio(data.member.bio ?? "");
       }
     } finally {
@@ -98,6 +107,10 @@ export default function MemberDetailScreen() {
         firstName,
         lastName,
         currentCity: city || undefined,
+        birthDate: birthDate || undefined,
+        birthPlace: birthPlace || undefined,
+        homeTown: homeTown || undefined,
+        occupation: occupation || undefined,
         bio: bio || undefined,
       });
       setEditing(false);
@@ -165,9 +178,7 @@ export default function MemberDetailScreen() {
             {m.urduFirstName} {m.urduLastName}
           </Text>
         )}
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 8 }}>
-          {formatGender(m.gender)}
-        </Text>
+        {!editing && <PersonFacts member={m} />}
 
         {canEditLocal && (
           <View style={styles.actions}>
@@ -193,7 +204,16 @@ export default function MemberDetailScreen() {
             <Card.Content style={styles.gap}>
               <FormTextInput label="First name" value={firstName} onChangeText={setFirstName} />
               <FormTextInput label="Last name" value={lastName} onChangeText={setLastName} />
+              <FormTextInput
+                label="Date of birth"
+                value={birthDate}
+                onChangeText={setBirthDate}
+                placeholder="YYYY-MM-DD"
+              />
+              <FormTextInput label="Birth place" value={birthPlace} onChangeText={setBirthPlace} />
               <FormTextInput label="City" value={city} onChangeText={setCity} />
+              <FormTextInput label="Home town" value={homeTown} onChangeText={setHomeTown} />
+              <FormTextInput label="Occupation" value={occupation} onChangeText={setOccupation} />
               <FormTextInput
                 label="Notes"
                 value={bio}
@@ -243,23 +263,7 @@ export default function MemberDetailScreen() {
           ))
         )}
 
-        {bundle.onlineDetails?.computed && (
-          <>
-            <Text variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
-              {copy.profile.kinshipOnline}
-            </Text>
-            {bundle.onlineDetails.computed.fullSiblings?.map((s) => (
-              <Text key={s.familyCode} variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                {copy.profile.fullSibling(`${s.firstName} ${s.lastName}`)}
-              </Text>
-            ))}
-            {bundle.onlineDetails.computed.halfSiblings?.map((s) => (
-              <Text key={s.familyCode} variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                {copy.profile.halfSibling(`${s.firstName} ${s.lastName}`)}
-              </Text>
-            ))}
-          </>
-        )}
+        <KinshipSections parents={bundle.parents} computed={bundle.computed} />
 
         <Button
           mode="outlined"

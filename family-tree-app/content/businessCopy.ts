@@ -113,6 +113,8 @@ export const copy = {
     privateFooter:
       "These records are in your private archive. Link the family cloud from Account to work with your shared registry.",
     tapProfile: "Open full profile",
+    graphView: "Graph",
+    listView: "List",
   },
 
   members: {
@@ -120,6 +122,7 @@ export const copy = {
     bannerCloud: "Family cloud — shared with your authorised family",
     searchPlaceholder: "Search by name or member reference",
     addMember: "Add family member",
+    genderLabel: "Gender",
     emptyPrivate:
       "No relatives in your private archive yet. Add someone or load a sample family from Account.",
     emptyCloud:

@@ -167,6 +167,48 @@ export async function fetchOnlineReports(
   }
 }
 
+export type MobileFamilyGraph = {
+  focalPersonId: string;
+  nodes: {
+    id: string;
+    type: "person";
+    position: { x: number; y: number };
+    data: {
+      person: {
+        id: string;
+        familyCode: string;
+        firstName: string;
+        lastName: string;
+        gender: string;
+        birthDate: string | null;
+        deathDate: string | null;
+        currentCity: string | null;
+        isLiving: boolean;
+      };
+      isFocal?: boolean;
+    };
+  }[];
+  edges: {
+    id: string;
+    source: string;
+    target: string;
+    type: "spouse" | "parent" | "child";
+  }[];
+};
+
+export async function fetchFamilyGraph(
+  familyCode: string,
+): Promise<MobileFamilyGraph | null> {
+  try {
+    const data = await apiFetch<{ graph: MobileFamilyGraph }>(
+      `/api/mobile/graph/${encodeURIComponent(familyCode)}`,
+    );
+    return data.graph;
+  } catch {
+    return null;
+  }
+}
+
 export async function createMemberOnline(input: {
   firstName: string;
   lastName: string;
