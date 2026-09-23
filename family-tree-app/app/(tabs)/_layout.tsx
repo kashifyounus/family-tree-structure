@@ -4,9 +4,11 @@ import { Platform } from "react-native";
 import { useTheme } from "react-native-paper";
 
 import { APP_NAME } from "@/constants/appMeta";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
 
 export default function TabLayout() {
   const theme = useTheme();
+  const { impactLight } = useAppPreferences();
 
   return (
     <Tabs
@@ -43,15 +45,7 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="home" color={color} size={size} />
           ),
         }}
-      />
-      <Tabs.Screen
-        name="members"
-        options={{
-          title: "Members",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-group" color={color} size={size} />
-          ),
-        }}
+        listeners={{ tabPress: () => impactLight() }}
       />
       <Tabs.Screen
         name="tree"
@@ -62,23 +56,30 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="family-tree" color={color} size={size} />
           ),
         }}
+        listeners={{ tabPress: () => impactLight() }}
+      />
+      <Tabs.Screen
+        name="members"
+        options={{
+          title: "Members",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group" color={color} size={size} />
+          ),
+        }}
+        listeners={{ tabPress: () => impactLight() }}
       />
       <Tabs.Screen
         name="reports"
         options={{
+          href: null,
           title: "Reports",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-bar" color={color} size={size} />
-          ),
         }}
       />
       <Tabs.Screen
         name="tools"
         options={{
+          href: null,
           title: "Tools",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="toolbox" color={color} size={size} />
-          ),
         }}
       />
       <Tabs.Screen
@@ -89,6 +90,7 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="account-circle" color={color} size={size} />
           ),
         }}
+        listeners={{ tabPress: () => impactLight() }}
       />
     </Tabs>
   );

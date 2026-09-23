@@ -1,0 +1,137 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+  - workflow
+---
+# Full private-archive workflow: onboarding → member → spouse → marriage → child → members list
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: onboarding-get-started
+    timeout: 90000
+- takeScreenshot: android_01_onboarding
+- extendedWaitUntil:
+    visible:
+      id: onboarding-screen
+    timeout: 15000
+- tapOn:
+    id: onboarding-get-started
+- extendedWaitUntil:
+    visible:
+      id: onboarding-create-profile
+    timeout: 15000
+- tapOn:
+    id: onboarding-display-name
+- inputText: "Android E2E"
+- runScript:
+    file: ../scripts/random-email.js
+- tapOn:
+    id: onboarding-email
+- inputText: ${output.email}
+- tapOn:
+    id: onboarding-password
+- inputText: "family123"
+- hideKeyboard
+- tapOn:
+    id: onboarding-first-name
+- inputText: "Amina"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: onboarding-last-name
+    direction: DOWN
+- tapOn:
+    id: onboarding-last-name
+- inputText: "Workflow"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: onboarding-create-profile
+    direction: DOWN
+- tapOn:
+    text: "Female"
+- tapOn:
+    text: "Create profile and start tree"
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 90000
+- takeScreenshot: android_02_profile_created
+- takeScreenshot: android_03_home
+- tapOn:
+    text: "Family directory"
+- extendedWaitUntil:
+    visible:
+      id: members-screen
+    timeout: 30000
+- tapOn:
+    id: members-first-card
+- extendedWaitUntil:
+    visible:
+      id: member-profile-screen
+    timeout: 15000
+- takeScreenshot: android_04_member_profile
+- tapOn:
+    id: member-add-spouse
+- tapOn:
+    id: member-spouse-first
+- inputText: "Omar"
+- tapOn:
+    id: member-spouse-last
+- eraseText
+- inputText: "Spouse"
+- tapOn:
+    text: "Male"
+- hideKeyboard
+- tapOn:
+    text: "Save changes"
+- extendedWaitUntil:
+    visible:
+      text: "Current marriage"
+    timeout: 60000
+- takeScreenshot: android_05_spouse_added
+- tapOn:
+    text: "View marriage"
+- extendedWaitUntil:
+    visible:
+      id: marriage-screen
+    timeout: 15000
+- takeScreenshot: android_06_marriage_screen
+- back
+- extendedWaitUntil:
+    visible:
+      id: member-profile-screen
+    timeout: 10000
+- tapOn:
+    id: member-add-child
+- tapOn:
+    id: member-child-first
+- inputText: "Sara"
+- tapOn:
+    id: member-child-last
+- eraseText
+- inputText: "Workflow"
+- tapOn:
+    text: "Female"
+- hideKeyboard
+- tapOn:
+    text: "Save changes"
+- extendedWaitUntil:
+    visible:
+      text: "Child saved on this marriage."
+    timeout: 90000
+- takeScreenshot: android_07_child_added
+- back
+- extendedWaitUntil:
+    visible:
+      id: members-screen
+    timeout: 30000
+- tapOn:
+    id: members-search
+- inputText: "Amina"
+- extendedWaitUntil:
+    visible:
+      text: "Amina"
+    timeout: 10000
+- takeScreenshot: android_08_members_search

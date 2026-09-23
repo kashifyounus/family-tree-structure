@@ -1,5 +1,6 @@
 import { copy } from "@/content/businessCopy";
 import { AppError, type AppErrorCode } from "@/lib/errors/AppError";
+import { RelationshipRuleError } from "@/lib/rules/relationshipRules";
 
 const CODE_MESSAGES: Record<AppErrorCode, string> = {
   UNKNOWN: copy.errors.generic,
@@ -18,13 +19,24 @@ export function presentUserMessage(error: unknown, fallback?: string): string {
     return error.userMessage;
   }
 
+  if (error instanceof RelationshipRuleError) {
+    return error.userMessage;
+  }
+
   if (error instanceof Error) {
     const msg = error.message.toLowerCase();
 
-    if (msg.includes("union") && msg.includes("child")) {
+    if (
+      (msg.includes("union") && msg.includes("child")) ||
+      msg.includes("linked to children")
+    ) {
       return copy.errors.deleteLinkedChildren;
     }
-    if (msg.includes("child in a union") || msg.includes("recorded as a child")) {
+    if (
+      msg.includes("child in a union") ||
+      msg.includes("recorded as a child") ||
+      msg.includes("child in a marriage")
+    ) {
       return copy.errors.deleteLinkedAsChild;
     }
     if (msg.includes("union or second parent")) {

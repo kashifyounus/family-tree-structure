@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { Gender } from "@prisma/client";
+import { defaultSpouseGender, toUserFacingMessage, ruleMessages } from "@/shared/relationshipRules";
 import { createPersonAndUnion } from "@/actions/familyTree";
 import { Modal } from "@/components/modals/Modal";
 import { inputClassName, labelClassName } from "@/components/modals/formStyles";
@@ -10,6 +11,7 @@ type AddSpouseModalProps = {
   open: boolean;
   onClose: () => void;
   personId: string;
+  personGender?: Gender;
   defaultLastName?: string;
   onSuccess: (familyCode: string) => void;
 };
@@ -18,9 +20,11 @@ export function AddSpouseModal({
   open,
   onClose,
   personId,
+  personGender = "MALE",
   defaultLastName = "",
   onSuccess,
 }: AddSpouseModalProps) {
+  const suggestedGender = defaultSpouseGender(personGender) ?? "";
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -44,7 +48,8 @@ export function AddSpouseModal({
         onSuccess(result.familyCode);
         onClose();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to add spouse");
+        console.error(e);
+        setError(toUserFacingMessage(e, ruleMessages.saveRelationship));
       }
     });
   };
@@ -121,8 +126,9 @@ export function AddSpouseModal({
             name="gender"
             required
             className={inputClassName}
-            defaultValue="MALE"
+            defaultValue={suggestedGender}
           >
+            <option value="">Select gender</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
             <option value="OTHER">Other</option>

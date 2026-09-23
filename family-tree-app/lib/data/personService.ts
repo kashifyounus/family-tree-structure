@@ -11,19 +11,31 @@ import {
   getParentsForPerson,
 } from "@/lib/kinship/kinshipCore";
 import type { ComputedRelations, KinshipPerson } from "@/lib/kinship/types";
+import { copy } from "@/content/businessCopy";
+import { AppError } from "@/lib/errors/AppError";
 import type {
   AddChildInput,
   AddSpouseInput,
+  LinkChildInput,
+  LinkSpouseInput,
   LocalUnionView,
   MemberRecord,
+  SetParentsInput,
   StorageMode,
+  UpdateMarriageInput,
   UpdateMemberInput,
 } from "@/lib/data/types";
 import {
   addLocalChild,
   addLocalSpouse,
+  getLocalMarriage,
   getLocalMemberById,
+  linkLocalChild,
+  linkLocalSpouse,
+  listLocalPeopleBrief,
   listLocalUnionOptions,
+  setLocalParents,
+  updateLocalMarriage,
   updateLocalMember,
 } from "@/lib/db/localRepository.ext";
 import {
@@ -143,8 +155,13 @@ export async function loadPersonByCode(
     member,
     unions: data.unions.map((u) => ({
       id: u.id,
+      partner1Id: u.partner1.id,
+      partner2Id: u.partner2.id,
       partner1Name: `${u.partner1.firstName} ${u.partner1.lastName}`,
       partner2Name: `${u.partner2.firstName} ${u.partner2.lastName}`,
+      marriageDate: u.marriageDate ?? null,
+      divorceDate: u.divorceDate ?? null,
+      isActive: u.isActive ?? true,
       children: u.children.map((c) => ({
         id: c.id,
         name: `${c.firstName} ${c.lastName}`,
@@ -157,28 +174,58 @@ export async function loadPersonByCode(
   };
 }
 
+function requireLocal(mode: StorageMode): void {
+  if (mode !== "local") {
+    throw new AppError("PERMISSION", copy.profile.cloudReadOnly);
+  }
+}
+
 export function updatePerson(
   mode: StorageMode,
   input: UpdateMemberInput,
 ): MemberRecord {
-  if (mode !== "local") {
-    throw new Error("Profile edit on device requires local mode or use web dashboard.");
-  }
+  requireLocal(mode);
   return updateLocalMember(input);
 }
 
 export function addSpouse(mode: StorageMode, input: AddSpouseInput): MemberRecord {
-  if (mode !== "local") {
-    throw new Error("Add spouse on device requires local mode for now.");
-  }
+  requireLocal(mode);
   return addLocalSpouse(input);
 }
 
 export function addChild(mode: StorageMode, input: AddChildInput): MemberRecord {
-  if (mode !== "local") {
-    throw new Error("Add child on device requires local mode for now.");
-  }
+  requireLocal(mode);
   return addLocalChild(input);
+}
+
+export function linkSpouse(mode: StorageMode, input: LinkSpouseInput): { unionId: string } {
+  requireLocal(mode);
+  return linkLocalSpouse(input);
+}
+
+export function linkChild(mode: StorageMode, input: LinkChildInput): void {
+  requireLocal(mode);
+  linkLocalChild(input);
+}
+
+export function assignParents(mode: StorageMode, input: SetParentsInput): { unionId: string } {
+  requireLocal(mode);
+  return setLocalParents(input);
+}
+
+export function saveMarriage(mode: StorageMode, input: UpdateMarriageInput): void {
+  requireLocal(mode);
+  updateLocalMarriage(input);
+}
+
+export function loadMarriage(mode: StorageMode, unionId: string) {
+  requireLocal(mode);
+  return getLocalMarriage(unionId);
+}
+
+export function peopleForPicker(mode: StorageMode) {
+  requireLocal(mode);
+  return listLocalPeopleBrief();
 }
 
 export function unionOptions(mode: StorageMode, personId: string) {

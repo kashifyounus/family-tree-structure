@@ -42,11 +42,19 @@ export function DashboardShell({
               {canEdit && (
                 <span className="text-zinc-400">·</span>
               )}
+              {canEdit && (
+                <Link
+                  href="/people/new"
+                  className="text-zinc-600 hover:text-indigo-600 dark:text-zinc-400"
+                >
+                  Create person
+                </Link>
+              )}
               <Link
                 href={`/tree/${sampleFamilyCode}`}
                 className="text-zinc-600 hover:text-indigo-600 dark:text-zinc-400"
               >
-                Tree view
+                Family tree
               </Link>
               <Link
                 href={`/tree/${sampleFamilyCode}/reports`}

@@ -119,6 +119,9 @@ export type OnlinePersonDetails = {
   person: OnlinePersonSummary;
   unions: {
     id: string;
+    marriageDate?: string | null;
+    divorceDate?: string | null;
+    isActive?: boolean;
     partner1: OnlinePersonSummary;
     partner2: OnlinePersonSummary;
     children: (OnlinePersonSummary & { relationshipType?: string })[];
@@ -169,6 +172,8 @@ export async function fetchOnlineReports(
 
 export type MobileFamilyGraph = {
   focalPersonId: string;
+  focalUnionId?: string | null;
+  focalUnionIds?: string[];
   nodes: {
     id: string;
     type: "person";
@@ -179,13 +184,19 @@ export type MobileFamilyGraph = {
         familyCode: string;
         firstName: string;
         lastName: string;
+        urduFirstName?: string | null;
+        urduLastName?: string | null;
         gender: string;
         birthDate: string | null;
         deathDate: string | null;
         currentCity: string | null;
         isLiving: boolean;
+        treeDisplayIsPrivate?: boolean;
       };
       isFocal?: boolean;
+      hasUnexpandedParents?: boolean;
+      hasUnexpandedChildren?: boolean;
+      hasUnexpandedSiblings?: boolean;
     };
   }[];
   edges: {
@@ -193,15 +204,32 @@ export type MobileFamilyGraph = {
     source: string;
     target: string;
     type: "spouse" | "parent" | "child";
+    label?: string;
   }[];
+};
+
+export type FetchFamilyGraphOptions = {
+  depth?: number;
+  siblingSteps?: number;
+  focalUnionId?: string | null;
 };
 
 export async function fetchFamilyGraph(
   familyCode: string,
+  options: FetchFamilyGraphOptions = {},
 ): Promise<MobileFamilyGraph | null> {
+  const depth = options.depth ?? 2;
+  const siblingSteps = options.siblingSteps ?? 0;
+  const qs = new URLSearchParams({
+    depth: String(depth),
+    siblingSteps: String(siblingSteps),
+  });
+  if (options.focalUnionId) {
+    qs.set("focalUnionId", options.focalUnionId);
+  }
   try {
     const data = await apiFetch<{ graph: MobileFamilyGraph }>(
-      `/api/mobile/graph/${encodeURIComponent(familyCode)}`,
+      `/api/mobile/graph/${encodeURIComponent(familyCode)}?${qs.toString()}`,
     );
     return data.graph;
   } catch {

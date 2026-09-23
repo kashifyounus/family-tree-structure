@@ -22,11 +22,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      void SplashScreen.hideAsync();
+      return;
     }
+    const fallback = setTimeout(() => {
+      void SplashScreen.hideAsync();
+    }, 5000);
+    return () => clearTimeout(fallback);
   }, [loaded]);
 
-  if (!loaded) {
+  if (!loaded && !error) {
     return null;
   }
 
@@ -38,7 +43,11 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="member/[personId]"
-            options={{ title: "Member profile", headerBackTitle: "Back" }}
+            options={{ title: "Person", headerBackTitle: "Back" }}
+          />
+          <Stack.Screen
+            name="marriage/[unionId]"
+            options={{ title: "Marriage", headerBackTitle: "Back" }}
           />
         </Stack>
       </NavigationGate>

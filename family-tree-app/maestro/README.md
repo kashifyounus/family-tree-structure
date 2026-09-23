@@ -32,8 +32,24 @@ maestro test maestro/flows/01-onboarding-private-archive.yaml
 | `02-add-marriage-spouse` | Open first member → add spouse → marriage visible |
 | `03-tools-backup-export` | Tools screen → export backup (no crash) |
 | `04-reports-insights` | Reports screen loads |
+| `05-complete-family-workflow` | Full flow with Maestro screenshots (onboarding → spouse → marriage → child → search) |
 
-Run `01` before `02` on a clean install. Flows `03` and `04` assume onboarding completed.
+Run `01` before `02` on a clean install. Flows `03` and `04` assume onboarding completed. Flow `05` clears app state and is self-contained.
+
+## Screenshots and video (CI / cloud agent)
+
+From `family-tree-app`:
+
+```bash
+export ANDROID_HOME=/workspace/.android-sdk
+chmod +x scripts/run-android-e2e-artifacts.sh
+START_EMULATOR=1 BOOT_TIMEOUT_SEC=1200 scripts/run-android-e2e-artifacts.sh
+```
+
+Outputs under `/opt/cursor/artifacts/android-e2e/`:
+
+- `family_records_android_workflow.mp4` — `adb screenrecord` during the Maestro run
+- `screenshots/android_*.png` — Maestro `takeScreenshot` steps from flow `05`
 
 ## CI
 

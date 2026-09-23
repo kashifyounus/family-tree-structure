@@ -1,91 +1,215 @@
-import { Link } from "expo-router";
-import { useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { Button, Card, Text, useTheme } from "react-native-paper";
+import { Link, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Searchbar, Text, useTheme } from "react-native-paper";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import { BrandLogo } from "@/components/BrandLogo";
+import { ActionTile } from "@/components/ui/ActionTile";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { ReferenceText } from "@/components/ui/ReferenceText";
 import { Screen } from "@/components/ui/Screen";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { APP_NAME, APP_OWNER, APP_VERSION, DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
+import { listMembers } from "@/lib/data/memberRepository";
+import type { MemberRecord } from "@/lib/data/types";
 import { buildLocalReports } from "@/lib/db/localReports";
-
-import {
-  APP_OWNER,
-  APP_VERSION,
-  DEFAULT_FAMILY_CODE,
-} from "@/constants/appMeta";
+import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
+import { motion } from "@/theme/motion";
+import { space } from "@/theme/tokens";
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const { mode, localMemberCount } = useStorage();
   const localAccount = useLocalAccount();
   const [living, setLiving] = useState(0);
+  const [query, setQuery] = useState("");
+  const [matches, setMatches] = useState<MemberRecord[]>([]);
+  const [recent, setRecent] = useState<RecentPerson[]>([]);
+  const [cloudMemberCount, setCloudMemberCount] = useState<number | null>(null);
+  const [cloudStatsLoading, setCloudStatsLoading] = useState(false);
 
   useEffect(() => {
     if (mode === "local") {
       setLiving(buildLocalReports().livingCount);
+      setCloudMemberCount(null);
     }
   }, [mode, localMemberCount]);
+
+  useEffect(() => {
+    void loadRecentPeople().then(setRecent);
+  }, [localMemberCount]);
+
+  const runSearch = useCallback(
+    async (q: string) => {
+      const trimmed = q.trim();
+      if (!trimmed) {
+        setMatches([]);
+        return;
+      }
+      const all = await listMembers(mode, trimmed);
+      const lower = trimmed.toLowerCase();
+      setMatches(
+        all
+          .filter(
+            (m) =>
+              m.familyCode.toLowerCase().includes(lower) ||
+              m.firstName.toLowerCase().includes(lower) ||
+              m.lastName.toLowerCase().includes(lower),
+          )
+          .slice(0, 6),
+      );
+    },
+    [mode],
+  );
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setMatches([]);
+      return;
+    }
+    const handle = setTimeout(() => {
+      void runSearch(trimmed);
+    }, 320);
+    return () => clearTimeout(handle);
+  }, [query, runSearch]);
 
   const branchReference =
     mode === "local" && localAccount.session
       ? localAccount.session.focalFamilyCode
       : DEFAULT_FAMILY_CODE;
 
+  useEffect(() => {
+    if (mode !== "online") return;
+    setCloudStatsLoading(true);
+    void listMembers("online")
+      .then((list) => setCloudMemberCount(list.length))
+      .catch(() => setCloudMemberCount(null))
+      .finally(() => setCloudStatsLoading(false));
+  }, [mode, localMemberCount]);
+
+  const cloudStatsLine = useMemo(() => {
+    if (mode !== "online") return null;
+    if (cloudStatsLoading) return copy.home.statsCloudLoading;
+    if (cloudMemberCount == null) return null;
+    return copy.home.statsCloud(cloudMemberCount, branchReference);
+  }, [mode, cloudStatsLoading, cloudMemberCount, branchReference]);
+
   return (
     <Screen testID="home-screen">
-      <BrandLogo size={72} />
-      <Text variant="bodyMedium" style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}>
-        v{APP_VERSION} · {APP_OWNER}
-      </Text>
-      <Text variant="bodyMedium" style={{ textAlign: "center", lineHeight: 22, color: theme.colors.onSurface, marginVertical: 12 }}>
-        {copy.app.tagline}
-      </Text>
-      {localAccount.session && mode === "local" && (
-        <Card mode="elevated" style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium">
-              {copy.home.greeting(localAccount.session.displayName)}
-            </Text>
-            <Text variant="bodySmall">
-              {copy.home.yourReference(localAccount.session.focalFamilyCode)}
-            </Text>
-          </Card.Content>
-        </Card>
+      <Animated.View entering={FadeIn.duration(motion.slow)} style={styles.hero}>
+        <BrandLogo size={80} />
+        <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
+          v{APP_VERSION} · {APP_OWNER}
+        </Text>
+      </Animated.View>
+
+      <PageHeader title={APP_NAME} subtitle={copy.app.tagline} />
+
+      <Searchbar
+        testID="home-search"
+        placeholder={copy.home.searchPlaceholder}
+        value={query}
+        onChangeText={setQuery}
+        onSubmitEditing={() => void runSearch(query)}
+        onIconPress={() => void runSearch(query)}
+        style={{ marginBottom: space.sm, backgroundColor: theme.colors.surfaceVariant }}
+      />
+      {matches.length > 0 && (
+        <View style={styles.matchList}>
+          {matches.map((m) => (
+            <Pressable
+              key={m.id}
+              onPress={() =>
+                router.push({
+                  pathname: "/member/[personId]",
+                  params: { personId: m.id, code: m.familyCode },
+                })
+              }
+            >
+              <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>
+                {m.firstName} {m.lastName} · {m.familyCode}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
       )}
+
+      {localAccount.session && mode === "local" && (
+        <SectionCard>
+          <Text variant="titleMedium">{copy.home.greeting(localAccount.session.displayName)}</Text>
+          <ReferenceText label={copy.account.memberReference} code={localAccount.session.focalFamilyCode} />
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
+            {copy.home.statsPrivate(localMemberCount, living)}
+          </Text>
+        </SectionCard>
+      )}
+
+      {mode === "online" && cloudStatsLine && (
+        <SectionCard>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            {cloudStatsLine}
+          </Text>
+        </SectionCard>
+      )}
+
+      {recent.length > 0 && (
+        <SectionCard title={copy.home.recentTitle}>
+          {recent.map((r) => (
+            <Pressable
+              key={r.personId}
+              onPress={() =>
+                router.push({
+                  pathname: "/member/[personId]",
+                  params: { personId: r.personId, code: r.familyCode },
+                })
+              }
+              style={{ paddingVertical: 6 }}
+            >
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+                {r.displayName}
+              </Text>
+              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {r.familyCode}
+              </Text>
+            </Pressable>
+          ))}
+        </SectionCard>
+      )}
+
       <View style={styles.actions}>
         <Link href="/(tabs)/tree" asChild>
-          <Button mode="contained" icon="family-tree">
+          <ActionTile icon="family-tree" mode="contained">
             {copy.home.openTree}
-          </Button>
+          </ActionTile>
         </Link>
         <Link href={`/(tabs)/tree?familyCode=${branchReference}`} asChild>
-          <Button mode="outlined" icon="account-group">
+          <ActionTile icon="account-group">
             {copy.home.yourBranch}
-          </Button>
+          </ActionTile>
         </Link>
         <Link href="/(tabs)/members" asChild>
-          <Button mode="outlined" icon="account-multiple">
+          <ActionTile testID="home-directory" icon="account-multiple">
             {copy.home.directory}
-          </Button>
+          </ActionTile>
         </Link>
         <Link href="/(tabs)/reports" asChild>
-          <Button mode="outlined" icon="chart-bar">
+          <ActionTile icon="chart-bar">
             {copy.home.insights}
-          </Button>
+          </ActionTile>
         </Link>
       </View>
-      {mode === "local" && (
-        <Text variant="bodySmall" style={{ marginTop: 16, color: theme.colors.onSurfaceVariant, textAlign: "center" }}>
-          {copy.home.statsPrivate(localMemberCount, living)}
-        </Text>
-      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 16 },
-  actions: { gap: 10, marginTop: 8 },
+  hero: { alignItems: "center", marginBottom: space.md },
+  actions: { gap: space.md, marginTop: space.sm },
+  matchList: { gap: 8, marginBottom: space.md },
 });

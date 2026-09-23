@@ -9,7 +9,7 @@ tags:
       id: home-screen
     timeout: 20000
 - tapOn:
-    text: "Members"
+    text: "Family directory"
 - extendedWaitUntil:
     visible:
       id: members-screen
@@ -27,12 +27,16 @@ tags:
 - inputText: "Fatima"
 - tapOn:
     id: member-spouse-last
+- eraseText
 - inputText: "Khan"
+- hideKeyboard
 - tapOn:
-    id: member-spouse-save
+    text: "Save changes"
 - extendedWaitUntil:
     visible:
       text: "Marriage:"
     timeout: 10000
+- assertVisible:
+    text: "Current marriage"
 - assertVisible:
     text: "Fatima"

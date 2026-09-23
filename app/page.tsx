@@ -57,16 +57,16 @@ export default async function HomePage() {
         <ul className="mt-16 grid w-full gap-4 text-left sm:grid-cols-3">
           {[
             {
-              title: "Union engine",
-              body: "Multiple spouses per person with ordered unions and per-union children.",
+              title: "People and marriages",
+              body: "Record each person once, then add spouses and children without losing earlier marriages.",
             },
             {
-              title: "Computed kinship",
-              body: "Uncles, aunts, and siblings derived from the graph — not manual tags.",
+              title: "Parents and relatives",
+              body: "Link parents, and see siblings, aunts, and uncles from the marriages already recorded.",
             },
             {
-              title: "Focal tree view",
-              body: "React Flow canvas with horizontal spouses and expandable branches.",
+              title: "Family tree",
+              body: "Move through the tree, open a person, and return to the same branch after you save.",
             },
           ].map((item) => (
             <li

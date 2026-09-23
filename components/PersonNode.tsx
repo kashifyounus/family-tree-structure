@@ -12,6 +12,7 @@ export type PersonNodeData = {
   isDeceased?: boolean;
   hasUnexpandedParents?: boolean;
   hasUnexpandedChildren?: boolean;
+  hasUnexpandedSiblings?: boolean;
   onExpandBranch?: (direction: "up" | "down" | "both") => void;
 };
 
@@ -22,7 +23,10 @@ export function PersonNode({
   const person = nodeData.person;
   if (!person) return null;
 
-  const initials = `${person.firstName[0] ?? ""}${person.lastName[0] ?? ""}`;
+  const isPrivate = person.treeDisplayIsPrivate === true;
+  const initials = isPrivate
+    ? "?"
+    : `${person.firstName[0] ?? ""}${person.lastName[0] ?? ""}`;
 
   return (
     <div
@@ -48,14 +52,23 @@ export function PersonNode({
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            {person.firstName} {person.lastName}
+            {isPrivate ? (
+              person.firstName
+            ) : (
+              <>
+                {person.firstName} {person.lastName}
+                {formatUrduName(person) ? (
+                  <>
+                    {" · "}
+                    <UrduText>{formatUrduName(person)}</UrduText>
+                  </>
+                ) : null}
+              </>
+            )}
           </p>
-          <p className="truncate text-[10px] font-mono text-zinc-500">
-            {person.familyCode}
-          </p>
-          {formatUrduName(person) && (
-            <p className="truncate text-[11px] text-zinc-600 dark:text-zinc-400">
-              <UrduText>{formatUrduName(person)}</UrduText>
+          {!isPrivate && (
+            <p className="truncate text-[10px] font-mono text-zinc-500">
+              {person.familyCode}
             </p>
           )}
         </div>

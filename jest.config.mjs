@@ -6,6 +6,7 @@ const config = {
     "^@/(.*)$": "<rootDir>/$1",
   },
   testMatch: ["**/*.test.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "<rootDir>/family-tree-app/"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   clearMocks: true,
 };

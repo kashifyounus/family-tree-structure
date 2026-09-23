@@ -19,11 +19,28 @@ export function getChildIds(personId: string, unions: UnionRecord[]): string[] {
   return [...ids];
 }
 
+function siblingsOf(personId: string, unions: UnionRecord[]): string[] {
+  const parentUnions = unions.filter((u) =>
+    u.childships.some((c) => c.childId === personId),
+  );
+  const sibs = new Set<string>();
+  for (const u of parentUnions) {
+    for (const c of u.childships) {
+      if (c.childId !== personId) sibs.add(c.childId);
+    }
+  }
+  return [...sibs];
+}
+
 export function getExplorationHints(
   personId: string,
   visibleIds: Set<string>,
   unions: UnionRecord[],
-): { hasUnexpandedParents: boolean; hasUnexpandedChildren: boolean } {
+): {
+  hasUnexpandedParents: boolean;
+  hasUnexpandedChildren: boolean;
+  hasUnexpandedSiblings: boolean;
+} {
   const parentIds = getParentIds(personId, unions);
   const childIds = getChildIds(personId, unions);
 
@@ -38,5 +55,13 @@ export function getExplorationHints(
   const hasUnexpandedChildren =
     childIds.length > 0 && childIds.some((id) => !visibleIds.has(id));
 
-  return { hasUnexpandedParents, hasUnexpandedChildren };
+  const sibIds = siblingsOf(personId, unions);
+  const hasUnexpandedSiblings =
+    sibIds.length > 0 && sibIds.some((id) => !visibleIds.has(id));
+
+  return {
+    hasUnexpandedParents,
+    hasUnexpandedChildren,
+    hasUnexpandedSiblings,
+  };
 }

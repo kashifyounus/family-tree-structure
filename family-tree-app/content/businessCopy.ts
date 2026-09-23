@@ -49,6 +49,17 @@ export const copy = {
     signedIn: "You are signed in",
     signOut: "Sign out",
     loadSampleFamily: "Load sample family",
+    appearanceTitle: "Appearance",
+    themeLight: "Light",
+    themeDark: "Dark",
+    textSizeTitle: "Text size",
+    textNormal: "Normal",
+    textLarge: "Large",
+    hapticsTitle: "Touch feedback",
+    hapticsOn: "Vibration on",
+    hapticsOff: "Vibration off",
+    dataTitle: "Your data",
+    openTools: "Backup, export & kinship tools",
     loadSampleSuccess: (reference: string) =>
       `Sample family loaded. Explore member reference ${reference}.`,
   },
@@ -58,6 +69,10 @@ export const copy = {
     welcomeBody:
       "Mughal's Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
     getStarted: "Begin setup",
+    shortPrivateCta: "Set up private archive",
+    loadDemoFamily: "Load demo family",
+    demoLoaded: (reference: string) =>
+      `Demo family loaded. Explore member reference ${reference}.`,
     chooseStorageTitle: "How would you like to start?",
     chooseStorageBody:
       "You may keep a private archive on this phone, connect to your family's shared registry, or start privately and link the cloud later.",
@@ -95,6 +110,12 @@ export const copy = {
     insights: "Family insights",
     statsPrivate: (members: number, living: number) =>
       `Private archive: ${members} member${members === 1 ? "" : "s"}, ${living} recorded as living`,
+    statsCloud: (members: number, focalCode: string) =>
+      `Family cloud: ${members} member${members === 1 ? "" : "s"} in your directory · branch ${focalCode}`,
+    statsCloudLoading: "Loading family cloud summary…",
+    searchPlaceholder: "Find a family member",
+    recentTitle: "Recently opened",
+    openBackupTools: "Backup & tools",
   },
 
   tree: {
@@ -115,6 +136,25 @@ export const copy = {
     tapProfile: "Open full profile",
     graphView: "Graph",
     listView: "List",
+    menuTitle: "Tree menu",
+    menuCenterMarriage: "Center on my marriage",
+    menuReload: "Reload tree",
+    menuMoreTools: "More tools",
+    menuKinship: "Compare kinship",
+    menuShowList: "Browse as list",
+    menuShowGraph: "Show graph view",
+    sheetProfile: "Open profile",
+    sheetCenter: "Center tree here",
+    loadParents: "Load parents",
+    loadChildren: "Load children",
+    loadSiblings: "Load siblings",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    offlineBanner: "You are offline. Switch to your private archive in Account to keep working.",
+    retryLoad: "Retry",
+    privatePerson: "Private",
+    exportPrivacyHint:
+      "This file contains private family data. Only share it with people you trust.",
   },
 
   members: {
@@ -147,7 +187,25 @@ export const copy = {
     openInTree: "Show in family tree",
     needMarriageFirst:
       "Record a marriage (add a spouse) before adding a child to this branch.",
+    cloudReadOnly:
+      "Shared family records can be viewed here. Add marriages, children, and parents on the family website, or switch to the private archive on this device.",
+    parentsSection: "Parents",
+    noParents: "No parents recorded yet.",
+    addParents: "Add parents",
+    changeParents: "Change parents",
+    currentMarriage: "Current marriage",
+    previousMarriage: "Previous marriage",
+    spouseSaved: "Marriage saved. Both people are now linked.",
+    childSaved: "Child saved on this marriage.",
+    parentsSaved: "Parents saved.",
+    marriageSaved: "Marriage details saved.",
+    confirmReplaceParents:
+      "This replaces the current parents. Other children of that marriage stay where they are.",
     kinshipOnline: "Relatives (from family cloud)",
+    relationToMe: "Relation to me",
+    relationToMeSame: "This is you in your private archive.",
+    relationToMeUnavailable:
+      "Sign in to your private archive to see how this person relates to you.",
     fullSibling: (name: string) => `Full sibling: ${name}`,
     halfSibling: (name: string) => `Half sibling: ${name}`,
   },
@@ -166,6 +224,9 @@ export const copy = {
     importFile: "Restore from backup file",
     importPlaceholder: "Paste backup file contents here…",
     importSuccess: "Your private archive was restored from the backup.",
+    importConfirmTitle: "Replace private archive?",
+    importConfirmBody: (count: number) =>
+      `This will erase ${count} member${count === 1 ? "" : "s"} on this device and replace them with the backup. This cannot be undone.`,
     compareTitle: "Compare two members",
     compareHint:
       "Enter member references or names from your private archive to see how they relate.",
@@ -173,8 +234,7 @@ export const copy = {
     compareNotFound:
       "We could not find both members. Use names or member references from your directory.",
     compareSame: "Please choose two different people.",
-    compareResult:
-      "Both members are in your private archive. Open each profile to see marriages and children, or use the family cloud for full relationship paths.",
+    compareResult: (summary: string) => summary,
     cloudOnly:
       "Backup and restore are available for your private archive. Switch to Private archive in Account, or use the family website for shared records.",
   },
@@ -207,6 +267,27 @@ export const copy = {
     MALE: "Male",
     FEMALE: "Female",
     OTHER: "Other",
+  },
+
+  security: {
+    privacyShield: "Mughal's Family Tree",
+    unlockTitle: "Enter your PIN",
+    unlockBody: "This device is protected. Enter your PIN to view your family records.",
+    pinLabel: "PIN",
+    unlockButton: "Unlock",
+    wrongPin: "That PIN is not correct. Try again.",
+    pinTitle: "App PIN",
+    pinHelp: "Optional 4–6 digit PIN. Also hides content in the app switcher.",
+    setPin: "Set PIN",
+    removePin: "Turn off PIN",
+    pinSet: "PIN is on.",
+    pinRemoved: "PIN is off.",
+    pinConfirmLabel: "Confirm PIN",
+    pinMismatch: "PINs do not match. Enter the same PIN twice.",
+    biometricTitle: "Unlock with fingerprint",
+    biometricHelp: "Use device biometrics when a PIN is set (optional).",
+    biometricUnlock: "Use biometrics",
+    biometricFailed: "Biometric unlock failed. Enter your PIN.",
   },
 
   errors: {

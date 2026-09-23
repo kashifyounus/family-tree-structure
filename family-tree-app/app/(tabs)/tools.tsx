@@ -3,7 +3,8 @@ import {
   writeAsStringAsync,
 } from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
 import { Button, Card, Text, useTheme } from "react-native-paper";
 
@@ -19,17 +20,35 @@ import {
   importLocalDatabaseJson,
 } from "@/lib/db/localRepository.ext";
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
+import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
 
 export default function ToolsScreen() {
   const theme = useTheme();
   const { mode, bumpDataRevision, localMemberCount } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
+  const { compareA } = useLocalSearchParams<{ compareA?: string }>();
   const [importText, setImportText] = useState("");
   const [personA, setPersonA] = useState("");
   const [personB, setPersonB] = useState("");
+
+  useEffect(() => {
+    if (compareA && typeof compareA === "string") {
+      setPersonA(compareA);
+    }
+  }, [compareA]);
   const [driveBusy, setDriveBusy] = useState(false);
 
-  const exportDb = async () => {
+  const exportDb = () => {
+    Alert.alert(copy.tools.exportFile, copy.tree.exportPrivacyHint, [
+      { text: copy.reports.cancel, style: "cancel" },
+      {
+        text: copy.tools.exportFile,
+        onPress: () => void runExport(),
+      },
+    ]);
+  };
+
+  const runExport = async () => {
     try {
       const json = exportLocalDatabaseJson();
       const path = `${cacheDirectory}mughals-family-backup.json`;
@@ -47,7 +66,22 @@ export default function ToolsScreen() {
     }
   };
 
-  const backupToDrive = async () => {
+  const backupToDrive = () => {
+    Alert.alert(copy.tools.driveTitle, copy.tree.exportPrivacyHint, [
+      { text: copy.reports.cancel, style: "cancel" },
+      {
+        text: copy.tools.driveButton,
+        onPress: () => {
+          Alert.alert(copy.tools.driveTitle, copy.tools.driveBody, [
+            { text: copy.reports.cancel, style: "cancel" },
+            { text: "Continue", onPress: () => void runDriveBackup() },
+          ]);
+        },
+      },
+    ]);
+  };
+
+  const runDriveBackup = async () => {
     setDriveBusy(true);
     try {
       const name = await backupDatabaseToGoogleDrive();
@@ -60,14 +94,35 @@ export default function ToolsScreen() {
   };
 
   const importDb = () => {
-    try {
-      importLocalDatabaseJson(importText);
-      bumpDataRevision();
-      setImportText("");
-      showSuccess(copy.tools.importSuccess);
-    } catch (e) {
-      showError(e);
-    }
+    Alert.alert(copy.tools.importFile, copy.tools.fileBackupBody(localMemberCount), [
+      { text: copy.reports.cancel, style: "cancel" },
+      {
+        text: "Continue",
+        onPress: () => {
+          Alert.alert(
+            copy.tools.importConfirmTitle,
+            copy.tools.importConfirmBody(localMemberCount),
+            [
+            { text: copy.reports.cancel, style: "cancel" },
+            {
+              text: copy.tools.importFile,
+              style: "destructive",
+              onPress: () => {
+                try {
+                  importLocalDatabaseJson(importText);
+                  bumpDataRevision();
+                  setImportText("");
+                  showSuccess(copy.tools.importSuccess);
+                } catch (e) {
+                  showError(e);
+                }
+              },
+            },
+          ],
+          );
+        },
+      },
+    ]);
   };
 
   const relationHint = () => {
@@ -90,7 +145,10 @@ export default function ToolsScreen() {
       Alert.alert(copy.tools.compareTitle, copy.tools.compareSame);
       return;
     }
-    Alert.alert(copy.tools.compareTitle, copy.tools.compareResult);
+    Alert.alert(
+      copy.tools.compareTitle,
+      copy.tools.compareResult(computeRelationSummary(a.id, b.id)),
+    );
   };
 
   return (
@@ -108,7 +166,7 @@ export default function ToolsScreen() {
                 mode="contained"
                 icon="google-drive"
                 loading={driveBusy}
-                onPress={() => void backupToDrive()}
+                onPress={backupToDrive}
               >
                 {copy.tools.driveButton}
               </Button>
@@ -125,7 +183,7 @@ export default function ToolsScreen() {
                 testID="tools-export-file"
                 mode="contained"
                 icon="export"
-                onPress={() => void exportDb()}
+                onPress={exportDb}
               >
                 {copy.tools.exportFile}
               </Button>

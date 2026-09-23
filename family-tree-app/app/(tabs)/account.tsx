@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -6,12 +7,16 @@ import {
   Card,
   Divider,
   SegmentedButtons,
+  Switch,
   Text,
   TextInput,
   useTheme,
 } from "react-native-paper";
 
+import { AppDialogForm } from "@/components/ui/AppDialogForm";
+import { FormTextInput } from "@/components/ui/FormTextInput";
 import { Screen } from "@/components/ui/Screen";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { copy } from "@/content/businessCopy";
 import {
   APP_OWNER,
@@ -31,6 +36,8 @@ import type { StorageMode } from "@/lib/data/types";
 
 export default function AccountScreen() {
   const theme = useTheme();
+  const router = useRouter();
+  const prefs = useAppPreferences();
   const auth = useAuth();
   const localAccount = useLocalAccount();
   const storage = useStorage();
@@ -39,6 +46,11 @@ export default function AccountScreen() {
   const [password, setPassword] = useState(DEFAULT_LOGIN_PASSWORD);
   const [submitting, setSubmitting] = useState(false);
   const [apiDraft, setApiDraft] = useState(storage.apiUrl);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pinDraft, setPinDraft] = useState("");
+  const [pinConfirmDraft, setPinConfirmDraft] = useState("");
+  const [pinFieldError, setPinFieldError] = useState<string | undefined>();
+  const [pinConfirmError, setPinConfirmError] = useState<string | undefined>();
 
   const onSignIn = async () => {
     if (storage.mode !== "online") {
@@ -91,6 +103,130 @@ export default function AccountScreen() {
           </Card.Content>
         </Card>
       )}
+
+      <Card mode="elevated" style={styles.card}>
+        <Card.Content style={styles.gap}>
+          <Text variant="titleMedium">{copy.account.appearanceTitle}</Text>
+          <SegmentedButtons
+            value={prefs.theme}
+            onValueChange={(v) => void prefs.setTheme(v as "light" | "dark")}
+            buttons={[
+              { value: "light", label: copy.account.themeLight, icon: "white-balance-sunny" },
+              { value: "dark", label: copy.account.themeDark, icon: "moon-waning-crescent" },
+            ]}
+          />
+          <Text variant="titleSmall">{copy.account.textSizeTitle}</Text>
+          <SegmentedButtons
+            value={prefs.textScale}
+            onValueChange={(v) => void prefs.setTextScale(v as "normal" | "large")}
+            buttons={[
+              { value: "normal", label: copy.account.textNormal },
+              { value: "large", label: copy.account.textLarge },
+            ]}
+          />
+          <View style={styles.rowBetween}>
+            <Text variant="bodyMedium">{copy.account.hapticsTitle}</Text>
+            <Switch
+              value={prefs.hapticsEnabled}
+              onValueChange={(v) => void prefs.setHapticsEnabled(v)}
+            />
+          </View>
+          <Text variant="titleSmall">{copy.security.pinTitle}</Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            {copy.security.pinHelp}
+          </Text>
+          {prefs.pinEnabled ? (
+            <>
+              <View style={styles.rowBetween}>
+                <Text variant="bodyMedium">{copy.security.biometricTitle}</Text>
+                <Switch
+                  value={prefs.biometricUnlockEnabled}
+                  onValueChange={(v) => void prefs.setBiometricUnlockEnabled(v)}
+                />
+              </View>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {copy.security.biometricHelp}
+              </Text>
+              <Button mode="outlined" onPress={() => void prefs.clearPin().then(() => showSuccess(copy.security.pinRemoved))}>
+                {copy.security.removePin}
+              </Button>
+            </>
+          ) : (
+            <Button mode="outlined" onPress={() => setPinDialogOpen(true)}>
+              {copy.security.setPin}
+            </Button>
+          )}
+        </Card.Content>
+      </Card>
+
+      <AppDialogForm
+        visible={pinDialogOpen}
+        title={copy.security.setPin}
+        onDismiss={() => {
+          setPinDialogOpen(false);
+          setPinDraft("");
+          setPinConfirmDraft("");
+          setPinFieldError(undefined);
+          setPinConfirmError(undefined);
+        }}
+        onSubmit={() => {
+          setPinFieldError(undefined);
+          setPinConfirmError(undefined);
+          if (!/^\d{4,6}$/.test(pinDraft)) {
+            setPinFieldError("PIN must be 4–6 digits.");
+            showError(new Error(copy.errors.validation));
+            return;
+          }
+          if (pinDraft !== pinConfirmDraft) {
+            setPinConfirmError(copy.security.pinMismatch);
+            showError(new Error(copy.security.pinMismatch));
+            return;
+          }
+          void prefs
+            .setPin(pinDraft)
+            .then(() => {
+              showSuccess(copy.security.pinSet);
+              setPinDialogOpen(false);
+              setPinDraft("");
+              setPinConfirmDraft("");
+            })
+            .catch((e) => showError(e));
+        }}
+        submitLabel={copy.security.setPin}
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          label={copy.security.pinLabel}
+          value={pinDraft}
+          onChangeText={setPinDraft}
+          errorText={pinFieldError}
+          secureTextEntry
+          keyboardType="number-pad"
+          maxLength={6}
+        />
+        <FormTextInput
+          label={copy.security.pinConfirmLabel}
+          value={pinConfirmDraft}
+          onChangeText={setPinConfirmDraft}
+          errorText={pinConfirmError}
+          secureTextEntry
+          keyboardType="number-pad"
+          maxLength={6}
+        />
+      </AppDialogForm>
+
+      <Card mode="elevated" style={styles.card}>
+        <Card.Content style={styles.gap}>
+          <Text variant="titleMedium">{copy.account.dataTitle}</Text>
+          <Button
+            mode="outlined"
+            icon="toolbox"
+            onPress={() => router.push("/(tabs)/tools")}
+          >
+            {copy.account.openTools}
+          </Button>
+        </Card.Content>
+      </Card>
 
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.gap}>
@@ -193,4 +329,9 @@ const styles = StyleSheet.create({
   card: { borderRadius: 16, marginBottom: 12 },
   gap: { gap: 10 },
   divider: { marginVertical: 12 },
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
 });
