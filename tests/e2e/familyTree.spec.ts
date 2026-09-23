@@ -1,0 +1,68 @@
+import { expect, test } from "@playwright/test";
+import { signInAsContributor } from "./auth";
+
+const FOCAL_CODE = "FAM-10004";
+
+test.describe("Mughal's Family Tree E2E", () => {
+  test.beforeEach(async ({ context }) => {
+    await signInAsContributor(context);
+  });
+
+  test("tree page loads and drawer shows English, Urdu, and geography", async ({
+    page,
+  }) => {
+    await page.goto(`/tree/${FOCAL_CODE}`);
+    await expect(page.getByTestId("person-drawer")).toBeVisible();
+    await expect(page.getByTestId("person-drawer-title")).toContainText(
+      "Hassan",
+    );
+    await expect(page.getByTestId("person-urdu-name")).toBeVisible();
+    await expect(page.getByTestId("geography-section")).toBeVisible();
+  });
+
+  test("search finds member by English name, Urdu, and family code", async ({
+    page,
+  }) => {
+    await page.goto(`/tree/${FOCAL_CODE}`);
+    const search = page.getByTestId("member-search");
+    await search.fill("Hassan");
+    await expect(page.getByRole("option").first()).toBeVisible();
+    await search.clear();
+    await search.fill("حسن");
+    await expect(page.getByRole("option").first()).toBeVisible({ timeout: 5000 });
+    await search.clear();
+    await search.fill(FOCAL_CODE);
+    await expect(page.getByText(FOCAL_CODE).first()).toBeVisible();
+  });
+
+  test("reports dashboard renders chart surfaces", async ({ page }) => {
+    await page.goto(`/tree/${FOCAL_CODE}/reports`);
+    await expect(page.getByRole("heading", { name: "Family reports" })).toBeVisible();
+    await expect(page.getByTestId("reports-dashboard")).toBeVisible();
+    await expect(page.locator(".recharts-wrapper").first()).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
+  test("mobile viewport shows tree nodes and member strip", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/tree/${FOCAL_CODE}`);
+    await expect(page.getByTestId("tree-canvas")).toBeVisible();
+    await expect(page.locator(".react-flow__node").first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByTestId("mobile-member-strip")).toBeVisible();
+    await expect(page.getByTestId("mobile-open-profile")).toBeVisible();
+  });
+
+  test("contributor sign-in reveals mutation actions in drawer", async ({
+    page,
+  }) => {
+    await page.goto(`/tree/${FOCAL_CODE}`);
+    await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+    await expect(page.getByTestId("person-drawer")).toBeVisible();
+    await expect(page.getByTestId("add-spouse-btn")).toBeVisible();
+    await expect(page.getByTestId("add-child-btn")).toBeVisible();
+  });
+
+});

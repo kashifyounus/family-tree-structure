@@ -1,0 +1,39 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: onboarding-screen
+    timeout: 30000
+- tapOn:
+    id: onboarding-get-started
+- extendedWaitUntil:
+    visible:
+      id: onboarding-create-profile
+    timeout: 10000
+- tapOn:
+    id: onboarding-display-name
+- inputText: "Test User"
+- tapOn:
+    id: onboarding-email
+- inputText: "tester@family.local"
+- tapOn:
+    id: onboarding-password
+- inputText: "family123"
+- tapOn:
+    id: onboarding-first-name
+- inputText: "Ahmad"
+- tapOn:
+    id: onboarding-last-name
+- inputText: "Khan"
+- tapOn:
+    id: onboarding-create-profile
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- assertVisible:
+    id: home-screen

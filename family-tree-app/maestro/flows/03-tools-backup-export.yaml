@@ -1,0 +1,29 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    text: "Tree"
+- tapOn:
+    id: tree-overflow-menu
+- tapOn:
+    id: tree-menu-more-tools
+- extendedWaitUntil:
+    visible:
+      id: tools-screen
+    timeout: 10000
+- assertVisible:
+    text: "Save copy to Google Drive"
+- tapOn:
+    id: tools-export-file
+- tapOn:
+    text: "Export backup file"
+- extendedWaitUntil:
+    visible:
+      id: tools-screen
+    timeout: 8000

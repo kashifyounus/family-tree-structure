@@ -1,0 +1,11 @@
+# Maestro — https://maestro.mobile.dev
+# Run: npm run test:e2e (requires Maestro CLI + Android emulator or device with APK installed)
+
+flows:
+  - flows/*
+includeTags:
+  - smoke
+
+platform:
+  android:
+    disableAnimations: true

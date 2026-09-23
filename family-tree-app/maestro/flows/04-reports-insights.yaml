@@ -1,0 +1,17 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    text: "Family insights"
+- extendedWaitUntil:
+    visible:
+      id: reports-screen
+    timeout: 10000
+- assertVisible:
+    text: "Family insights"
