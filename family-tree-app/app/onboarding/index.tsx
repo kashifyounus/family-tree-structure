@@ -8,7 +8,6 @@ import {
   Chip,
   HelperText,
   ProgressBar,
-  SegmentedButtons,
   Text,
   useTheme,
 } from "react-native-paper";
@@ -219,17 +218,10 @@ export default function OnboardingScreen() {
                 value={lastName}
                 onChangeText={setLastName}
               />
-              <Text variant="labelLarge" style={styles.section}>
-                {copy.onboarding.startingMember}
-              </Text>
-              <SegmentedButtons
+              <GenderField
                 value={gender}
-                onValueChange={(v) => setGender(v as Gender)}
-                buttons={[
-                  { value: "MALE", label: copy.gender.MALE },
-                  { value: "FEMALE", label: copy.gender.FEMALE },
-                  { value: "OTHER", label: copy.gender.OTHER },
-                ]}
+                onChange={setGender}
+                label={copy.onboarding.startingMember}
               />
               <Button
                 testID="onboarding-create-profile"
