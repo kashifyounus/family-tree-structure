@@ -5,7 +5,6 @@ import { StyleSheet, View } from "react-native";
 import {
   Button,
   Card,
-  Chip,
   HelperText,
   ProgressBar,
   Text,
@@ -24,11 +23,12 @@ import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_LOGIN_EMAIL, DEFAULT_LOGIN_PASSWORD } from "@/context/AuthContext";
-import type { Gender, StorageMode } from "@/lib/data/types";
+import { setupDemoArchive } from "@/lib/localAccount/demoSetup";
+import type { Gender } from "@/lib/data/types";
 
-type Step = "welcome" | "mode" | "local" | "online" | "done";
+type Step = "start" | "local" | "online";
 
-const STEPS: Step[] = ["welcome", "mode", "local", "online", "done"];
+const STEPS: Step[] = ["start", "local", "online"];
 
 export default function OnboardingScreen() {
   const theme = useTheme();
@@ -38,8 +38,7 @@ export default function OnboardingScreen() {
   const auth = useAuth();
   const { showError, showSuccess } = useAppFeedback();
 
-  const [step, setStep] = useState<Step>("welcome");
-  const [mode, setMode] = useState<StorageMode>("local");
+  const [step, setStep] = useState<Step>("start");
   const [busy, setBusy] = useState(false);
 
   const [displayName, setDisplayName] = useState("");
@@ -55,20 +54,24 @@ export default function OnboardingScreen() {
 
   const progress = (STEPS.indexOf(step) + 1) / STEPS.length;
 
-  const go = (next: Step) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setStep(next);
-  };
-
   const finish = async () => {
     await storage.completeOnboarding();
     router.replace("/(tabs)");
   };
 
-  const onChooseMode = async (next: StorageMode) => {
-    setMode(next);
-    await storage.setMode(next);
-    go(next === "local" ? "local" : "online");
+  const go = (next: Step) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setStep(next);
+  };
+
+  const startPrivate = async () => {
+    await storage.setMode("local");
+    go("local");
+  };
+
+  const startCloud = async () => {
+    await storage.setMode("online");
+    go("online");
   };
 
   const onRegisterLocal = async () => {
@@ -86,7 +89,23 @@ export default function OnboardingScreen() {
       showSuccess(
         copy.onboarding.welcomeNamed(session.displayName, session.focalFamilyCode),
       );
-      go("done");
+      await finish();
+    } catch (e) {
+      showError(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onLoadDemo = async () => {
+    setBusy(true);
+    try {
+      await storage.setMode("local");
+      const session = await setupDemoArchive();
+      await localAccount.refresh();
+      storage.bumpDataRevision();
+      showSuccess(copy.onboarding.demoLoaded(session.focalFamilyCode));
+      await finish();
     } catch (e) {
       showError(e);
     } finally {
@@ -104,7 +123,7 @@ export default function OnboardingScreen() {
         return;
       }
       showSuccess(copy.onboarding.cloudConnected);
-      go("done");
+      await finish();
     } catch (e) {
       showError(e);
     } finally {
@@ -115,7 +134,7 @@ export default function OnboardingScreen() {
   const onSkipOnlineAuth = async () => {
     await storage.setApiUrl(apiUrl);
     showSuccess(copy.onboarding.addressSaved);
-    go("done");
+    await finish();
   };
 
   return (
@@ -129,51 +148,31 @@ export default function OnboardingScreen() {
         exiting={SlideOutLeft.duration(200)}
         style={styles.step}
       >
-        {step === "welcome" && (
+        {step === "start" && (
           <AppCard>
             <Card.Content style={styles.cardContent}>
               <Text variant="titleLarge">{copy.onboarding.welcomeTitle}</Text>
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.onboarding.welcomeBody}
+                {copy.onboarding.chooseStorageBody}
               </Text>
               <Button
                 testID="onboarding-get-started"
                 mode="contained"
-                onPress={() => go("mode")}
+                onPress={() => void startPrivate()}
               >
-                {copy.onboarding.getStarted}
+                {copy.onboarding.privateChoice}
               </Button>
-            </Card.Content>
-          </AppCard>
-        )}
-
-        {step === "mode" && (
-          <AppCard>
-            <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">{copy.onboarding.chooseStorageTitle}</Text>
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.onboarding.chooseStorageBody}
-              </Text>
-              <View style={styles.modeCards}>
-                <Chip
-                  testID="onboarding-choose-private"
-                  icon="home-heart"
-                  selected={mode === "local"}
-                  onPress={() => void onChooseMode("local")}
-                  style={styles.chip}
-                >
-                  {copy.onboarding.privateChoice}
-                </Chip>
-                <Chip
-                  icon="cloud"
-                  selected={mode === "online"}
-                  onPress={() => void onChooseMode("online")}
-                  style={styles.chip}
-                >
-                  {copy.onboarding.cloudChoice}
-                </Chip>
-              </View>
-              <Button onPress={() => go("welcome")}>Back</Button>
+              <Button mode="outlined" onPress={() => void startCloud()}>
+                {copy.onboarding.cloudChoice}
+              </Button>
+              <Button
+                testID="onboarding-load-demo"
+                mode="text"
+                loading={busy}
+                onPress={() => void onLoadDemo()}
+              >
+                {copy.onboarding.loadDemoFamily}
+              </Button>
             </Card.Content>
           </AppCard>
         )}
@@ -231,7 +230,7 @@ export default function OnboardingScreen() {
               >
                 {copy.onboarding.createProfile}
               </Button>
-              <Button onPress={() => go("mode")}>Back</Button>
+              <Button onPress={() => go("start")}>Back</Button>
             </Card.Content>
           </AppCard>
         )}
@@ -240,7 +239,9 @@ export default function OnboardingScreen() {
           <AppCard>
             <Card.Content style={styles.cardContent}>
               <Text variant="titleLarge">{copy.onboarding.cloudTitle}</Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{copy.onboarding.cloudBody}</Text>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {copy.onboarding.cloudBody}
+              </Text>
               <FormTextInput
                 label={copy.account.connectionAddress}
                 value={apiUrl}
@@ -267,21 +268,7 @@ export default function OnboardingScreen() {
               <Button onPress={() => void onSkipOnlineAuth()}>
                 {copy.onboarding.saveAddressOnly}
               </Button>
-              <Button onPress={() => go("mode")}>Back</Button>
-            </Card.Content>
-          </AppCard>
-        )}
-
-        {step === "done" && (
-          <AppCard>
-            <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">{copy.onboarding.completeTitle}</Text>
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.onboarding.completeBody}
-              </Text>
-              <Button testID="onboarding-enter-app" mode="contained" onPress={() => void finish()}>
-                {copy.onboarding.enterApp}
-              </Button>
+              <Button onPress={() => go("start")}>Back</Button>
             </Card.Content>
           </AppCard>
         )}
@@ -294,7 +281,4 @@ const styles = StyleSheet.create({
   progress: { marginBottom: 16, borderRadius: 8 },
   step: { marginTop: 8 },
   cardContent: { gap: 12 },
-  modeCards: { gap: 8 },
-  chip: { alignSelf: "stretch", justifyContent: "flex-start" },
-  section: { marginTop: 4 },
 });

@@ -18,6 +18,8 @@ export function mergeFamilyGraphs(
 
   return {
     focalPersonId: base.focalPersonId,
+    focalUnionId: base.focalUnionId,
+    focalUnionIds: base.focalUnionIds,
     nodes: [...nodeMap.values()],
     edges: [...edgeMap.values()],
   };

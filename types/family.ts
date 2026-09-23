@@ -23,6 +23,8 @@ export type PersonSummary = {
   currentCity: string | null;
   permanentCity: string | null;
   homeTown: string | null;
+  /** True when name/code are replaced for restricted viewers (e.g. tree placeholder). */
+  treeDisplayIsPrivate?: boolean;
 };
 
 export type UnionSummary = {
@@ -104,6 +106,7 @@ export type FamilyGraphNode = {
     isDeceased?: boolean;
     hasUnexpandedParents?: boolean;
     hasUnexpandedChildren?: boolean;
+    hasUnexpandedSiblings?: boolean;
   };
 };
 
@@ -118,6 +121,9 @@ export type FamilyGraphEdge = {
 
 export type FamilyGraph = {
   focalPersonId: string;
+  /** Primary marriage union on the focal row, when the focal person has a spouse in the graph. */
+  focalUnionId?: string | null;
+  focalUnionIds?: string[];
   nodes: FamilyGraphNode[];
   edges: FamilyGraphEdge[];
 };

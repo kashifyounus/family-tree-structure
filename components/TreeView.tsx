@@ -15,6 +15,7 @@ import { AuthPanel } from "@/components/AuthPanel";
 import { MobileGraphMemberStrip } from "@/components/tree/MobileGraphMemberStrip";
 import { MobileTreeListPanel } from "@/components/tree/MobileTreeListPanel";
 import { TreeCanvasContainer } from "@/components/tree/TreeCanvasContainer";
+import { TreeExpansionToolbar } from "@/components/tree/TreeExpansionToolbar";
 
 type TreeViewProps = {
   familyCode: string;
@@ -36,7 +37,9 @@ export function TreeView({
   const [details, setDetails] = useState<PersonDetails>(initialDetails);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileMode, setMobileMode] = useState<MobileTreeMode>("graph");
-  const [, startTransition] = useTransition();
+  const [depth, setDepth] = useState(2);
+  const [siblingSteps, setSiblingSteps] = useState(0);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 1024px)");
@@ -48,29 +51,43 @@ export function TreeView({
 
   const canEdit = canEditTree(session.role);
 
+  const loadGraph = useCallback(
+    (code: string, nextDepth: number, nextSiblingSteps: number) => {
+      startTransition(async () => {
+        const g = await getFamilyGraph(code, nextDepth, nextSiblingSteps);
+        if (g) setGraph(g);
+      });
+    },
+    [],
+  );
+
   const refreshTree = useCallback(() => {
     startTransition(async () => {
       const next = await getPersonDetails(details.person.id);
       if (next) setDetails(next);
-      const g = await getFamilyGraph(familyCode);
-      if (g) setGraph(g);
+      loadGraph(familyCode, depth, siblingSteps);
       router.refresh();
     });
-  }, [details.person.id, familyCode, router]);
+  }, [details.person.id, familyCode, router, depth, siblingSteps, loadGraph]);
 
-  const focusPerson = useCallback((personId: string) => {
-    startTransition(async () => {
-      const next = await getPersonDetails(personId);
-      if (!next) return;
-      setDetails(next);
-      const narrow = window.matchMedia("(max-width: 1023px)").matches;
-      if (narrow) {
-        setDrawerOpen(true);
-      }
-      const g = await getFamilyGraph(next.person.familyCode);
-      if (g) setGraph(g);
-    });
-  }, []);
+  const focusPerson = useCallback(
+    (personId: string) => {
+      startTransition(async () => {
+        const next = await getPersonDetails(personId);
+        if (!next) return;
+        setDetails(next);
+        const narrow = window.matchMedia("(max-width: 1023px)").matches;
+        if (narrow) {
+          setDrawerOpen(true);
+        }
+        loadGraph(next.person.familyCode, depth, siblingSteps);
+      });
+    },
+    [depth, siblingSteps, loadGraph],
+  );
+
+  const focalNode = graph.nodes.find((n) => n.id === graph.focalPersonId);
+  const focalHints = focalNode?.data;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden pb-[4.25rem] lg:pb-0">
@@ -91,6 +108,33 @@ export function TreeView({
               </div>
               <SearchBar className="w-full sm:max-w-md" />
             </div>
+
+            <TreeExpansionToolbar
+              loading={isPending}
+              canLoadParents={!!focalHints?.hasUnexpandedParents}
+              canLoadChildren={!!focalHints?.hasUnexpandedChildren}
+              canLoadSiblings={!!focalHints?.hasUnexpandedSiblings}
+              onLoadParents={() => {
+                const next = depth + 1;
+                setDepth(next);
+                loadGraph(details.person.familyCode, next, siblingSteps);
+              }}
+              onLoadChildren={() => {
+                const next = depth + 1;
+                setDepth(next);
+                loadGraph(details.person.familyCode, next, siblingSteps);
+              }}
+              onLoadSiblings={() => {
+                const next = siblingSteps + 1;
+                setSiblingSteps(next);
+                loadGraph(details.person.familyCode, depth, next);
+              }}
+              onCenterMarriage={() => {
+                setDepth(2);
+                setSiblingSteps(0);
+                loadGraph(familyCode, 2, 0);
+              }}
+            />
 
             <div className="flex gap-2 lg:hidden">
               <button

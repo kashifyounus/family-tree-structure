@@ -2,14 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import {
-  Banner,
-  FAB,
-  List,
-  Searchbar,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Banner, FAB, Searchbar, Text, useTheme } from "react-native-paper";
+
+import { MemberCard } from "@/components/members/MemberCard";
 
 import { AppDialogForm } from "@/components/ui/AppDialogForm";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,9 +15,10 @@ import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { useAuth } from "@/context/AuthContext";
 import { useAppFeedback } from "@/context/ErrorContext";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
-import { formatGender } from "@/lib/format/gender";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
+import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import type { Gender, MemberRecord } from "@/lib/data/types";
 import { layout, radius, space } from "@/theme/tokens";
 
@@ -34,6 +30,7 @@ export default function MembersScreen() {
   const { mode, dataRevision, bumpDataRevision } = useStorage();
   const auth = useAuth();
   const { showError, showSuccess } = useAppFeedback();
+  const { impactLight } = useAppPreferences();
   const canCreate =
     mode === "local" ||
     (mode === "online" && auth.token && auth.role !== "VIEWER");
@@ -47,6 +44,7 @@ export default function MembersScreen() {
   const [gender, setGender] = useState<Gender>("MALE");
   const [birthDate, setBirthDate] = useState("");
   const [createCity, setCreateCity] = useState("");
+  const [createFieldErrors, setCreateFieldErrors] = useState<FieldErrors>({});
 
   const load = useCallback(
     async (q: string) => {
@@ -70,6 +68,19 @@ export default function MembersScreen() {
   }, [load, dataRevision, mode]);
 
   const onCreate = async () => {
+    const errors: FieldErrors = {
+      firstName: required(firstName, "First name"),
+      lastName: required(lastName, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setCreateFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setCreateFieldErrors({});
     try {
       await createMember(mode, {
         firstName: firstName.trim(),
@@ -84,6 +95,7 @@ export default function MembersScreen() {
       setBirthDate("");
       setCreateCity("");
       bumpDataRevision();
+      impactLight();
       showSuccess(copy.success.saved);
     } catch (e) {
       showError(e);
@@ -104,6 +116,7 @@ export default function MembersScreen() {
               try {
                 await removeMember(mode, member.id);
                 bumpDataRevision();
+                impactLight();
               } catch (e) {
                 showError(e);
               }
@@ -157,12 +170,9 @@ export default function MembersScreen() {
           refreshing={loading}
           onRefresh={() => void load(query)}
           renderItem={({ item, index }) => (
-            <List.Item
+            <MemberCard
               testID={index === 0 ? "members-first-card" : undefined}
-              title={`${item.firstName} ${item.lastName}`}
-              description={`${copy.account.memberReference}: ${item.familyCode} · ${formatGender(item.gender)}${item.currentCity ? ` · ${item.currentCity}` : ""}`}
-              left={(props) => <List.Icon {...props} icon="account-circle" />}
-              right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              member={item}
               onPress={() =>
                 router.push({
                   pathname: "/member/[personId]",
@@ -172,9 +182,6 @@ export default function MembersScreen() {
               onLongPress={() => {
                 if (mode === "local") onDelete(item);
               }}
-              style={[styles.listItem, { backgroundColor: theme.colors.surface }]}
-              titleStyle={{ color: theme.colors.onSurface }}
-              descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
             />
           )}
           ListEmptyComponent={
@@ -191,7 +198,10 @@ export default function MembersScreen() {
       <AppDialogForm
         visible={createOpen}
         title={copy.members.newMemberTitle}
-        onDismiss={() => setCreateOpen(false)}
+        onDismiss={() => {
+          setCreateOpen(false);
+          setCreateFieldErrors({});
+        }}
         onSubmit={() => void onCreate()}
         submitLabel={copy.members.saveMember}
         submitTestID="members-create-save"
@@ -202,6 +212,7 @@ export default function MembersScreen() {
           label="First name"
           value={firstName}
           onChangeText={setFirstName}
+          errorText={createFieldErrors.firstName}
           autoCapitalize="words"
         />
         <FormTextInput
@@ -209,6 +220,7 @@ export default function MembersScreen() {
           label="Last name"
           value={lastName}
           onChangeText={setLastName}
+          errorText={createFieldErrors.lastName}
           autoCapitalize="words"
         />
         <FormTextInput
@@ -239,9 +251,5 @@ const styles = StyleSheet.create({
   banner: { borderRadius: radius.md },
   search: { borderRadius: radius.md },
   listContent: { paddingHorizontal: layout.screenPaddingX, paddingTop: space.xs },
-  listItem: {
-    borderRadius: radius.lg,
-    marginBottom: layout.listGap,
-  },
   fab: { position: "absolute", right: layout.screenPaddingX },
 });

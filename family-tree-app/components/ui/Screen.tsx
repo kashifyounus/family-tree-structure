@@ -11,6 +11,7 @@ import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { layout } from "@/theme/tokens";
 import { motion } from "@/theme/motion";
 
@@ -38,11 +39,14 @@ export function Screen({
   animated = true,
 }: ScreenProps) {
   const theme = useTheme();
+  const prefs = useAppPreferences();
+  const textScale = prefs.textScale === "large" ? 1.12 : 1;
   const insets = useSafeAreaInsets();
   const contentStyle = [
     padded && styles.padded,
     {
       paddingBottom: Math.max(insets.bottom, 16) + bottomInset,
+      transform: textScale === 1 ? undefined : [{ scale: textScale }],
     },
     style,
   ];

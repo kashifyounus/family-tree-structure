@@ -1,8 +1,13 @@
 import { expect, test } from "@playwright/test";
+import { signInAsContributor } from "./auth";
 
 const FOCAL_CODE = "FAM-10004";
 
 test.describe("Mughal's Family Tree E2E", () => {
+  test.beforeEach(async ({ context }) => {
+    await signInAsContributor(context);
+  });
+
   test("tree page loads and drawer shows English, Urdu, and geography", async ({
     page,
   }) => {
@@ -52,21 +57,7 @@ test.describe("Mughal's Family Tree E2E", () => {
 
   test("contributor sign-in reveals mutation actions in drawer", async ({
     page,
-    context,
   }) => {
-    await context.addCookies([
-      {
-        name: "kinship_auth",
-        value: JSON.stringify({
-          role: "CONTRIBUTOR",
-          userId: "user-contributor",
-          displayName: "Family Contributor",
-        }),
-        url: "http://127.0.0.1:3000",
-        httpOnly: true,
-        sameSite: "Lax",
-      },
-    ]);
     await page.goto(`/tree/${FOCAL_CODE}`);
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
     await expect(page.getByTestId("person-drawer")).toBeVisible();

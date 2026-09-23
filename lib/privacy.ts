@@ -9,6 +9,9 @@ import type {
 
 const MASKED = "—";
 
+/** Shown on tree and lists when the viewer cannot see this living person’s identity. */
+export const TREE_PRIVATE_PLACEHOLDER = "Private";
+
 function birthYearOnly(isoDate: string | null): string | null {
   if (!isoDate) return null;
   return String(new Date(isoDate).getFullYear());
@@ -34,7 +37,7 @@ export function maskPersonSummary(
   viewer: AuthContext,
 ): PersonSummary {
   if (!shouldMaskLivingPerson(person, viewer)) {
-    return person;
+    return { ...person, treeDisplayIsPrivate: false };
   }
 
   return {
@@ -50,8 +53,13 @@ export function maskPersonSummary(
     age: birthYearOnly(person.birthDate)
       ? new Date().getFullYear() - parseInt(birthYearOnly(person.birthDate)!, 10)
       : null,
-    firstName: person.firstName,
-    lastName: person.lastName,
+    firstName: TREE_PRIVATE_PLACEHOLDER,
+    lastName: "",
+    nickname: null,
+    urduFirstName: null,
+    urduLastName: null,
+    familyCode: TREE_PRIVATE_PLACEHOLDER,
+    treeDisplayIsPrivate: true,
   };
 }
 

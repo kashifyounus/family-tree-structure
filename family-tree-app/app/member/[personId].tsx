@@ -22,6 +22,8 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
+import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import {
   addChild,
@@ -35,6 +37,10 @@ import {
 } from "@/lib/data/personService";
 import type { PersonBundle } from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
+import { formatBilingualName } from "@/lib/format/displayName";
+import { recordRecentVisit } from "@/lib/recentPeople";
+import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
+import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 
 export default function MemberDetailScreen() {
@@ -42,6 +48,8 @@ export default function MemberDetailScreen() {
   const router = useRouter();
   const { mode, bumpDataRevision } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
+  const { impactLight } = useAppPreferences();
+  const localAccount = useLocalAccount();
   const { personId, code } = useLocalSearchParams<{
     personId: string;
     code?: string;
@@ -71,6 +79,7 @@ export default function MemberDetailScreen() {
   const [parentA, setParentA] = useState("");
   const [parentB, setParentB] = useState("");
   const [confirmParents, setConfirmParents] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -80,6 +89,11 @@ export default function MemberDetailScreen() {
         : await loadPersonById(mode, String(personId));
       setBundle(data);
       if (data) {
+        void recordRecentVisit({
+          personId: data.member.id,
+          familyCode: data.member.familyCode,
+          displayName: formatBilingualName(data.member),
+        });
         setFirstName(data.member.firstName);
         setLastName(data.member.lastName);
         setCity(data.member.currentCity ?? "");
@@ -112,8 +126,31 @@ export default function MemberDetailScreen() {
 
   const m = bundle.member;
   const canEditLocal = mode === "local";
+  const focalId =
+    canEditLocal && localAccount.session ? localAccount.session.focalPersonId : null;
+  const relationToMeText =
+    focalId && focalId === m.id
+      ? copy.profile.relationToMeSame
+      : focalId
+        ? computeRelationSummary(focalId, m.id)
+        : canEditLocal
+          ? copy.profile.relationToMeUnavailable
+          : null;
 
   const saveEdit = () => {
+    const errors: FieldErrors = {
+      firstName: required(firstName, "First name"),
+      lastName: required(lastName, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setFieldErrors({});
     try {
       updatePerson(mode, {
         personId: m.id,
@@ -129,6 +166,7 @@ export default function MemberDetailScreen() {
       setEditing(false);
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.success.saved);
     } catch (e) {
       showError(e);
@@ -136,10 +174,21 @@ export default function MemberDetailScreen() {
   };
 
   const submitSpouse = () => {
-    if (!spGender) {
-      showError(new Error("Select a gender for the spouse."));
+    const errors: FieldErrors = {
+      spFirst: required(spFirst, "First name"),
+      spLast: required(spLast, "Last name"),
+      spGender: spGender ? undefined : "Select a gender for the spouse.",
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
       return;
     }
+    setFieldErrors({});
+    if (!spGender) return;
     try {
       addSpouse(mode, {
         relatedPersonId: m.id,
@@ -152,6 +201,7 @@ export default function MemberDetailScreen() {
       setSpLast("");
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.profile.spouseSaved);
     } catch (e) {
       showError(e);
@@ -165,6 +215,19 @@ export default function MemberDetailScreen() {
       showError(copy.profile.needMarriageFirst);
       return;
     }
+    const errors: FieldErrors = {
+      chFirst: required(chFirst, "First name"),
+      chLast: required(chLast, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setFieldErrors({});
     try {
       addChild(mode, {
         parentPersonId: m.id,
@@ -178,6 +241,7 @@ export default function MemberDetailScreen() {
       setChLast("");
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.profile.childSaved);
     } catch (e) {
       showError(e);
@@ -201,6 +265,7 @@ export default function MemberDetailScreen() {
       setConfirmParents(false);
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.profile.parentsSaved);
     } catch (e) {
       showError(e);
@@ -220,17 +285,20 @@ export default function MemberDetailScreen() {
     <>
       <Screen testID="member-profile-screen" keyboardAvoiding>
         <PageHeader
-          title={`${m.firstName} ${m.lastName}`}
-          meta={
-            (m.urduFirstName || m.urduLastName)
-              ? `${m.urduFirstName ?? ""} ${m.urduLastName ?? ""}`.trim()
-              : undefined
-          }
+          title={formatBilingualName(m)}
+          meta={m.familyCode}
         />
         <ReferenceText label={copy.account.memberReference} code={m.familyCode} />
         {!editing && (
           <SectionCard title="Personal details" delay={60}>
             <PersonFacts member={m} />
+          </SectionCard>
+        )}
+        {relationToMeText && (
+          <SectionCard title={copy.profile.relationToMe} delay={70}>
+            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+              {relationToMeText}
+            </Text>
           </SectionCard>
         )}
         {!canEditLocal && (
@@ -239,9 +307,37 @@ export default function MemberDetailScreen() {
           </Text>
         )}
 
+        <Button
+          mode="contained-tonal"
+          icon="family-tree"
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/tree",
+              params: { familyCode: m.familyCode },
+            })
+          }
+        >
+          {copy.profile.openInTree}
+        </Button>
+
         {canEditLocal && (
           <View style={styles.actions}>
-            <Button mode="outlined" onPress={() => setEditing((v) => !v)}>
+            <Button
+              mode="outlined"
+              onPress={() => {
+                if (editing) {
+                  setFirstName(m.firstName);
+                  setLastName(m.lastName);
+                  setCity(m.currentCity ?? "");
+                  setBirthDate(m.birthDate ?? "");
+                  setBirthPlace(m.birthPlace ?? "");
+                  setHomeTown(m.homeTown ?? "");
+                  setOccupation(m.occupation ?? "");
+                  setBio(m.bio ?? "");
+                }
+                setEditing((v) => !v);
+              }}
+            >
               {editing ? copy.profile.cancelEdit : copy.profile.editProfile}
             </Button>
             <Button
@@ -278,8 +374,18 @@ export default function MemberDetailScreen() {
         {editing && (
           <Card mode="elevated" style={styles.block}>
             <Card.Content style={styles.gap}>
-              <FormTextInput label="First name" value={firstName} onChangeText={setFirstName} />
-              <FormTextInput label="Last name" value={lastName} onChangeText={setLastName} />
+              <FormTextInput
+                label="First name"
+                value={firstName}
+                onChangeText={setFirstName}
+                errorText={fieldErrors.firstName}
+              />
+              <FormTextInput
+                label="Last name"
+                value={lastName}
+                onChangeText={setLastName}
+                errorText={fieldErrors.lastName}
+              />
               <FormTextInput
                 label="Date of birth"
                 value={birthDate}
@@ -385,14 +491,21 @@ export default function MemberDetailScreen() {
                 label="First name"
                 value={spFirst}
                 onChangeText={setSpFirst}
+                errorText={fieldErrors.spFirst}
               />
               <FormTextInput
                 testID="member-spouse-last"
                 label="Last name"
                 value={spLast}
                 onChangeText={setSpLast}
+                errorText={fieldErrors.spLast}
               />
               <Text variant="labelLarge">Gender</Text>
+              {fieldErrors.spGender ? (
+                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+                  {fieldErrors.spGender}
+                </Text>
+              ) : null}
               <RadioButton.Group
                 onValueChange={(value) => setSpGender(value as Gender)}
                 value={spGender}
@@ -420,12 +533,14 @@ export default function MemberDetailScreen() {
                 label="Given name"
                 value={chFirst}
                 onChangeText={setChFirst}
+                errorText={fieldErrors.chFirst}
               />
               <FormTextInput
                 testID="member-child-last"
                 label="Family name"
                 value={chLast}
                 onChangeText={setChLast}
+                errorText={fieldErrors.chLast}
               />
               <Text variant="labelLarge">Gender</Text>
               <RadioButton.Group
