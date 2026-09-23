@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Noto_Nastaliq_Urdu } from "next/font/google";
 import { AppFooter } from "@/components/AppFooter";
+import { AppErrorBoundary } from "@/components/records/AppErrorBoundary";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/appMeta";
 import "./globals.css";
 
@@ -46,7 +47,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoUrdu.variable} flex min-h-dvh flex-col antialiased`}
       >
-        <div className="flex-1">{children}</div>
+        <div className="flex-1">
+          <AppErrorBoundary>{children}</AppErrorBoundary>
+        </div>
         <AppFooter />
       </body>
     </html>

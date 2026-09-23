@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import type { Gender, RelationshipType } from "@prisma/client";
+import { ruleMessages, toUserFacingMessage } from "@/shared/relationshipRules";
 import {
   createPersonAndUnion,
   listMembersForPicker,
@@ -71,7 +72,8 @@ export function AddChildModal({
         onSuccess(result.familyCode);
         onClose();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to add child");
+        console.error(e);
+        setError(toUserFacingMessage(e, ruleMessages.saveRelationship));
       }
     });
   };
@@ -199,7 +201,7 @@ export function AddChildModal({
 
         <fieldset className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
           <legend className="px-1 text-xs font-medium text-zinc-600">
-            Parent union
+            Marriage
           </legend>
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm">
@@ -209,7 +211,7 @@ export function AddChildModal({
                 value="existing"
                 defaultChecked={unions.length > 0}
               />
-              Existing union
+              Existing marriage
             </label>
             <select
               name="existingUnionId"
@@ -230,7 +232,7 @@ export function AddChildModal({
                 value="new"
                 defaultChecked={unions.length === 0}
               />
-              New union (second parent)
+              Other parent (creates a marriage if needed)
             </label>
             <select name="secondParentId" className={inputClassName}>
               <option value="">Select second parent…</option>

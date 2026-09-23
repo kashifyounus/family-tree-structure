@@ -119,6 +119,9 @@ export type OnlinePersonDetails = {
   person: OnlinePersonSummary;
   unions: {
     id: string;
+    marriageDate?: string | null;
+    divorceDate?: string | null;
+    isActive?: boolean;
     partner1: OnlinePersonSummary;
     partner2: OnlinePersonSummary;
     children: (OnlinePersonSummary & { relationshipType?: string })[];

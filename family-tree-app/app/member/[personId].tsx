@@ -5,8 +5,10 @@ import {
   ActivityIndicator,
   Button,
   Card,
+  Chip,
   Dialog,
   Portal,
+  RadioButton,
   Text,
   useTheme,
 } from "react-native-paper";
@@ -21,12 +23,16 @@ import { useStorage } from "@/context/StorageContext";
 import {
   addChild,
   addSpouse,
+  assignParents,
   loadPersonByCode,
   loadPersonById,
+  peopleForPicker,
   unionOptions,
   updatePerson,
 } from "@/lib/data/personService";
 import type { PersonBundle } from "@/lib/data/personService";
+import type { Gender } from "@/lib/data/types";
+import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 
 export default function MemberDetailScreen() {
   const theme = useTheme();
@@ -52,8 +58,16 @@ export default function MemberDetailScreen() {
   const [childOpen, setChildOpen] = useState(false);
   const [spFirst, setSpFirst] = useState("");
   const [spLast, setSpLast] = useState("");
+  const [spGender, setSpGender] = useState<Gender | "">("");
   const [chFirst, setChFirst] = useState("");
   const [chLast, setChLast] = useState("");
+  const [chGender, setChGender] = useState<Gender>("MALE");
+  const [chUnionId, setChUnionId] = useState("");
+  const [parentsOpen, setParentsOpen] = useState(false);
+  const [parentQuery, setParentQuery] = useState("");
+  const [parentA, setParentA] = useState("");
+  const [parentB, setParentB] = useState("");
+  const [confirmParents, setConfirmParents] = useState(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -123,18 +137,23 @@ export default function MemberDetailScreen() {
   };
 
   const submitSpouse = () => {
+    if (!spGender) {
+      showError(new Error("Select a gender for the spouse."));
+      return;
+    }
     try {
       addSpouse(mode, {
         relatedPersonId: m.id,
         firstName: spFirst.trim(),
         lastName: spLast.trim(),
-        gender: "FEMALE",
+        gender: spGender,
       });
       setSpouseOpen(false);
       setSpFirst("");
       setSpLast("");
       bumpDataRevision();
       void reload();
+      showSuccess(copy.profile.spouseSaved);
     } catch (e) {
       showError(e);
     }
@@ -142,27 +161,61 @@ export default function MemberDetailScreen() {
 
   const submitChild = () => {
     const marriages = unionOptions(mode, m.id);
-    if (marriages.length === 0) {
+    const unionId = chUnionId || marriages[0]?.id;
+    if (!unionId) {
       showError(copy.profile.needMarriageFirst);
       return;
     }
     try {
       addChild(mode, {
         parentPersonId: m.id,
-        unionId: marriages[0].id,
+        unionId,
         firstName: chFirst.trim(),
         lastName: chLast.trim(),
-        gender: "MALE",
+        gender: chGender,
       });
       setChildOpen(false);
       setChFirst("");
       setChLast("");
       bumpDataRevision();
       void reload();
+      showSuccess(copy.profile.childSaved);
     } catch (e) {
       showError(e);
     }
   };
+
+  const submitParents = () => {
+    if (bundle.parents.length > 0 && !confirmParents) {
+      showError(copy.profile.confirmReplaceParents);
+      return;
+    }
+    try {
+      assignParents(mode, {
+        personId: m.id,
+        parentAId: parentA,
+        parentBId: parentB,
+      });
+      setParentsOpen(false);
+      setParentA("");
+      setParentB("");
+      setConfirmParents(false);
+      bumpDataRevision();
+      void reload();
+      showSuccess(copy.profile.parentsSaved);
+    } catch (e) {
+      showError(e);
+    }
+  };
+
+  const pickerPeople =
+    canEditLocal && parentsOpen
+      ? peopleForPicker(mode).filter(
+          (person) =>
+            person.id !== m.id &&
+            (`${person.name} ${person.familyCode}`).toLowerCase().includes(parentQuery.trim().toLowerCase()),
+        )
+      : [];
 
   return (
     <>
@@ -179,6 +232,11 @@ export default function MemberDetailScreen() {
           </Text>
         )}
         {!editing && <PersonFacts member={m} />}
+        {!canEditLocal && (
+          <Text variant="bodyMedium" style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
+            {copy.profile.cloudReadOnly}
+          </Text>
+        )}
 
         {canEditLocal && (
           <View style={styles.actions}>
@@ -189,12 +247,28 @@ export default function MemberDetailScreen() {
               testID="member-add-spouse"
               mode="contained-tonal"
               icon="heart"
-              onPress={() => setSpouseOpen(true)}
+              onPress={() => {
+                setSpGender(defaultSpouseGender(m.gender) ?? "");
+                setSpLast(m.lastName);
+                setSpouseOpen(true);
+              }}
             >
               {copy.profile.addSpouse}
             </Button>
-            <Button mode="contained-tonal" icon="baby-carriage" onPress={() => setChildOpen(true)}>
+            <Button
+              mode="contained-tonal"
+              icon="baby-carriage"
+              onPress={() => {
+                const marriages = unionOptions(mode, m.id);
+                setChUnionId(marriages[0]?.id ?? "");
+                setChLast(m.lastName);
+                setChildOpen(true);
+              }}
+            >
               {copy.profile.addChild}
+            </Button>
+            <Button mode="contained-tonal" icon="account-child" onPress={() => setParentsOpen(true)}>
+              {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
             </Button>
           </View>
         )}
@@ -239,9 +313,24 @@ export default function MemberDetailScreen() {
           bundle.unions.map((u) => (
             <Card key={u.id} mode="elevated" style={styles.block}>
               <Card.Content>
+                <Chip compact style={{ alignSelf: "flex-start", marginBottom: 8 }}>
+                  {u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage}
+                </Chip>
                 <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>
                   {copy.tree.marriageTo(u.partner1Name, u.partner2Name)}
                 </Text>
+                <Button
+                  mode="text"
+                  compact
+                  onPress={() =>
+                    router.push({
+                      pathname: "/marriage/[unionId]",
+                      params: { unionId: u.id },
+                    })
+                  }
+                >
+                  View marriage
+                </Button>
                 {u.children.map((c) => (
                   <Button
                     key={c.id}
@@ -297,6 +386,15 @@ export default function MemberDetailScreen() {
                 value={spLast}
                 onChangeText={setSpLast}
               />
+              <Text variant="labelLarge">Gender</Text>
+              <RadioButton.Group
+                onValueChange={(value) => setSpGender(value as Gender)}
+                value={spGender}
+              >
+                <RadioButton.Item label="Female" value="FEMALE" />
+                <RadioButton.Item label="Male" value="MALE" />
+                <RadioButton.Item label="Other" value="OTHER" />
+              </RadioButton.Group>
             </View>
           </Dialog.ScrollArea>
           <Dialog.Actions>
@@ -311,13 +409,76 @@ export default function MemberDetailScreen() {
           <Dialog.Title>{copy.profile.addChild}</Dialog.Title>
           <Dialog.ScrollArea style={styles.dialogScroll}>
             <View style={styles.dialogInner}>
-              <FormTextInput label="First name" value={chFirst} onChangeText={setChFirst} />
-              <FormTextInput label="Last name" value={chLast} onChangeText={setChLast} />
+              <FormTextInput label="Given name" value={chFirst} onChangeText={setChFirst} />
+              <FormTextInput label="Family name" value={chLast} onChangeText={setChLast} />
+              <Text variant="labelLarge">Gender</Text>
+              <RadioButton.Group
+                onValueChange={(value) => setChGender(value as Gender)}
+                value={chGender}
+              >
+                <RadioButton.Item label="Male" value="MALE" />
+                <RadioButton.Item label="Female" value="FEMALE" />
+                <RadioButton.Item label="Other" value="OTHER" />
+              </RadioButton.Group>
+              {unionOptions(mode, m.id).map((marriage) => (
+                <Button
+                  key={marriage.id}
+                  mode={chUnionId === marriage.id ? "contained" : "outlined"}
+                  onPress={() => setChUnionId(marriage.id)}
+                >
+                  {marriage.label}
+                </Button>
+              ))}
             </View>
           </Dialog.ScrollArea>
           <Dialog.Actions>
             <Button onPress={() => setChildOpen(false)}>{copy.reports.cancel}</Button>
             <Button mode="contained" onPress={submitChild}>
+              {copy.profile.saveChanges}
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        <Dialog visible={parentsOpen} onDismiss={() => setParentsOpen(false)}>
+          <Dialog.Title>
+            {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
+          </Dialog.Title>
+          <Dialog.ScrollArea style={styles.dialogScroll}>
+            <View style={styles.dialogInner}>
+              {bundle.parents.length > 0 && (
+                <Text variant="bodySmall">{copy.profile.confirmReplaceParents}</Text>
+              )}
+              {bundle.parents.length > 0 && (
+                <Button mode={confirmParents ? "contained" : "outlined"} onPress={() => setConfirmParents(true)}>
+                  Confirm parent change
+                </Button>
+              )}
+              <FormTextInput
+                label="Search people"
+                value={parentQuery}
+                onChangeText={setParentQuery}
+              />
+              {pickerPeople.slice(0, 8).map((person) => (
+                <View key={person.id} style={styles.actions}>
+                  <Button
+                    mode={parentA === person.id ? "contained" : "text"}
+                    onPress={() => setParentA(person.id)}
+                  >
+                    Parent: {person.name}
+                  </Button>
+                  <Button
+                    mode={parentB === person.id ? "contained" : "text"}
+                    onPress={() => setParentB(person.id)}
+                  >
+                    Other parent
+                  </Button>
+                </View>
+              ))}
+            </View>
+          </Dialog.ScrollArea>
+          <Dialog.Actions>
+            <Button onPress={() => setParentsOpen(false)}>{copy.reports.cancel}</Button>
+            <Button mode="contained" onPress={submitParents}>
               {copy.profile.saveChanges}
             </Button>
           </Dialog.Actions>
@@ -334,6 +495,6 @@ const styles = StyleSheet.create({
   gap: { gap: 10 },
   section: { marginTop: 20 },
   treeBtn: { marginTop: 24, marginBottom: 8 },
-  dialogScroll: { maxHeight: 280 },
+  dialogScroll: { maxHeight: 420 },
   dialogInner: { gap: 12, paddingHorizontal: 24, paddingVertical: 8 },
 });

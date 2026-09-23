@@ -35,4 +35,6 @@ tags:
       text: "Marriage:"
     timeout: 10000
 - assertVisible:
+    text: "Current marriage"
+- assertVisible:
     text: "Fatima"

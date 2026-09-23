@@ -100,6 +100,10 @@ export function maskPersonDetails(
   return {
     person: maskPersonSummary(details.person, viewer),
     unions: details.unions.map((u) => maskUnionSummary(u, viewer)),
+    parentLinks: details.parentLinks.map((link) => ({
+      ...link,
+      partners: link.partners.map((partner) => maskPersonSummary(partner, viewer)),
+    })),
     computed: {
       paternalUncles: details.computed.paternalUncles.map((r) =>
         maskKinshipRelative(r, viewer),

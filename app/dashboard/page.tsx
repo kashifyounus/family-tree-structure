@@ -18,7 +18,7 @@ export default async function DashboardPage() {
     <DashboardShell
       session={session}
       title="Family records dashboard"
-      description="Create standalone members, edit profiles, delete leaf records, and jump to the interactive tree or analytics reports."
+      description="Create people, open a record, and move from a person to their marriages, parents, and children."
       sampleFamilyCode={reportsCode}
     >
       <MemberAdminPanel

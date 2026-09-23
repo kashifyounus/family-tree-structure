@@ -68,7 +68,38 @@ export type LocalReports = {
 
 export type LocalUnionView = {
   id: string;
+  partner1Id?: string;
+  partner2Id?: string;
   partner1Name: string;
   partner2Name: string;
+  marriageDate?: string | null;
+  divorceDate?: string | null;
+  isActive?: boolean;
   children: { id: string; name: string; familyCode: string }[];
+};
+
+export type LinkSpouseInput = {
+  personId: string;
+  spouseId: string;
+  marriageDate?: string;
+};
+
+export type LinkChildInput = {
+  unionId: string;
+  childId: string;
+  relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
+};
+
+export type SetParentsInput = {
+  personId: string;
+  parentAId: string;
+  parentBId: string;
+  relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
+};
+
+export type UpdateMarriageInput = {
+  unionId: string;
+  marriageDate?: string | null;
+  divorceDate?: string | null;
+  isActive?: boolean;
 };

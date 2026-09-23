@@ -38,7 +38,11 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="member/[personId]"
-            options={{ title: "Member profile", headerBackTitle: "Back" }}
+            options={{ title: "Person", headerBackTitle: "Back" }}
+          />
+          <Stack.Screen
+            name="marriage/[unionId]"
+            options={{ title: "Marriage", headerBackTitle: "Back" }}
           />
         </Stack>
       </NavigationGate>

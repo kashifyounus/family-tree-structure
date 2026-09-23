@@ -55,7 +55,7 @@ export function KinshipSections({ parents, computed }: KinshipSectionsProps) {
       </Text>
       {parents.length === 0 ? (
         <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-          No parents recorded. Add a child link from a marriage to set parents.
+          No parents recorded yet.
         </Text>
       ) : (
         parents.map((p) => (

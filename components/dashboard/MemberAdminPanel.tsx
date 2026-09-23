@@ -13,6 +13,7 @@ import { CreateMemberModal } from "@/components/modals/CreateMemberModal";
 import { EditPersonModal } from "@/components/modals/EditPersonModal";
 import type { PersonDetails } from "@/types/family";
 import { inputClassName } from "@/components/modals/formStyles";
+import { formatGenderLabel } from "@/lib/records/format";
 
 type MemberAdminPanelProps = {
   initialMembers: DashboardMember[];
@@ -175,7 +176,7 @@ export function MemberAdminPanel({
                   <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-50">
                     {m.firstName} {m.lastName}
                     <span className="ml-2 text-xs font-normal text-zinc-500">
-                      {m.gender}
+                      {formatGenderLabel(m.gender)}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-indigo-600 dark:text-indigo-400">
@@ -186,6 +187,12 @@ export function MemberAdminPanel({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-2">
+                      <Link
+                        href={`/people/${m.id}`}
+                        className="text-xs font-medium text-emerald-800 hover:underline dark:text-emerald-300"
+                      >
+                        Record
+                      </Link>
                       <Link
                         href={`/tree/${m.familyCode}`}
                         className="text-xs font-medium text-indigo-600 hover:underline"

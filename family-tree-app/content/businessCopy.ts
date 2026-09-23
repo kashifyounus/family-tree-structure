@@ -147,6 +147,20 @@ export const copy = {
     openInTree: "Show in family tree",
     needMarriageFirst:
       "Record a marriage (add a spouse) before adding a child to this branch.",
+    cloudReadOnly:
+      "Shared family records can be viewed here. Add marriages, children, and parents on the family website, or switch to the private archive on this device.",
+    parentsSection: "Parents",
+    noParents: "No parents recorded yet.",
+    addParents: "Add parents",
+    changeParents: "Change parents",
+    currentMarriage: "Current marriage",
+    previousMarriage: "Previous marriage",
+    spouseSaved: "Marriage saved. Both people are now linked.",
+    childSaved: "Child saved on this marriage.",
+    parentsSaved: "Parents saved.",
+    marriageSaved: "Marriage details saved.",
+    confirmReplaceParents:
+      "This replaces the current parents. Other children of that marriage stay where they are.",
     kinshipOnline: "Relatives (from family cloud)",
     fullSibling: (name: string) => `Full sibling: ${name}`,
     halfSibling: (name: string) => `Half sibling: ${name}`,

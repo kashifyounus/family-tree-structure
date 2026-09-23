@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { PersonDetails } from "@/types/family";
@@ -10,6 +11,7 @@ import {
   formatUrduName,
 } from "@/lib/personMapper";
 import { UrduText } from "@/components/UrduText";
+import { formatGenderLabel } from "@/lib/records/format";
 import { AddSpouseModal } from "@/components/modals/AddSpouseModal";
 import { AddChildModal } from "@/components/modals/AddChildModal";
 import { EditPersonModal } from "@/components/modals/EditPersonModal";
@@ -112,6 +114,12 @@ export function PersonDrawer({
             <p className="font-mono text-xs text-indigo-600 dark:text-indigo-400">
               {person.familyCode}
             </p>
+            <Link
+              href={`/people/${person.id}`}
+              className="mt-1 inline-block text-xs font-medium text-emerald-800 hover:underline dark:text-emerald-300"
+            >
+              Open full record
+            </Link>
           </div>
           <button
             type="button"
@@ -168,7 +176,7 @@ export function PersonDrawer({
                 </span>
               )}
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs dark:bg-zinc-800">
-                {person.gender}
+                {formatGenderLabel(person.gender)}
               </span>
               <span
                 className={`rounded-full px-2 py-0.5 text-xs ${
@@ -273,9 +281,9 @@ export function PersonDrawer({
           )}
 
           <section>
-            <h3 className="mb-2 text-sm font-semibold">Unions & children</h3>
+            <h3 className="mb-2 text-sm font-semibold">Marriages and children</h3>
             {unions.length === 0 ? (
-              <p className="text-sm text-zinc-500">No unions recorded.</p>
+              <p className="text-sm text-zinc-500">No marriages recorded yet.</p>
             ) : (
               <ul className="space-y-3">
                 {unions.map((u) => (
@@ -310,7 +318,7 @@ export function PersonDrawer({
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-sm font-semibold">Computed kinship</h3>
+            <h3 className="text-sm font-semibold">Other relatives</h3>
             <RelativeList title="Paternal uncles" items={computed.paternalUncles} />
             <RelativeList title="Paternal aunts" items={computed.paternalAunts} />
             <RelativeList title="Maternal uncles" items={computed.maternalUncles} />
@@ -325,6 +333,7 @@ export function PersonDrawer({
         open={spouseOpen}
         onClose={() => setSpouseOpen(false)}
         personId={person.id}
+        personGender={person.gender}
         defaultLastName={person.lastName}
         onSuccess={() => onRefresh()}
       />

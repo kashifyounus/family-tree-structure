@@ -73,12 +73,22 @@ export type HusbandFamilyReport = {
   byWife: HouseholdWifeGroup[];
 };
 
+export type ParentLink = {
+  childshipId: string;
+  unionId: string;
+  relationshipType: RelationshipType;
+  partners: PersonSummary[];
+};
+
 export type PersonDetails = {
   person: PersonSummary;
   unions: UnionSummary[];
+  parentLinks: ParentLink[];
   computed: ComputedRelations;
   household: HusbandFamilyReport | null;
 };
+
+export type MarriageRecord = UnionSummary;
 
 export type GraphNodeType = "person" | "union";
 
@@ -147,6 +157,7 @@ export type CreateStandalonePersonInput = {
   currentCity?: string;
   permanentCity?: string;
   homeTown?: string;
+  privacyLevel?: PrivacyLevel;
 };
 
 export type RelationshipPathStep = {
@@ -215,6 +226,26 @@ export type UpdateUnionInput = {
   marriageDate?: string | null;
   divorceDate?: string | null;
   isActive?: boolean;
+};
+
+export type LinkExistingSpouseInput = {
+  personId: string;
+  spouseId: string;
+  marriageDate?: string;
+};
+
+export type LinkExistingChildInput = {
+  unionId: string;
+  childId: string;
+  relationshipType?: RelationshipType;
+};
+
+export type SetParentsInput = {
+  personId: string;
+  parentAId: string;
+  parentBId: string;
+  relationshipType?: RelationshipType;
+  childshipId?: string;
 };
 
 export type CityDistributionBucket = {

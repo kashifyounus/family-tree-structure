@@ -157,8 +157,11 @@ export function getLocalUnionsForPerson(personId: string): LocalUnionView[] {
     id: string;
     partner_1_id: string;
     partner_2_id: string;
+    marriage_date: string | null;
+    divorce_date: string | null;
+    is_active: number;
   }>(
-    `SELECT id, partner_1_id, partner_2_id FROM unions
+    `SELECT id, partner_1_id, partner_2_id, marriage_date, divorce_date, is_active FROM unions
      WHERE partner_1_id = ? OR partner_2_id = ?`,
     [personId, personId],
   );
@@ -180,8 +183,13 @@ export function getLocalUnionsForPerson(personId: string): LocalUnionView[] {
     );
     return {
       id: u.id,
+      partner1Id: u.partner_1_id,
+      partner2Id: u.partner_2_id,
       partner1Name: p1 ? `${p1.first_name} ${p1.last_name}` : "—",
       partner2Name: p2 ? `${p2.first_name} ${p2.last_name}` : "—",
+      marriageDate: u.marriage_date,
+      divorceDate: u.divorce_date,
+      isActive: u.is_active !== 0,
       children: children.map((c) => ({
         id: c.id,
         name: `${c.first_name} ${c.last_name}`,
