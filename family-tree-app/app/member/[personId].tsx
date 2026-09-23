@@ -40,6 +40,7 @@ import type { Gender } from "@/lib/data/types";
 import { formatBilingualName } from "@/lib/format/displayName";
 import { recordRecentVisit } from "@/lib/recentPeople";
 import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
+import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 
 export default function MemberDetailScreen() {
@@ -78,6 +79,7 @@ export default function MemberDetailScreen() {
   const [parentA, setParentA] = useState("");
   const [parentB, setParentB] = useState("");
   const [confirmParents, setConfirmParents] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -136,6 +138,19 @@ export default function MemberDetailScreen() {
           : null;
 
   const saveEdit = () => {
+    const errors: FieldErrors = {
+      firstName: required(firstName, "First name"),
+      lastName: required(lastName, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setFieldErrors({});
     try {
       updatePerson(mode, {
         personId: m.id,
@@ -159,10 +174,21 @@ export default function MemberDetailScreen() {
   };
 
   const submitSpouse = () => {
-    if (!spGender) {
-      showError(new Error("Select a gender for the spouse."));
+    const errors: FieldErrors = {
+      spFirst: required(spFirst, "First name"),
+      spLast: required(spLast, "Last name"),
+      spGender: spGender ? undefined : "Select a gender for the spouse.",
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
       return;
     }
+    setFieldErrors({});
+    if (!spGender) return;
     try {
       addSpouse(mode, {
         relatedPersonId: m.id,
@@ -189,6 +215,19 @@ export default function MemberDetailScreen() {
       showError(copy.profile.needMarriageFirst);
       return;
     }
+    const errors: FieldErrors = {
+      chFirst: required(chFirst, "First name"),
+      chLast: required(chLast, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setFieldErrors({});
     try {
       addChild(mode, {
         parentPersonId: m.id,
@@ -335,8 +374,18 @@ export default function MemberDetailScreen() {
         {editing && (
           <Card mode="elevated" style={styles.block}>
             <Card.Content style={styles.gap}>
-              <FormTextInput label="First name" value={firstName} onChangeText={setFirstName} />
-              <FormTextInput label="Last name" value={lastName} onChangeText={setLastName} />
+              <FormTextInput
+                label="First name"
+                value={firstName}
+                onChangeText={setFirstName}
+                errorText={fieldErrors.firstName}
+              />
+              <FormTextInput
+                label="Last name"
+                value={lastName}
+                onChangeText={setLastName}
+                errorText={fieldErrors.lastName}
+              />
               <FormTextInput
                 label="Date of birth"
                 value={birthDate}
@@ -442,14 +491,21 @@ export default function MemberDetailScreen() {
                 label="First name"
                 value={spFirst}
                 onChangeText={setSpFirst}
+                errorText={fieldErrors.spFirst}
               />
               <FormTextInput
                 testID="member-spouse-last"
                 label="Last name"
                 value={spLast}
                 onChangeText={setSpLast}
+                errorText={fieldErrors.spLast}
               />
               <Text variant="labelLarge">Gender</Text>
+              {fieldErrors.spGender ? (
+                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+                  {fieldErrors.spGender}
+                </Text>
+              ) : null}
               <RadioButton.Group
                 onValueChange={(value) => setSpGender(value as Gender)}
                 value={spGender}
@@ -477,12 +533,14 @@ export default function MemberDetailScreen() {
                 label="Given name"
                 value={chFirst}
                 onChangeText={setChFirst}
+                errorText={fieldErrors.chFirst}
               />
               <FormTextInput
                 testID="member-child-last"
                 label="Family name"
                 value={chLast}
                 onChangeText={setChLast}
+                errorText={fieldErrors.chLast}
               />
               <Text variant="labelLarge">Gender</Text>
               <RadioButton.Group

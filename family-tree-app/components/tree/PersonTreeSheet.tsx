@@ -21,6 +21,7 @@ import { formatGraphPersonName } from "@/lib/format/displayName";
 import type { GraphPersonSummary } from "@/lib/graph/types";
 import type { Gender } from "@/lib/data/types";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
+import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import { space } from "@/theme/tokens";
 
 type PersonTreeSheetProps = {
@@ -55,6 +56,7 @@ export function PersonTreeSheet({
   const [chLast, setChLast] = useState("");
   const [chGender, setChGender] = useState<Gender>("MALE");
   const [chUnionId, setChUnionId] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   if (!person) return null;
 
@@ -62,10 +64,21 @@ export function PersonTreeSheet({
   const canAddLocal = isLocal && !isPrivate && mode === "local";
 
   const submitSpouse = () => {
-    if (!spGender) {
-      showError(new Error("Select a gender for the spouse."));
+    const errors: FieldErrors = {
+      spFirst: required(spFirst, "First name"),
+      spLast: required(spLast, "Last name"),
+      spGender: spGender ? undefined : "Select a gender for the spouse.",
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
       return;
     }
+    if (!spGender) return;
+    setFieldErrors({});
     try {
       addSpouse(mode, {
         relatedPersonId: person.id,
@@ -92,6 +105,19 @@ export function PersonTreeSheet({
       showError(copy.profile.needMarriageFirst);
       return;
     }
+    const errors: FieldErrors = {
+      chFirst: required(chFirst, "First name"),
+      chLast: required(chLast, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setFieldErrors({});
     try {
       addChild(mode, {
         parentPersonId: person.id,
@@ -195,14 +221,21 @@ export function PersonTreeSheet({
                 label="First name"
                 value={spFirst}
                 onChangeText={setSpFirst}
+                errorText={fieldErrors.spFirst}
               />
               <FormTextInput
                 testID="member-spouse-last"
                 label="Last name"
                 value={spLast}
                 onChangeText={setSpLast}
+                errorText={fieldErrors.spLast}
               />
               <Text variant="labelLarge">Gender</Text>
+              {fieldErrors.spGender ? (
+                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+                  {fieldErrors.spGender}
+                </Text>
+              ) : null}
               <RadioButton.Group
                 onValueChange={(value) => setSpGender(value as Gender)}
                 value={spGender}
@@ -230,12 +263,14 @@ export function PersonTreeSheet({
                 label="First name"
                 value={chFirst}
                 onChangeText={setChFirst}
+                errorText={fieldErrors.chFirst}
               />
               <FormTextInput
                 testID="member-child-last"
                 label="Last name"
                 value={chLast}
                 onChangeText={setChLast}
+                errorText={fieldErrors.chLast}
               />
               <Text variant="labelLarge">Gender</Text>
               <RadioButton.Group

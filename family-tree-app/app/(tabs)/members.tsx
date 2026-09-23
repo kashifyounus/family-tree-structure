@@ -18,6 +18,7 @@ import { useAppFeedback } from "@/context/ErrorContext";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
+import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import type { Gender, MemberRecord } from "@/lib/data/types";
 import { layout, radius, space } from "@/theme/tokens";
 
@@ -43,6 +44,7 @@ export default function MembersScreen() {
   const [gender, setGender] = useState<Gender>("MALE");
   const [birthDate, setBirthDate] = useState("");
   const [createCity, setCreateCity] = useState("");
+  const [createFieldErrors, setCreateFieldErrors] = useState<FieldErrors>({});
 
   const load = useCallback(
     async (q: string) => {
@@ -66,6 +68,19 @@ export default function MembersScreen() {
   }, [load, dataRevision, mode]);
 
   const onCreate = async () => {
+    const errors: FieldErrors = {
+      firstName: required(firstName, "First name"),
+      lastName: required(lastName, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setCreateFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setCreateFieldErrors({});
     try {
       await createMember(mode, {
         firstName: firstName.trim(),
@@ -183,7 +198,10 @@ export default function MembersScreen() {
       <AppDialogForm
         visible={createOpen}
         title={copy.members.newMemberTitle}
-        onDismiss={() => setCreateOpen(false)}
+        onDismiss={() => {
+          setCreateOpen(false);
+          setCreateFieldErrors({});
+        }}
         onSubmit={() => void onCreate()}
         submitLabel={copy.members.saveMember}
         submitTestID="members-create-save"
@@ -194,6 +212,7 @@ export default function MembersScreen() {
           label="First name"
           value={firstName}
           onChangeText={setFirstName}
+          errorText={createFieldErrors.firstName}
           autoCapitalize="words"
         />
         <FormTextInput
@@ -201,6 +220,7 @@ export default function MembersScreen() {
           label="Last name"
           value={lastName}
           onChangeText={setLastName}
+          errorText={createFieldErrors.lastName}
           autoCapitalize="words"
         />
         <FormTextInput

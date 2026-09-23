@@ -1,5 +1,5 @@
 import { Link, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Searchbar, Text, useTheme } from "react-native-paper";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -30,10 +30,13 @@ export default function HomeScreen() {
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<MemberRecord[]>([]);
   const [recent, setRecent] = useState<RecentPerson[]>([]);
+  const [cloudMemberCount, setCloudMemberCount] = useState<number | null>(null);
+  const [cloudStatsLoading, setCloudStatsLoading] = useState(false);
 
   useEffect(() => {
     if (mode === "local") {
       setLiving(buildLocalReports().livingCount);
+      setCloudMemberCount(null);
     }
   }, [mode, localMemberCount]);
 
@@ -41,14 +44,14 @@ export default function HomeScreen() {
     void loadRecentPeople().then(setRecent);
   }, [localMemberCount]);
 
-  const search = useCallback(
+  const runSearch = useCallback(
     async (q: string) => {
       const trimmed = q.trim();
       if (!trimmed) {
         setMatches([]);
         return;
       }
-      const all = await listMembers(mode);
+      const all = await listMembers(mode, trimmed);
       const lower = trimmed.toLowerCase();
       setMatches(
         all
@@ -64,10 +67,38 @@ export default function HomeScreen() {
     [mode],
   );
 
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setMatches([]);
+      return;
+    }
+    const handle = setTimeout(() => {
+      void runSearch(trimmed);
+    }, 320);
+    return () => clearTimeout(handle);
+  }, [query, runSearch]);
+
   const branchReference =
     mode === "local" && localAccount.session
       ? localAccount.session.focalFamilyCode
       : DEFAULT_FAMILY_CODE;
+
+  useEffect(() => {
+    if (mode !== "online") return;
+    setCloudStatsLoading(true);
+    void listMembers("online")
+      .then((list) => setCloudMemberCount(list.length))
+      .catch(() => setCloudMemberCount(null))
+      .finally(() => setCloudStatsLoading(false));
+  }, [mode, localMemberCount]);
+
+  const cloudStatsLine = useMemo(() => {
+    if (mode !== "online") return null;
+    if (cloudStatsLoading) return copy.home.statsCloudLoading;
+    if (cloudMemberCount == null) return null;
+    return copy.home.statsCloud(cloudMemberCount, branchReference);
+  }, [mode, cloudStatsLoading, cloudMemberCount, branchReference]);
 
   return (
     <Screen testID="home-screen">
@@ -85,8 +116,8 @@ export default function HomeScreen() {
         placeholder={copy.home.searchPlaceholder}
         value={query}
         onChangeText={setQuery}
-        onSubmitEditing={() => void search(query)}
-        onIconPress={() => void search(query)}
+        onSubmitEditing={() => void runSearch(query)}
+        onIconPress={() => void runSearch(query)}
         style={{ marginBottom: space.sm, backgroundColor: theme.colors.surfaceVariant }}
       />
       {matches.length > 0 && (
@@ -115,6 +146,14 @@ export default function HomeScreen() {
           <ReferenceText label={copy.account.memberReference} code={localAccount.session.focalFamilyCode} />
           <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
             {copy.home.statsPrivate(localMemberCount, living)}
+          </Text>
+        </SectionCard>
+      )}
+
+      {mode === "online" && cloudStatsLine && (
+        <SectionCard>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            {cloudStatsLine}
           </Text>
         </SectionCard>
       )}

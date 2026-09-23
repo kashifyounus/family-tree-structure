@@ -1,18 +1,31 @@
-import { StyleSheet } from "react-native";
-import { TextInput, type TextInputProps } from "react-native-paper";
+import { StyleSheet, View } from "react-native";
+import { HelperText, TextInput, type TextInputProps } from "react-native-paper";
+
+type FormTextInputProps = TextInputProps & {
+  errorText?: string;
+};
 
 /** Outlined Paper field with consistent spacing for forms. */
-export function FormTextInput(props: TextInputProps) {
+export function FormTextInput({ errorText, ...props }: FormTextInputProps) {
   return (
-    <TextInput
-      mode="outlined"
-      dense={false}
-      style={[styles.field, props.style]}
-      {...props}
-    />
+    <View style={styles.wrap}>
+      <TextInput
+        mode="outlined"
+        dense={false}
+        error={!!errorText}
+        style={[styles.field, props.style]}
+        {...props}
+      />
+      {errorText ? (
+        <HelperText type="error" visible padding="none">
+          {errorText}
+        </HelperText>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  field: { marginBottom: 4 },
+  wrap: { marginBottom: 4 },
+  field: {},
 });

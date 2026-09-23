@@ -99,7 +99,10 @@ export default function ToolsScreen() {
       {
         text: "Continue",
         onPress: () => {
-          Alert.alert(copy.tools.importFile, copy.tools.fileBackupBody(localMemberCount), [
+          Alert.alert(
+            copy.tools.importConfirmTitle,
+            copy.tools.importConfirmBody(localMemberCount),
+            [
             { text: copy.reports.cancel, style: "cancel" },
             {
               text: copy.tools.importFile,
@@ -115,7 +118,8 @@ export default function ToolsScreen() {
                 }
               },
             },
-          ]);
+          ],
+          );
         },
       },
     ]);

@@ -23,6 +23,7 @@ type StoredPreferences = {
   textScale: TextScalePreference;
   hapticsEnabled: boolean;
   pinEnabled: boolean;
+  biometricUnlockEnabled: boolean;
 };
 
 type AppPreferencesContextValue = {
@@ -31,12 +32,15 @@ type AppPreferencesContextValue = {
   textScale: TextScalePreference;
   hapticsEnabled: boolean;
   pinEnabled: boolean;
+  biometricUnlockEnabled: boolean;
   locked: boolean;
   setTheme: (theme: ThemePreference) => Promise<void>;
   setTextScale: (scale: TextScalePreference) => Promise<void>;
   setHapticsEnabled: (enabled: boolean) => Promise<void>;
   setPin: (pin: string) => Promise<void>;
   clearPin: () => Promise<void>;
+  setBiometricUnlockEnabled: (enabled: boolean) => Promise<void>;
+  tryBiometricUnlock: () => Promise<boolean>;
   verifyPin: (pin: string) => Promise<boolean>;
   unlock: () => void;
   lock: () => void;
@@ -48,6 +52,7 @@ const defaults: StoredPreferences = {
   textScale: "normal",
   hapticsEnabled: true,
   pinEnabled: false,
+  biometricUnlockEnabled: false,
 };
 
 const AppPreferencesContext = createContext<AppPreferencesContextValue | null>(
@@ -125,9 +130,34 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
 
   const clearPin = useCallback(async () => {
     await SecureStore.deleteItemAsync(PIN_HASH_KEY);
-    await patchPrefs({ pinEnabled: false });
+    await patchPrefs({ pinEnabled: false, biometricUnlockEnabled: false });
     setLocked(false);
   }, [patchPrefs]);
+
+  const setBiometricUnlockEnabled = useCallback(
+    async (biometricUnlockEnabled: boolean) => {
+      await patchPrefs({ biometricUnlockEnabled });
+    },
+    [patchPrefs],
+  );
+
+  const tryBiometricUnlock = useCallback(async () => {
+    if (!prefs.pinEnabled || !prefs.biometricUnlockEnabled) return false;
+    try {
+      const LocalAuthentication = await import("expo-local-authentication");
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const enrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!hasHardware || !enrolled) return false;
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Unlock Mughal family records",
+        cancelLabel: "Use PIN",
+        disableDeviceFallback: true,
+      });
+      return result.success;
+    } catch {
+      return false;
+    }
+  }, [prefs.biometricUnlockEnabled, prefs.pinEnabled]);
 
   const verifyPin = useCallback(async (pin: string) => {
     const stored = await SecureStore.getItemAsync(PIN_HASH_KEY);
@@ -153,12 +183,15 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
       textScale: prefs.textScale,
       hapticsEnabled: prefs.hapticsEnabled,
       pinEnabled: prefs.pinEnabled,
+      biometricUnlockEnabled: prefs.biometricUnlockEnabled,
       locked,
       setTheme,
       setTextScale,
       setHapticsEnabled,
       setPin,
       clearPin,
+      setBiometricUnlockEnabled,
+      tryBiometricUnlock,
       verifyPin,
       unlock,
       lock,
@@ -173,6 +206,8 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
       setHapticsEnabled,
       setPin,
       clearPin,
+      setBiometricUnlockEnabled,
+      tryBiometricUnlock,
       verifyPin,
       unlock,
       lock,

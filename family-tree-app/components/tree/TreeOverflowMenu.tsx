@@ -12,6 +12,8 @@ type TreeOverflowMenuProps = {
   onDismiss: () => void;
   onCenterMarriage: () => void;
   onReload: () => void;
+  listLayout?: boolean;
+  onToggleListLayout?: () => void;
 };
 
 export function TreeOverflowMenu({
@@ -21,6 +23,8 @@ export function TreeOverflowMenu({
   onDismiss,
   onCenterMarriage,
   onReload,
+  listLayout,
+  onToggleListLayout,
 }: TreeOverflowMenuProps) {
   const theme = useTheme();
   const router = useRouter();
@@ -47,6 +51,16 @@ export function TreeOverflowMenu({
           <Button icon="refresh" mode="outlined" onPress={onReload}>
             {copy.tree.menuReload}
           </Button>
+          {onToggleListLayout ? (
+            <Button
+              testID="tree-menu-list-toggle"
+              icon={listLayout ? "graph" : "format-list-bulleted"}
+              mode="outlined"
+              onPress={onToggleListLayout}
+            >
+              {listLayout ? copy.tree.menuShowGraph : copy.tree.menuShowList}
+            </Button>
+          ) : null}
           <Button
             testID="tree-menu-kinship"
             icon="account-switch"

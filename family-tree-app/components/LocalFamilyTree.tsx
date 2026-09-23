@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Button, SegmentedButtons, Text, useTheme } from "react-native-paper";
+import { Button, Text, useTheme } from "react-native-paper";
 
 import { FamilyTreeGraphView } from "@/components/FamilyTreeGraphView";
 import { copy } from "@/content/businessCopy";
@@ -21,23 +21,23 @@ import type { GraphPersonSummary } from "@/lib/graph/types";
 type LocalFamilyTreeProps = {
   familyCode: string;
   immersive?: boolean;
+  layout?: "graph" | "list";
   onPersonPress?: (person: GraphPersonSummary) => void;
   zoomScale?: number;
   onZoomChange?: (scale: number) => void;
 };
 
-type ViewMode = "graph" | "list";
-
 export function LocalFamilyTree({
   familyCode,
   immersive,
+  layout = "graph",
   onPersonPress,
   zoomScale,
   onZoomChange,
 }: LocalFamilyTreeProps) {
   const theme = useTheme();
   const router = useRouter();
-  const [view, setView] = useState<ViewMode>("graph");
+  const view = layout;
   const [gensUp, setGensUp] = useState(2);
   const [gensDown, setGensDown] = useState(2);
   const [siblingSteps, setSiblingSteps] = useState(0);
@@ -129,16 +129,6 @@ export function LocalFamilyTree({
           </Button>
         </View>
       )}
-      <View style={styles.toggleWrap}>
-        <SegmentedButtons
-          value={view}
-          onValueChange={(v) => setView(v as ViewMode)}
-          buttons={[
-            { value: "graph", label: copy.tree.graphView, icon: "graph" },
-            { value: "list", label: copy.tree.listView, icon: "format-list-bulleted" },
-          ]}
-        />
-      </View>
       {view === "graph" && graph ? (
         <FamilyTreeGraphView
           graph={graph}
@@ -255,7 +245,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 8,
   },
-  toggleWrap: { paddingHorizontal: 12, paddingVertical: 8 },
   scroll: { flex: 1 },
   content: { padding: 12, paddingBottom: 32 },
   empty: { flex: 1, padding: 20, justifyContent: "center" },

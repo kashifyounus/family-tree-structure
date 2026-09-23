@@ -79,6 +79,7 @@ export default function TreeScreen() {
   const [reloadKey, setReloadKey] = useState(0);
   const [onlineDepth, setOnlineDepth] = useState(2);
   const [onlineSiblingSteps, setOnlineSiblingSteps] = useState(0);
+  const [listLayout, setListLayout] = useState(false);
 
   const uri = useMemo(() => {
     return `${apiUrl}/tree/${encodeURIComponent(loadedCode)}?embed=1`;
@@ -198,9 +199,10 @@ export default function TreeScreen() {
       <View style={styles.canvas}>
         {isLocal ? (
           <LocalFamilyTree
-            key={`${loadedCode}-${dataRevision}-${reloadKey}`}
+            key={`${loadedCode}-${dataRevision}-${reloadKey}-${listLayout ? "list" : "graph"}`}
             familyCode={loadedCode.trim()}
             immersive
+            layout={listLayout ? "list" : "graph"}
             onPersonPress={onPersonPress}
             zoomScale={zoom}
             onZoomChange={setZoom}
@@ -267,6 +269,15 @@ export default function TreeScreen() {
           setMenuOpen(false);
           setReloadKey((k) => k + 1);
         }}
+        listLayout={isLocal ? listLayout : undefined}
+        onToggleListLayout={
+          isLocal
+            ? () => {
+                setListLayout((v) => !v);
+                setMenuOpen(false);
+              }
+            : undefined
+        }
       />
     </View>
   );

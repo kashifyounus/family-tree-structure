@@ -110,6 +110,9 @@ export const copy = {
     insights: "Family insights",
     statsPrivate: (members: number, living: number) =>
       `Private archive: ${members} member${members === 1 ? "" : "s"}, ${living} recorded as living`,
+    statsCloud: (members: number, focalCode: string) =>
+      `Family cloud: ${members} member${members === 1 ? "" : "s"} in your directory · branch ${focalCode}`,
+    statsCloudLoading: "Loading family cloud summary…",
     searchPlaceholder: "Find a family member",
     recentTitle: "Recently opened",
     openBackupTools: "Backup & tools",
@@ -138,6 +141,8 @@ export const copy = {
     menuReload: "Reload tree",
     menuMoreTools: "More tools",
     menuKinship: "Compare kinship",
+    menuShowList: "Browse as list",
+    menuShowGraph: "Show graph view",
     sheetProfile: "Open profile",
     sheetCenter: "Center tree here",
     loadParents: "Load parents",
@@ -219,6 +224,9 @@ export const copy = {
     importFile: "Restore from backup file",
     importPlaceholder: "Paste backup file contents here…",
     importSuccess: "Your private archive was restored from the backup.",
+    importConfirmTitle: "Replace private archive?",
+    importConfirmBody: (count: number) =>
+      `This will erase ${count} member${count === 1 ? "" : "s"} on this device and replace them with the backup. This cannot be undone.`,
     compareTitle: "Compare two members",
     compareHint:
       "Enter member references or names from your private archive to see how they relate.",
@@ -274,6 +282,12 @@ export const copy = {
     removePin: "Turn off PIN",
     pinSet: "PIN is on.",
     pinRemoved: "PIN is off.",
+    pinConfirmLabel: "Confirm PIN",
+    pinMismatch: "PINs do not match. Enter the same PIN twice.",
+    biometricTitle: "Unlock with fingerprint",
+    biometricHelp: "Use device biometrics when a PIN is set (optional).",
+    biometricUnlock: "Use biometrics",
+    biometricFailed: "Biometric unlock failed. Enter your PIN.",
   },
 
   errors: {

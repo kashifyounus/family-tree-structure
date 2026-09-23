@@ -48,6 +48,9 @@ export default function AccountScreen() {
   const [apiDraft, setApiDraft] = useState(storage.apiUrl);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [pinDraft, setPinDraft] = useState("");
+  const [pinConfirmDraft, setPinConfirmDraft] = useState("");
+  const [pinFieldError, setPinFieldError] = useState<string | undefined>();
+  const [pinConfirmError, setPinConfirmError] = useState<string | undefined>();
 
   const onSignIn = async () => {
     if (storage.mode !== "online") {
@@ -133,9 +136,21 @@ export default function AccountScreen() {
             {copy.security.pinHelp}
           </Text>
           {prefs.pinEnabled ? (
-            <Button mode="outlined" onPress={() => void prefs.clearPin().then(() => showSuccess(copy.security.pinRemoved))}>
-              {copy.security.removePin}
-            </Button>
+            <>
+              <View style={styles.rowBetween}>
+                <Text variant="bodyMedium">{copy.security.biometricTitle}</Text>
+                <Switch
+                  value={prefs.biometricUnlockEnabled}
+                  onValueChange={(v) => void prefs.setBiometricUnlockEnabled(v)}
+                />
+              </View>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {copy.security.biometricHelp}
+              </Text>
+              <Button mode="outlined" onPress={() => void prefs.clearPin().then(() => showSuccess(copy.security.pinRemoved))}>
+                {copy.security.removePin}
+              </Button>
+            </>
           ) : (
             <Button mode="outlined" onPress={() => setPinDialogOpen(true)}>
               {copy.security.setPin}
@@ -147,14 +162,33 @@ export default function AccountScreen() {
       <AppDialogForm
         visible={pinDialogOpen}
         title={copy.security.setPin}
-        onDismiss={() => setPinDialogOpen(false)}
+        onDismiss={() => {
+          setPinDialogOpen(false);
+          setPinDraft("");
+          setPinConfirmDraft("");
+          setPinFieldError(undefined);
+          setPinConfirmError(undefined);
+        }}
         onSubmit={() => {
+          setPinFieldError(undefined);
+          setPinConfirmError(undefined);
+          if (!/^\d{4,6}$/.test(pinDraft)) {
+            setPinFieldError("PIN must be 4–6 digits.");
+            showError(new Error(copy.errors.validation));
+            return;
+          }
+          if (pinDraft !== pinConfirmDraft) {
+            setPinConfirmError(copy.security.pinMismatch);
+            showError(new Error(copy.security.pinMismatch));
+            return;
+          }
           void prefs
             .setPin(pinDraft)
             .then(() => {
               showSuccess(copy.security.pinSet);
               setPinDialogOpen(false);
               setPinDraft("");
+              setPinConfirmDraft("");
             })
             .catch((e) => showError(e));
         }}
@@ -165,6 +199,16 @@ export default function AccountScreen() {
           label={copy.security.pinLabel}
           value={pinDraft}
           onChangeText={setPinDraft}
+          errorText={pinFieldError}
+          secureTextEntry
+          keyboardType="number-pad"
+          maxLength={6}
+        />
+        <FormTextInput
+          label={copy.security.pinConfirmLabel}
+          value={pinConfirmDraft}
+          onChangeText={setPinConfirmDraft}
+          errorText={pinConfirmError}
           secureTextEntry
           keyboardType="number-pad"
           maxLength={6}

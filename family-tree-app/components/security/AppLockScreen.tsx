@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
 
@@ -17,20 +17,53 @@ export function AppLockScreen({ onUnlocked }: AppLockScreenProps) {
   const { showError } = useAppFeedback();
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pinError, setPinError] = useState<string | undefined>();
+
+  const unlockSuccess = () => {
+    prefs.unlock();
+    onUnlocked();
+    setPin("");
+    setPinError(undefined);
+  };
+
+  const tryBiometric = async () => {
+    setBusy(true);
+    try {
+      const ok = await prefs.tryBiometricUnlock();
+      if (ok) {
+        unlockSuccess();
+        return;
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!prefs.biometricUnlockEnabled) return;
+    void (async () => {
+      setBusy(true);
+      try {
+        const ok = await prefs.tryBiometricUnlock();
+        if (ok) unlockSuccess();
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }, [prefs.biometricUnlockEnabled, prefs.tryBiometricUnlock]);
 
   const submit = async () => {
     setBusy(true);
     try {
       const ok = await prefs.verifyPin(pin);
       if (!ok) {
+        setPinError(copy.security.wrongPin);
         showError(new Error(copy.security.wrongPin));
         return;
       }
-      prefs.unlock();
-      onUnlocked();
+      unlockSuccess();
     } finally {
       setBusy(false);
-      setPin("");
     }
   };
 
@@ -45,7 +78,11 @@ export function AppLockScreen({ onUnlocked }: AppLockScreenProps) {
       <FormTextInput
         label={copy.security.pinLabel}
         value={pin}
-        onChangeText={setPin}
+        onChangeText={(value) => {
+          setPin(value);
+          setPinError(undefined);
+        }}
+        errorText={pinError}
         secureTextEntry
         keyboardType="number-pad"
         maxLength={6}
@@ -54,6 +91,11 @@ export function AppLockScreen({ onUnlocked }: AppLockScreenProps) {
       <Button mode="contained" loading={busy} onPress={() => void submit()} style={{ marginTop: 16 }}>
         {copy.security.unlockButton}
       </Button>
+      {prefs.biometricUnlockEnabled ? (
+        <Button mode="outlined" onPress={() => void tryBiometric()} style={{ marginTop: 12 }}>
+          {copy.security.biometricUnlock}
+        </Button>
+      ) : null}
     </View>
   );
 }
