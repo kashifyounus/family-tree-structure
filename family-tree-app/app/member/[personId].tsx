@@ -35,6 +35,8 @@ import {
 } from "@/lib/data/personService";
 import type { PersonBundle } from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
+import { formatBilingualName } from "@/lib/format/displayName";
+import { recordRecentVisit } from "@/lib/recentPeople";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 
 export default function MemberDetailScreen() {
@@ -80,6 +82,11 @@ export default function MemberDetailScreen() {
         : await loadPersonById(mode, String(personId));
       setBundle(data);
       if (data) {
+        void recordRecentVisit({
+          personId: data.member.id,
+          familyCode: data.member.familyCode,
+          displayName: formatBilingualName(data.member),
+        });
         setFirstName(data.member.firstName);
         setLastName(data.member.lastName);
         setCity(data.member.currentCity ?? "");

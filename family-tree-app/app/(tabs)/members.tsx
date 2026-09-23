@@ -2,14 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import {
-  Banner,
-  FAB,
-  List,
-  Searchbar,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Banner, FAB, Searchbar, Text, useTheme } from "react-native-paper";
+
+import { MemberCard } from "@/components/members/MemberCard";
 
 import { AppDialogForm } from "@/components/ui/AppDialogForm";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -21,7 +16,6 @@ import { copy } from "@/content/businessCopy";
 import { useAuth } from "@/context/AuthContext";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
-import { formatGender } from "@/lib/format/gender";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
 import type { Gender, MemberRecord } from "@/lib/data/types";
 import { layout, radius, space } from "@/theme/tokens";
@@ -157,12 +151,9 @@ export default function MembersScreen() {
           refreshing={loading}
           onRefresh={() => void load(query)}
           renderItem={({ item, index }) => (
-            <List.Item
+            <MemberCard
               testID={index === 0 ? "members-first-card" : undefined}
-              title={`${item.firstName} ${item.lastName}`}
-              description={`${copy.account.memberReference}: ${item.familyCode} · ${formatGender(item.gender)}${item.currentCity ? ` · ${item.currentCity}` : ""}`}
-              left={(props) => <List.Icon {...props} icon="account-circle" />}
-              right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              member={item}
               onPress={() =>
                 router.push({
                   pathname: "/member/[personId]",
@@ -172,9 +163,6 @@ export default function MembersScreen() {
               onLongPress={() => {
                 if (mode === "local") onDelete(item);
               }}
-              style={[styles.listItem, { backgroundColor: theme.colors.surface }]}
-              titleStyle={{ color: theme.colors.onSurface }}
-              descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
             />
           )}
           ListEmptyComponent={
@@ -239,9 +227,5 @@ const styles = StyleSheet.create({
   banner: { borderRadius: radius.md },
   search: { borderRadius: radius.md },
   listContent: { paddingHorizontal: layout.screenPaddingX, paddingTop: space.xs },
-  listItem: {
-    borderRadius: radius.lg,
-    marginBottom: layout.listGap,
-  },
   fab: { position: "absolute", right: layout.screenPaddingX },
 });

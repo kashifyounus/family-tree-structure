@@ -49,6 +49,17 @@ export const copy = {
     signedIn: "You are signed in",
     signOut: "Sign out",
     loadSampleFamily: "Load sample family",
+    appearanceTitle: "Appearance",
+    themeLight: "Light",
+    themeDark: "Dark",
+    textSizeTitle: "Text size",
+    textNormal: "Normal",
+    textLarge: "Large",
+    hapticsTitle: "Touch feedback",
+    hapticsOn: "Vibration on",
+    hapticsOff: "Vibration off",
+    dataTitle: "Your data",
+    openTools: "Backup, export & kinship tools",
     loadSampleSuccess: (reference: string) =>
       `Sample family loaded. Explore member reference ${reference}.`,
   },
@@ -95,6 +106,9 @@ export const copy = {
     insights: "Family insights",
     statsPrivate: (members: number, living: number) =>
       `Private archive: ${members} member${members === 1 ? "" : "s"}, ${living} recorded as living`,
+    searchPlaceholder: "Find a family member",
+    recentTitle: "Recently opened",
+    openBackupTools: "Backup & tools",
   },
 
   tree: {
@@ -115,6 +129,20 @@ export const copy = {
     tapProfile: "Open full profile",
     graphView: "Graph",
     listView: "List",
+    menuTitle: "Tree menu",
+    menuCenterMarriage: "Center on my marriage",
+    menuReload: "Reload tree",
+    menuMoreTools: "More tools",
+    sheetProfile: "Open profile",
+    sheetCenter: "Center tree here",
+    loadParents: "Load parents",
+    loadChildren: "Load children",
+    loadSiblings: "Load siblings",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    offlineBanner: "You are offline. Switch to your private archive in Account to keep working.",
+    exportPrivacyHint:
+      "This file contains private family data. Only share it with people you trust.",
   },
 
   members: {

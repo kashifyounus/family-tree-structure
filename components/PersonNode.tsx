@@ -49,15 +49,16 @@ export function PersonNode({
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
             {person.firstName} {person.lastName}
+            {formatUrduName(person) ? (
+              <>
+                {" · "}
+                <UrduText>{formatUrduName(person)}</UrduText>
+              </>
+            ) : null}
           </p>
           <p className="truncate text-[10px] font-mono text-zinc-500">
             {person.familyCode}
           </p>
-          {formatUrduName(person) && (
-            <p className="truncate text-[11px] text-zinc-600 dark:text-zinc-400">
-              <UrduText>{formatUrduName(person)}</UrduText>
-            </p>
-          )}
         </div>
       </div>
       <div className="mt-1 flex flex-wrap gap-1">

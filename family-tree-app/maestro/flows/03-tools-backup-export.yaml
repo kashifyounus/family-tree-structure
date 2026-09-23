@@ -8,7 +8,11 @@ tags:
       id: home-screen
     timeout: 20000
 - tapOn:
-    text: "Tools"
+    text: "Tree"
+- tapOn:
+    id: tree-overflow-menu
+- tapOn:
+    id: tree-menu-more-tools
 - extendedWaitUntil:
     visible:
       id: tools-screen
@@ -17,7 +21,8 @@ tags:
     text: "Save copy to Google Drive"
 - tapOn:
     id: tools-export-file
-# Share sheet may appear — flow verifies export action is reachable without crash
+- tapOn:
+    text: "Export backup file"
 - extendedWaitUntil:
     visible:
       id: tools-screen

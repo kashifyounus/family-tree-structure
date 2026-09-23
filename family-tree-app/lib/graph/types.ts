@@ -5,6 +5,8 @@ export type GraphPersonSummary = {
   familyCode: string;
   firstName: string;
   lastName: string;
+  urduFirstName?: string | null;
+  urduLastName?: string | null;
   gender: KinshipPerson["gender"];
   birthDate: string | null;
   deathDate: string | null;
@@ -20,6 +22,9 @@ export type FamilyGraphNode = {
     person: GraphPersonSummary;
     isFocal?: boolean;
     isDeceased?: boolean;
+    hasUnexpandedParents?: boolean;
+    hasUnexpandedChildren?: boolean;
+    hasUnexpandedSiblings?: boolean;
   };
 };
 

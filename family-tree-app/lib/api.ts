@@ -182,6 +182,8 @@ export type MobileFamilyGraph = {
         familyCode: string;
         firstName: string;
         lastName: string;
+        urduFirstName?: string | null;
+        urduLastName?: string | null;
         gender: string;
         birthDate: string | null;
         deathDate: string | null;

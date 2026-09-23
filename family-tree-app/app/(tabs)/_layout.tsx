@@ -45,15 +45,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="members"
-        options={{
-          title: "Members",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-group" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="tree"
         options={{
           title: "Tree",
@@ -64,21 +55,26 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="members"
+        options={{
+          title: "Members",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="reports"
         options={{
+          href: null,
           title: "Reports",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-bar" color={color} size={size} />
-          ),
         }}
       />
       <Tabs.Screen
         name="tools"
         options={{
+          href: null,
           title: "Tools",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="toolbox" color={color} size={size} />
-          ),
         }}
       />
       <Tabs.Screen

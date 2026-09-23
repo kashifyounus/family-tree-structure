@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
@@ -6,12 +7,14 @@ import {
   Card,
   Divider,
   SegmentedButtons,
+  Switch,
   Text,
   TextInput,
   useTheme,
 } from "react-native-paper";
 
 import { Screen } from "@/components/ui/Screen";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { copy } from "@/content/businessCopy";
 import {
   APP_OWNER,
@@ -31,6 +34,8 @@ import type { StorageMode } from "@/lib/data/types";
 
 export default function AccountScreen() {
   const theme = useTheme();
+  const router = useRouter();
+  const prefs = useAppPreferences();
   const auth = useAuth();
   const localAccount = useLocalAccount();
   const storage = useStorage();
@@ -91,6 +96,49 @@ export default function AccountScreen() {
           </Card.Content>
         </Card>
       )}
+
+      <Card mode="elevated" style={styles.card}>
+        <Card.Content style={styles.gap}>
+          <Text variant="titleMedium">{copy.account.appearanceTitle}</Text>
+          <SegmentedButtons
+            value={prefs.theme}
+            onValueChange={(v) => void prefs.setTheme(v as "light" | "dark")}
+            buttons={[
+              { value: "light", label: copy.account.themeLight, icon: "white-balance-sunny" },
+              { value: "dark", label: copy.account.themeDark, icon: "moon-waning-crescent" },
+            ]}
+          />
+          <Text variant="titleSmall">{copy.account.textSizeTitle}</Text>
+          <SegmentedButtons
+            value={prefs.textScale}
+            onValueChange={(v) => void prefs.setTextScale(v as "normal" | "large")}
+            buttons={[
+              { value: "normal", label: copy.account.textNormal },
+              { value: "large", label: copy.account.textLarge },
+            ]}
+          />
+          <View style={styles.rowBetween}>
+            <Text variant="bodyMedium">{copy.account.hapticsTitle}</Text>
+            <Switch
+              value={prefs.hapticsEnabled}
+              onValueChange={(v) => void prefs.setHapticsEnabled(v)}
+            />
+          </View>
+        </Card.Content>
+      </Card>
+
+      <Card mode="elevated" style={styles.card}>
+        <Card.Content style={styles.gap}>
+          <Text variant="titleMedium">{copy.account.dataTitle}</Text>
+          <Button
+            mode="outlined"
+            icon="toolbox"
+            onPress={() => router.push("/(tabs)/tools")}
+          >
+            {copy.account.openTools}
+          </Button>
+        </Card.Content>
+      </Card>
 
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.gap}>
@@ -193,4 +241,9 @@ const styles = StyleSheet.create({
   card: { borderRadius: 16, marginBottom: 12 },
   gap: { gap: 10 },
   divider: { marginVertical: 12 },
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
 });

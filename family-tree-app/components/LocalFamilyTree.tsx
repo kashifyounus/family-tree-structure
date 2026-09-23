@@ -1,28 +1,56 @@
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { SegmentedButtons, Text, useTheme } from "react-native-paper";
+import { Button, SegmentedButtons, Text, useTheme } from "react-native-paper";
 
 import { FamilyTreeGraphView } from "@/components/FamilyTreeGraphView";
 import { copy } from "@/content/businessCopy";
 import { formatGender } from "@/lib/format/gender";
-import { buildLocalFamilyGraph } from "@/lib/graph/buildLocalFamilyGraph";
+import {
+  buildLocalFamilyGraph,
+  type BuildLocalGraphOptions,
+} from "@/lib/graph/buildLocalFamilyGraph";
+import { focalHasUnexpandedSiblings } from "@/lib/graph/explorationHints";
+import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import {
   getLocalMemberByFamilyCode,
   getLocalUnionsForPerson,
 } from "@/lib/db/localRepository";
+import type { GraphPersonSummary } from "@/lib/graph/types";
 
 type LocalFamilyTreeProps = {
   familyCode: string;
   immersive?: boolean;
+  onPersonPress?: (person: GraphPersonSummary) => void;
+  zoomScale?: number;
+  onZoomChange?: (scale: number) => void;
 };
 
 type ViewMode = "graph" | "list";
 
-export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps) {
+export function LocalFamilyTree({
+  familyCode,
+  immersive,
+  onPersonPress,
+  zoomScale,
+  onZoomChange,
+}: LocalFamilyTreeProps) {
   const theme = useTheme();
   const router = useRouter();
   const [view, setView] = useState<ViewMode>("graph");
+  const [gensUp, setGensUp] = useState(2);
+  const [gensDown, setGensDown] = useState(2);
+  const [siblingSteps, setSiblingSteps] = useState(0);
+
+  const graphOptions: BuildLocalGraphOptions = useMemo(
+    () => ({
+      generationsUp: gensUp,
+      generationsDown: gensDown,
+      siblingSteps,
+    }),
+    [gensUp, gensDown, siblingSteps],
+  );
+
   const focal = useMemo(
     () => getLocalMemberByFamilyCode(familyCode),
     [familyCode],
@@ -32,9 +60,34 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
     [focal],
   );
   const graph = useMemo(
-    () => buildLocalFamilyGraph(familyCode.trim()),
-    [familyCode],
+    () => buildLocalFamilyGraph(familyCode.trim(), graphOptions),
+    [familyCode, graphOptions],
   );
+
+  const canLoadMore = useCallback(() => {
+    if (!focal || !graph) return { parents: false, children: false, siblings: false };
+    const { allUnions } = loadKinshipDataset();
+    const included = new Set(graph.nodes.map((n) => n.id));
+    const ego = graph.nodes.find((n) => n.id === focal.id);
+    return {
+      parents: ego?.data.hasUnexpandedParents ?? false,
+      children: ego?.data.hasUnexpandedChildren ?? false,
+      siblings: focalHasUnexpandedSiblings(
+        focal.id,
+        included,
+        allUnions,
+        siblingSteps,
+      ),
+    };
+  }, [focal, graph, siblingSteps]);
+
+  const more = canLoadMore();
+
+  const resetExpansion = () => {
+    setGensUp(2);
+    setGensDown(2);
+    setSiblingSteps(0);
+  };
 
   if (!focal) {
     return (
@@ -48,6 +101,34 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
 
   return (
     <View style={[styles.root, immersive && { backgroundColor: theme.colors.background }]}>
+      {view === "graph" && (
+        <View style={styles.expandRow}>
+          <Button
+            compact
+            mode="outlined"
+            disabled={!more.parents}
+            onPress={() => setGensUp((g) => g + 1)}
+          >
+            {copy.tree.loadParents}
+          </Button>
+          <Button
+            compact
+            mode="outlined"
+            disabled={!more.siblings}
+            onPress={() => setSiblingSteps((s) => s + 1)}
+          >
+            {copy.tree.loadSiblings}
+          </Button>
+          <Button
+            compact
+            mode="outlined"
+            disabled={!more.children}
+            onPress={() => setGensDown((g) => g + 1)}
+          >
+            {copy.tree.loadChildren}
+          </Button>
+        </View>
+      )}
       <View style={styles.toggleWrap}>
         <SegmentedButtons
           value={view}
@@ -59,7 +140,12 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
         />
       </View>
       {view === "graph" && graph ? (
-        <FamilyTreeGraphView graph={graph} />
+        <FamilyTreeGraphView
+          graph={graph}
+          onPersonPress={onPersonPress}
+          zoomScale={zoomScale}
+          onZoomChange={onZoomChange}
+        />
       ) : (
         <ScrollView
           style={styles.scroll}
@@ -110,10 +196,16 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
                 key={m.id}
                 style={[
                   styles.marriageCard,
-                  { backgroundColor: theme.colors.surfaceVariant },
+                  {
+                    backgroundColor: theme.colors.surfaceVariant,
+                    opacity: m.isActive ? 1 : 0.65,
+                  },
                 ]}
               >
                 <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>
+                  {m.isActive ? copy.profile.currentMarriage : copy.profile.previousMarriage}
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginTop: 4 }}>
                   {copy.tree.marriageTo(m.partner1Name, m.partner2Name)}
                 </Text>
                 {m.children.length === 0 ? (
@@ -145,12 +237,24 @@ export function LocalFamilyTree({ familyCode, immersive }: LocalFamilyTreeProps)
           </Text>
         </ScrollView>
       )}
+      {!immersive && (
+        <Button mode="text" onPress={resetExpansion}>
+          {copy.tree.menuReload}
+        </Button>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  expandRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+  },
   toggleWrap: { paddingHorizontal: 12, paddingVertical: 8 },
   scroll: { flex: 1 },
   content: { padding: 12, paddingBottom: 32 },
