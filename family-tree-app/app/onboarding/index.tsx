@@ -18,6 +18,7 @@ import { copy } from "@/content/businessCopy";
 import { BrandLogo } from "@/components/BrandLogo";
 import { AppCard } from "@/components/ui/AppCard";
 import { FormTextInput } from "@/components/ui/FormTextInput";
+import { GenderField } from "@/components/ui/GenderField";
 import { Screen } from "@/components/ui/Screen";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useLocalAccount } from "@/context/LocalAccountContext";
