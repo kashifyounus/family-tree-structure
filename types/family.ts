@@ -121,6 +121,9 @@ export type FamilyGraphEdge = {
 
 export type FamilyGraph = {
   focalPersonId: string;
+  /** Primary marriage union on the focal row, when the focal person has a spouse in the graph. */
+  focalUnionId?: string | null;
+  focalUnionIds?: string[];
   nodes: FamilyGraphNode[];
   edges: FamilyGraphEdge[];
 };

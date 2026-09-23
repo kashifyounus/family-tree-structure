@@ -54,3 +54,18 @@ jobs:
 
       - name: Build Next.js Project
         run: npm run build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E
+        run: npm run test:e2e
+        env:
+          CI: true
+
+      - name: Mobile app typecheck and tests
+        working-directory: family-tree-app
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npm test -- --passWithNoTests

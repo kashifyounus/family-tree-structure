@@ -26,10 +26,18 @@ export type MarriageLayoutEdge = {
   label?: string;
 };
 
+export type MarriageLayoutOptions = {
+  /** When set, this union is treated as the primary marriage row (first spouse column). */
+  preferredFocalUnionId?: string | null;
+};
+
 export type MarriageLayoutResult = {
   positions: Map<string, { x: number; y: number }>;
   focalPersonId: string;
   focalPartnerIds: string[];
+  /** Primary union on the marriage row (first spouse union after sorting). */
+  focalUnionId: string | null;
+  focalUnionIds: string[];
   edges: MarriageLayoutEdge[];
 };
 
@@ -180,12 +188,20 @@ export function layoutMarriageCentricGraph(
   included: Set<string>,
   originX = 0,
   originY = 0,
+  options?: MarriageLayoutOptions,
 ): MarriageLayoutResult {
   const positions = new Map<string, { x: number; y: number }>();
   const edges: MarriageLayoutEdge[] = [];
   const focal = peopleById.get(focalId);
   if (!focal) {
-    return { positions, focalPersonId: focalId, focalPartnerIds: [], edges };
+    return {
+      positions,
+      focalPersonId: focalId,
+      focalPartnerIds: [],
+      focalUnionId: null,
+      focalUnionIds: [],
+      edges,
+    };
   }
 
   const H = MARRIAGE_H_SPACING;
@@ -205,6 +221,15 @@ export function layoutMarriageCentricGraph(
     spouseEntries.push({ union: u, spouseId });
   }
 
+  const preferred = options?.preferredFocalUnionId;
+  if (preferred) {
+    const idx = spouseEntries.findIndex((e) => e.union.id === preferred);
+    if (idx > 0) {
+      const [picked] = spouseEntries.splice(idx, 1);
+      spouseEntries.unshift(picked);
+    }
+  }
+
   spouseEntries.forEach((entry, index) => {
     const spouseX = originX + (index + 1) * H;
     ensurePosition(positions, entry.spouseId, spouseX, originY);
@@ -213,7 +238,7 @@ export function layoutMarriageCentricGraph(
       source: focalId,
       target: entry.spouseId,
       type: "spouse",
-      label: "union",
+      label: entry.union.id,
     });
   });
 
@@ -311,6 +336,8 @@ export function layoutMarriageCentricGraph(
     positions,
     focalPersonId: focalId,
     focalPartnerIds: spouseEntries.map((e) => e.spouseId),
+    focalUnionId: spouseEntries[0]?.union.id ?? null,
+    focalUnionIds: spouseEntries.map((e) => e.union.id),
     edges,
   };
 }

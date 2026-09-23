@@ -43,6 +43,7 @@ export type BuildLocalGraphOptions = {
   generationsUp?: number;
   generationsDown?: number;
   siblingSteps?: number;
+  focalUnionId?: string | null;
 };
 
 export function buildLocalFamilyGraph(
@@ -75,13 +76,21 @@ export function buildLocalFamilyGraph(
       .map((p) => [p.id, { id: p.id, birthDate: p.birthDate }]),
   );
 
-  const { positions, edges: layoutEdges, focalPartnerIds } =
-    layoutMarriageCentricGraph(
-      focal.id,
-      layoutPeople,
-      toLayoutUnions(allUnions),
-      included,
-    );
+  const {
+    positions,
+    edges: layoutEdges,
+    focalPartnerIds,
+    focalUnionId,
+    focalUnionIds,
+  } = layoutMarriageCentricGraph(
+    focal.id,
+    layoutPeople,
+    toLayoutUnions(allUnions),
+    included,
+    0,
+    0,
+    { preferredFocalUnionId: options.focalUnionId },
+  );
 
   const nodes: FamilyGraphNode[] = [];
   for (const personId of included) {
@@ -111,10 +120,13 @@ export function buildLocalFamilyGraph(
     source: e.source,
     target: e.target,
     type: e.type,
+    label: e.label,
   }));
 
   return {
     focalPersonId: focal.id,
+    focalUnionId,
+    focalUnionIds,
     nodes,
     edges,
   };

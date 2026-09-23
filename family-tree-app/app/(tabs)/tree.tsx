@@ -25,6 +25,8 @@ import type { GraphPersonSummary } from "@/lib/graph/types";
 function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
   return {
     focalPersonId: g.focalPersonId,
+    focalUnionId: g.focalUnionId,
+    focalUnionIds: g.focalUnionIds,
     nodes: g.nodes.map((n) => ({
       id: n.id,
       type: "person",
@@ -51,7 +53,13 @@ function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
         hasUnexpandedSiblings: n.data.hasUnexpandedSiblings,
       },
     })),
-    edges: g.edges,
+    edges: g.edges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      type: e.type,
+      label: e.label,
+    })),
   };
 }
 

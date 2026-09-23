@@ -14,6 +14,7 @@ import { Text, useTheme } from "react-native-paper";
 import { copy } from "@/content/businessCopy";
 import { formatGraphPersonName } from "@/lib/format/displayName";
 import type { FamilyGraph, GraphPersonSummary } from "@/lib/graph/types";
+import { buildPedigreeConnectorSegments } from "../../shared/pedigreeConnectors";
 
 const NODE_W = 148;
 const NODE_H = 80;
@@ -89,14 +90,16 @@ export function FamilyTreeGraphView({
     };
   }, [graph.nodes, screenW]);
 
-  const nodeCenter = (id: string) => {
-    const n = graph.nodes.find((x) => x.id === id);
-    if (!n) return { x: 0, y: 0 };
-    return {
-      x: n.position.x - layout.minX + PADDING + NODE_W / 2,
-      y: n.position.y - layout.minY + PADDING + NODE_H / 2,
-    };
-  };
+  const connectorSegments = useMemo(() => {
+    const boxes = graph.nodes.map((n) => ({
+      id: n.id,
+      x: n.position.x - layout.minX + PADDING,
+      y: n.position.y - layout.minY + PADDING,
+      width: NODE_W,
+      height: NODE_H,
+    }));
+    return buildPedigreeConnectorSegments(boxes, graph.edges);
+  }, [graph.nodes, graph.edges, layout.minX, layout.minY]);
 
   const scaledW = layout.width * scale;
   const scaledH = layout.height * scale;
@@ -128,23 +131,21 @@ export function FamilyTreeGraphView({
               height={layout.height}
               style={StyleSheet.absoluteFill}
             >
-              {graph.edges.map((e) => {
-                const a = nodeCenter(e.source);
-                const b = nodeCenter(e.target);
+              {connectorSegments.map((s) => {
                 const stroke =
-                  e.type === "spouse"
+                  s.kind === "spouse"
                     ? theme.colors.secondary
                     : theme.colors.primary;
                 return (
                   <Line
-                    key={e.id}
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
+                    key={s.id}
+                    x1={s.x1}
+                    y1={s.y1}
+                    x2={s.x2}
+                    y2={s.y2}
                     stroke={stroke}
-                    strokeWidth={2}
-                    strokeOpacity={0.65}
+                    strokeWidth={s.kind === "spouse" ? 2.5 : 2}
+                    strokeOpacity={0.7}
                   />
                 );
               })}

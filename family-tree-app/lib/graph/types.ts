@@ -34,10 +34,13 @@ export type FamilyGraphEdge = {
   source: string;
   target: string;
   type: "spouse" | "parent" | "child";
+  label?: string;
 };
 
 export type FamilyGraph = {
   focalPersonId: string;
+  focalUnionId?: string | null;
+  focalUnionIds?: string[];
   nodes: FamilyGraphNode[];
   edges: FamilyGraphEdge[];
 };

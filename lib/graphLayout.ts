@@ -59,7 +59,13 @@ function layoutFocalCentric(
   isFocal: boolean,
   originX = 0,
   originY = 0,
-): { nodes: FamilyGraphNode[]; edges: FamilyGraphEdge[] } {
+  preferredFocalUnionId?: string | null,
+): {
+  nodes: FamilyGraphNode[];
+  edges: FamilyGraphEdge[];
+  focalUnionId: string | null;
+  focalUnionIds: string[];
+} {
   const layoutPeople = new Map(
     [...included]
       .map((id) => peopleById.get(id))
@@ -67,15 +73,21 @@ function layoutFocalCentric(
       .map((p) => [p.id, { id: p.id, birthDate: p.birthDate }]),
   );
 
-  const { positions, edges: layoutEdges, focalPartnerIds } =
-    layoutMarriageCentricGraph(
-      focal.id,
-      layoutPeople,
-      toLayoutUnions(unions),
-      included,
-      originX,
-      originY,
-    );
+  const {
+    positions,
+    edges: layoutEdges,
+    focalPartnerIds,
+    focalUnionId,
+    focalUnionIds,
+  } = layoutMarriageCentricGraph(
+    focal.id,
+    layoutPeople,
+    toLayoutUnions(unions),
+    included,
+    originX,
+    originY,
+    { preferredFocalUnionId },
+  );
 
   const hintsFor = (personId: string) =>
     getExplorationHints(personId, included, unions);
@@ -106,7 +118,7 @@ function layoutFocalCentric(
     label: e.label,
   }));
 
-  return { nodes, edges };
+  return { nodes, edges, focalUnionId, focalUnionIds };
 }
 
 export function buildFamilyGraph(
@@ -116,6 +128,7 @@ export function buildFamilyGraph(
   generationsUp = 2,
   generationsDown = 2,
   siblingSteps = 0,
+  preferredFocalUnionId?: string | null,
 ): FamilyGraph {
   const included = collectIncludedPersonIds(
     focal.id,
@@ -125,16 +138,21 @@ export function buildFamilyGraph(
     siblingSteps,
   );
   const peopleById = new Map(allPeople.map((p) => [p.id, p]));
-  const { nodes, edges } = layoutFocalCentric(
+  const { nodes, edges, focalUnionId, focalUnionIds } = layoutFocalCentric(
     focal,
     peopleById,
     unions,
     included,
     true,
+    0,
+    0,
+    preferredFocalUnionId,
   );
 
   return {
     focalPersonId: focal.id,
+    focalUnionId,
+    focalUnionIds,
     nodes,
     edges,
   };
@@ -156,7 +174,7 @@ export function buildExpansionSubgraph(
     gensDown + 1,
   );
   const peopleById = new Map(people.map((p) => [p.id, p]));
-  const { nodes, edges } = layoutFocalCentric(
+  const { nodes, edges, focalUnionId, focalUnionIds } = layoutFocalCentric(
     anchor,
     peopleById,
     unions,
@@ -168,6 +186,8 @@ export function buildExpansionSubgraph(
 
   return {
     focalPersonId: anchor.id,
+    focalUnionId,
+    focalUnionIds,
     nodes,
     edges,
   };

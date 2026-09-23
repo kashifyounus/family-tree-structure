@@ -45,15 +45,14 @@ describe("marriageTreeLayout", () => {
 
   it("places spouse on marriage row and children below", () => {
     const included = collectIncludedPersonIds("ego", unions, 1, 1, 1);
-    const { positions, edges } = layoutMarriageCentricGraph(
-      "ego",
-      people,
-      unions,
-      included,
-    );
+    const { positions, edges, focalUnionId, focalUnionIds } =
+      layoutMarriageCentricGraph("ego", people, unions, included);
     expect(positions.get("spouse")!.y).toBe(positions.get("ego")!.y);
     expect(positions.get("c2")!.y).toBeGreaterThan(positions.get("ego")!.y);
     expect(positions.get("sib")!.x).toBeLessThan(positions.get("ego")!.x);
     expect(edges.some((e) => e.type === "spouse")).toBe(true);
+    expect(focalUnionId).toBe("u1");
+    expect(focalUnionIds).toContain("u1");
+    expect(edges.find((e) => e.type === "spouse")?.label).toBe("u1");
   });
 });

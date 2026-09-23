@@ -14,9 +14,10 @@ export async function GET(request: Request, context: RouteContext) {
   const url = new URL(request.url);
   const depth = parseIntParam(url.searchParams.get("depth"), 2);
   const siblingSteps = parseIntParam(url.searchParams.get("siblingSteps"), 0);
+  const focalUnionId = url.searchParams.get("focalUnionId");
 
   const [graph, details] = await Promise.all([
-    getFamilyGraph(decoded, depth, siblingSteps),
+    getFamilyGraph(decoded, depth, siblingSteps, focalUnionId),
     getPersonDetailsByFamilyCode(decoded),
   ]);
 

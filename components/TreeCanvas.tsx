@@ -17,6 +17,7 @@ import { expandFamilyGraph } from "@/actions/familyTree";
 import type { FamilyGraph } from "@/types/family";
 import { PersonNode, type PersonNodeData } from "@/components/PersonNode";
 import { FitViewOnGraphChange } from "@/components/tree/FitViewOnGraphChange";
+import { PedigreeConnectorsLayer } from "@/components/tree/PedigreeConnectorsLayer";
 
 const nodeTypes = { person: PersonNode };
 
@@ -47,19 +48,14 @@ function graphToFlow(
       },
     };
   });
-  const edges: Edge[] = graph.edges.map((e) => ({
-    id: e.id,
-    source: e.source,
-    target: e.target,
-    sourceHandle: e.type === "spouse" ? "spouse" : undefined,
-    targetHandle: e.type === "spouse" ? "spouse-in" : undefined,
-    label: e.label,
-    animated: e.type === "spouse",
-    style:
-      e.type === "spouse"
-        ? { stroke: "#f43f5e", strokeWidth: 2 }
-        : { stroke: "#6366f1", strokeWidth: 1.5 },
-  }));
+  const edges: Edge[] = graph.edges
+    .filter((e) => e.type !== "spouse" && e.type !== "parent" && e.type !== "child")
+    .map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      label: e.label,
+    }));
   return { nodes, edges };
 }
 
@@ -164,6 +160,7 @@ function TreeCanvasInner({
         maxZoom={2}
         proOptions={{ hideAttribution: true }}
       >
+        <PedigreeConnectorsLayer edges={graph.edges} />
         <FitViewOnGraphChange nodeCount={nodes.length} padding={0.25} />
         <Background gap={16} color="#e4e4e7" />
         <Controls

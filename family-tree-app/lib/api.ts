@@ -172,6 +172,8 @@ export async function fetchOnlineReports(
 
 export type MobileFamilyGraph = {
   focalPersonId: string;
+  focalUnionId?: string | null;
+  focalUnionIds?: string[];
   nodes: {
     id: string;
     type: "person";
@@ -202,12 +204,14 @@ export type MobileFamilyGraph = {
     source: string;
     target: string;
     type: "spouse" | "parent" | "child";
+    label?: string;
   }[];
 };
 
 export type FetchFamilyGraphOptions = {
   depth?: number;
   siblingSteps?: number;
+  focalUnionId?: string | null;
 };
 
 export async function fetchFamilyGraph(
@@ -220,6 +224,9 @@ export async function fetchFamilyGraph(
     depth: String(depth),
     siblingSteps: String(siblingSteps),
   });
+  if (options.focalUnionId) {
+    qs.set("focalUnionId", options.focalUnionId);
+  }
   try {
     const data = await apiFetch<{ graph: MobileFamilyGraph }>(
       `/api/mobile/graph/${encodeURIComponent(familyCode)}?${qs.toString()}`,
