@@ -2,7 +2,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
-  ActivityIndicator,
   Button,
   Card,
   Chip,
@@ -16,7 +15,11 @@ import {
 import { KinshipSections } from "@/components/KinshipSections";
 import { PersonFacts } from "@/components/PersonFacts";
 import { FormTextInput } from "@/components/ui/FormTextInput";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { ReferenceText } from "@/components/ui/ReferenceText";
+import { LoadingView } from "@/components/ui/LoadingView";
 import { Screen } from "@/components/ui/Screen";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
@@ -96,11 +99,7 @@ export default function MemberDetailScreen() {
   }, [reload]);
 
   if (loading) {
-    return (
-      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   if (!bundle) {
@@ -220,18 +219,20 @@ export default function MemberDetailScreen() {
   return (
     <>
       <Screen testID="member-profile-screen" keyboardAvoiding>
-        <Text variant="headlineMedium" style={{ color: theme.colors.onBackground }}>
-          {m.firstName} {m.lastName}
-        </Text>
-        <Text variant="labelLarge" style={{ color: theme.colors.primary, marginTop: 4 }}>
-          {copy.account.memberReference}: {m.familyCode}
-        </Text>
-        {(m.urduFirstName || m.urduLastName) && (
-          <Text variant="titleMedium" style={{ marginTop: 8, color: theme.colors.onSurface }}>
-            {m.urduFirstName} {m.urduLastName}
-          </Text>
+        <PageHeader
+          title={`${m.firstName} ${m.lastName}`}
+          meta={
+            (m.urduFirstName || m.urduLastName)
+              ? `${m.urduFirstName ?? ""} ${m.urduLastName ?? ""}`.trim()
+              : undefined
+          }
+        />
+        <ReferenceText label={copy.account.memberReference} code={m.familyCode} />
+        {!editing && (
+          <SectionCard title="Personal details" delay={60}>
+            <PersonFacts member={m} />
+          </SectionCard>
         )}
-        {!editing && <PersonFacts member={m} />}
         {!canEditLocal && (
           <Text variant="bodyMedium" style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
             {copy.profile.cloudReadOnly}
@@ -311,45 +312,49 @@ export default function MemberDetailScreen() {
             {copy.profile.noMarriages}
           </Text>
         ) : (
-          bundle.unions.map((u) => (
-            <Card key={u.id} mode="elevated" style={styles.block}>
-              <Card.Content>
-                <Chip compact style={{ alignSelf: "flex-start", marginBottom: 8 }}>
-                  {u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage}
-                </Chip>
-                <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>
-                  {copy.tree.marriageTo(u.partner1Name, u.partner2Name)}
-                </Text>
+          bundle.unions.map((u, index) => (
+            <SectionCard
+              key={u.id}
+              delay={80 + index * 40}
+              title={copy.tree.marriageTo(u.partner1Name, u.partner2Name)}
+              subtitle={
+                u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage
+              }
+            >
+              <Chip compact icon="heart" style={{ alignSelf: "flex-start" }}>
+                {u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage}
+              </Chip>
+              <Button
+                mode="text"
+                compact
+                icon="ring"
+                onPress={() =>
+                  router.push({
+                    pathname: "/marriage/[unionId]",
+                    params: { unionId: u.id },
+                  })
+                }
+              >
+                View marriage
+              </Button>
+              {u.children.map((c) => (
                 <Button
+                  key={c.id}
                   mode="text"
                   compact
+                  icon="account-child"
                   onPress={() =>
                     router.push({
-                      pathname: "/marriage/[unionId]",
-                      params: { unionId: u.id },
+                      pathname: "/member/[personId]",
+                      params: { personId: c.id, code: c.familyCode },
                     })
                   }
+                  labelStyle={{ textAlign: "left" }}
                 >
-                  View marriage
+                  {c.name} ({c.familyCode})
                 </Button>
-                {u.children.map((c) => (
-                  <Button
-                    key={c.id}
-                    mode="text"
-                    compact
-                    onPress={() =>
-                      router.push({
-                        pathname: "/member/[personId]",
-                        params: { personId: c.id, code: c.familyCode },
-                      })
-                    }
-                    labelStyle={{ textAlign: "left" }}
-                  >
-                    {c.name} ({c.familyCode})
-                  </Button>
-                ))}
-              </Card.Content>
-            </Card>
+              ))}
+            </SectionCard>
           ))
         )}
 

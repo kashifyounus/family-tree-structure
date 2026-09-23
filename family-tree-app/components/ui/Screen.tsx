@@ -11,11 +11,16 @@ import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { layout } from "@/theme/tokens";
+import { motion } from "@/theme/motion";
+
 type ScreenProps = {
   children: ReactNode;
   scroll?: boolean;
   padded?: boolean;
   keyboardAvoiding?: boolean;
+  /** Entrance animation (disable on heavy lists / tab remounts). */
+  animated?: boolean;
   style?: ViewStyle;
   testID?: string;
   /** Extra bottom padding (e.g. above tab bar + FAB). */
@@ -30,6 +35,7 @@ export function Screen({
   style,
   testID,
   bottomInset = 0,
+  animated = true,
 }: ScreenProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -41,10 +47,12 @@ export function Screen({
     style,
   ];
 
-  const body = (
-    <Animated.View entering={FadeInDown.duration(320)} style={contentStyle}>
+  const innerContent = animated ? (
+    <Animated.View entering={FadeInDown.duration(motion.screenEnter)} style={contentStyle}>
       {children}
     </Animated.View>
+  ) : (
+    <View style={contentStyle}>{children}</View>
   );
 
   const scrollView = (
@@ -56,11 +64,11 @@ export function Screen({
       automaticallyAdjustKeyboardInsets
       nestedScrollEnabled
     >
-      {body}
+      {innerContent}
     </ScrollView>
   );
 
-  const inner = scroll ? scrollView : body;
+  const inner = scroll ? scrollView : innerContent;
 
   return (
     <View
@@ -85,5 +93,8 @@ export function Screen({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   scrollGrow: { flexGrow: 1 },
-  padded: { paddingHorizontal: 20, paddingTop: 12 },
+  padded: {
+    paddingHorizontal: layout.screenPaddingX,
+    paddingTop: layout.screenPaddingTop,
+  },
 });

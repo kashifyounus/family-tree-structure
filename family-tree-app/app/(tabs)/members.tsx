@@ -1,21 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
+import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
-  ActivityIndicator,
-  Button,
-  Card,
-  Dialog,
+  Banner,
   FAB,
-  Portal,
+  List,
   Searchbar,
-  SegmentedButtons,
   Text,
   useTheme,
 } from "react-native-paper";
 
+import { AppDialogForm } from "@/components/ui/AppDialogForm";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { FormTextInput } from "@/components/ui/FormTextInput";
+import { GenderField } from "@/components/ui/GenderField";
+import { LoadingView } from "@/components/ui/LoadingView";
+import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { useAuth } from "@/context/AuthContext";
 import { useAppFeedback } from "@/context/ErrorContext";
@@ -23,6 +24,7 @@ import { useStorage } from "@/context/StorageContext";
 import { formatGender } from "@/lib/format/gender";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
 import type { Gender, MemberRecord } from "@/lib/data/types";
+import { layout, radius, space } from "@/theme/tokens";
 
 export default function MembersScreen() {
   const theme = useTheme();
@@ -114,16 +116,16 @@ export default function MembersScreen() {
 
   const listBottom = tabBarHeight + 88;
 
+  if (loading && members.length === 0 && !error) {
+    return <LoadingView message={copy.members.searchPlaceholder} />;
+  }
+
   return (
-    <KeyboardAvoidingView
-      testID="members-screen"
-      style={[styles.root, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <Screen testID="members-screen" scroll={false} padded={false} animated={false}>
       <View style={styles.header}>
-        <Text variant="labelLarge" style={{ color: theme.colors.primary }}>
+        <Banner visible icon="information" style={styles.banner}>
           {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
-        </Text>
+        </Banner>
         <Searchbar
           testID="members-search"
           placeholder={copy.members.searchPlaceholder}
@@ -131,7 +133,7 @@ export default function MembersScreen() {
           onChangeText={setQuery}
           onSubmitEditing={() => void load(query)}
           onIconPress={() => void load(query)}
-          elevation={1}
+          elevation={layout.fabOffset === 16 ? 1 : 1}
           style={[styles.search, { backgroundColor: theme.colors.surfaceVariant }]}
           inputStyle={{ color: theme.colors.onSurface }}
           iconColor={theme.colors.onSurfaceVariant}
@@ -139,10 +141,8 @@ export default function MembersScreen() {
         />
       </View>
 
-      {loading && members.length === 0 ? (
-        <ActivityIndicator style={styles.loader} />
-      ) : error ? (
-        <Text variant="bodyMedium" style={{ color: theme.colors.error, padding: 16 }}>
+      {error ? (
+        <Text variant="bodyMedium" style={{ color: theme.colors.error, padding: space.lg }}>
           {error}
         </Text>
       ) : (
@@ -157,10 +157,12 @@ export default function MembersScreen() {
           refreshing={loading}
           onRefresh={() => void load(query)}
           renderItem={({ item, index }) => (
-            <Card
+            <List.Item
               testID={index === 0 ? "members-first-card" : undefined}
-              mode="elevated"
-              style={styles.card}
+              title={`${item.firstName} ${item.lastName}`}
+              description={`${copy.account.memberReference}: ${item.familyCode} · ${formatGender(item.gender)}${item.currentCity ? ` · ${item.currentCity}` : ""}`}
+              left={(props) => <List.Icon {...props} icon="account-circle" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" />}
               onPress={() =>
                 router.push({
                   pathname: "/member/[personId]",
@@ -170,107 +172,76 @@ export default function MembersScreen() {
               onLongPress={() => {
                 if (mode === "local") onDelete(item);
               }}
-            >
-              <Card.Content>
-                <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-                  {item.firstName} {item.lastName}
-                </Text>
-                <Text variant="labelMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
-                  {copy.account.memberReference}: {item.familyCode}
-                </Text>
-                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-                  {formatGender(item.gender)}
-                  {item.currentCity ? ` · ${item.currentCity}` : ""}
-                </Text>
-                {mode === "local" && (
-                  <Text variant="labelSmall" style={{ color: theme.colors.outline, marginTop: 8 }}>
-                    {copy.members.longPressDelete}
-                  </Text>
-                )}
-              </Card.Content>
-            </Card>
+              style={[styles.listItem, { backgroundColor: theme.colors.surface }]}
+              titleStyle={{ color: theme.colors.onSurface }}
+              descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
+            />
           )}
           ListEmptyComponent={
-            <Text
-              variant="bodyMedium"
-              style={{ textAlign: "center", color: theme.colors.onSurfaceVariant, marginTop: 32 }}
-            >
-              {mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
-            </Text>
+            <EmptyState
+              icon="account-multiple-outline"
+              title={mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
+              actionLabel={canCreate ? copy.members.addMember : undefined}
+              onAction={canCreate ? () => setCreateOpen(true) : undefined}
+            />
           }
         />
       )}
 
-      <Portal>
-        <Dialog visible={createOpen} onDismiss={() => setCreateOpen(false)}>
-          <Dialog.Title>{copy.members.newMemberTitle}</Dialog.Title>
-          <Dialog.ScrollArea style={styles.dialogScroll}>
-            <View style={styles.dialogContent}>
-              <FormTextInput
-                testID="members-create-first"
-                label="First name"
-                value={firstName}
-                onChangeText={setFirstName}
-                autoCapitalize="words"
-              />
-              <FormTextInput
-                testID="members-create-last"
-                label="Last name"
-                value={lastName}
-                onChangeText={setLastName}
-                autoCapitalize="words"
-              />
-              <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.members.genderLabel}
-              </Text>
-              <FormTextInput
-                label="Date of birth"
-                value={birthDate}
-                onChangeText={setBirthDate}
-                placeholder="YYYY-MM-DD"
-              />
-              <FormTextInput label="City" value={createCity} onChangeText={setCreateCity} />
-              <SegmentedButtons
-                value={gender}
-                onValueChange={(v) => setGender(v as Gender)}
-                buttons={[
-                  { value: "MALE", label: copy.gender.MALE },
-                  { value: "FEMALE", label: copy.gender.FEMALE },
-                  { value: "OTHER", label: copy.gender.OTHER },
-                ]}
-              />
-            </View>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setCreateOpen(false)}>{copy.reports.cancel}</Button>
-            <Button testID="members-create-save" mode="contained" onPress={() => void onCreate()}>
-              {copy.members.saveMember}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <AppDialogForm
+        visible={createOpen}
+        title={copy.members.newMemberTitle}
+        onDismiss={() => setCreateOpen(false)}
+        onSubmit={() => void onCreate()}
+        submitLabel={copy.members.saveMember}
+        submitTestID="members-create-save"
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          testID="members-create-first"
+          label="First name"
+          value={firstName}
+          onChangeText={setFirstName}
+          autoCapitalize="words"
+        />
+        <FormTextInput
+          testID="members-create-last"
+          label="Last name"
+          value={lastName}
+          onChangeText={setLastName}
+          autoCapitalize="words"
+        />
+        <FormTextInput
+          label="Date of birth"
+          value={birthDate}
+          onChangeText={setBirthDate}
+          placeholder="YYYY-MM-DD"
+        />
+        <FormTextInput label="City" value={createCity} onChangeText={setCreateCity} />
+        <GenderField value={gender} onChange={setGender} />
+      </AppDialogForm>
 
       {canCreate && !createOpen && (
         <FAB
           testID="members-add"
           icon="plus"
-          style={[styles.fab, { bottom: tabBarHeight + 16 }]}
+          style={[styles.fab, { bottom: tabBarHeight + layout.fabOffset }]}
           onPress={() => setCreateOpen(true)}
           label={copy.members.addMember}
         />
       )}
-    </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, gap: 10 },
-  search: { borderRadius: 12 },
-  loader: { marginTop: 32 },
-  listContent: { paddingHorizontal: 16, paddingTop: 4 },
-  card: { marginBottom: 10, borderRadius: 16 },
-  dialogScroll: { maxHeight: 360, paddingHorizontal: 0 },
-  dialogContent: { gap: 12, paddingHorizontal: 24, paddingVertical: 8 },
-  fab: { position: "absolute", right: 16 },
+  header: { paddingHorizontal: layout.screenPaddingX, paddingTop: space.sm, gap: space.md },
+  banner: { borderRadius: radius.md },
+  search: { borderRadius: radius.md },
+  listContent: { paddingHorizontal: layout.screenPaddingX, paddingTop: space.xs },
+  listItem: {
+    borderRadius: radius.lg,
+    marginBottom: layout.listGap,
+  },
+  fab: { position: "absolute", right: layout.screenPaddingX },
 });

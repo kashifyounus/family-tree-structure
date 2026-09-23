@@ -7,7 +7,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Snackbar } from "react-native-paper";
+import { Snackbar, useTheme } from "react-native-paper";
+
+import { semantic } from "@/theme/paperTheme";
 
 import type { AppError } from "@/lib/errors/AppError";
 import { reportError, setErrorReporter } from "@/lib/errors/reportError";
@@ -21,6 +23,38 @@ type ErrorContextValue = {
 const ErrorContext = createContext<ErrorContextValue | null>(null);
 
 type SnackKind = "error" | "success" | "info";
+
+function FeedbackSnackbar({
+  visible,
+  message,
+  kind,
+  onDismiss,
+}: {
+  visible: boolean;
+  message: string;
+  kind: SnackKind;
+  onDismiss: () => void;
+}) {
+  const theme = useTheme();
+  const backgroundColor =
+    kind === "error"
+      ? theme.colors.errorContainer
+      : kind === "success"
+        ? semantic.successContainer
+        : theme.colors.inverseSurface;
+
+  return (
+    <Snackbar
+      visible={visible}
+      onDismiss={onDismiss}
+      duration={kind === "error" ? 6000 : 3500}
+      action={{ label: "Dismiss", onPress: onDismiss }}
+      style={{ backgroundColor }}
+    >
+      {message}
+    </Snackbar>
+  );
+}
 
 export function ErrorProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
@@ -60,21 +94,12 @@ export function ErrorProvider({ children }: { children: ReactNode }) {
   return (
     <ErrorContext.Provider value={value}>
       {children}
-      <Snackbar
+      <FeedbackSnackbar
         visible={visible}
+        message={message}
+        kind={kind}
         onDismiss={() => setVisible(false)}
-        duration={kind === "error" ? 6000 : 3500}
-        action={{ label: "Dismiss", onPress: () => setVisible(false) }}
-        style={
-          kind === "error"
-            ? { backgroundColor: "#b91c1c" }
-            : kind === "success"
-              ? { backgroundColor: "#047857" }
-              : undefined
-        }
-      >
-        {message}
-      </Snackbar>
+      />
     </ErrorContext.Provider>
   );
 }

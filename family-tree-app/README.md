@@ -2,6 +2,10 @@
 
 React Native **Expo SDK 57** app (`family-tree-app`) for the same backend as the Next.js web project.
 
+## UI (React Native Paper)
+
+The app uses **Material Design 3** via `react-native-paper` with a shared Mughal palette (`theme/paperTheme.ts`), layout tokens (`theme/tokens.ts`), and motion timings (`theme/motion.ts`). Reusable building blocks live under `components/ui/` (`Screen`, `SectionCard`, `PageHeader`, `FormTextInput`, `GenderField`, `ActionTile`, `AppDialogForm`, `EmptyState`, `LoadingView`, `ReferenceText`). Import from `@/components/ui` or individual files.
+
 ## Features
 
 - **6 tabs**: Home, Members, Tree, Reports, Tools, Account

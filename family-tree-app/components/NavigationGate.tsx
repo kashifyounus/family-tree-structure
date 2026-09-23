@@ -1,8 +1,7 @@
 import { useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
-
 import { useStorage } from "@/context/StorageContext";
+import { LoadingView } from "@/components/ui/LoadingView";
 
 export function NavigationGate({ children }: { children: React.ReactNode }) {
   const { ready, onboardingComplete } = useStorage();
@@ -22,11 +21,7 @@ export function NavigationGate({ children }: { children: React.ReactNode }) {
   }, [ready, onboardingComplete, segments, router]);
 
   if (!ready) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   return children;

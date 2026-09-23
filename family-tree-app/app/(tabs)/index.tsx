@@ -1,20 +1,22 @@
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, Card, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import { BrandLogo } from "@/components/BrandLogo";
+import { ActionTile } from "@/components/ui/ActionTile";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { ReferenceText } from "@/components/ui/ReferenceText";
 import { Screen } from "@/components/ui/Screen";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { APP_NAME, APP_OWNER, APP_VERSION, DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { buildLocalReports } from "@/lib/db/localReports";
-
-import {
-  APP_OWNER,
-  APP_VERSION,
-  DEFAULT_FAMILY_CODE,
-} from "@/constants/appMeta";
+import { motion } from "@/theme/motion";
+import { space } from "@/theme/tokens";
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -35,49 +37,50 @@ export default function HomeScreen() {
 
   return (
     <Screen testID="home-screen">
-      <BrandLogo size={72} />
-      <Text variant="bodyMedium" style={{ textAlign: "center", color: theme.colors.onSurfaceVariant }}>
-        v{APP_VERSION} · {APP_OWNER}
-      </Text>
-      <Text variant="bodyMedium" style={{ textAlign: "center", lineHeight: 22, color: theme.colors.onSurface, marginVertical: 12 }}>
-        {copy.app.tagline}
-      </Text>
+      <Animated.View entering={FadeIn.duration(motion.slow)} style={styles.hero}>
+        <BrandLogo size={80} />
+        <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
+          v{APP_VERSION} · {APP_OWNER}
+        </Text>
+      </Animated.View>
+
+      <PageHeader title={APP_NAME} subtitle={copy.app.tagline} />
+
       {localAccount.session && mode === "local" && (
-        <Card mode="elevated" style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium">
-              {copy.home.greeting(localAccount.session.displayName)}
-            </Text>
-            <Text variant="bodySmall">
-              {copy.home.yourReference(localAccount.session.focalFamilyCode)}
-            </Text>
-          </Card.Content>
-        </Card>
+        <SectionCard delay={motion.staggerStep}>
+          <Text variant="titleMedium">{copy.home.greeting(localAccount.session.displayName)}</Text>
+          <ReferenceText label={copy.account.memberReference} code={localAccount.session.focalFamilyCode} />
+        </SectionCard>
       )}
+
       <View style={styles.actions}>
         <Link href="/(tabs)/tree" asChild>
-          <Button mode="contained" icon="family-tree">
+          <ActionTile icon="family-tree" mode="contained" delay={motion.staggerStep * 2}>
             {copy.home.openTree}
-          </Button>
+          </ActionTile>
         </Link>
         <Link href={`/(tabs)/tree?familyCode=${branchReference}`} asChild>
-          <Button mode="outlined" icon="account-group">
+          <ActionTile icon="account-group" delay={motion.staggerStep * 3}>
             {copy.home.yourBranch}
-          </Button>
+          </ActionTile>
         </Link>
         <Link href="/(tabs)/members" asChild>
-          <Button testID="home-directory" mode="outlined" icon="account-multiple">
+          <ActionTile testID="home-directory" icon="account-multiple" delay={motion.staggerStep * 4}>
             {copy.home.directory}
-          </Button>
+          </ActionTile>
         </Link>
         <Link href="/(tabs)/reports" asChild>
-          <Button mode="outlined" icon="chart-bar">
+          <ActionTile icon="chart-bar" delay={motion.staggerStep * 5}>
             {copy.home.insights}
-          </Button>
+          </ActionTile>
         </Link>
       </View>
+
       {mode === "local" && (
-        <Text variant="bodySmall" style={{ marginTop: 16, color: theme.colors.onSurfaceVariant, textAlign: "center" }}>
+        <Text
+          variant="bodySmall"
+          style={{ marginTop: space.lg, color: theme.colors.onSurfaceVariant, textAlign: "center" }}
+        >
           {copy.home.statsPrivate(localMemberCount, living)}
         </Text>
       )}
@@ -86,6 +89,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 16 },
-  actions: { gap: 10, marginTop: 8 },
+  hero: { alignItems: "center", marginBottom: space.md },
+  actions: { gap: space.md, marginTop: space.sm },
 });

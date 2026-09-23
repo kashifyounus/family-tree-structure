@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { StyleSheet } from "react-native";
@@ -29,6 +30,7 @@ export function AppProviders({ children }: AppProvidersProps) {
             icon: (props) => <MaterialCommunityIcons {...props} />,
           }}
         >
+          <StatusBar style={scheme === "dark" ? "light" : "dark"} />
           <AppErrorBoundary>
             <ErrorProvider>
               <StorageProvider>
