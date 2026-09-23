@@ -201,12 +201,24 @@ export type MobileFamilyGraph = {
   }[];
 };
 
+export type FetchFamilyGraphOptions = {
+  depth?: number;
+  siblingSteps?: number;
+};
+
 export async function fetchFamilyGraph(
   familyCode: string,
+  options: FetchFamilyGraphOptions = {},
 ): Promise<MobileFamilyGraph | null> {
+  const depth = options.depth ?? 2;
+  const siblingSteps = options.siblingSteps ?? 0;
+  const qs = new URLSearchParams({
+    depth: String(depth),
+    siblingSteps: String(siblingSteps),
+  });
   try {
     const data = await apiFetch<{ graph: MobileFamilyGraph }>(
-      `/api/mobile/graph/${encodeURIComponent(familyCode)}`,
+      `/api/mobile/graph/${encodeURIComponent(familyCode)}?${qs.toString()}`,
     );
     return data.graph;
   } catch {

@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
+import * as SecureStore from "expo-secure-store";
 import {
   createContext,
   useCallback,
@@ -11,6 +13,7 @@ import {
 } from "react";
 
 const STORAGE_KEY = "@mughals/app-preferences/v1";
+const PIN_HASH_KEY = "mughals_app_pin_hash";
 
 export type ThemePreference = "light" | "dark";
 export type TextScalePreference = "normal" | "large";
@@ -19,6 +22,7 @@ type StoredPreferences = {
   theme: ThemePreference;
   textScale: TextScalePreference;
   hapticsEnabled: boolean;
+  pinEnabled: boolean;
 };
 
 type AppPreferencesContextValue = {
@@ -26,9 +30,16 @@ type AppPreferencesContextValue = {
   theme: ThemePreference;
   textScale: TextScalePreference;
   hapticsEnabled: boolean;
+  pinEnabled: boolean;
+  locked: boolean;
   setTheme: (theme: ThemePreference) => Promise<void>;
   setTextScale: (scale: TextScalePreference) => Promise<void>;
   setHapticsEnabled: (enabled: boolean) => Promise<void>;
+  setPin: (pin: string) => Promise<void>;
+  clearPin: () => Promise<void>;
+  verifyPin: (pin: string) => Promise<boolean>;
+  unlock: () => void;
+  lock: () => void;
   impactLight: () => void;
 };
 
@@ -36,22 +47,30 @@ const defaults: StoredPreferences = {
   theme: "light",
   textScale: "normal",
   hapticsEnabled: true,
+  pinEnabled: false,
 };
 
 const AppPreferencesContext = createContext<AppPreferencesContextValue | null>(
   null,
 );
 
+async function hashPin(pin: string): Promise<string> {
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, pin);
+}
+
 export function AppPreferencesProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [prefs, setPrefs] = useState<StoredPreferences>(defaults);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
     void (async () => {
       try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          setPrefs({ ...defaults, ...JSON.parse(raw) });
+        const merged = raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
+        setPrefs(merged);
+        if (merged.pinEnabled) {
+          setLocked(true);
         }
       } catch {
         /* keep defaults */
@@ -91,6 +110,37 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
     [patchPrefs],
   );
 
+  const setPin = useCallback(
+    async (pin: string) => {
+      if (!/^\d{4,6}$/.test(pin)) {
+        throw new Error("PIN must be 4–6 digits.");
+      }
+      const digest = await hashPin(pin);
+      await SecureStore.setItemAsync(PIN_HASH_KEY, digest);
+      await patchPrefs({ pinEnabled: true });
+      setLocked(false);
+    },
+    [patchPrefs],
+  );
+
+  const clearPin = useCallback(async () => {
+    await SecureStore.deleteItemAsync(PIN_HASH_KEY);
+    await patchPrefs({ pinEnabled: false });
+    setLocked(false);
+  }, [patchPrefs]);
+
+  const verifyPin = useCallback(async (pin: string) => {
+    const stored = await SecureStore.getItemAsync(PIN_HASH_KEY);
+    if (!stored) return false;
+    const digest = await hashPin(pin);
+    return digest === stored;
+  }, []);
+
+  const unlock = useCallback(() => setLocked(false), []);
+  const lock = useCallback(() => {
+    if (prefs.pinEnabled) setLocked(true);
+  }, [prefs.pinEnabled]);
+
   const impactLight = useCallback(() => {
     if (!prefs.hapticsEnabled) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -102,17 +152,30 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
       theme: prefs.theme,
       textScale: prefs.textScale,
       hapticsEnabled: prefs.hapticsEnabled,
+      pinEnabled: prefs.pinEnabled,
+      locked,
       setTheme,
       setTextScale,
       setHapticsEnabled,
+      setPin,
+      clearPin,
+      verifyPin,
+      unlock,
+      lock,
       impactLight,
     }),
     [
       ready,
       prefs,
+      locked,
       setTheme,
       setTextScale,
       setHapticsEnabled,
+      setPin,
+      clearPin,
+      verifyPin,
+      unlock,
+      lock,
       impactLight,
     ],
   );

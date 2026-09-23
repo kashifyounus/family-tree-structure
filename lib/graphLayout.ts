@@ -21,7 +21,11 @@ function personNode(
   x: number,
   y: number,
   isFocal: boolean,
-  hints?: { hasUnexpandedParents?: boolean; hasUnexpandedChildren?: boolean },
+  hints?: {
+    hasUnexpandedParents?: boolean;
+    hasUnexpandedChildren?: boolean;
+    hasUnexpandedSiblings?: boolean;
+  },
 ): FamilyGraphNode {
   return {
     id: person.id,
@@ -33,6 +37,7 @@ function personNode(
       isDeceased: !!person.deathDate || !person.isLiving,
       hasUnexpandedParents: hints?.hasUnexpandedParents,
       hasUnexpandedChildren: hints?.hasUnexpandedChildren,
+      hasUnexpandedSiblings: hints?.hasUnexpandedSiblings,
     },
   };
 }

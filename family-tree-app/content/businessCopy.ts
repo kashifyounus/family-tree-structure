@@ -69,6 +69,10 @@ export const copy = {
     welcomeBody:
       "Mughal's Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
     getStarted: "Begin setup",
+    shortPrivateCta: "Set up private archive",
+    loadDemoFamily: "Load demo family",
+    demoLoaded: (reference: string) =>
+      `Demo family loaded. Explore member reference ${reference}.`,
     chooseStorageTitle: "How would you like to start?",
     chooseStorageBody:
       "You may keep a private archive on this phone, connect to your family's shared registry, or start privately and link the cloud later.",
@@ -249,6 +253,21 @@ export const copy = {
     MALE: "Male",
     FEMALE: "Female",
     OTHER: "Other",
+  },
+
+  security: {
+    privacyShield: "Mughal's Family Tree",
+    unlockTitle: "Enter your PIN",
+    unlockBody: "This device is protected. Enter your PIN to view your family records.",
+    pinLabel: "PIN",
+    unlockButton: "Unlock",
+    wrongPin: "That PIN is not correct. Try again.",
+    pinTitle: "App PIN",
+    pinHelp: "Optional 4–6 digit PIN. Also hides content in the app switcher.",
+    setPin: "Set PIN",
+    removePin: "Turn off PIN",
+    pinSet: "PIN is on.",
+    pinRemoved: "PIN is off.",
   },
 
   errors: {

@@ -259,13 +259,30 @@ export async function getPersonDetailsByFamilyCode(
 export async function getFamilyGraph(
   familyCode: string,
   depth = 2,
+  siblingSteps = 0,
 ): Promise<FamilyGraph | null> {
   const focal = await prisma.person.findUnique({ where: { familyCode } });
   if (!focal) return null;
 
   const unions = await loadAllUnions();
-  const people = await loadPeopleForFocal(focal.id, unions, depth, depth);
-  const graph = buildFamilyGraph(focal, people, unions, depth, depth);
+  const included = collectIncludedPersonIds(
+    focal.id,
+    unions,
+    depth,
+    depth,
+    siblingSteps,
+  );
+  const people = await prisma.person.findMany({
+    where: { id: { in: [...included] } },
+  });
+  const graph = buildFamilyGraph(
+    focal,
+    people,
+    unions,
+    depth,
+    depth,
+    siblingSteps,
+  );
   return maskGraph(graph);
 }
 

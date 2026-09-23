@@ -72,6 +72,8 @@ export default function TreeScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
+  const [onlineDepth, setOnlineDepth] = useState(2);
+  const [onlineSiblingSteps, setOnlineSiblingSteps] = useState(0);
 
   const uri = useMemo(() => {
     return `${apiUrl}/tree/${encodeURIComponent(loadedCode)}?embed=1`;
@@ -84,7 +86,10 @@ export default function TreeScreen() {
     setGraphLoading(true);
     setUseWebFallback(false);
     setOffline(false);
-    void fetchFamilyGraph(loadedCode.trim())
+    void fetchFamilyGraph(loadedCode.trim(), {
+      depth: onlineDepth,
+      siblingSteps: onlineSiblingSteps,
+    })
       .then((g) => {
         if (g && g.nodes.length > 0) {
           setOnlineGraph(mapOnlineGraph(g));
@@ -97,7 +102,7 @@ export default function TreeScreen() {
         setUseWebFallback(true);
       })
       .finally(() => setGraphLoading(false));
-  }, [isLocal, loadedCode]);
+  }, [isLocal, loadedCode, onlineDepth, onlineSiblingSteps]);
 
   useEffect(() => {
     loadOnlineGraph();

@@ -104,6 +104,7 @@ export type FamilyGraphNode = {
     isDeceased?: boolean;
     hasUnexpandedParents?: boolean;
     hasUnexpandedChildren?: boolean;
+    hasUnexpandedSiblings?: boolean;
   };
 };
 

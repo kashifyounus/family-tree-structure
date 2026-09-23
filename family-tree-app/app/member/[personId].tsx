@@ -227,12 +227,8 @@ export default function MemberDetailScreen() {
     <>
       <Screen testID="member-profile-screen" keyboardAvoiding>
         <PageHeader
-          title={`${m.firstName} ${m.lastName}`}
-          meta={
-            (m.urduFirstName || m.urduLastName)
-              ? `${m.urduFirstName ?? ""} ${m.urduLastName ?? ""}`.trim()
-              : undefined
-          }
+          title={formatBilingualName(m)}
+          meta={m.familyCode}
         />
         <ReferenceText label={copy.account.memberReference} code={m.familyCode} />
         {!editing && (
@@ -246,9 +242,37 @@ export default function MemberDetailScreen() {
           </Text>
         )}
 
+        <Button
+          mode="contained-tonal"
+          icon="family-tree"
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/tree",
+              params: { familyCode: m.familyCode },
+            })
+          }
+        >
+          {copy.profile.openInTree}
+        </Button>
+
         {canEditLocal && (
           <View style={styles.actions}>
-            <Button mode="outlined" onPress={() => setEditing((v) => !v)}>
+            <Button
+              mode="outlined"
+              onPress={() => {
+                if (editing) {
+                  setFirstName(m.firstName);
+                  setLastName(m.lastName);
+                  setCity(m.currentCity ?? "");
+                  setBirthDate(m.birthDate ?? "");
+                  setBirthPlace(m.birthPlace ?? "");
+                  setHomeTown(m.homeTown ?? "");
+                  setOccupation(m.occupation ?? "");
+                  setBio(m.bio ?? "");
+                }
+                setEditing((v) => !v);
+              }}
+            >
               {editing ? copy.profile.cancelEdit : copy.profile.editProfile}
             </Button>
             <Button

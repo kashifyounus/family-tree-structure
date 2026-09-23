@@ -12,6 +12,7 @@ export type PersonNodeData = {
   isDeceased?: boolean;
   hasUnexpandedParents?: boolean;
   hasUnexpandedChildren?: boolean;
+  hasUnexpandedSiblings?: boolean;
   onExpandBranch?: (direction: "up" | "down" | "both") => void;
 };
 

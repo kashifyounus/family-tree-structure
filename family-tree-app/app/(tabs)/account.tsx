@@ -13,6 +13,8 @@ import {
   useTheme,
 } from "react-native-paper";
 
+import { AppDialogForm } from "@/components/ui/AppDialogForm";
+import { FormTextInput } from "@/components/ui/FormTextInput";
 import { Screen } from "@/components/ui/Screen";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { copy } from "@/content/businessCopy";
@@ -44,6 +46,8 @@ export default function AccountScreen() {
   const [password, setPassword] = useState(DEFAULT_LOGIN_PASSWORD);
   const [submitting, setSubmitting] = useState(false);
   const [apiDraft, setApiDraft] = useState(storage.apiUrl);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [pinDraft, setPinDraft] = useState("");
 
   const onSignIn = async () => {
     if (storage.mode !== "online") {
@@ -124,8 +128,48 @@ export default function AccountScreen() {
               onValueChange={(v) => void prefs.setHapticsEnabled(v)}
             />
           </View>
+          <Text variant="titleSmall">{copy.security.pinTitle}</Text>
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            {copy.security.pinHelp}
+          </Text>
+          {prefs.pinEnabled ? (
+            <Button mode="outlined" onPress={() => void prefs.clearPin().then(() => showSuccess(copy.security.pinRemoved))}>
+              {copy.security.removePin}
+            </Button>
+          ) : (
+            <Button mode="outlined" onPress={() => setPinDialogOpen(true)}>
+              {copy.security.setPin}
+            </Button>
+          )}
         </Card.Content>
       </Card>
+
+      <AppDialogForm
+        visible={pinDialogOpen}
+        title={copy.security.setPin}
+        onDismiss={() => setPinDialogOpen(false)}
+        onSubmit={() => {
+          void prefs
+            .setPin(pinDraft)
+            .then(() => {
+              showSuccess(copy.security.pinSet);
+              setPinDialogOpen(false);
+              setPinDraft("");
+            })
+            .catch((e) => showError(e));
+        }}
+        submitLabel={copy.security.setPin}
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          label={copy.security.pinLabel}
+          value={pinDraft}
+          onChangeText={setPinDraft}
+          secureTextEntry
+          keyboardType="number-pad"
+          maxLength={6}
+        />
+      </AppDialogForm>
 
       <Card mode="elevated" style={styles.card}>
         <Card.Content style={styles.gap}>
