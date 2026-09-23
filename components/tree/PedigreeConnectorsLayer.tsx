@@ -24,7 +24,14 @@ export function PedigreeConnectorsLayer({ edges }: PedigreeConnectorsLayerProps)
       width: NODE_W,
       height: NODE_H,
     }));
-    return buildPedigreeConnectorSegments(boxes, edges);
+    const pedigreeEdges = edges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      type: e.type ?? "parent",
+      label: e.label,
+    }));
+    return buildPedigreeConnectorSegments(boxes, pedigreeEdges);
   }, [nodes, edges]);
 
   if (segments.length === 0) return null;
