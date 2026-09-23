@@ -3,7 +3,8 @@ import {
   writeAsStringAsync,
 } from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
 import { Button, Card, Text, useTheme } from "react-native-paper";
 
@@ -19,14 +20,22 @@ import {
   importLocalDatabaseJson,
 } from "@/lib/db/localRepository.ext";
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
+import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
 
 export default function ToolsScreen() {
   const theme = useTheme();
   const { mode, bumpDataRevision, localMemberCount } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
+  const { compareA } = useLocalSearchParams<{ compareA?: string }>();
   const [importText, setImportText] = useState("");
   const [personA, setPersonA] = useState("");
   const [personB, setPersonB] = useState("");
+
+  useEffect(() => {
+    if (compareA && typeof compareA === "string") {
+      setPersonA(compareA);
+    }
+  }, [compareA]);
   const [driveBusy, setDriveBusy] = useState(false);
 
   const exportDb = () => {
@@ -132,7 +141,10 @@ export default function ToolsScreen() {
       Alert.alert(copy.tools.compareTitle, copy.tools.compareSame);
       return;
     }
-    Alert.alert(copy.tools.compareTitle, copy.tools.compareResult);
+    Alert.alert(
+      copy.tools.compareTitle,
+      copy.tools.compareResult(computeRelationSummary(a.id, b.id)),
+    );
   };
 
   return (

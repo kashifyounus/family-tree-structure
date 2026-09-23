@@ -15,6 +15,7 @@ import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { useAuth } from "@/context/AuthContext";
 import { useAppFeedback } from "@/context/ErrorContext";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
 import type { Gender, MemberRecord } from "@/lib/data/types";
@@ -28,6 +29,7 @@ export default function MembersScreen() {
   const { mode, dataRevision, bumpDataRevision } = useStorage();
   const auth = useAuth();
   const { showError, showSuccess } = useAppFeedback();
+  const { impactLight } = useAppPreferences();
   const canCreate =
     mode === "local" ||
     (mode === "online" && auth.token && auth.role !== "VIEWER");
@@ -78,6 +80,7 @@ export default function MembersScreen() {
       setBirthDate("");
       setCreateCity("");
       bumpDataRevision();
+      impactLight();
       showSuccess(copy.success.saved);
     } catch (e) {
       showError(e);
@@ -98,6 +101,7 @@ export default function MembersScreen() {
               try {
                 await removeMember(mode, member.id);
                 bumpDataRevision();
+                impactLight();
               } catch (e) {
                 showError(e);
               }

@@ -248,12 +248,19 @@ export default function TreeScreen() {
       <PersonTreeSheet
         visible={sheetOpen}
         person={selectedPerson}
+        isLocal={isLocal}
         onDismiss={() => setSheetOpen(false)}
         onCenterTree={centerOnPerson}
+        onFamilyChanged={() => setReloadKey((k) => k + 1)}
       />
       <TreeOverflowMenu
         visible={menuOpen}
         familyCode={loadedCode}
+        focalFamilyCode={
+          mode === "local" && localAccount.session
+            ? localAccount.session.focalFamilyCode
+            : undefined
+        }
         onDismiss={() => setMenuOpen(false)}
         onCenterMarriage={centerOnMyMarriage}
         onReload={() => {

@@ -4,9 +4,11 @@ import { Platform } from "react-native";
 import { useTheme } from "react-native-paper";
 
 import { APP_NAME } from "@/constants/appMeta";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
 
 export default function TabLayout() {
   const theme = useTheme();
+  const { impactLight } = useAppPreferences();
 
   return (
     <Tabs
@@ -43,6 +45,7 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="home" color={color} size={size} />
           ),
         }}
+        listeners={{ tabPress: () => impactLight() }}
       />
       <Tabs.Screen
         name="tree"
@@ -53,6 +56,7 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="family-tree" color={color} size={size} />
           ),
         }}
+        listeners={{ tabPress: () => impactLight() }}
       />
       <Tabs.Screen
         name="members"
@@ -62,6 +66,7 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="account-group" color={color} size={size} />
           ),
         }}
+        listeners={{ tabPress: () => impactLight() }}
       />
       <Tabs.Screen
         name="reports"
@@ -85,6 +90,7 @@ export default function TabLayout() {
             <MaterialCommunityIcons name="account-circle" color={color} size={size} />
           ),
         }}
+        listeners={{ tabPress: () => impactLight() }}
       />
     </Tabs>
   );

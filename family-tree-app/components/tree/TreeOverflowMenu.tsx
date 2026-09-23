@@ -8,6 +8,7 @@ import { space } from "@/theme/tokens";
 type TreeOverflowMenuProps = {
   visible: boolean;
   familyCode: string;
+  focalFamilyCode?: string;
   onDismiss: () => void;
   onCenterMarriage: () => void;
   onReload: () => void;
@@ -16,6 +17,7 @@ type TreeOverflowMenuProps = {
 export function TreeOverflowMenu({
   visible,
   familyCode,
+  focalFamilyCode,
   onDismiss,
   onCenterMarriage,
   onReload,
@@ -44,6 +46,22 @@ export function TreeOverflowMenu({
           </Button>
           <Button icon="refresh" mode="outlined" onPress={onReload}>
             {copy.tree.menuReload}
+          </Button>
+          <Button
+            testID="tree-menu-kinship"
+            icon="account-switch"
+            mode="outlined"
+            onPress={() => {
+              onDismiss();
+              router.push({
+                pathname: "/(tabs)/tools",
+                params: focalFamilyCode
+                  ? { compareA: focalFamilyCode }
+                  : undefined,
+              });
+            }}
+          >
+            {copy.tree.menuKinship}
           </Button>
           <Button
             icon="chart-bar"

@@ -22,6 +22,8 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
+import { useAppPreferences } from "@/context/AppPreferencesContext";
+import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import {
   addChild,
@@ -37,6 +39,7 @@ import type { PersonBundle } from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
 import { formatBilingualName } from "@/lib/format/displayName";
 import { recordRecentVisit } from "@/lib/recentPeople";
+import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 
 export default function MemberDetailScreen() {
@@ -44,6 +47,8 @@ export default function MemberDetailScreen() {
   const router = useRouter();
   const { mode, bumpDataRevision } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
+  const { impactLight } = useAppPreferences();
+  const localAccount = useLocalAccount();
   const { personId, code } = useLocalSearchParams<{
     personId: string;
     code?: string;
@@ -119,6 +124,16 @@ export default function MemberDetailScreen() {
 
   const m = bundle.member;
   const canEditLocal = mode === "local";
+  const focalId =
+    canEditLocal && localAccount.session ? localAccount.session.focalPersonId : null;
+  const relationToMeText =
+    focalId && focalId === m.id
+      ? copy.profile.relationToMeSame
+      : focalId
+        ? computeRelationSummary(focalId, m.id)
+        : canEditLocal
+          ? copy.profile.relationToMeUnavailable
+          : null;
 
   const saveEdit = () => {
     try {
@@ -136,6 +151,7 @@ export default function MemberDetailScreen() {
       setEditing(false);
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.success.saved);
     } catch (e) {
       showError(e);
@@ -159,6 +175,7 @@ export default function MemberDetailScreen() {
       setSpLast("");
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.profile.spouseSaved);
     } catch (e) {
       showError(e);
@@ -185,6 +202,7 @@ export default function MemberDetailScreen() {
       setChLast("");
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.profile.childSaved);
     } catch (e) {
       showError(e);
@@ -208,6 +226,7 @@ export default function MemberDetailScreen() {
       setConfirmParents(false);
       bumpDataRevision();
       void reload();
+      impactLight();
       showSuccess(copy.profile.parentsSaved);
     } catch (e) {
       showError(e);
@@ -234,6 +253,13 @@ export default function MemberDetailScreen() {
         {!editing && (
           <SectionCard title="Personal details" delay={60}>
             <PersonFacts member={m} />
+          </SectionCard>
+        )}
+        {relationToMeText && (
+          <SectionCard title={copy.profile.relationToMe} delay={70}>
+            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+              {relationToMeText}
+            </Text>
           </SectionCard>
         )}
         {!canEditLocal && (

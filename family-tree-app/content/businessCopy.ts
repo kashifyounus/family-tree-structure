@@ -137,6 +137,7 @@ export const copy = {
     menuCenterMarriage: "Center on my marriage",
     menuReload: "Reload tree",
     menuMoreTools: "More tools",
+    menuKinship: "Compare kinship",
     sheetProfile: "Open profile",
     sheetCenter: "Center tree here",
     loadParents: "Load parents",
@@ -196,6 +197,10 @@ export const copy = {
     confirmReplaceParents:
       "This replaces the current parents. Other children of that marriage stay where they are.",
     kinshipOnline: "Relatives (from family cloud)",
+    relationToMe: "Relation to me",
+    relationToMeSame: "This is you in your private archive.",
+    relationToMeUnavailable:
+      "Sign in to your private archive to see how this person relates to you.",
     fullSibling: (name: string) => `Full sibling: ${name}`,
     halfSibling: (name: string) => `Half sibling: ${name}`,
   },
@@ -221,8 +226,7 @@ export const copy = {
     compareNotFound:
       "We could not find both members. Use names or member references from your directory.",
     compareSame: "Please choose two different people.",
-    compareResult:
-      "Both members are in your private archive. Open each profile to see marriages and children, or use the family cloud for full relationship paths.",
+    compareResult: (summary: string) => summary,
     cloudOnly:
       "Backup and restore are available for your private archive. Switch to Private archive in Account, or use the family website for shared records.",
   },
