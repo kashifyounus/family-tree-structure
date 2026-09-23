@@ -256,6 +256,7 @@ export default function MemberDetailScreen() {
               {copy.profile.addSpouse}
             </Button>
             <Button
+              testID="member-add-child"
               mode="contained-tonal"
               icon="baby-carriage"
               onPress={() => {
@@ -409,8 +410,18 @@ export default function MemberDetailScreen() {
           <Dialog.Title>{copy.profile.addChild}</Dialog.Title>
           <Dialog.ScrollArea style={styles.dialogScroll}>
             <View style={styles.dialogInner}>
-              <FormTextInput label="Given name" value={chFirst} onChangeText={setChFirst} />
-              <FormTextInput label="Family name" value={chLast} onChangeText={setChLast} />
+              <FormTextInput
+                testID="member-child-first"
+                label="Given name"
+                value={chFirst}
+                onChangeText={setChFirst}
+              />
+              <FormTextInput
+                testID="member-child-last"
+                label="Family name"
+                value={chLast}
+                onChangeText={setChLast}
+              />
               <Text variant="labelLarge">Gender</Text>
               <RadioButton.Group
                 onValueChange={(value) => setChGender(value as Gender)}
@@ -433,7 +444,7 @@ export default function MemberDetailScreen() {
           </Dialog.ScrollArea>
           <Dialog.Actions>
             <Button onPress={() => setChildOpen(false)}>{copy.reports.cancel}</Button>
-            <Button mode="contained" onPress={submitChild}>
+            <Button testID="member-child-save" mode="contained" onPress={submitChild}>
               {copy.profile.saveChanges}
             </Button>
           </Dialog.Actions>

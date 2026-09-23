@@ -22,11 +22,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      void SplashScreen.hideAsync();
+      return;
     }
+    const fallback = setTimeout(() => {
+      void SplashScreen.hideAsync();
+    }, 5000);
+    return () => clearTimeout(fallback);
   }, [loaded]);
 
-  if (!loaded) {
+  if (!loaded && !error) {
     return null;
   }
 

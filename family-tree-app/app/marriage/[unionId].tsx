@@ -56,7 +56,7 @@ export default function MarriageScreen() {
   };
 
   return (
-    <Screen keyboardAvoiding>
+    <Screen testID="marriage-screen" keyboardAvoiding>
       <Text variant="headlineSmall" style={{ color: theme.colors.onBackground }}>
         {marriage.partner1.firstName} {marriage.partner1.lastName} and {marriage.partner2.firstName}{" "}
         {marriage.partner2.lastName}

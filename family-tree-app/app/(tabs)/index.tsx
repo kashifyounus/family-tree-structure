@@ -66,7 +66,7 @@ export default function HomeScreen() {
           </Button>
         </Link>
         <Link href="/(tabs)/members" asChild>
-          <Button mode="outlined" icon="account-multiple">
+          <Button testID="home-directory" mode="outlined" icon="account-multiple">
             {copy.home.directory}
           </Button>
         </Link>
