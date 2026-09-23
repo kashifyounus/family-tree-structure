@@ -77,13 +77,6 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      - name: Upload Next.js build
-        uses: actions/upload-artifact@v4
-        with:
-          name: next-build
-          path: .next
-          retention-days: 2
-
   web-e2e:
     name: Web — Playwright E2E
     runs-on: ubuntu-latest
@@ -121,11 +114,8 @@ jobs:
           npx prisma migrate deploy
           npm run db:seed
 
-      - name: Download Next.js build
-        uses: actions/download-artifact@v4
-        with:
-          name: next-build
-          path: .next
+      - name: Build Next.js (production server for E2E)
+        run: npm run build
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
