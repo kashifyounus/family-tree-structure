@@ -115,7 +115,16 @@ export function PersonWorkspace({
       <SectionCard title="Summary">
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <Fact label="Date of birth" value={formatRecordDate(person.birthDate)} />
-          <Fact label="Date of death" value={person.deathDate ? formatRecordDate(person.deathDate) : "Living"} />
+          <Fact
+            label="Date of death"
+            value={
+              person.deathDate
+                ? formatRecordDate(person.deathDate)
+                : person.isLiving
+                  ? "—"
+                  : "Not recorded"
+            }
+          />
           <Fact label="Place of birth" value={person.birthPlace ?? "Not recorded"} />
           <Fact label="Current city" value={person.currentCity ?? "Not recorded"} />
           <Fact label="Permanent city" value={person.permanentCity ?? "Not recorded"} />
@@ -235,7 +244,7 @@ function MarriageList({
   return (
     <SectionCard title={title}>
       {unions.length === 0 ? (
-        <EmptyState title={title} body={empty} />
+        <EmptyState title="Nothing recorded yet" body={empty} />
       ) : (
         <ul className="space-y-3">
           {unions.map((union) => {

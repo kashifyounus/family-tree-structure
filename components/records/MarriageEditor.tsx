@@ -131,11 +131,23 @@ export function MarriageEditor({ marriage, canEdit }: MarriageEditorProps) {
           </div>
           <div>
             <dt className="text-stone-500">Death of {personName(marriage.partner1)}</dt>
-            <dd className="font-medium">{marriage.partner1.deathDate ? formatRecordDate(marriage.partner1.deathDate) : "Living"}</dd>
+            <dd className="font-medium">
+              {marriage.partner1.deathDate
+                ? formatRecordDate(marriage.partner1.deathDate)
+                : marriage.partner1.isLiving
+                  ? "—"
+                  : "Not recorded"}
+            </dd>
           </div>
           <div>
             <dt className="text-stone-500">Death of {personName(marriage.partner2)}</dt>
-            <dd className="font-medium">{marriage.partner2.deathDate ? formatRecordDate(marriage.partner2.deathDate) : "Living"}</dd>
+            <dd className="font-medium">
+              {marriage.partner2.deathDate
+                ? formatRecordDate(marriage.partner2.deathDate)
+                : marriage.partner2.isLiving
+                  ? "—"
+                  : "Not recorded"}
+            </dd>
           </div>
         </dl>
         <p className="mt-3 text-sm text-stone-500">
