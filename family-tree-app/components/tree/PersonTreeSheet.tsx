@@ -25,6 +25,8 @@ export function PersonTreeSheet({
 
   if (!person) return null;
 
+  const isPrivate = person.treeDisplayIsPrivate === true;
+
   return (
     <Portal>
       <Modal
@@ -42,22 +44,26 @@ export function PersonTreeSheet({
           {person.familyCode}
         </Text>
         <View style={styles.actions}>
-          <Button
-            mode="contained"
-            icon="account"
-            onPress={() => {
-              onDismiss();
-              router.push({
-                pathname: "/member/[personId]",
-                params: { personId: person.id, code: person.familyCode },
-              });
-            }}
-          >
-            {copy.tree.sheetProfile}
-          </Button>
-          <Button mode="outlined" icon="target" onPress={onCenterTree}>
-            {copy.tree.sheetCenter}
-          </Button>
+          {!isPrivate && (
+            <Button
+              mode="contained"
+              icon="account"
+              onPress={() => {
+                onDismiss();
+                router.push({
+                  pathname: "/member/[personId]",
+                  params: { personId: person.id, code: person.familyCode },
+                });
+              }}
+            >
+              {copy.tree.sheetProfile}
+            </Button>
+          )}
+          {!isPrivate && (
+            <Button mode="outlined" icon="target" onPress={onCenterTree}>
+              {copy.tree.sheetCenter}
+            </Button>
+          )}
           <Button mode="text" onPress={onDismiss}>
             {copy.reports.cancel}
           </Button>

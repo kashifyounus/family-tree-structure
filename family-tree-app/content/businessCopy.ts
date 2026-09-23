@@ -145,6 +145,8 @@ export const copy = {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     offlineBanner: "You are offline. Switch to your private archive in Account to keep working.",
+    retryLoad: "Retry",
+    privatePerson: "Private",
     exportPrivacyHint:
       "This file contains private family data. Only share it with people you trust.",
   },

@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FamilyTreeGraphView } from "@/components/FamilyTreeGraphView";
 import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { PersonTreeSheet } from "@/components/tree/PersonTreeSheet";
+import { TreeGraphExpandBar } from "@/components/tree/TreeGraphExpandBar";
 import { TreeOverflowMenu } from "@/components/tree/TreeOverflowMenu";
 import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
@@ -41,9 +42,13 @@ function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
           deathDate: n.data.person.deathDate,
           currentCity: n.data.person.currentCity,
           isLiving: n.data.person.isLiving,
+          treeDisplayIsPrivate: n.data.person.treeDisplayIsPrivate,
         },
         isFocal: n.data.isFocal,
         isDeceased: !n.data.person.isLiving,
+        hasUnexpandedParents: n.data.hasUnexpandedParents,
+        hasUnexpandedChildren: n.data.hasUnexpandedChildren,
+        hasUnexpandedSiblings: n.data.hasUnexpandedSiblings,
       },
     })),
     edges: g.edges,
@@ -124,6 +129,10 @@ export default function TreeScreen() {
     setReloadKey((k) => k + 1);
   };
 
+  const onlineFocal = onlineGraph?.nodes.find(
+    (n) => n.id === onlineGraph.focalPersonId,
+  )?.data;
+
   const centerOnMyMarriage = () => {
     const code =
       mode === "local" && localAccount.session
@@ -173,6 +182,10 @@ export default function TreeScreen() {
           icon="cloud-off-outline"
           actions={[
             {
+              label: copy.tree.retryLoad,
+              onPress: () => loadOnlineGraph(),
+            },
+            {
               label: copy.storage.privateArchiveShort,
               onPress: () => void setMode("local"),
             },
@@ -197,12 +210,22 @@ export default function TreeScreen() {
             <ActivityIndicator size="large" />
           </View>
         ) : onlineGraph && !useWebFallback ? (
-          <FamilyTreeGraphView
-            graph={onlineGraph}
-            onPersonPress={onPersonPress}
-            zoomScale={zoom}
-            onZoomChange={setZoom}
-          />
+          <>
+            <TreeGraphExpandBar
+              canLoadParents={!!onlineFocal?.hasUnexpandedParents}
+              canLoadChildren={!!onlineFocal?.hasUnexpandedChildren}
+              canLoadSiblings={!!onlineFocal?.hasUnexpandedSiblings}
+              onLoadParents={() => setOnlineDepth((d) => d + 1)}
+              onLoadSiblings={() => setOnlineSiblingSteps((s) => s + 1)}
+              onLoadChildren={() => setOnlineDepth((d) => d + 1)}
+            />
+            <FamilyTreeGraphView
+              graph={onlineGraph}
+              onPersonPress={onPersonPress}
+              zoomScale={zoom}
+              onZoomChange={setZoom}
+            />
+          </>
         ) : (
           <WebView
             source={{ uri }}

@@ -11,6 +11,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, { Line } from "react-native-svg";
 import { Text, useTheme } from "react-native-paper";
 
+import { copy } from "@/content/businessCopy";
 import { formatGraphPersonName } from "@/lib/format/displayName";
 import type { FamilyGraph, GraphPersonSummary } from "@/lib/graph/types";
 
@@ -151,9 +152,10 @@ export function FamilyTreeGraphView({
             {layout.nodes.map((n) => {
               const left = n.position.x - layout.minX + PADDING;
               const top = n.position.y - layout.minY + PADDING;
-              const p = n.data.person;
-              const focal = n.data.isFocal;
-              const deceased = n.data.isDeceased;
+            const p = n.data.person;
+            const focal = n.data.isFocal;
+            const deceased = n.data.isDeceased;
+            const isPrivate = p.treeDisplayIsPrivate === true;
               return (
                 <Pressable
                   key={n.id}
@@ -172,7 +174,7 @@ export function FamilyTreeGraphView({
                 >
                   <View style={styles.nodeHeader}>
                     <MaterialCommunityIcons
-                      name={genderIcon(p.gender)}
+                      name={isPrivate ? "lock" : genderIcon(p.gender)}
                       size={18}
                       color={theme.colors.primary}
                     />
@@ -181,15 +183,17 @@ export function FamilyTreeGraphView({
                       numberOfLines={2}
                       style={{ color: theme.colors.onSurface, flex: 1 }}
                     >
-                      {formatGraphPersonName(p)}
+                      {isPrivate ? copy.tree.privatePerson : formatGraphPersonName(p)}
                     </Text>
                   </View>
-                  <Text
-                    variant="labelSmall"
-                    style={{ color: theme.colors.onSurfaceVariant, marginTop: 2 }}
-                  >
-                    {p.familyCode}
-                  </Text>
+                  {!isPrivate && (
+                    <Text
+                      variant="labelSmall"
+                      style={{ color: theme.colors.onSurfaceVariant, marginTop: 2 }}
+                    >
+                      {p.familyCode}
+                    </Text>
+                  )}
                 </Pressable>
               );
             })}

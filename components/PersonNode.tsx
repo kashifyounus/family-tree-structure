@@ -23,7 +23,10 @@ export function PersonNode({
   const person = nodeData.person;
   if (!person) return null;
 
-  const initials = `${person.firstName[0] ?? ""}${person.lastName[0] ?? ""}`;
+  const isPrivate = person.treeDisplayIsPrivate === true;
+  const initials = isPrivate
+    ? "?"
+    : `${person.firstName[0] ?? ""}${person.lastName[0] ?? ""}`;
 
   return (
     <div
@@ -49,17 +52,25 @@ export function PersonNode({
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            {person.firstName} {person.lastName}
-            {formatUrduName(person) ? (
+            {isPrivate ? (
+              person.firstName
+            ) : (
               <>
-                {" · "}
-                <UrduText>{formatUrduName(person)}</UrduText>
+                {person.firstName} {person.lastName}
+                {formatUrduName(person) ? (
+                  <>
+                    {" · "}
+                    <UrduText>{formatUrduName(person)}</UrduText>
+                  </>
+                ) : null}
               </>
-            ) : null}
+            )}
           </p>
-          <p className="truncate text-[10px] font-mono text-zinc-500">
-            {person.familyCode}
-          </p>
+          {!isPrivate && (
+            <p className="truncate text-[10px] font-mono text-zinc-500">
+              {person.familyCode}
+            </p>
+          )}
         </div>
       </div>
       <div className="mt-1 flex flex-wrap gap-1">

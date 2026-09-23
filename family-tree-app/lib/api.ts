@@ -189,8 +189,12 @@ export type MobileFamilyGraph = {
         deathDate: string | null;
         currentCity: string | null;
         isLiving: boolean;
+        treeDisplayIsPrivate?: boolean;
       };
       isFocal?: boolean;
+      hasUnexpandedParents?: boolean;
+      hasUnexpandedChildren?: boolean;
+      hasUnexpandedSiblings?: boolean;
     };
   }[];
   edges: {

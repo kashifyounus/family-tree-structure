@@ -17,8 +17,6 @@ tags:
     timeout: 15000
 - tapOn:
     id: onboarding-get-started
-- tapOn:
-    id: onboarding-choose-private
 - extendedWaitUntil:
     visible:
       id: onboarding-create-profile
@@ -57,15 +55,9 @@ tags:
     text: "Create profile and start tree"
 - extendedWaitUntil:
     visible:
-      id: onboarding-enter-app
+      id: home-screen
     timeout: 90000
 - takeScreenshot: android_02_profile_created
-- tapOn:
-    id: onboarding-enter-app
-- extendedWaitUntil:
-    visible:
-      id: home-screen
-    timeout: 20000
 - takeScreenshot: android_03_home
 - tapOn:
     text: "Family directory"

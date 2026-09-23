@@ -12,6 +12,7 @@ export type GraphPersonSummary = {
   deathDate: string | null;
   currentCity: string | null;
   isLiving: boolean;
+  treeDisplayIsPrivate?: boolean;
 };
 
 export type FamilyGraphNode = {

@@ -1,5 +1,5 @@
 import type { AuthContext } from "@/lib/auth";
-import { maskPersonSummary } from "@/lib/privacy";
+import { maskPersonSummary, TREE_PRIVATE_PLACEHOLDER } from "@/lib/privacy";
 import type { PersonSummary } from "@/types/family";
 
 const guest: AuthContext = {
@@ -56,6 +56,9 @@ describe("privacy masking", () => {
     expect(masked.birthPlace).toBeNull();
     expect(masked.currentCity).toBeNull();
     expect(masked.birthDate).toMatch(/^1990-01-01$/);
+    expect(masked.firstName).toBe(TREE_PRIVATE_PLACEHOLDER);
+    expect(masked.treeDisplayIsPrivate).toBe(true);
+    expect(masked.familyCode).toBe(TREE_PRIVATE_PLACEHOLDER);
   });
 
   it("masks sensitive fields for VIEWER role", () => {
