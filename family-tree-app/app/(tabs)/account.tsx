@@ -19,9 +19,10 @@ import { Screen } from "@/components/ui/Screen";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { copy } from "@/content/businessCopy";
 import {
+  APP_NAME,
   APP_OWNER,
   APP_OWNER_EMAIL,
-  APP_VERSION,
+  APP_VERSION_LABEL,
 } from "@/constants/appMeta";
 import { useAppFeedback } from "@/context/ErrorContext";
 import {
@@ -122,8 +123,14 @@ export default function AccountScreen() {
 
   return (
     <Screen testID="account-screen">
+      <Text variant="titleMedium" style={{ marginBottom: 4 }}>
+        {APP_NAME}
+      </Text>
       <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
-        App v{APP_VERSION}
+        Version {APP_VERSION_LABEL} · {APP_OWNER}
+      </Text>
+      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+        {APP_OWNER_EMAIL}
       </Text>
 
       {storage.mode === "local" && localAccount.session && (

@@ -1,18 +1,29 @@
 import { useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { AppState, View } from "react-native";
 
+import { GenealogyBootScreen } from "@/components/GenealogyBootScreen";
 import { AppLockScreen } from "@/components/security/AppLockScreen";
 import { AppPrivacyOverlay } from "@/components/security/AppPrivacyOverlay";
-import { LoadingView } from "@/components/ui/LoadingView";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
+import { log } from "@/lib/logging/logger";
 
-export function NavigationGate({ children }: { children: React.ReactNode }) {
-  const { ready, onboardingComplete } = useStorage();
+type NavigationGateProps = {
+  children: ReactNode;
+  fallback?: ReactNode;
+};
+
+export function NavigationGate({ children, fallback }: NavigationGateProps) {
+  const { ready, onboardingComplete, mode } = useStorage();
   const prefs = useAppPreferences();
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!ready) return;
+    log.lifecycle("Storage ready", { mode, onboardingComplete });
+  }, [ready, mode, onboardingComplete]);
 
   useEffect(() => {
     if (!ready) return;
@@ -37,7 +48,7 @@ export function NavigationGate({ children }: { children: React.ReactNode }) {
   }, [prefs.pinEnabled, prefs.lock]);
 
   if (!ready || !prefs.ready) {
-    return <LoadingView />;
+    return fallback ?? <GenealogyBootScreen message="Loading family records…" />;
   }
 
   if (prefs.pinEnabled && prefs.locked && onboardingComplete) {

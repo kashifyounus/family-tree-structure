@@ -1,10 +1,12 @@
-import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
+import { GenealogyBootScreen } from "@/components/GenealogyBootScreen";
 import { NavigationGate } from "@/components/NavigationGate";
+import { APP_NAME, APP_VERSION_LABEL } from "@/constants/appMeta";
+import { log } from "@/lib/logging/logger";
 import { AppProviders } from "@/providers/AppProviders";
 
 export { ErrorBoundary } from "expo-router";
@@ -12,42 +14,27 @@ export { ErrorBoundary } from "expo-router";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
-
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      void SplashScreen.hideAsync();
-      return;
-    }
-    const fallback = setTimeout(() => {
-      void SplashScreen.hideAsync();
-    }, 5000);
-    return () => clearTimeout(fallback);
-  }, [loaded]);
-
-  if (!loaded && !error) {
-    return null;
-  }
+    log.lifecycle("Application starting", {
+      app: APP_NAME,
+      version: APP_VERSION_LABEL,
+    });
+    void SplashScreen.hideAsync();
+  }, []);
 
   return (
     <AppProviders>
-      <NavigationGate>
+      <NavigationGate fallback={<GenealogyBootScreen message="Preparing your family archive…" />}>
         <Stack screenOptions={{ animation: "slide_from_right" }}>
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="member/[personId]"
-            options={{ title: "Person", headerBackTitle: "Back" }}
+            options={{ title: "Family member", headerBackTitle: "Back" }}
           />
           <Stack.Screen
             name="marriage/[unionId]"
-            options={{ title: "Marriage", headerBackTitle: "Back" }}
+            options={{ title: "Marriage record", headerBackTitle: "Back" }}
           />
         </Stack>
       </NavigationGate>
