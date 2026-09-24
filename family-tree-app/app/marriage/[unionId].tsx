@@ -1,16 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  Button,
-  Dialog,
-  List,
-  Portal,
-  RadioButton,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Button, List, RadioButton, Text, useTheme } from "react-native-paper";
 
+import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen } from "@/components/ui/Screen";
@@ -180,42 +173,37 @@ export default function MarriageScreen() {
         ))
       )}
 
-      <Portal>
-        <Dialog visible={childOpen} onDismiss={() => setChildOpen(false)}>
-          <Dialog.Title>{copy.profile.addChild}</Dialog.Title>
-          <Dialog.ScrollArea style={styles.dialogScroll}>
-            <View style={styles.dialogInner}>
-              <FormTextInput
-                testID="member-child-first"
-                label="First name"
-                value={chFirst}
-                onChangeText={setChFirst}
-              />
-              <FormTextInput
-                testID="member-child-last"
-                label="Last name"
-                value={chLast}
-                onChangeText={setChLast}
-              />
-              <Text variant="labelLarge">Gender</Text>
-              <RadioButton.Group
-                onValueChange={(value) => setChGender(value as Gender)}
-                value={chGender}
-              >
-                <RadioButton.Item label="Female" value="FEMALE" />
-                <RadioButton.Item label="Male" value="MALE" />
-                <RadioButton.Item label="Other" value="OTHER" />
-              </RadioButton.Group>
-            </View>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setChildOpen(false)}>{copy.reports.cancel}</Button>
-            <Button testID="member-child-save" mode="contained" onPress={submitChild}>
-              {copy.profile.saveChanges}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <FormBottomSheet
+        visible={childOpen}
+        title={copy.profile.addChild}
+        onDismiss={() => setChildOpen(false)}
+        onSubmit={submitChild}
+        submitLabel={copy.profile.saveChanges}
+        submitTestID="member-child-save"
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          testID="member-child-first"
+          label="First name"
+          value={chFirst}
+          onChangeText={setChFirst}
+        />
+        <FormTextInput
+          testID="member-child-last"
+          label="Last name"
+          value={chLast}
+          onChangeText={setChLast}
+        />
+        <Text variant="labelLarge">Gender</Text>
+        <RadioButton.Group
+          onValueChange={(value) => setChGender(value as Gender)}
+          value={chGender}
+        >
+          <RadioButton.Item label="Female" value="FEMALE" />
+          <RadioButton.Item label="Male" value="MALE" />
+          <RadioButton.Item label="Other" value="OTHER" />
+        </RadioButton.Group>
+      </FormBottomSheet>
     </Screen>
   );
 }
@@ -224,6 +212,4 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginBottom: space.md },
   section: { marginTop: space.lg, marginBottom: space.sm },
   addChildBtn: { marginBottom: space.md, alignSelf: "flex-start" },
-  dialogScroll: { maxHeight: 360, paddingHorizontal: 0 },
-  dialogInner: { paddingHorizontal: space.lg, gap: space.sm },
 });

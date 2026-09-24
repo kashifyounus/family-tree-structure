@@ -1,16 +1,9 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  Button,
-  Dialog,
-  Modal,
-  Portal,
-  RadioButton,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Button, RadioButton, Text, useTheme } from "react-native-paper";
 
+import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
@@ -139,170 +132,145 @@ export function PersonTreeSheet({
 
   return (
     <>
-      <Portal>
-        <Modal
-          visible={visible}
-          onDismiss={onDismiss}
-          contentContainerStyle={[
-            styles.sheet,
-            { backgroundColor: theme.colors.surface },
-          ]}
+      <FormBottomSheet
+        visible={visible}
+        title={formatGraphPersonName(person)}
+        onDismiss={onDismiss}
+        hideActions
+        cancelLabel={copy.reports.cancel}
+      >
+        <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
+          {person.familyCode}
+        </Text>
+        <View style={styles.actions}>
+          {!isPrivate && (
+            <Button
+              mode="contained"
+              icon="account"
+              onPress={() => {
+                onDismiss();
+                router.push({
+                  pathname: "/member/[personId]",
+                  params: { personId: person.id, code: person.familyCode },
+                });
+              }}
+            >
+              {copy.tree.sheetProfile}
+            </Button>
+          )}
+          {canAddLocal && (
+            <Button
+              testID="tree-sheet-add-spouse"
+              mode="contained-tonal"
+              icon="heart"
+              onPress={() => {
+                setSpGender(defaultSpouseGender(person.gender) ?? "");
+                setSpLast(person.lastName);
+                setSpouseOpen(true);
+              }}
+            >
+              {copy.profile.addSpouse}
+            </Button>
+          )}
+          {canAddLocal && (
+            <Button
+              testID="tree-sheet-add-child"
+              mode="contained-tonal"
+              icon="baby-carriage"
+              onPress={() => {
+                const marriages = unionOptions(mode, person.id);
+                setChUnionId(marriages[0]?.id ?? "");
+                setChLast(person.lastName);
+                setChildOpen(true);
+              }}
+            >
+              {copy.profile.addChild}
+            </Button>
+          )}
+          {!isPrivate && (
+            <Button mode="outlined" icon="target" onPress={onCenterTree}>
+              {copy.tree.sheetCenter}
+            </Button>
+          )}
+        </View>
+      </FormBottomSheet>
+
+      <FormBottomSheet
+        visible={spouseOpen}
+        title={copy.profile.addSpouse}
+        onDismiss={() => setSpouseOpen(false)}
+        onSubmit={submitSpouse}
+        submitLabel={copy.profile.saveChanges}
+        submitTestID="member-spouse-save"
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          testID="member-spouse-first"
+          label="First name"
+          value={spFirst}
+          onChangeText={setSpFirst}
+          errorText={fieldErrors.spFirst}
+        />
+        <FormTextInput
+          testID="member-spouse-last"
+          label="Last name"
+          value={spLast}
+          onChangeText={setSpLast}
+          errorText={fieldErrors.spLast}
+        />
+        <Text variant="labelLarge">Gender</Text>
+        {fieldErrors.spGender ? (
+          <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+            {fieldErrors.spGender}
+          </Text>
+        ) : null}
+        <RadioButton.Group
+          onValueChange={(value) => setSpGender(value as Gender)}
+          value={spGender}
         >
-          <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-            {formatGraphPersonName(person)}
-          </Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.primary, marginTop: 4 }}>
-            {person.familyCode}
-          </Text>
-          <View style={styles.actions}>
-            {!isPrivate && (
-              <Button
-                mode="contained"
-                icon="account"
-                onPress={() => {
-                  onDismiss();
-                  router.push({
-                    pathname: "/member/[personId]",
-                    params: { personId: person.id, code: person.familyCode },
-                  });
-                }}
-              >
-                {copy.tree.sheetProfile}
-              </Button>
-            )}
-            {canAddLocal && (
-              <Button
-                testID="tree-sheet-add-spouse"
-                mode="contained-tonal"
-                icon="heart"
-                onPress={() => {
-                  setSpGender(defaultSpouseGender(person.gender) ?? "");
-                  setSpLast(person.lastName);
-                  setSpouseOpen(true);
-                }}
-              >
-                {copy.profile.addSpouse}
-              </Button>
-            )}
-            {canAddLocal && (
-              <Button
-                testID="tree-sheet-add-child"
-                mode="contained-tonal"
-                icon="baby-carriage"
-                onPress={() => {
-                  const marriages = unionOptions(mode, person.id);
-                  setChUnionId(marriages[0]?.id ?? "");
-                  setChLast(person.lastName);
-                  setChildOpen(true);
-                }}
-              >
-                {copy.profile.addChild}
-              </Button>
-            )}
-            {!isPrivate && (
-              <Button mode="outlined" icon="target" onPress={onCenterTree}>
-                {copy.tree.sheetCenter}
-              </Button>
-            )}
-            <Button mode="text" onPress={onDismiss}>
-              {copy.reports.cancel}
-            </Button>
-          </View>
-        </Modal>
-      </Portal>
+          <RadioButton.Item label="Female" value="FEMALE" />
+          <RadioButton.Item label="Male" value="MALE" />
+          <RadioButton.Item label="Other" value="OTHER" />
+        </RadioButton.Group>
+      </FormBottomSheet>
 
-      <Portal>
-        <Dialog visible={spouseOpen} onDismiss={() => setSpouseOpen(false)}>
-          <Dialog.Title>{copy.profile.addSpouse}</Dialog.Title>
-          <Dialog.ScrollArea style={styles.dialogScroll}>
-            <View style={styles.dialogInner}>
-              <FormTextInput
-                testID="member-spouse-first"
-                label="First name"
-                value={spFirst}
-                onChangeText={setSpFirst}
-                errorText={fieldErrors.spFirst}
-              />
-              <FormTextInput
-                testID="member-spouse-last"
-                label="Last name"
-                value={spLast}
-                onChangeText={setSpLast}
-                errorText={fieldErrors.spLast}
-              />
-              <Text variant="labelLarge">Gender</Text>
-              {fieldErrors.spGender ? (
-                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
-                  {fieldErrors.spGender}
-                </Text>
-              ) : null}
-              <RadioButton.Group
-                onValueChange={(value) => setSpGender(value as Gender)}
-                value={spGender}
-              >
-                <RadioButton.Item label="Female" value="FEMALE" />
-                <RadioButton.Item label="Male" value="MALE" />
-                <RadioButton.Item label="Other" value="OTHER" />
-              </RadioButton.Group>
-            </View>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setSpouseOpen(false)}>{copy.reports.cancel}</Button>
-            <Button testID="member-spouse-save" mode="contained" onPress={submitSpouse}>
-              {copy.profile.saveChanges}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-
-        <Dialog visible={childOpen} onDismiss={() => setChildOpen(false)}>
-          <Dialog.Title>{copy.profile.addChild}</Dialog.Title>
-          <Dialog.ScrollArea style={styles.dialogScroll}>
-            <View style={styles.dialogInner}>
-              <FormTextInput
-                testID="member-child-first"
-                label="First name"
-                value={chFirst}
-                onChangeText={setChFirst}
-                errorText={fieldErrors.chFirst}
-              />
-              <FormTextInput
-                testID="member-child-last"
-                label="Last name"
-                value={chLast}
-                onChangeText={setChLast}
-                errorText={fieldErrors.chLast}
-              />
-              <Text variant="labelLarge">Gender</Text>
-              <RadioButton.Group
-                onValueChange={(value) => setChGender(value as Gender)}
-                value={chGender}
-              >
-                <RadioButton.Item label="Female" value="FEMALE" />
-                <RadioButton.Item label="Male" value="MALE" />
-                <RadioButton.Item label="Other" value="OTHER" />
-              </RadioButton.Group>
-            </View>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setChildOpen(false)}>{copy.reports.cancel}</Button>
-            <Button testID="member-child-save" mode="contained" onPress={submitChild}>
-              {copy.profile.saveChanges}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <FormBottomSheet
+        visible={childOpen}
+        title={copy.profile.addChild}
+        onDismiss={() => setChildOpen(false)}
+        onSubmit={submitChild}
+        submitLabel={copy.profile.saveChanges}
+        submitTestID="member-child-save"
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          testID="member-child-first"
+          label="First name"
+          value={chFirst}
+          onChangeText={setChFirst}
+          errorText={fieldErrors.chFirst}
+        />
+        <FormTextInput
+          testID="member-child-last"
+          label="Last name"
+          value={chLast}
+          onChangeText={setChLast}
+          errorText={fieldErrors.chLast}
+        />
+        <Text variant="labelLarge">Gender</Text>
+        <RadioButton.Group
+          onValueChange={(value) => setChGender(value as Gender)}
+          value={chGender}
+        >
+          <RadioButton.Item label="Female" value="FEMALE" />
+          <RadioButton.Item label="Male" value="MALE" />
+          <RadioButton.Item label="Other" value="OTHER" />
+        </RadioButton.Group>
+      </FormBottomSheet>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  sheet: {
-    marginHorizontal: space.lg,
-    marginBottom: space.xl,
-    padding: space.lg,
-    borderRadius: 16,
-  },
-  actions: { marginTop: space.lg, gap: space.sm },
-  dialogScroll: { maxHeight: 360, paddingHorizontal: 0 },
-  dialogInner: { paddingHorizontal: space.lg, gap: space.sm },
+  actions: { marginTop: space.sm, gap: space.sm },
 });

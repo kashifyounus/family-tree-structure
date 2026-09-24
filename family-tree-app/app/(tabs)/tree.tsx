@@ -10,7 +10,7 @@ import {
 } from "react-native-paper";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FamilyTreeGraphView } from "@/components/FamilyTreeGraphView";
+import { GraphWebView } from "@/components/tree/GraphWebView";
 import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { PersonTreeSheet } from "@/components/tree/PersonTreeSheet";
 import { TreeGraphExpandBar } from "@/components/tree/TreeGraphExpandBar";
@@ -229,11 +229,10 @@ export default function TreeScreen() {
               onLoadSiblings={() => setOnlineSiblingSteps((s) => s + 1)}
               onLoadChildren={() => setOnlineDepth((d) => d + 1)}
             />
-            <FamilyTreeGraphView
+            <GraphWebView
               graph={onlineGraph}
               onPersonPress={onPersonPress}
-              zoomScale={zoom}
-              onZoomChange={setZoom}
+              testID="online-tree-graph-webview"
             />
           </>
         ) : (

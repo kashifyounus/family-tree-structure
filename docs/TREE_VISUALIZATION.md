@@ -23,6 +23,6 @@ The native React Native graph (Reanimated + manual layout) was prone to gesture 
 
 | Approach | Pros | Cons |
 |----------|------|------|
-| WebView canvas | Stable zoom, quick to ship | Node tap → profile needs bridge (not yet wired) |
+| WebView canvas | Stable zoom, quick to ship | Layout is grid-based (not pedigree); tap opens tree person sheet |
 | React Flow in WebView | Pixel parity with web | Heavier bundle, needs bundled JS |
 | Native Skia | Best performance | Highest engineering cost |

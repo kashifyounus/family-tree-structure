@@ -130,7 +130,11 @@ export function LocalFamilyTree({
         </View>
       )}
       {view === "graph" && graph ? (
-        <GraphWebView graph={graph} testID="local-tree-graph-webview" />
+        <GraphWebView
+          graph={graph}
+          testID="local-tree-graph-webview"
+          onPersonPress={onPersonPress}
+        />
       ) : (
         <ScrollView
           style={styles.scroll}
