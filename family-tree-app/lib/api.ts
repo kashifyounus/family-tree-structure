@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 
+import { normalizeApiBaseUrl } from "@/lib/apiUrl";
+
 const TOKEN_KEY = "mughals_auth_token";
 const API_URL_KEY = "mughals_api_base_url";
 
@@ -12,8 +14,9 @@ export async function loadApiUrlOverride(): Promise<string | null> {
 }
 
 export async function saveApiUrlOverride(url: string): Promise<void> {
-  apiUrlOverride = url;
-  await AsyncStorage.setItem(API_URL_KEY, url);
+  const normalized = normalizeApiBaseUrl(url);
+  apiUrlOverride = normalized;
+  await AsyncStorage.setItem(API_URL_KEY, normalized);
 }
 
 export function getApiBaseUrl(): string {

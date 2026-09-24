@@ -243,10 +243,12 @@ export default function OnboardingScreen() {
                 {copy.onboarding.cloudBody}
               </Text>
               <FormTextInput
+                testID="onboarding-api-url"
                 label={copy.account.connectionAddress}
                 value={apiUrl}
                 onChangeText={setApiUrl}
                 autoCapitalize="none"
+                autoCorrect={false}
               />
               <HelperText type="info">https://your-family-site.com</HelperText>
               <FormTextInput

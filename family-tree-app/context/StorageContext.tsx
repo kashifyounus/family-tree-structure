@@ -22,6 +22,8 @@ import {
   loadApiUrlOverride,
   saveApiUrlOverride,
 } from "@/lib/api";
+import { AppError } from "@/lib/errors/AppError";
+import { normalizeApiBaseUrl, validateApiBaseUrl } from "@/lib/apiUrl";
 import { getLocalAccountCount } from "@/lib/localAccount/service";
 
 const MODE_KEY = "mughals_storage_mode";
@@ -87,9 +89,13 @@ export function StorageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setApiUrl = useCallback(async (url: string) => {
-    const trimmed = url.trim().replace(/\/$/, "");
-    setApiUrlState(trimmed);
-    await saveApiUrlOverride(trimmed);
+    const normalized = normalizeApiBaseUrl(url);
+    const validationMessage = validateApiBaseUrl(normalized);
+    if (validationMessage) {
+      throw new AppError("VALIDATION", validationMessage);
+    }
+    setApiUrlState(normalized);
+    await saveApiUrlOverride(normalized);
   }, []);
 
   const completeOnboarding = useCallback(async () => {
