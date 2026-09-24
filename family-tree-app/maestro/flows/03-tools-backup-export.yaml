@@ -8,7 +8,7 @@ tags:
       id: home-screen
     timeout: 20000
 - tapOn:
-    text: "Tree"
+    id: home-tree
 - tapOn:
     id: tree-overflow-menu
 - tapOn:

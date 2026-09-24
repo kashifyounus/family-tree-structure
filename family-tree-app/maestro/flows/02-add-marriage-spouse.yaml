@@ -9,7 +9,7 @@ tags:
       id: home-screen
     timeout: 20000
 - tapOn:
-    text: "Family directory"
+    id: home-directory
 - extendedWaitUntil:
     visible:
       id: members-screen

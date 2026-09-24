@@ -67,6 +67,7 @@
     "test:watch": "jest --watch",
     "test:e2e": "maestro test --config maestro/config.yaml maestro/flows",
     "test:e2e:smoke": "maestro test --config maestro/config.yaml maestro/flows --include-tags smoke",
+    "test:maestro:contracts": "jest __tests__/maestroFlows.test.ts",
     "test:android:env": "bash scripts/test-android-env.sh",
     "test:e2e:android:artifacts": "bash scripts/run-android-e2e-artifacts.sh",
     "build:apk": "bash scripts/build-apk-local.sh"

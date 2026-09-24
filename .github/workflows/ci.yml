@@ -171,4 +171,4 @@ jobs:
 
       - name: Maestro flow contracts (static)
         working-directory: family-tree-app
-        run: npm test -- __tests__/maestroFlows.test.ts
+        run: npm run test:maestro:contracts

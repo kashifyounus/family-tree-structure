@@ -8,7 +8,7 @@ tags:
       id: home-screen
     timeout: 20000
 - tapOn:
-    text: "Family insights"
+    id: home-insights
 - extendedWaitUntil:
     visible:
       id: reports-screen

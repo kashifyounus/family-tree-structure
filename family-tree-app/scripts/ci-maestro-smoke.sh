@@ -19,8 +19,9 @@ echo "Waiting for emulator..."
 adb wait-for-device
 adb shell 'while [[ -z $(getprop sys.boot_completed 2>/dev/null | tr -d "\r") ]]; do sleep 2; done'
 
-echo "Installing $APK"
-adb install -r "$APK"
+echo "Installing $APK (push + pm install — reliable on slow emulators)"
+adb push "$APK" /data/local/tmp/family-tree-debug.apk
+adb shell pm install -r -g /data/local/tmp/family-tree-debug.apk
 
 if ! command -v maestro >/dev/null; then
   echo "Installing Maestro CLI..."

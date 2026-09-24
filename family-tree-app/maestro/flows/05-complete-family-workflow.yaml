@@ -60,7 +60,7 @@ tags:
 - takeScreenshot: android_02_profile_created
 - takeScreenshot: android_03_home
 - tapOn:
-    text: "Family directory"
+    id: home-directory
 - extendedWaitUntil:
     visible:
       id: members-screen

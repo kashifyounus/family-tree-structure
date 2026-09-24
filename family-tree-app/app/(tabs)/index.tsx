@@ -204,7 +204,7 @@ export default function HomeScreen() {
 
       <View style={styles.actions}>
         <Link href="/(tabs)/tree" asChild>
-          <ActionTile icon="family-tree" title={copy.home.openTree} />
+          <ActionTile testID="home-tree" icon="family-tree" title={copy.home.openTree} />
         </Link>
         <Link href={`/(tabs)/tree?familyCode=${branchReference}`} asChild>
           <ActionTile icon="account-group" title={copy.home.yourBranch} />
@@ -213,7 +213,7 @@ export default function HomeScreen() {
           <ActionTile testID="home-directory" icon="account-multiple" title={copy.home.directory} />
         </Link>
         <Link href="/(tabs)/reports" asChild>
-          <ActionTile icon="chart-bar" title={copy.home.insights} />
+          <ActionTile testID="home-insights" icon="chart-bar" title={copy.home.insights} />
         </Link>
       </View>
     </Screen>
