@@ -15,6 +15,7 @@ import Animated, { SlideInRight, SlideOutLeft } from "react-native-reanimated";
 import { copy } from "@/content/businessCopy";
 import { BrandLogo } from "@/components/BrandLogo";
 import { AppCard } from "@/components/ui/AppCard";
+import { Button as GsButton, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { GenderField } from "@/components/ui/GenderField";
 import { Screen } from "@/components/ui/Screen";
@@ -222,15 +223,18 @@ export default function OnboardingScreen() {
                 onChange={setGender}
                 label={copy.onboarding.startingMember}
               />
-              <Button
+              <GsButton
                 testID="onboarding-create-profile"
-                mode="contained"
-                loading={busy}
                 onPress={() => void onRegisterLocal()}
+                disabled={busy}
+                className="w-full"
               >
-                {copy.onboarding.createProfile}
-              </Button>
-              <Button onPress={() => go("start")}>Back</Button>
+                {busy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.onboarding.createProfile}</ButtonText>
+              </GsButton>
+              <GsButton variant="ghost" onPress={() => go("start")} className="w-full">
+                <ButtonText>Back</ButtonText>
+              </GsButton>
             </Card.Content>
           </AppCard>
         )}
@@ -264,13 +268,20 @@ export default function OnboardingScreen() {
                 onChangeText={setServerPassword}
                 secureTextEntry
               />
-              <Button mode="contained" loading={busy} onPress={() => void onOnlineSetup()}>
-                {copy.onboarding.signInContinue}
-              </Button>
-              <Button onPress={() => void onSkipOnlineAuth()}>
-                {copy.onboarding.saveAddressOnly}
-              </Button>
-              <Button onPress={() => go("start")}>Back</Button>
+              <GsButton
+                onPress={() => void onOnlineSetup()}
+                disabled={busy}
+                className="w-full"
+              >
+                {busy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.onboarding.signInContinue}</ButtonText>
+              </GsButton>
+              <GsButton variant="outline" onPress={() => void onSkipOnlineAuth()} className="w-full">
+                <ButtonText>{copy.onboarding.saveAddressOnly}</ButtonText>
+              </GsButton>
+              <GsButton variant="ghost" onPress={() => go("start")} className="w-full">
+                <ButtonText>Back</ButtonText>
+              </GsButton>
             </Card.Content>
           </AppCard>
         )}

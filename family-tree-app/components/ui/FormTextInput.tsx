@@ -12,7 +12,6 @@ export function FormTextInput({
   label,
   errorText,
   style,
-  className,
   ...props
 }: FormTextInputProps) {
   return (
@@ -21,7 +20,7 @@ export function FormTextInput({
         <Text className="text-sm font-medium text-foreground">{label}</Text>
       ) : null}
       <Input
-        className={`w-full ${errorText ? "border-destructive" : ""} ${className ?? ""}`}
+        className={`w-full ${errorText ? "border-destructive" : ""}`}
         isDisabled={props.editable === false}
       >
         <InputField

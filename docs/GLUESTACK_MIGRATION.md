@@ -1,48 +1,37 @@
 # Gluestack UI (React Native) — migration
 
-**App:** `family-tree-app` · Expo SDK 57 · **Gluestack UI v5 alpha** + **NativeWind v5** (Tailwind v4).
+**App:** `family-tree-app` · Expo SDK 57 · **Gluestack UI v5 alpha** + **NativeWind v5**.
 
 ## Phase A — complete
 
-| Item | Location |
-|------|----------|
-| CLI init | `npx gluestack-ui init --nativewind -y` |
-| Global CSS + tokens | `global.css` (Kuriosity primary `#1B4332`) |
-| Metro | `metro.config.js` → `withNativewind` + `../shared` watch folder |
-| Babel | `babel.config.js` → `nativewind/babel`, `module-resolver` |
-| Provider | `GluestackThemeProvider` wraps Paper in `AppProviders.tsx` |
-| Sample component | `components/ui/button` — used on Account → **Remove sample data** |
-| Paper coexistence | All existing screens unchanged; new UI should import from `@/components/ui/button` etc. |
+- CLI init, `global.css`, Metro + Babel, `GluestackThemeProvider` beside Paper
+- `components/ui/button` sample on Account
+
+## Phase B — complete
+
+| Area | Change |
+|------|--------|
+| **Sheets** | `FormBottomSheet` → Gluestack **Actionsheet** (+ backdrop, drag indicator, scroll) |
+| **Fields** | `FormTextInput` → Gluestack **Input** / **InputField** (all call sites) |
+| **Members** | `MembersSearchField` replaces Paper `Searchbar` |
+| **Onboarding** | Register / cloud steps use Gluestack **Button** for primary actions |
+| **Components** | `npx gluestack-ui add actionsheet input` |
+
+Sheets still exposed as `FormBottomSheet` / `AppDialogForm` so screens did not need renames.
 
 ### Add more components
 
 ```bash
 cd family-tree-app
-npx gluestack-ui add input actionsheet -y --use-npm
+npx gluestack-ui add checkbox radio -y --use-npm
 ```
 
-### Usage pattern
+## Phase C (next)
 
-```tsx
-import { Button, ButtonText } from "@/components/ui/button";
-
-<Button variant="default" onPress={onSave}>
-  <ButtonText>Save</ButtonText>
-</Button>
-```
-
-## Phase B (next)
-
-- `FormBottomSheet` → Gluestack Actionsheet / Modal
-- Lists & inputs on Members / onboarding
-
-## Phase C (later)
-
-- Remove `react-native-paper` after screen-by-screen port
-- Align MD3 tokens fully with `global.css` variables
+- `GenderField`, lists (`MemberCard`), tabs chrome → Gluestack
+- Remove `react-native-paper` when coverage is complete
 
 ## Notes
 
-- Init fell back to **NativeWind v5** for Expo (CLI message).
-- Jest mocks `@/global.css` in `jest.setup.js`.
-- Maestro: keep `testID` when replacing controls.
+- Jest mocks `@/global.css`; devDependency `@react-native/jest-preset` pinned for jest-expo.
+- Preserve Maestro `testID`s when swapping controls.
