@@ -1,12 +1,9 @@
 import { Image, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
-import {
-  APP_NAME,
-  APP_OWNER,
-  APP_TAGLINE,
-  APP_VERSION_LABEL,
-} from "@/constants/appMeta";
+import { CreditFooter } from "@/components/CreditFooter";
+import { APP_NAME, APP_TAGLINE } from "@/constants/appMeta";
 import { space } from "@/theme/tokens";
 
 type GenealogyBootScreenProps = {
@@ -23,7 +20,7 @@ export function GenealogyBootScreen({ message }: GenealogyBootScreenProps) {
       accessibilityRole="progressbar"
       accessibilityLabel={`Loading ${APP_NAME}`}
     >
-      <View style={styles.card}>
+      <Animated.View entering={FadeInUp.duration(500)} style={styles.card}>
         <Image
           source={require("@/assets/images/brand-logo.png")}
           style={styles.logo}
@@ -42,15 +39,10 @@ export function GenealogyBootScreen({ message }: GenealogyBootScreenProps) {
             {message}
           </Text>
         ) : null}
-      </View>
-      <View style={styles.footer}>
-        <Text variant="labelSmall" style={styles.footerText}>
-          v{APP_VERSION_LABEL}
-        </Text>
-        <Text variant="labelSmall" style={styles.footerText}>
-          {APP_OWNER}
-        </Text>
-      </View>
+      </Animated.View>
+      <Animated.View entering={FadeInDown.delay(200).duration(450)} style={styles.footer}>
+        <CreditFooter inverted />
+      </Animated.View>
     </View>
   );
 }
@@ -86,9 +78,5 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: space.xl,
     alignItems: "center",
-    gap: 4,
-  },
-  footerText: {
-    color: "rgba(255,255,255,0.92)",
   },
 });

@@ -63,7 +63,7 @@ export async function probeMobileApiHealth(
     if (!body?.ok) {
       return {
         ok: false,
-        message: "This site does not look like a Mughal's Family Tree server.",
+        message: "This site does not look like a Kuriosity Family Tree server.",
       };
     }
     return { ok: true };

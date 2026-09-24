@@ -25,7 +25,7 @@ cd android
 ./gradlew assembleRelease --no-daemon
 
 APK="$ROOT/android/app/build/outputs/apk/release/app-release.apk"
-OUT_NAME="Mughals-Family-Tree-$(node -p "require('${ROOT}/app.json').expo.version")-release.apk"
+OUT_NAME="Kuriosity-Family-Tree-$(node -p "require('${ROOT}/app.json').expo.version")-release.apk"
 DIST="$ROOT/dist"
 mkdir -p "$DIST"
 cp "$APK" "$DIST/$OUT_NAME"

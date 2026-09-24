@@ -13,6 +13,7 @@ const brand = {
   tertiary: "#1D4E4A",
   success: "#047857",
   successContainer: "#d1fae5",
+  onSuccessContainer: "#064e3b",
 };
 
 const fontConfig = configureFonts({

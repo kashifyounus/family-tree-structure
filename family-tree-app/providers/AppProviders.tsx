@@ -1,9 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+import { installGlobalErrorHandlers } from "@/lib/globalErrorHandlers";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AppPreferencesProvider, useAppPreferences } from "@/context/AppPreferencesContext";
@@ -43,6 +46,10 @@ function ThemedApp({ children }: AppProvidersProps) {
 }
 
 export function AppProviders({ children }: AppProvidersProps) {
+  useEffect(() => {
+    installGlobalErrorHandlers();
+  }, []);
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>

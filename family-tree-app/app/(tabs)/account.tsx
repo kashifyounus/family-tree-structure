@@ -18,12 +18,8 @@ import { FormTextInput } from "@/components/ui/FormTextInput";
 import { Screen } from "@/components/ui/Screen";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { copy } from "@/content/businessCopy";
-import {
-  APP_NAME,
-  APP_OWNER,
-  APP_OWNER_EMAIL,
-  APP_VERSION_LABEL,
-} from "@/constants/appMeta";
+import { CreditFooter } from "@/components/CreditFooter";
+import { APP_NAME } from "@/constants/appMeta";
 import { useAppFeedback } from "@/context/ErrorContext";
 import {
   DEFAULT_LOGIN_EMAIL,
@@ -123,15 +119,10 @@ export default function AccountScreen() {
 
   return (
     <Screen testID="account-screen">
-      <Text variant="titleMedium" style={{ marginBottom: 4 }}>
+      <Text variant="titleMedium" style={{ marginBottom: 12 }}>
         {APP_NAME}
       </Text>
-      <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
-        Version {APP_VERSION_LABEL} · {APP_OWNER}
-      </Text>
-      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
-        {APP_OWNER_EMAIL}
-      </Text>
+      <CreditFooter />
 
       {storage.mode === "local" && localAccount.session && (
         <Card mode="elevated" style={styles.card}>
@@ -382,9 +373,9 @@ export default function AccountScreen() {
       )}
 
       <Divider style={styles.divider} />
-      <Text variant="bodySmall" style={{ textAlign: "center", color: theme.colors.onSurfaceVariant, marginBottom: 24 }}>
-        {APP_OWNER} · {APP_OWNER_EMAIL}
-      </Text>
+      <View style={{ marginBottom: 24, alignItems: "center" }}>
+        <CreditFooter showVersion={false} />
+      </View>
     </Screen>
   );
 }

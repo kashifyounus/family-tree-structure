@@ -149,7 +149,7 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
       const enrolled = await LocalAuthentication.isEnrolledAsync();
       if (!hasHardware || !enrolled) return false;
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Unlock Mughal family records",
+        promptMessage: "Unlock Kuriosity Family Tree",
         cancelLabel: "Use PIN",
         disableDeviceFallback: true,
       });

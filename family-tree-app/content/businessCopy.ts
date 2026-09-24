@@ -1,5 +1,5 @@
 /**
- * User-facing language for Mughal's Family Tree.
+ * User-facing language for Kuriosity Family Tree.
  * Internal code may still use technical names; only strings from here belong in the UI.
  *
  * Terminology choices (open for your review — see content/TERMINOLOGY.md):
@@ -14,7 +14,7 @@ export const copy = {
     tagline:
       "Preserve your lineage, connect generations, and share your story with those you trust.",
     intro:
-      "Mughal's Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
+      "Kuriosity Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
   },
 
   storage: {
@@ -26,7 +26,7 @@ export const copy = {
     privateHelp:
       "Your family information stays on this phone. You can still link to the family cloud later without losing what you have entered here.",
     cloudHelp:
-      "Your family information is loaded from your organisation's Mughal's Family Tree website. Everyone you authorise sees the same records.",
+      "Your family information is loaded from your family's Kuriosity Family Tree website. Everyone you authorise sees the same records.",
     switchToCloudHint:
       "To sign in to the family cloud, choose Shared online under where your records are kept.",
     switchToPrivateInfo:
@@ -75,7 +75,7 @@ export const copy = {
   onboarding: {
     welcomeTitle: "Welcome to your family story",
     welcomeBody:
-      "Mughal's Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
+      "Kuriosity Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
     getStarted: "Begin setup",
     shortPrivateCta: "Set up private archive",
     loadDemoFamily: "Load demo family",
@@ -278,7 +278,7 @@ export const copy = {
   },
 
   security: {
-    privacyShield: "Mughal's Family Tree",
+    privacyShield: "Kuriosity Family Tree",
     unlockTitle: "Enter your PIN",
     unlockBody: "This device is protected. Enter your PIN to view your family records.",
     pinLabel: "PIN",

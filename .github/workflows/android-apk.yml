@@ -61,7 +61,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mughals-family-tree-apk
+          name: kuriosity-family-tree-apk
           path: family-tree-app/dist/*.apk
           retention-days: 90
 
