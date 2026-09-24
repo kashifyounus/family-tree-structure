@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { StyleSheet } from "react-native";
-import { Snackbar, Text, useTheme } from "react-native-paper";
+import { Snackbar, Text, useTheme, type MD3Theme } from "react-native-paper";
 
 import { semantic } from "@/theme/paperTheme";
 
@@ -27,7 +27,7 @@ type SnackKind = "error" | "success" | "info";
 
 function snackColors(
   kind: SnackKind,
-  theme: ReturnType<typeof useTheme>,
+  theme: MD3Theme,
 ): { background: string; text: string; action: string } {
   switch (kind) {
     case "error":
