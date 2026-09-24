@@ -8,6 +8,11 @@ import { StyleSheet, View } from "react-native";
 
 import { KinshipSections } from "@/components/KinshipSections";
 import { PersonFacts } from "@/components/PersonFacts";
+import { ExistingMemberPicker } from "@/components/members/ExistingMemberPicker";
+import {
+  MemberFormModeToggle,
+  type MemberFormMode,
+} from "@/components/members/MemberFormModeToggle";
 import { CoupleParentPickerSheet } from "@/components/parents/CoupleParentPickerSheet";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
@@ -25,9 +30,12 @@ import {
   addChild,
   addSpouse,
   assignParentsToCouple,
+  linkChild,
+  linkSpouse,
   loadPersonByCode,
   loadPersonById,
   parentCouplesForPicker,
+  peopleForPicker,
   unionOptions,
   updatePerson,
 } from "@/lib/data/personService";
@@ -73,6 +81,10 @@ export default function MemberDetailScreen() {
   const [chLast, setChLast] = useState("");
   const [chGender, setChGender] = useState<Gender>("MALE");
   const [chUnionId, setChUnionId] = useState("");
+  const [spouseFormMode, setSpouseFormMode] = useState<MemberFormMode>("create");
+  const [linkSpouseId, setLinkSpouseId] = useState("");
+  const [childFormMode, setChildFormMode] = useState<MemberFormMode>("create");
+  const [linkChildId, setLinkChildId] = useState("");
   const [parentsOpen, setParentsOpen] = useState(false);
   const [parentQuery, setParentQuery] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -170,6 +182,26 @@ export default function MemberDetailScreen() {
   };
 
   const submitSpouse = () => {
+    if (spouseFormMode === "link") {
+      if (!linkSpouseId) {
+        showError(new Error(copy.profile.pickMemberRequired));
+        return;
+      }
+      try {
+        linkSpouse(mode, { personId: m.id, spouseId: linkSpouseId });
+        setSpouseOpen(false);
+        setLinkSpouseId("");
+        setSpouseFormMode("create");
+        bumpDataRevision();
+        void reload();
+        impactLight();
+        showSuccess(copy.profile.spouseLinked);
+      } catch (e) {
+        showError(e);
+      }
+      return;
+    }
+
     const errors: FieldErrors = {
       spFirst: required(spFirst, "First name"),
       spLast: required(spLast, "Last name"),
@@ -211,6 +243,27 @@ export default function MemberDetailScreen() {
       showError(copy.profile.needMarriageFirst);
       return;
     }
+
+    if (childFormMode === "link") {
+      if (!linkChildId) {
+        showError(new Error(copy.profile.pickMemberRequired));
+        return;
+      }
+      try {
+        linkChild(mode, { unionId, childId: linkChildId });
+        setChildOpen(false);
+        setLinkChildId("");
+        setChildFormMode("create");
+        bumpDataRevision();
+        void reload();
+        impactLight();
+        showSuccess(copy.profile.childLinked);
+      } catch (e) {
+        showError(e);
+      }
+      return;
+    }
+
     const errors: FieldErrors = {
       chFirst: required(chFirst, "First name"),
       chLast: required(chLast, "Last name"),
@@ -277,6 +330,14 @@ export default function MemberDetailScreen() {
         })
       : undefined;
 
+  const localPeople = canEditLocal ? peopleForPicker(mode) : [];
+  const activeUnionId = chUnionId || unionOptions(mode, m.id)[0]?.id;
+  const activeMarriage = bundle.unions.find((u) => u.id === activeUnionId);
+  const childExcludeIds = [
+    m.id,
+    ...(activeMarriage?.children.map((c) => c.id) ?? []),
+  ];
+
   return (
     <>
       <Screen testID="member-profile-screen" keyboardAvoiding>
@@ -340,6 +401,8 @@ export default function MemberDetailScreen() {
               testID="member-add-spouse"
               variant="secondary"
               onPress={() => {
+                setSpouseFormMode("create");
+                setLinkSpouseId("");
                 setSpGender(defaultSpouseGender(m.gender) ?? "MALE");
                 setSpLast(m.lastName);
                 setSpouseOpen(true);
@@ -352,6 +415,8 @@ export default function MemberDetailScreen() {
               variant="secondary"
               onPress={() => {
                 const marriages = unionOptions(mode, m.id);
+                setChildFormMode("create");
+                setLinkChildId("");
                 setChUnionId(marriages[0]?.id ?? "");
                 setChLast(m.lastName);
                 setChildOpen(true);
@@ -460,6 +525,11 @@ export default function MemberDetailScreen() {
           ))
         )}
 
+        {mode === "online" && bundle.computed ? (
+          <AppText variant="titleMedium" style={{ marginTop: 8 }}>
+            {copy.profile.kinshipOnline}
+          </AppText>
+        ) : null}
         <KinshipSections parents={bundle.parents} computed={bundle.computed} />
 
         <Button
@@ -485,30 +555,42 @@ export default function MemberDetailScreen() {
         submitTestID="member-spouse-save"
         cancelLabel={copy.reports.cancel}
       >
-        <FormTextInput
-          testID="member-spouse-first"
-          label="First name"
-          value={spFirst}
-          onChangeText={setSpFirst}
-          errorText={fieldErrors.spFirst}
-        />
-        <FormTextInput
-          testID="member-spouse-last"
-          label="Last name"
-          value={spLast}
-          onChangeText={setSpLast}
-          errorText={fieldErrors.spLast}
-        />
-        <GenderField
-          value={spGender === "" ? "MALE" : spGender}
-          onChange={setSpGender}
-          label="Gender"
-        />
-        {fieldErrors.spGender ? (
-          <AppText variant="bodySmall" style={{ color: theme.colors.error }}>
-            {fieldErrors.spGender}
-          </AppText>
-        ) : null}
+        <MemberFormModeToggle mode={spouseFormMode} onChange={setSpouseFormMode} />
+        {spouseFormMode === "link" ? (
+          <ExistingMemberPicker
+            members={localPeople}
+            excludeIds={[m.id]}
+            selectedId={linkSpouseId}
+            onSelect={setLinkSpouseId}
+          />
+        ) : (
+          <>
+            <FormTextInput
+              testID="member-spouse-first"
+              label="First name"
+              value={spFirst}
+              onChangeText={setSpFirst}
+              errorText={fieldErrors.spFirst}
+            />
+            <FormTextInput
+              testID="member-spouse-last"
+              label="Last name"
+              value={spLast}
+              onChangeText={setSpLast}
+              errorText={fieldErrors.spLast}
+            />
+            <GenderField
+              value={spGender === "" ? "MALE" : spGender}
+              onChange={setSpGender}
+              label="Gender"
+            />
+            {fieldErrors.spGender ? (
+              <AppText variant="bodySmall" style={{ color: theme.colors.error }}>
+                {fieldErrors.spGender}
+              </AppText>
+            ) : null}
+          </>
+        )}
       </FormBottomSheet>
 
       <FormBottomSheet
@@ -520,21 +602,7 @@ export default function MemberDetailScreen() {
         submitTestID="member-child-save"
         cancelLabel={copy.reports.cancel}
       >
-        <FormTextInput
-          testID="member-child-first"
-          label="Given name"
-          value={chFirst}
-          onChangeText={setChFirst}
-          errorText={fieldErrors.chFirst}
-        />
-        <FormTextInput
-          testID="member-child-last"
-          label="Family name"
-          value={chLast}
-          onChangeText={setChLast}
-          errorText={fieldErrors.chLast}
-        />
-        <GenderField value={chGender} onChange={setChGender} label="Gender" />
+        <MemberFormModeToggle mode={childFormMode} onChange={setChildFormMode} />
         {unionOptions(mode, m.id).map((marriage) => (
           <Button
             key={marriage.id}
@@ -544,6 +612,32 @@ export default function MemberDetailScreen() {
             <ButtonText>{marriage.label}</ButtonText>
           </Button>
         ))}
+        {childFormMode === "link" ? (
+          <ExistingMemberPicker
+            members={localPeople}
+            excludeIds={childExcludeIds}
+            selectedId={linkChildId}
+            onSelect={setLinkChildId}
+          />
+        ) : (
+          <>
+            <FormTextInput
+              testID="member-child-first"
+              label="Given name"
+              value={chFirst}
+              onChangeText={setChFirst}
+              errorText={fieldErrors.chFirst}
+            />
+            <FormTextInput
+              testID="member-child-last"
+              label="Family name"
+              value={chLast}
+              onChangeText={setChLast}
+              errorText={fieldErrors.chLast}
+            />
+            <GenderField value={chGender} onChange={setChGender} label="Gender" />
+          </>
+        )}
       </FormBottomSheet>
 
       <CoupleParentPickerSheet

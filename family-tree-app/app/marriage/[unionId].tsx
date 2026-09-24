@@ -11,7 +11,18 @@ import { copy } from "@/content/businessCopy";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
-import { addChild, loadMarriage, saveMarriage } from "@/lib/data/personService";
+import { ExistingMemberPicker } from "@/components/members/ExistingMemberPicker";
+import {
+  MemberFormModeToggle,
+  type MemberFormMode,
+} from "@/components/members/MemberFormModeToggle";
+import {
+  addChild,
+  linkChild,
+  loadMarriage,
+  peopleForPicker,
+  saveMarriage,
+} from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
 import { space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
@@ -34,6 +45,8 @@ export default function MarriageScreen() {
   const [chFirst, setChFirst] = useState("");
   const [chLast, setChLast] = useState("");
   const [chGender, setChGender] = useState<Gender>("MALE");
+  const [childFormMode, setChildFormMode] = useState<MemberFormMode>("create");
+  const [linkChildId, setLinkChildId] = useState("");
 
   if (mode !== "local") {
     return (
@@ -75,7 +88,33 @@ export default function MarriageScreen() {
     }
   };
 
+  const localPeople = peopleForPicker(mode);
+  const childExcludeIds = [
+    partner1.id,
+    partner2.id,
+    ...marriage.children.map((c) => c.id),
+  ];
+
   const submitChild = () => {
+    if (childFormMode === "link") {
+      if (!linkChildId) {
+        showError(new Error(copy.profile.pickMemberRequired));
+        return;
+      }
+      try {
+        linkChild(mode, { unionId: marriage.id, childId: linkChildId });
+        setChildOpen(false);
+        setLinkChildId("");
+        setChildFormMode("create");
+        bumpDataRevision();
+        impactLight();
+        showSuccess(copy.profile.childLinked);
+      } catch (e) {
+        showError(e);
+      }
+      return;
+    }
+
     try {
       addChild(mode, {
         parentPersonId: partner1.id,
@@ -146,6 +185,8 @@ export default function MarriageScreen() {
         variant="secondary"
         style={styles.addChildBtn}
         onPress={() => {
+          setChildFormMode("create");
+          setLinkChildId("");
           setChLast(partner1.lastName);
           setChildOpen(true);
         }}
@@ -182,19 +223,31 @@ export default function MarriageScreen() {
         submitTestID="member-child-save"
         cancelLabel={copy.reports.cancel}
       >
-        <FormTextInput
-          testID="member-child-first"
-          label="First name"
-          value={chFirst}
-          onChangeText={setChFirst}
-        />
-        <FormTextInput
-          testID="member-child-last"
-          label="Last name"
-          value={chLast}
-          onChangeText={setChLast}
-        />
-        <GenderField value={chGender} onChange={setChGender} />
+        <MemberFormModeToggle mode={childFormMode} onChange={setChildFormMode} />
+        {childFormMode === "link" ? (
+          <ExistingMemberPicker
+            members={localPeople}
+            excludeIds={childExcludeIds}
+            selectedId={linkChildId}
+            onSelect={setLinkChildId}
+          />
+        ) : (
+          <>
+            <FormTextInput
+              testID="member-child-first"
+              label="First name"
+              value={chFirst}
+              onChangeText={setChFirst}
+            />
+            <FormTextInput
+              testID="member-child-last"
+              label="Last name"
+              value={chLast}
+              onChangeText={setChLast}
+            />
+            <GenderField value={chGender} onChange={setChGender} />
+          </>
+        )}
       </FormBottomSheet>
     </Screen>
   );
