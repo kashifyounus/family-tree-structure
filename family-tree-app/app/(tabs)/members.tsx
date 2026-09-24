@@ -20,6 +20,7 @@ import { useStorage } from "@/context/StorageContext";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
 import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import type { Gender, MemberRecord } from "@/lib/data/types";
+import { motion } from "@/theme/motion";
 import { layout, radius, space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
@@ -68,8 +69,19 @@ export default function MembersScreen() {
   );
 
   useEffect(() => {
-    void load("");
-  }, [load, dataRevision, mode]);
+    setQuery("");
+  }, [mode]);
+
+  useEffect(() => {
+    void load(query.trim());
+  }, [dataRevision, load]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      void load(query.trim());
+    }, motion.screenEnter);
+    return () => clearTimeout(handle);
+  }, [query, load]);
 
   const onCreate = async () => {
     const errors: FieldErrors = {
@@ -147,7 +159,7 @@ export default function MembersScreen() {
           value={query}
           placeholder={copy.members.searchPlaceholder}
           onChangeText={setQuery}
-          onSubmit={() => void load(query)}
+          onSubmit={() => void load(query.trim())}
         />
       </View>
 
