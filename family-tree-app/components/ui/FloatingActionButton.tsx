@@ -7,6 +7,8 @@ type FloatingActionButtonProps = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   onPress: () => void;
   testID?: string;
+  accessibilityLabel: string;
+  accessibilityHint?: string;
   style?: ViewStyle;
 };
 
@@ -14,6 +16,8 @@ export function FloatingActionButton({
   icon,
   onPress,
   testID,
+  accessibilityLabel,
+  accessibilityHint,
   style,
 }: FloatingActionButtonProps) {
   const theme = useAppTheme();
@@ -23,6 +27,8 @@ export function FloatingActionButton({
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
       className="h-14 w-14 rounded-full items-center justify-center shadow-md"
       style={[{ backgroundColor: theme.colors.primary }, style]}
     >

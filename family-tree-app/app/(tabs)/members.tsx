@@ -246,6 +246,8 @@ export default function MembersScreen() {
         <FloatingActionButton
           testID="members-add"
           icon="plus"
+          accessibilityLabel={copy.members.addMember}
+          accessibilityHint={copy.members.newMemberTitle}
           style={{ ...styles.fab, bottom: tabBarHeight + layout.fabOffset }}
           onPress={() => setCreateOpen(true)}
         />
