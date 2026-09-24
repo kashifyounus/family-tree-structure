@@ -53,7 +53,16 @@ Outputs under `/opt/cursor/artifacts/android-e2e/`:
 
 ## CI
 
-Use Maestro Cloud or a self-hosted emulator job with the APK artifact. Set `MAESTRO_APP_ID` if you use a different application id.
+| Job | What runs |
+|-----|-----------|
+| **CI / Mobile** (`ci.yml`) | Jest `maestroFlows.test.ts` — flow files, `appId`, smoke tags, and **testID ↔ app** cross-check |
+| **Mobile — Maestro smoke** (`mobile-maestro.yml`) | Builds debug APK, boots API 30 emulator, runs flow `01-onboarding-private-archive.yaml` |
+
+Trigger the emulator job manually via **Actions → Mobile — Maestro smoke → Run workflow**, or on PRs that touch `family-tree-app/`.
+
+Override the flow in automation with `MAESTRO_CI_FLOW` (see `scripts/ci-maestro-smoke.sh`).
+
+Set `MAESTRO_APP_ID` if you use a different application id.
 
 ## Cloud Agent / headless Linux notes
 

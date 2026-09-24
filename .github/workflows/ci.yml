@@ -168,3 +168,7 @@ jobs:
           npm ci
           npx tsc --noEmit
           npm test -- --passWithNoTests
+
+      - name: Maestro flow contracts (static)
+        working-directory: family-tree-app
+        run: npm test -- __tests__/maestroFlows.test.ts
