@@ -33,6 +33,8 @@ export const copy = {
       "You are now working from your private archive on this device. Sign-in to the family cloud is not required.",
     switchToCloudInfo:
       "You are now connected to the shared family registry online.",
+    cloudUrlWhenOnline:
+      "To connect to your family's website, choose Shared online — you can set or change the address anytime in Account.",
     memberCountLabel: (count: number) =>
       `${count} family member${count === 1 ? "" : "s"} in your private archive`,
   },
@@ -43,8 +45,14 @@ export const copy = {
     signOutDevice: "Sign out on this device",
     connectionAddress: "Family website address",
     connectionAddressHelp:
-      "The web address where your family cloud is hosted (provided by your family administrator).",
-    saveConnection: "Save connection",
+      "Enter or change the web address of your family's shared registry at any time. It is saved on this device — you do not need to rebuild the app.",
+    connectionCurrent: (url: string) => `Connected to ${url}`,
+    saveConnection: "Save address",
+    testConnection: "Test connection",
+    connectionSaved: "Family website address saved.",
+    connectionTestOk: "Connection successful — this server is ready.",
+    connectionChangedSignInAgain:
+      "Server address updated. Sign in again with your family cloud account.",
     familyCloudSignIn: "Family cloud sign-in",
     signedIn: "You are signed in",
     signOut: "Sign out",

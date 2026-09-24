@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
@@ -33,6 +33,7 @@ import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { seedLocalDemoFamily } from "@/lib/db/seedLocalDemo";
 import type { StorageMode } from "@/lib/data/types";
+import { normalizeApiBaseUrl, probeMobileApiHealth } from "@/lib/apiUrl";
 
 export default function AccountScreen() {
   const theme = useTheme();
@@ -46,11 +47,48 @@ export default function AccountScreen() {
   const [password, setPassword] = useState(DEFAULT_LOGIN_PASSWORD);
   const [submitting, setSubmitting] = useState(false);
   const [apiDraft, setApiDraft] = useState(storage.apiUrl);
+  const [testingConnection, setTestingConnection] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [pinDraft, setPinDraft] = useState("");
   const [pinConfirmDraft, setPinConfirmDraft] = useState("");
   const [pinFieldError, setPinFieldError] = useState<string | undefined>();
   const [pinConfirmError, setPinConfirmError] = useState<string | undefined>();
+
+  useEffect(() => {
+    setApiDraft(storage.apiUrl);
+  }, [storage.apiUrl]);
+
+  const onSaveConnection = async () => {
+    try {
+      const normalized = normalizeApiBaseUrl(apiDraft);
+      const changed = normalized !== storage.apiUrl;
+      await storage.setApiUrl(apiDraft);
+      if (changed) {
+        storage.bumpDataRevision();
+        if (auth.token) {
+          await auth.signOut();
+          showInfo(copy.account.connectionChangedSignInAgain);
+        } else {
+          showSuccess(copy.account.connectionSaved);
+        }
+      } else {
+        showSuccess(copy.account.connectionSaved);
+      }
+    } catch (e) {
+      showError(e);
+    }
+  };
+
+  const onTestConnection = async () => {
+    setTestingConnection(true);
+    try {
+      const result = await probeMobileApiHealth(apiDraft);
+      if (result.ok) showSuccess(copy.account.connectionTestOk);
+      else showError(new Error(result.message));
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   const onSignIn = async () => {
     if (storage.mode !== "online") {
@@ -256,25 +294,11 @@ export default function AccountScreen() {
               {copy.account.loadSampleFamily}
             </Button>
           )}
-        </Card.Content>
-      </Card>
-
-      <Card mode="elevated" style={styles.card}>
-        <Card.Content style={styles.gap}>
-          <Text variant="titleMedium">{copy.account.connectionAddress}</Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
-            {copy.account.connectionAddressHelp}
-          </Text>
-          <TextInput
-            mode="outlined"
-            label={copy.account.connectionAddress}
-            value={apiDraft}
-            onChangeText={setApiDraft}
-            autoCapitalize="none"
-          />
-          <Button mode="contained-tonal" onPress={() => void storage.setApiUrl(apiDraft)}>
-            {copy.account.saveConnection}
-          </Button>
+          {storage.mode === "local" && (
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+              {copy.storage.cloudUrlWhenOnline}
+            </Text>
+          )}
         </Card.Content>
       </Card>
 
@@ -282,6 +306,40 @@ export default function AccountScreen() {
         <Card mode="elevated" style={styles.card}>
           <Card.Content style={styles.gap}>
             <Text variant="titleMedium">{copy.account.familyCloudSignIn}</Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+              {copy.account.connectionAddressHelp}
+            </Text>
+            <Text variant="labelMedium" style={{ color: theme.colors.primary }}>
+              {copy.account.connectionCurrent(storage.apiUrl)}
+            </Text>
+            <TextInput
+              testID="account-api-url"
+              mode="outlined"
+              label={copy.account.connectionAddress}
+              value={apiDraft}
+              onChangeText={setApiDraft}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+            <View style={styles.rowButtons}>
+              <Button
+                mode="outlined"
+                loading={testingConnection}
+                disabled={testingConnection}
+                onPress={() => void onTestConnection()}
+                style={styles.flexBtn}
+              >
+                {copy.account.testConnection}
+              </Button>
+              <Button
+                mode="contained-tonal"
+                onPress={() => void onSaveConnection()}
+                style={styles.flexBtn}
+              >
+                {copy.account.saveConnection}
+              </Button>
+            </View>
             {auth.token ? (
               <>
                 <Text variant="titleSmall">{copy.account.signedIn}</Text>
@@ -334,4 +392,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  rowButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  flexBtn: { flex: 1 },
 });

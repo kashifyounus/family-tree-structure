@@ -24,7 +24,7 @@ import { space } from "@/theme/tokens";
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { mode, localMemberCount } = useStorage();
+  const { mode, localMemberCount, apiUrl, dataRevision } = useStorage();
   const localAccount = useLocalAccount();
   const [living, setLiving] = useState(0);
   const [query, setQuery] = useState("");
@@ -64,7 +64,7 @@ export default function HomeScreen() {
           .slice(0, 6),
       );
     },
-    [mode],
+    [mode, apiUrl],
   );
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function HomeScreen() {
       .then((list) => setCloudMemberCount(list.length))
       .catch(() => setCloudMemberCount(null))
       .finally(() => setCloudStatsLoading(false));
-  }, [mode, localMemberCount]);
+  }, [mode, localMemberCount, apiUrl, dataRevision]);
 
   const cloudStatsLine = useMemo(() => {
     if (mode !== "online") return null;

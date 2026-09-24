@@ -16,7 +16,7 @@ if [[ -f .env ]]; then
   set +a
 fi
 
-echo "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-<not set — online mode needs this at build time>}"
+echo "EXPO_PUBLIC_API_URL=${EXPO_PUBLIC_API_URL:-<not set — optional dev default; users set URL in Account>}"
 
 npx expo prebuild --platform android --no-install
 
@@ -36,5 +36,5 @@ echo "Copy: $DIST/$OUT_NAME"
 ls -lh "$APK" "$DIST/$OUT_NAME"
 echo ""
 echo "Install: adb install -r \"$DIST/$OUT_NAME\""
-echo "Note: Release build uses debug keystore (fine for sideload). Use EAS or a release keystore for Play Store."
-echo "Set EXPO_PUBLIC_API_URL before building if you use Family cloud / online sync."
+echo "Note: Release build uses debug keystore (fine for sideload). Configure a release keystore for Play Store."
+echo "Online mode: users set or change the family website address in Account (no rebuild required)."
