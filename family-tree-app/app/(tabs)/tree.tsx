@@ -8,10 +8,16 @@ import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { PersonTreeSheet } from "@/components/tree/PersonTreeSheet";
 import { TreeGraphExpandBar } from "@/components/tree/TreeGraphExpandBar";
 import { TreeOverflowMenu } from "@/components/tree/TreeOverflowMenu";
+import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
+import {
+  resolveCloudFocalFamilyCode,
+  resolveLocalFocalFamilyCode,
+  saveCloudFocalFamilyCode,
+} from "@/lib/tree/focalFamilyCode";
 import type { FamilyGraph } from "@/lib/graph/types";
 import type { GraphPersonSummary } from "@/lib/graph/types";
 import { IconButton } from "@/components/ui/IconButton";
@@ -67,11 +73,11 @@ export default function TreeScreen() {
   const { mode, apiUrl, dataRevision, setMode } = useStorage();
   const localAccount = useLocalAccount();
   const params = useLocalSearchParams<{ familyCode?: string }>();
-  const defaultCode =
-    mode === "local" && localAccount.session
-      ? localAccount.session.focalFamilyCode
-      : "FAM-10004";
-  const [loadedCode, setLoadedCode] = useState(params.familyCode ?? defaultCode);
+  const paramCode =
+    typeof params.familyCode === "string" ? params.familyCode.trim() : "";
+  const [loadedCode, setLoadedCode] = useState(
+    paramCode || DEFAULT_FAMILY_CODE,
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [onlineGraph, setOnlineGraph] = useState<FamilyGraph | null>(null);
   const [graphLoading, setGraphLoading] = useState(false);
@@ -121,8 +127,25 @@ export default function TreeScreen() {
   }, [loadOnlineGraph, dataRevision, reloadKey]);
 
   useEffect(() => {
-    if (params.familyCode) setLoadedCode(params.familyCode);
-  }, [params.familyCode]);
+    if (paramCode) {
+      setLoadedCode(paramCode);
+      return;
+    }
+    void (async () => {
+      const focal =
+        mode === "local"
+          ? resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode)
+          : await resolveCloudFocalFamilyCode(localAccount.session?.focalFamilyCode);
+      setLoadedCode(focal);
+    })();
+  }, [paramCode, mode, localAccount.session?.focalFamilyCode]);
+
+  useEffect(() => {
+    if (isLocal) return;
+    const trimmed = loadedCode.trim();
+    if (!trimmed) return;
+    void saveCloudFocalFamilyCode(trimmed);
+  }, [isLocal, loadedCode]);
 
   const onPersonPress = (person: GraphPersonSummary) => {
     setSelectedPerson(person);
@@ -141,13 +164,15 @@ export default function TreeScreen() {
   )?.data;
 
   const centerOnMyMarriage = () => {
-    const code =
-      mode === "local" && localAccount.session
-        ? localAccount.session.focalFamilyCode
-        : defaultCode;
-    setLoadedCode(code);
-    setMenuOpen(false);
-    setReloadKey((k) => k + 1);
+    void (async () => {
+      const code =
+        mode === "local"
+          ? resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode)
+          : await resolveCloudFocalFamilyCode(localAccount.session?.focalFamilyCode);
+      setLoadedCode(code);
+      setMenuOpen(false);
+      setReloadKey((k) => k + 1);
+    })();
   };
 
   return (
@@ -267,9 +292,8 @@ export default function TreeScreen() {
         visible={menuOpen}
         familyCode={loadedCode}
         focalFamilyCode={
-          mode === "local" && localAccount.session
-            ? localAccount.session.focalFamilyCode
-            : undefined
+          localAccount.session?.focalFamilyCode ??
+          (mode === "local" ? loadedCode : undefined)
         }
         onDismiss={() => setMenuOpen(false)}
         onCenterMarriage={centerOnMyMarriage}
