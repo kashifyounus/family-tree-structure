@@ -27,7 +27,7 @@ Keep both shapes aligned when adding fields. After fetching, the app runs `norma
 
 | Wire field | Notes |
 |------------|--------|
-| `household` | Husband/wife household report (used on web reports) |
+| `household` | Husband/wife household report (mobile **Reports** tab + web reports) |
 | `person.photoUrl`, `privacyLevel`, `motherTongue`, `permanentCity` | Available for future profile UI |
 | `children[].relationshipType`, `unionId` | Available for future labels |
 
@@ -38,6 +38,6 @@ Keep both shapes aligned when adding fields. After fetching, the app runs `norma
 - `GET /api/mobile/members` — directory search (`fatherName` / `motherName` from birth union when known)  
 - `POST /api/mobile/members/create` — new person (role-checked server-side)  
 - `GET /api/mobile/graph/[familyCode]` — tree graph JSON  
-- `GET /api/mobile/reports/[familyCode]` — insights  
+- `GET /api/mobile/reports/[familyCode]` — insights (`household` includes wives/children counts; focal wife resolves to husband server-side)  
 
 There are **no** mobile mutation routes for marriages, parents, or profile updates; those remain **local SQLite** or the **web app**.

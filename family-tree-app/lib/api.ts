@@ -139,6 +139,7 @@ export type OnlineReports = {
   city: { currentCity: { label: string; count: number }[] } | null;
   ages: { range: string; count: number }[];
   household: {
+    husbandName?: string;
     wifeCount: number;
     totalChildren: number;
     byWife: { wifeName: string; childrenCount: number }[];

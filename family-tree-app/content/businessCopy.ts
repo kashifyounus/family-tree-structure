@@ -273,6 +273,7 @@ export const copy = {
       `${marriages} marriage${marriages === 1 ? "" : "s"} recorded · ${children} child${children === 1 ? "" : "ren"}`,
     householdLine: (name: string, count: number) =>
       `${name}: ${count} child${count === 1 ? "" : "ren"}`,
+    householdForHusband: (name: string) => `Household for ${name}`,
     noDataCloud:
       "No insights are available yet. Check your family website address, member reference, and sign-in in Account.",
     searchMembers: "Search",

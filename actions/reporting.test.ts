@@ -1,5 +1,8 @@
 import { calculateAge } from "@/lib/age";
-import { buildHusbandFamilyReport } from "@/lib/household";
+import {
+  buildHusbandFamilyReport,
+  husbandSubjectForHouseholdReport,
+} from "@/lib/household";
 import { mockPerson, unionWithChildren } from "@/lib/testFixtures";
 
 describe("reporting and age utilities", () => {
@@ -99,6 +102,16 @@ describe("reporting and age utilities", () => {
         gender: "FEMALE",
       });
       expect(buildHusbandFamilyReport(female, unions)).toBeNull();
+    });
+
+    it("husbandSubjectForHouseholdReport resolves husband when focal is a wife", () => {
+      const wife = wife1;
+      const wifeUnions = unions.filter(
+        (u) => u.partner1Id === wife.id || u.partner2Id === wife.id,
+      );
+      expect(husbandSubjectForHouseholdReport(wife, wifeUnions)?.id).toBe(
+        husband.id,
+      );
     });
   });
 });

@@ -3,7 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import { calculateAge } from "@/lib/age";
 import { getConnectedPersonIds } from "@/lib/familyScope";
-import { buildHusbandFamilyReport } from "@/lib/household";
+import {
+  buildHusbandFamilyReport,
+  husbandSubjectForHouseholdReport,
+} from "@/lib/household";
 import type { UnionRecord } from "@/lib/kinship";
 import { getAuthContext } from "@/lib/auth.server";
 import { maskPersonSummary } from "@/lib/privacy";
@@ -107,10 +110,10 @@ export async function getHusbandFamilyReport(
   personId: string,
 ): Promise<HusbandFamilyReport | null> {
   const viewer = await getAuthContext();
-  const husband = await prisma.person.findUnique({ where: { id: personId } });
-  if (!husband) return null;
+  const focal = await prisma.person.findUnique({ where: { id: personId } });
+  if (!focal) return null;
 
-  const unions = await prisma.union.findMany({
+  const focalUnions = await prisma.union.findMany({
     where: {
       OR: [{ partner1Id: personId }, { partner2Id: personId }],
     },
@@ -122,7 +125,28 @@ export async function getHusbandFamilyReport(
     orderBy: { marriageDate: "asc" },
   });
 
-  const report = buildHusbandFamilyReport(husband, unions);
+  const husbandSubject = husbandSubjectForHouseholdReport(focal, focalUnions);
+  if (!husbandSubject) return null;
+
+  const unions =
+    husbandSubject.id === focal.id
+      ? focalUnions
+      : await prisma.union.findMany({
+          where: {
+            OR: [
+              { partner1Id: husbandSubject.id },
+              { partner2Id: husbandSubject.id },
+            ],
+          },
+          include: {
+            partner1: true,
+            partner2: true,
+            children: { include: { child: true } },
+          },
+          orderBy: { marriageDate: "asc" },
+        });
+
+  const report = buildHusbandFamilyReport(husbandSubject, unions);
   if (!report) return null;
 
   return {

@@ -2,7 +2,7 @@ import type { Person } from "@prisma/client";
 import type { HusbandFamilyReport } from "@/types/family";
 import { formatUrduName, toPersonSummary } from "@/lib/personMapper";
 
-type UnionWithChildren = {
+export type UnionWithChildren = {
   id: string;
   partner1Id: string;
   partner2Id: string;
@@ -14,6 +14,27 @@ type UnionWithChildren = {
     relationshipType: string;
   }[];
 };
+
+/** When the focal person is a wife, use her husband for polygamy household metrics. */
+export function husbandSubjectForHouseholdReport(
+  focal: Person,
+  focalUnions: UnionWithChildren[],
+): Person | null {
+  if (focal.gender === "MALE") return focal;
+  if (focal.gender !== "FEMALE") return null;
+
+  const sorted = [...focalUnions].sort((a, b) => {
+    if (!a.marriageDate) return 1;
+    if (!b.marriageDate) return -1;
+    return a.marriageDate.getTime() - b.marriageDate.getTime();
+  });
+
+  for (const u of sorted) {
+    const partner = u.partner1Id === focal.id ? u.partner2 : u.partner1;
+    if (partner.gender === "MALE") return partner;
+  }
+  return null;
+}
 
 export function buildHusbandFamilyReport(
   husband: Person,
