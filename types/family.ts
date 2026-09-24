@@ -82,6 +82,7 @@ export type ParentLink = {
   partners: PersonSummary[];
 };
 
+/** Server person payload; mobile clients mirror this as `shared/mobilePersonDetails.MobilePersonDetails`. */
 export type PersonDetails = {
   person: PersonSummary;
   unions: UnionSummary[];

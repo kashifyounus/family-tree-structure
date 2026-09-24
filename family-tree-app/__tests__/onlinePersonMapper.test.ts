@@ -1,8 +1,9 @@
-import type { OnlinePersonSummary } from "@/lib/api";
+import type { MobilePersonSummary } from "@/lib/api/mobilePersonDetails";
+import { normalizeMobilePersonDetails } from "@/lib/api/mobilePersonDetails";
 import {
-  computedRelationsFromOnline,
+  computedRelationsFromMobile,
   mapOnlineDetailsToBundle,
-  parentsFromOnlineParentLinks,
+  parentsFromParentLinks,
 } from "@/lib/data/onlinePersonMapper";
 
 function person(
@@ -11,10 +12,11 @@ function person(
   first: string,
   last: string,
   gender: "MALE" | "FEMALE" = "MALE",
-): OnlinePersonSummary {
+): MobilePersonSummary {
   return {
     id,
     familyCode: code,
+    title: null,
     firstName: first,
     lastName: last,
     nickname: null,
@@ -23,11 +25,17 @@ function person(
     gender,
     birthDate: null,
     deathDate: null,
-    currentCity: null,
-    occupation: null,
+    photoUrl: null,
     bio: null,
     isLiving: true,
     age: null,
+    occupation: null,
+    motherTongue: null,
+    privacyLevel: "MEMBERS_ONLY",
+    birthPlace: null,
+    currentCity: null,
+    permanentCity: null,
+    homeTown: null,
   };
 }
 
@@ -35,7 +43,7 @@ describe("onlinePersonMapper", () => {
   it("maps parent links to unique kinship parents", () => {
     const father = person("p1", "FAM-1", "Hassan", "Khan", "MALE");
     const mother = person("p2", "FAM-2", "Ayesha", "Khan", "FEMALE");
-    const parents = parentsFromOnlineParentLinks([
+    const parents = parentsFromParentLinks([
       {
         childshipId: "c1",
         unionId: "u1",
@@ -47,11 +55,11 @@ describe("onlinePersonMapper", () => {
     expect(parents.map((p) => p.id).sort()).toEqual(["p1", "p2"]);
   });
 
-  it("builds a full bundle from online person details", () => {
+  it("builds a full bundle from mobile person details", () => {
     const father = person("p1", "FAM-1", "Hassan", "Khan", "MALE");
     const mother = person("p2", "FAM-2", "Ayesha", "Khan", "FEMALE");
     const focal = person("p3", "FAM-3", "Ali", "Khan", "MALE");
-    const bundle = mapOnlineDetailsToBundle({
+    const details = normalizeMobilePersonDetails({
       person: focal,
       parentLinks: [
         {
@@ -70,7 +78,9 @@ describe("onlinePersonMapper", () => {
         maternalUncles: [],
         maternalAunts: [],
       },
+      household: null,
     });
+    const bundle = mapOnlineDetailsToBundle(details);
     expect(bundle.member.id).toBe("p3");
     expect(bundle.parents).toHaveLength(2);
     expect(bundle.onlineDetails.person.familyCode).toBe("FAM-3");
@@ -83,7 +93,7 @@ describe("onlinePersonMapper", () => {
       side: "paternal" as const,
       degree: "full" as const,
     };
-    const computed = computedRelationsFromOnline({
+    const computed = computedRelationsFromMobile({
       fullSiblings: [],
       halfSiblings: [],
       paternalUncles: [uncle],
@@ -91,7 +101,7 @@ describe("onlinePersonMapper", () => {
       maternalUncles: [],
       maternalAunts: [],
     });
-    expect(computed?.paternalUncles[0]?.id).toBe("u-uncle");
-    expect(computed?.paternalUncles[0]?.kinshipLabel).toBe("Paternal uncle");
+    expect(computed.paternalUncles[0]?.id).toBe("u-uncle");
+    expect(computed.paternalUncles[0]?.kinshipLabel).toBe("Paternal uncle");
   });
 });

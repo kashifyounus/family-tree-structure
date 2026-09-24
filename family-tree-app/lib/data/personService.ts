@@ -3,9 +3,9 @@ import {
   fetchOnlinePersonByCode,
   fetchOnlinePersonById,
   fetchOnlineReports,
-  type OnlinePersonDetails,
   type OnlineReports,
 } from "@/lib/api";
+import type { MobilePersonDetails } from "@/lib/api/mobilePersonDetails";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import {
   computeKinshipForPerson,
@@ -56,7 +56,7 @@ export type PersonBundle = {
   unions: LocalUnionView[];
   parents: KinshipPerson[];
   computed: ComputedRelations | null;
-  onlineDetails?: OnlinePersonDetails;
+  onlineDetails?: MobilePersonDetails;
 };
 
 function enrichLocalBundle(member: MemberRecord): PersonBundle {
@@ -78,7 +78,7 @@ function enrichLocalBundle(member: MemberRecord): PersonBundle {
 }
 
 async function loadOnlinePersonBundle(
-  fetchDetails: () => Promise<OnlinePersonDetails | null>,
+  fetchDetails: () => Promise<MobilePersonDetails | null>,
 ): Promise<PersonBundle | null> {
   const data = await fetchDetails();
   if (!data) return null;

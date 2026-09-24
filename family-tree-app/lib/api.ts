@@ -1,6 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 
+import {
+  type MobilePersonDetails,
+  normalizeMobilePersonDetails,
+} from "@/lib/api/mobilePersonDetails";
 import { normalizeApiBaseUrl } from "@/lib/apiUrl";
 
 const TOKEN_KEY = "mughals_auth_token";
@@ -100,72 +104,17 @@ export async function fetchMembers(query = ""): Promise<DashboardMember[]> {
   return data.members;
 }
 
-export type OnlinePersonSummary = {
-  id: string;
-  familyCode: string;
-  firstName: string;
-  lastName: string;
-  nickname: string | null;
-  urduFirstName: string | null;
-  urduLastName: string | null;
-  gender: "MALE" | "FEMALE" | "OTHER";
-  birthDate: string | null;
-  deathDate: string | null;
-  birthPlace?: string | null;
-  homeTown?: string | null;
-  currentCity: string | null;
-  occupation: string | null;
-  bio: string | null;
-  isLiving: boolean;
-  age: number | null;
-  treeDisplayIsPrivate?: boolean;
-};
-
-export type OnlineParentLink = {
-  childshipId: string;
-  unionId: string;
-  relationshipType: string;
-  partners: OnlinePersonSummary[];
-};
-
-export type OnlineKinshipRelative = OnlinePersonSummary & {
-  kinshipLabel?: string;
-  side?: "paternal" | "maternal" | "neutral";
-  degree?: "full" | "half" | "step" | "unknown";
-};
-
-export type OnlineComputedRelations = {
-  fullSiblings: OnlineKinshipRelative[];
-  halfSiblings: OnlineKinshipRelative[];
-  paternalUncles: OnlineKinshipRelative[];
-  paternalAunts: OnlineKinshipRelative[];
-  maternalUncles: OnlineKinshipRelative[];
-  maternalAunts: OnlineKinshipRelative[];
-};
-
-export type OnlinePersonDetails = {
-  person: OnlinePersonSummary;
-  unions: {
-    id: string;
-    marriageDate?: string | null;
-    divorceDate?: string | null;
-    isActive?: boolean;
-    partner1: OnlinePersonSummary;
-    partner2: OnlinePersonSummary;
-    children: (OnlinePersonSummary & { relationshipType?: string })[];
-  }[];
-  parentLinks?: OnlineParentLink[];
-  computed?: OnlineComputedRelations;
-};
+/** @deprecated Use `MobilePersonDetails` from `@/lib/api/mobilePersonDetails`. */
+export type OnlinePersonDetails = MobilePersonDetails;
 
 export async function fetchOnlinePersonByCode(
   familyCode: string,
-): Promise<OnlinePersonDetails | null> {
+): Promise<MobilePersonDetails | null> {
   try {
-    const data = await apiFetch<{ details: OnlinePersonDetails }>(
+    const data = await apiFetch<{ details: MobilePersonDetails }>(
       `/api/mobile/person/by-code/${encodeURIComponent(familyCode)}`,
     );
-    return data.details;
+    return normalizeMobilePersonDetails(data.details);
   } catch {
     return null;
   }
@@ -173,12 +122,12 @@ export async function fetchOnlinePersonByCode(
 
 export async function fetchOnlinePersonById(
   personId: string,
-): Promise<OnlinePersonDetails | null> {
+): Promise<MobilePersonDetails | null> {
   try {
-    const data = await apiFetch<{ details: OnlinePersonDetails }>(
+    const data = await apiFetch<{ details: MobilePersonDetails }>(
       `/api/mobile/person/${encodeURIComponent(personId)}`,
     );
-    return data.details;
+    return normalizeMobilePersonDetails(data.details);
   } catch {
     return null;
   }

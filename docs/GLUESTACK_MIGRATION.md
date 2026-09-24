@@ -37,3 +37,4 @@ npx gluestack-ui add checkbox radio -y --use-npm
 
 - Jest mocks `@/global.css`; devDependency `@react-native/jest-preset` pinned for jest-expo.
 - Preserve Maestro `testID`s when swapping controls.
+- Mobile HTTP contracts: see `docs/MOBILE_API.md` and `shared/mobilePersonDetails.ts`.
