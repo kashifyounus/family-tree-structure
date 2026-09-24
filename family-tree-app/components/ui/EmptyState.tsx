@@ -1,58 +1,36 @@
-import { StyleSheet, View } from "react-native";
-import { Button, Icon, Text, useTheme } from "react-native-paper";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { View } from "react-native";
 
-import { motion } from "@/theme/motion";
-import { space } from "@/theme/tokens";
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 type EmptyStateProps = {
-  icon?: string;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
   title: string;
-  body?: string;
   actionLabel?: string;
   onAction?: () => void;
 };
 
-export function EmptyState({ icon = "account-search", title, body, actionLabel, onAction }: EmptyStateProps) {
-  const theme = useTheme();
+export function EmptyState({
+  icon = "folder-open-outline",
+  title,
+  actionLabel,
+  onAction,
+}: EmptyStateProps) {
+  const theme = useAppTheme();
 
   return (
-    <Animated.View entering={FadeIn.duration(motion.normal)} style={styles.wrap}>
-      <View style={[styles.iconRing, { backgroundColor: theme.colors.primaryContainer }]}>
-        <Icon source={icon} size={36} color={theme.colors.primary} />
-      </View>
-      <Text variant="titleMedium" style={{ color: theme.colors.onSurface, textAlign: "center" }}>
+    <View className="items-center justify-center py-12 px-6 gap-3">
+      <MaterialCommunityIcons name={icon} size={48} color={theme.colors.onSurfaceVariant} />
+      <AppText variant="bodyMedium" className="text-center text-muted-foreground">
         {title}
-      </Text>
-      {body ? (
-        <Text
-          variant="bodyMedium"
-          style={{ color: theme.colors.onSurfaceVariant, textAlign: "center", marginTop: space.sm }}
-        >
-          {body}
-        </Text>
-      ) : null}
+      </AppText>
       {actionLabel && onAction ? (
-        <Button mode="contained-tonal" onPress={onAction} style={{ marginTop: space.lg }}>
-          {actionLabel}
+        <Button variant="outline" onPress={onAction}>
+          <ButtonText>{actionLabel}</ButtonText>
         </Button>
       ) : null}
-    </Animated.View>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    alignItems: "center",
-    paddingVertical: space.section,
-    paddingHorizontal: space.xl,
-  },
-  iconRing: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: space.lg,
-  },
-});

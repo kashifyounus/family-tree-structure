@@ -1,32 +1,29 @@
-import { Image, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Image, View } from "react-native";
 
+import { AppText } from "@/components/ui/AppText";
 import { APP_NAME } from "@/constants/appMeta";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 type BrandLogoProps = {
   size?: number;
   showTitle?: boolean;
 };
 
-export function BrandLogo({ size = 88, showTitle = true }: BrandLogoProps) {
-  const theme = useTheme();
+export function BrandLogo({ size = 72, showTitle = true }: BrandLogoProps) {
+  const theme = useAppTheme();
+
   return (
-    <View style={styles.wrap} accessibilityRole="image" accessibilityLabel={APP_NAME}>
+    <View className="items-center gap-2">
       <Image
         source={require("@/assets/images/brand-logo.png")}
-        style={{ width: size, height: size, borderRadius: size / 5 }}
-        resizeMode="cover"
+        style={{ width: size, height: size, borderRadius: size / 4 }}
+        resizeMode="contain"
       />
-      {showTitle && (
-        <Text variant="headlineSmall" style={[styles.title, { color: theme.colors.primary }]}>
+      {showTitle ? (
+        <AppText variant="titleMedium" style={{ color: theme.colors.primary }}>
           {APP_NAME}
-        </Text>
-      )}
+        </AppText>
+      ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { alignItems: "center", gap: 12 },
-  title: { fontWeight: "700", textAlign: "center" },
-});

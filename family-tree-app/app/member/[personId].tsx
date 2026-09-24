@@ -1,7 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { AppCard, AppCardContent } from "@/components/ui/AppCard";
+import { Badge, BadgeText } from "@/components/ui/badge";
+import { Button, ButtonText } from "@/components/ui/button";
+import { GenderField } from "@/components/ui/GenderField";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, Card, Chip, RadioButton, Text, useTheme } from "react-native-paper";
 
 import { KinshipSections } from "@/components/KinshipSections";
 import { PersonFacts } from "@/components/PersonFacts";
@@ -36,9 +39,11 @@ import { recordRecentVisit } from "@/lib/recentPeople";
 import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
 import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
 
 export default function MemberDetailScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const router = useRouter();
   const { mode, bumpDataRevision } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
@@ -110,7 +115,7 @@ export default function MemberDetailScreen() {
   if (!bundle) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-        <Text variant="bodyLarge">{copy.profile.notFound}</Text>
+        <AppText variant="bodyLarge">{copy.profile.notFound}</AppText>
       </View>
     );
   }
@@ -288,20 +293,19 @@ export default function MemberDetailScreen() {
         )}
         {relationToMeText && (
           <SectionCard title={copy.profile.relationToMe} delay={70}>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
               {relationToMeText}
-            </Text>
+            </AppText>
           </SectionCard>
         )}
         {!canEditLocal && (
-          <Text variant="bodyMedium" style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
+          <AppText variant="bodyMedium" style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
             {copy.profile.cloudReadOnly}
-          </Text>
+          </AppText>
         )}
 
         <Button
-          mode="contained-tonal"
-          icon="family-tree"
+          variant="secondary"
           onPress={() =>
             router.push({
               pathname: "/(tabs)/tree",
@@ -309,13 +313,13 @@ export default function MemberDetailScreen() {
             })
           }
         >
-          {copy.profile.openInTree}
+          <ButtonText>{copy.profile.openInTree}</ButtonText>
         </Button>
 
         {canEditLocal && (
           <View style={styles.actions}>
             <Button
-              mode="outlined"
+              variant="outline"
               onPress={() => {
                 if (editing) {
                   setFirstName(m.firstName);
@@ -330,24 +334,22 @@ export default function MemberDetailScreen() {
                 setEditing((v) => !v);
               }}
             >
-              {editing ? copy.profile.cancelEdit : copy.profile.editProfile}
+              <ButtonText>{editing ? copy.profile.cancelEdit : copy.profile.editProfile}</ButtonText>
             </Button>
             <Button
               testID="member-add-spouse"
-              mode="contained-tonal"
-              icon="heart"
+              variant="secondary"
               onPress={() => {
-                setSpGender(defaultSpouseGender(m.gender) ?? "");
+                setSpGender(defaultSpouseGender(m.gender) ?? "MALE");
                 setSpLast(m.lastName);
                 setSpouseOpen(true);
               }}
             >
-              {copy.profile.addSpouse}
+              <ButtonText>{copy.profile.addSpouse}</ButtonText>
             </Button>
             <Button
               testID="member-add-child"
-              mode="contained-tonal"
-              icon="baby-carriage"
+              variant="secondary"
               onPress={() => {
                 const marriages = unionOptions(mode, m.id);
                 setChUnionId(marriages[0]?.id ?? "");
@@ -355,17 +357,19 @@ export default function MemberDetailScreen() {
                 setChildOpen(true);
               }}
             >
-              {copy.profile.addChild}
+              <ButtonText>{copy.profile.addChild}</ButtonText>
             </Button>
-            <Button mode="contained-tonal" icon="account-child" onPress={() => setParentsOpen(true)}>
-              {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
+            <Button variant="secondary" onPress={() => setParentsOpen(true)}>
+              <ButtonText>
+                {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
+              </ButtonText>
             </Button>
           </View>
         )}
 
         {editing && (
-          <Card mode="elevated" style={styles.block}>
-            <Card.Content style={styles.gap}>
+          <AppCard style={styles.block}>
+            <AppCardContent style={styles.gap}>
               <FormTextInput
                 label="First name"
                 value={firstName}
@@ -395,20 +399,20 @@ export default function MemberDetailScreen() {
                 multiline
                 numberOfLines={3}
               />
-              <Button mode="contained" onPress={saveEdit}>
-                {copy.profile.saveChanges}
+              <Button onPress={saveEdit}>
+                <ButtonText>{copy.profile.saveChanges}</ButtonText>
               </Button>
-            </Card.Content>
-          </Card>
+            </AppCardContent>
+          </AppCard>
         )}
 
-        <Text variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+        <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
           {copy.profile.marriagesSection}
-        </Text>
+        </AppText>
         {bundle.unions.length === 0 ? (
-          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+          <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
             {copy.profile.noMarriages}
-          </Text>
+          </AppText>
         ) : (
           bundle.unions.map((u, index) => (
             <SectionCard
@@ -419,13 +423,14 @@ export default function MemberDetailScreen() {
                 u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage
               }
             >
-              <Chip compact icon="heart" style={{ alignSelf: "flex-start" }}>
-                {u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage}
-              </Chip>
+              <Badge variant="outline" className="self-start">
+                <BadgeText>
+                  {u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage}
+                </BadgeText>
+              </Badge>
               <Button
-                mode="text"
-                compact
-                icon="ring"
+                variant="ghost"
+                size="sm"
                 onPress={() =>
                   router.push({
                     pathname: "/marriage/[unionId]",
@@ -433,23 +438,22 @@ export default function MemberDetailScreen() {
                   })
                 }
               >
-                View marriage
+                <ButtonText>View marriage</ButtonText>
               </Button>
               {u.children.map((c) => (
                 <Button
                   key={c.id}
-                  mode="text"
-                  compact
-                  icon="account-child"
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start"
                   onPress={() =>
                     router.push({
                       pathname: "/member/[personId]",
                       params: { personId: c.id, code: c.familyCode },
                     })
                   }
-                  labelStyle={{ textAlign: "left" }}
                 >
-                  {c.name} ({c.familyCode})
+                  <ButtonText>{c.name} ({c.familyCode})</ButtonText>
                 </Button>
               ))}
             </SectionCard>
@@ -459,8 +463,7 @@ export default function MemberDetailScreen() {
         <KinshipSections parents={bundle.parents} computed={bundle.computed} />
 
         <Button
-          mode="outlined"
-          icon="family-tree"
+          variant="outline"
           style={styles.treeBtn}
           onPress={() =>
             router.push({
@@ -469,7 +472,7 @@ export default function MemberDetailScreen() {
             })
           }
         >
-          {copy.profile.openInTree}
+          <ButtonText>{copy.profile.openInTree}</ButtonText>
         </Button>
       </Screen>
 
@@ -496,20 +499,16 @@ export default function MemberDetailScreen() {
           onChangeText={setSpLast}
           errorText={fieldErrors.spLast}
         />
-        <Text variant="labelLarge">Gender</Text>
+        <GenderField
+          value={spGender === "" ? "MALE" : spGender}
+          onChange={setSpGender}
+          label="Gender"
+        />
         {fieldErrors.spGender ? (
-          <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+          <AppText variant="bodySmall" style={{ color: theme.colors.error }}>
             {fieldErrors.spGender}
-          </Text>
+          </AppText>
         ) : null}
-        <RadioButton.Group
-          onValueChange={(value) => setSpGender(value as Gender)}
-          value={spGender}
-        >
-          <RadioButton.Item label="Female" value="FEMALE" />
-          <RadioButton.Item label="Male" value="MALE" />
-          <RadioButton.Item label="Other" value="OTHER" />
-        </RadioButton.Group>
       </FormBottomSheet>
 
       <FormBottomSheet
@@ -535,22 +534,14 @@ export default function MemberDetailScreen() {
           onChangeText={setChLast}
           errorText={fieldErrors.chLast}
         />
-        <Text variant="labelLarge">Gender</Text>
-        <RadioButton.Group
-          onValueChange={(value) => setChGender(value as Gender)}
-          value={chGender}
-        >
-          <RadioButton.Item label="Male" value="MALE" />
-          <RadioButton.Item label="Female" value="FEMALE" />
-          <RadioButton.Item label="Other" value="OTHER" />
-        </RadioButton.Group>
+        <GenderField value={chGender} onChange={setChGender} label="Gender" />
         {unionOptions(mode, m.id).map((marriage) => (
           <Button
             key={marriage.id}
-            mode={chUnionId === marriage.id ? "contained" : "outlined"}
+            variant={chUnionId === marriage.id ? "default" : "outline"}
             onPress={() => setChUnionId(marriage.id)}
           >
-            {marriage.label}
+            <ButtonText>{marriage.label}</ButtonText>
           </Button>
         ))}
       </FormBottomSheet>

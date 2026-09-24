@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, List, RadioButton, Text, useTheme } from "react-native-paper";
 
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
@@ -15,9 +14,14 @@ import { useStorage } from "@/context/StorageContext";
 import { addChild, loadMarriage, saveMarriage } from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
 import { space } from "@/theme/tokens";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
+import { GenderField } from "@/components/ui/GenderField";
+import { ListRow } from "@/components/ui/ListRow";
 
 export default function MarriageScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const router = useRouter();
   const { showError, showSuccess } = useAppFeedback();
   const { impactLight } = useAppPreferences();
@@ -34,7 +38,7 @@ export default function MarriageScreen() {
   if (mode !== "local") {
     return (
       <Screen>
-        <Text variant="bodyLarge">{copy.profile.cloudReadOnly}</Text>
+        <AppText variant="bodyLarge">{copy.profile.cloudReadOnly}</AppText>
       </Screen>
     );
   }
@@ -42,7 +46,7 @@ export default function MarriageScreen() {
   if (!marriage || !marriage.partner1 || !marriage.partner2) {
     return (
       <Screen>
-        <Text variant="bodyLarge">{copy.profile.notFound}</Text>
+        <AppText variant="bodyLarge">{copy.profile.notFound}</AppText>
       </Screen>
     );
   }
@@ -98,22 +102,20 @@ export default function MarriageScreen() {
       />
       <View style={styles.row}>
         <Button
-          mode="outlined"
-          icon="account"
+          variant="outline"
           onPress={() =>
             router.push({ pathname: "/member/[personId]", params: { personId: partner1.id } })
           }
         >
-          {partner1.firstName}
+          <ButtonText>{partner1.firstName}</ButtonText>
         </Button>
         <Button
-          mode="outlined"
-          icon="account"
+          variant="outline"
           onPress={() =>
             router.push({ pathname: "/member/[personId]", params: { personId: partner2.id } })
           }
         >
-          {partner2.firstName}
+          <ButtonText>{partner2.firstName}</ButtonText>
         </Button>
       </View>
       <SectionCard title="Marriage dates" delay={40}>
@@ -129,40 +131,38 @@ export default function MarriageScreen() {
           onChangeText={setDivorceDate}
           placeholder="YYYY-MM-DD"
         />
-        <Button mode="contained" icon="content-save" onPress={() => save(false)}>
-          Save marriage
+        <Button onPress={() => save(false)}>
+          <ButtonText>Save marriage</ButtonText>
         </Button>
-        <Button mode="outlined" icon="heart-broken" onPress={() => save(true)}>
-          Mark marriage as ended
+        <Button variant="outline" onPress={() => save(true)}>
+          <ButtonText>Mark marriage as ended</ButtonText>
         </Button>
       </SectionCard>
-      <Text variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+      <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
         Children
-      </Text>
+      </AppText>
       <Button
         testID="marriage-add-child"
-        mode="contained-tonal"
-        icon="baby-carriage"
+        variant="secondary"
         style={styles.addChildBtn}
         onPress={() => {
           setChLast(partner1.lastName);
           setChildOpen(true);
         }}
       >
-        {copy.profile.addChild}
+        <ButtonText>{copy.profile.addChild}</ButtonText>
       </Button>
       {marriage.children.length === 0 ? (
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+        <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
           No children recorded for this marriage.
-        </Text>
+        </AppText>
       ) : (
         marriage.children.map((child) => (
-          <List.Item
+          <ListRow
             key={child.id}
             title={`${child.first_name} ${child.last_name}`}
             description={child.family_code}
-            left={(props) => <List.Icon {...props} icon="account-child" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            leftIcon="account-child"
             onPress={() =>
               router.push({
                 pathname: "/member/[personId]",
@@ -194,15 +194,7 @@ export default function MarriageScreen() {
           value={chLast}
           onChangeText={setChLast}
         />
-        <Text variant="labelLarge">Gender</Text>
-        <RadioButton.Group
-          onValueChange={(value) => setChGender(value as Gender)}
-          value={chGender}
-        >
-          <RadioButton.Item label="Female" value="FEMALE" />
-          <RadioButton.Item label="Male" value="MALE" />
-          <RadioButton.Item label="Other" value="OTHER" />
-        </RadioButton.Group>
+        <GenderField value={chGender} onChange={setChGender} />
       </FormBottomSheet>
     </Screen>
   );

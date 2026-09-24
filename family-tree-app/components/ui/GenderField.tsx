@@ -1,32 +1,37 @@
-import { Text, SegmentedButtons, useTheme } from "react-native-paper";
+import { View } from "react-native";
 
-import { copy } from "@/content/businessCopy";
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
 import type { Gender } from "@/lib/data/types";
-import { space } from "@/theme/tokens";
+
+const OPTIONS: { value: Gender; label: string }[] = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "OTHER", label: "Other" },
+];
 
 type GenderFieldProps = {
   value: Gender;
-  onChange: (value: Gender) => void;
+  onChange: (gender: Gender) => void;
   label?: string;
 };
 
 export function GenderField({ value, onChange, label }: GenderFieldProps) {
-  const theme = useTheme();
-
   return (
-    <>
-      <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.xs }}>
-        {label ?? copy.members.genderLabel}
-      </Text>
-      <SegmentedButtons
-        value={value}
-        onValueChange={(v) => onChange(v as Gender)}
-        buttons={[
-          { value: "MALE", label: copy.gender.MALE },
-          { value: "FEMALE", label: copy.gender.FEMALE },
-          { value: "OTHER", label: copy.gender.OTHER },
-        ]}
-      />
-    </>
+    <View className="gap-2">
+      {label ? <AppText variant="labelLarge">{label}</AppText> : null}
+      <View className="flex-row flex-wrap gap-2">
+        {OPTIONS.map((opt) => (
+          <Button
+            key={opt.value}
+            size="sm"
+            variant={value === opt.value ? "default" : "outline"}
+            onPress={() => onChange(opt.value)}
+          >
+            <ButtonText>{opt.label}</ButtonText>
+          </Button>
+        ))}
+      </View>
+    </View>
   );
 }

@@ -1,11 +1,12 @@
 import { StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
 
+import { AppText } from "@/components/ui/AppText";
 import {
   APP_COMPANY,
   APP_CREDIT_SUBTITLE,
   APP_VERSION_LABEL,
 } from "@/constants/appMeta";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 type CreditFooterProps = {
   showVersion?: boolean;
@@ -13,23 +14,26 @@ type CreditFooterProps = {
 };
 
 export function CreditFooter({ showVersion = true, inverted = false }: CreditFooterProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const primaryColor = inverted ? "rgba(255,255,255,0.95)" : theme.colors.onSurfaceVariant;
   const secondaryColor = inverted ? "rgba(255,255,255,0.8)" : theme.colors.onSurfaceVariant;
 
   return (
     <View style={styles.wrap}>
       {showVersion ? (
-        <Text variant="labelSmall" style={{ color: secondaryColor, textAlign: "center" }}>
+        <AppText variant="labelSmall" style={{ color: secondaryColor, textAlign: "center" }}>
           Version {APP_VERSION_LABEL}
-        </Text>
+        </AppText>
       ) : null}
-      <Text variant="titleSmall" style={{ color: primaryColor, textAlign: "center", fontWeight: "600" }}>
+      <AppText
+        variant="titleSmall"
+        style={{ color: primaryColor, textAlign: "center", fontWeight: "600" }}
+      >
         {APP_COMPANY}
-      </Text>
-      <Text variant="labelMedium" style={{ color: secondaryColor, textAlign: "center" }}>
+      </AppText>
+      <AppText variant="labelMedium" style={{ color: secondaryColor, textAlign: "center" }}>
         {APP_CREDIT_SUBTITLE}
-      </Text>
+      </AppText>
     </View>
   );
 }

@@ -5,6 +5,7 @@ type MembersSearchFieldProps = {
   placeholder: string;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
+  testID?: string;
 };
 
 export function MembersSearchField({
@@ -12,11 +13,12 @@ export function MembersSearchField({
   placeholder,
   onChangeText,
   onSubmit,
+  testID = "members-search",
 }: MembersSearchFieldProps) {
   return (
     <Input className="w-full bg-muted/30">
       <InputField
-        testID="members-search"
+        testID={testID}
         value={value}
         placeholder={placeholder}
         onChangeText={onChangeText}

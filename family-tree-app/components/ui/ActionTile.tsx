@@ -1,54 +1,36 @@
-import type { ReactNode } from "react";
-import { StyleSheet } from "react-native";
-import { Button, useTheme } from "react-native-paper";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Pressable, View } from "react-native";
 
-import { motion } from "@/theme/motion";
-import { radius, space } from "@/theme/tokens";
+import { AppText } from "@/components/ui/AppText";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 type ActionTileProps = {
-  icon: string;
-  children: ReactNode;
-  mode?: "contained" | "outlined" | "contained-tonal";
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  title: string;
+  subtitle?: string;
   onPress?: () => void;
   testID?: string;
-  delay?: number;
 };
 
-export function ActionTile({
-  icon,
-  children,
-  mode = "outlined",
-  onPress,
-  testID,
-  delay = 0,
-}: ActionTileProps) {
-  const theme = useTheme();
+export function ActionTile({ icon, title, subtitle, onPress, testID }: ActionTileProps) {
+  const theme = useAppTheme();
 
   return (
-    <Animated.View entering={FadeInUp.delay(delay).duration(motion.normal)}>
-      <Button
-        testID={testID}
-        mode={mode}
-        icon={icon}
-        onPress={onPress}
-        contentStyle={styles.content}
-        style={[
-          styles.button,
-          mode === "contained" && { backgroundColor: theme.colors.primary },
-        ]}
-      >
-        {children}
-      </Button>
-    </Animated.View>
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      className="flex-row items-center gap-3 p-4 rounded-2xl border border-border bg-card"
+    >
+      <View className="h-10 w-10 rounded-full items-center justify-center bg-primary/10">
+        <MaterialCommunityIcons name={icon} size={22} color={theme.colors.primary} />
+      </View>
+      <View className="flex-1 min-w-0">
+        <AppText variant="titleSmall">{title}</AppText>
+        {subtitle ? (
+          <AppText variant="bodySmall" className="text-muted-foreground">{subtitle}</AppText>
+        ) : null}
+      </View>
+      <MaterialCommunityIcons name="chevron-right" size={22} color={theme.colors.onSurfaceVariant} />
+    </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: radius.md,
-  },
-  content: {
-    paddingVertical: space.sm,
-  },
-});

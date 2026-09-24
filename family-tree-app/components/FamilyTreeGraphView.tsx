@@ -10,13 +10,14 @@ import {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
 import Svg, { Line } from "react-native-svg";
-import { Text, useTheme } from "react-native-paper";
 
 import { copy } from "@/content/businessCopy";
 import { formatGraphPersonName } from "@/lib/format/displayName";
 import type { FamilyGraph, GraphPersonSummary } from "@/lib/graph/types";
 import { clampGraphScale } from "@/lib/graph/graphScale";
 import { buildPedigreeConnectorSegments } from "../../shared/pedigreeConnectors";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
 
 const NODE_W = 148;
 const NODE_H = 80;
@@ -43,7 +44,7 @@ export function FamilyTreeGraphView({
   zoomScale: controlledScale,
   onZoomChange,
 }: FamilyTreeGraphViewProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { width: screenW } = useWindowDimensions();
   const [internalScale, setInternalScale] = useState(1);
   const scale = controlledScale ?? internalScale;
@@ -196,21 +197,21 @@ export function FamilyTreeGraphView({
                       size={18}
                       color={theme.colors.primary}
                     />
-                    <Text
+                    <AppText
                       variant="labelLarge"
                       numberOfLines={2}
                       style={{ color: theme.colors.onSurface, flex: 1 }}
                     >
                       {isPrivate ? copy.tree.privatePerson : formatGraphPersonName(p)}
-                    </Text>
+                    </AppText>
                   </View>
                   {!isPrivate && (
-                    <Text
+                    <AppText
                       variant="labelSmall"
                       style={{ color: theme.colors.onSurfaceVariant, marginTop: 2 }}
                     >
                       {p.familyCode}
-                    </Text>
+                    </AppText>
                   )}
                 </Pressable>
               );

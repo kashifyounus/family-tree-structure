@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { AppCard, AppCardContent } from "@/components/ui/AppCard";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { StyleSheet, View } from "react-native";
-import {
-  ActivityIndicator,
-  Button,
-  Card,
-  Text,
-  useTheme,
-} from "react-native-paper";
 
 import { SimpleBarChart } from "@/components/SimpleBarChart";
 import { FormTextInput } from "@/components/ui/FormTextInput";
@@ -20,9 +16,11 @@ import { loadReports } from "@/lib/data/personService";
 import { buildLocalReports } from "@/lib/db/localReports";
 import type { LocalReports } from "@/lib/data/types";
 import type { OnlineReports } from "@/lib/api";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
 
 export default function ReportsScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { mode } = useStorage();
   const { showError } = useAppFeedback();
   const [code, setCode] = useState(DEFAULT_FAMILY_CODE);
@@ -72,48 +70,47 @@ export default function ReportsScreen() {
           />
           <Button
             testID="reports-refresh"
-            mode="contained"
             onPress={() => void load()}
             style={styles.refreshBtn}
           >
-            {copy.reports.loadInsights}
+            <ButtonText>{copy.reports.loadInsights}</ButtonText>
           </Button>
         </View>
       )}
 
       {loading ? (
-        <ActivityIndicator style={styles.loader} />
+        <Spinner size="large" style={styles.loader} />
       ) : mode === "local" && local ? (
         <View style={styles.section}>
-          <Card mode="elevated" style={styles.statCard}>
-            <Card.Content>
-              <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
+          <AppCard style={styles.statCard}>
+            <AppCardContent>
+              <AppText variant="titleMedium" style={{ color: theme.colors.onSurface }}>
                 {copy.reports.membersLiving(local.memberCount, local.livingCount)}
-              </Text>
-            </Card.Content>
-          </Card>
+              </AppText>
+            </AppCardContent>
+          </AppCard>
           <SimpleBarChart title={copy.reports.chartCity} data={local.cities} />
           <SimpleBarChart title={copy.reports.chartAge} data={local.ages} />
         </View>
       ) : online ? (
         <View style={styles.section}>
           {online.household && (
-            <Card mode="elevated" style={styles.card}>
-              <Card.Content style={styles.cardGap}>
-                <Text variant="titleMedium">{copy.reports.householdTitle}</Text>
-                <Text variant="bodyMedium">
+            <AppCard style={styles.card}>
+              <AppCardContent style={styles.cardGap}>
+                <AppText variant="titleMedium">{copy.reports.householdTitle}</AppText>
+                <AppText variant="bodyMedium">
                   {copy.reports.householdSummary(
                     online.household.wifeCount,
                     online.household.totalChildren,
                   )}
-                </Text>
+                </AppText>
                 {online.household.byWife.map((w) => (
-                  <Text key={w.wifeName} variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                  <AppText key={w.wifeName} variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                     {copy.reports.householdLine(w.wifeName, w.childrenCount)}
-                  </Text>
+                  </AppText>
                 ))}
-              </Card.Content>
-            </Card>
+              </AppCardContent>
+            </AppCard>
           )}
           {online.city && (
             <SimpleBarChart
@@ -130,9 +127,9 @@ export default function ReportsScreen() {
           />
         </View>
       ) : (
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+        <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
           {copy.reports.noDataCloud}
-        </Text>
+        </AppText>
       )}
     </Screen>
   );

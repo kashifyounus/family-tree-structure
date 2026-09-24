@@ -2,11 +2,12 @@ import {
   cacheDirectory,
   writeAsStringAsync,
 } from "expo-file-system/legacy";
+import { AppCard, AppCardContent } from "@/components/ui/AppCard";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import * as Sharing from "expo-sharing";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
-import { Button, Card, Text, useTheme } from "react-native-paper";
 
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -21,9 +22,11 @@ import {
 } from "@/lib/db/localRepository.ext";
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
 import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
 
 export default function ToolsScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { mode, bumpDataRevision, localMemberCount } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
   const { compareA } = useLocalSearchParams<{ compareA?: string }>();
@@ -157,35 +160,29 @@ export default function ToolsScreen() {
 
       {mode === "local" ? (
         <>
-          <Card mode="elevated" style={styles.card}>
-            <Card.Content style={styles.cardInner}>
-              <Text variant="titleMedium">{copy.tools.driveTitle}</Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.driveBody}</Text>
+          <AppCard style={styles.card}>
+            <AppCardContent style={styles.cardInner}>
+              <AppText variant="titleMedium">{copy.tools.driveTitle}</AppText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.driveBody}</AppText>
               <Button
                 testID="tools-drive-backup"
-                mode="contained"
-                icon="google-drive"
-                loading={driveBusy}
+                disabled={driveBusy}
                 onPress={backupToDrive}
               >
-                {copy.tools.driveButton}
+                {driveBusy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.tools.driveButton}</ButtonText>
               </Button>
-            </Card.Content>
-          </Card>
+            </AppCardContent>
+          </AppCard>
 
-          <Card mode="elevated" style={styles.card}>
-            <Card.Content style={styles.cardInner}>
-              <Text variant="titleMedium">{copy.tools.fileBackupTitle}</Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+          <AppCard style={styles.card}>
+            <AppCardContent style={styles.cardInner}>
+              <AppText variant="titleMedium">{copy.tools.fileBackupTitle}</AppText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.tools.fileBackupBody(localMemberCount)}
-              </Text>
-              <Button
-                testID="tools-export-file"
-                mode="contained"
-                icon="export"
-                onPress={exportDb}
-              >
-                {copy.tools.exportFile}
+              </AppText>
+              <Button testID="tools-export-file" onPress={exportDb}>
+                <ButtonText>{copy.tools.exportFile}</ButtonText>
               </Button>
               <FormTextInput
                 multiline
@@ -194,28 +191,28 @@ export default function ToolsScreen() {
                 value={importText}
                 onChangeText={setImportText}
               />
-              <Button mode="outlined" onPress={importDb}>
-                {copy.tools.importFile}
+              <Button variant="outline" onPress={importDb}>
+                <ButtonText>{copy.tools.importFile}</ButtonText>
               </Button>
-            </Card.Content>
-          </Card>
+            </AppCardContent>
+          </AppCard>
 
-          <Card mode="elevated" style={styles.card}>
-            <Card.Content style={styles.cardInner}>
-              <Text variant="titleMedium">{copy.tools.compareTitle}</Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+          <AppCard style={styles.card}>
+            <AppCardContent style={styles.cardInner}>
+              <AppText variant="titleMedium">{copy.tools.compareTitle}</AppText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.tools.compareHint}
-              </Text>
+              </AppText>
               <FormTextInput label="Person A" value={personA} onChangeText={setPersonA} />
               <FormTextInput label="Person B" value={personB} onChangeText={setPersonB} />
-              <Button mode="outlined" onPress={relationHint}>
-                {copy.tools.compareButton}
+              <Button variant="outline" onPress={relationHint}>
+                <ButtonText>{copy.tools.compareButton}</ButtonText>
               </Button>
-            </Card.Content>
-          </Card>
+            </AppCardContent>
+          </AppCard>
         </>
       ) : (
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.cloudOnly}</Text>
+        <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.cloudOnly}</AppText>
       )}
     </Screen>
   );

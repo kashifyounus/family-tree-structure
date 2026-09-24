@@ -4,7 +4,7 @@ React Native **Expo SDK 57** app by **Kuriosity Engineering** (`family-tree-app`
 
 ## UI (React Native Paper)
 
-Material Design 3 with a heritage palette (`theme/paperTheme.ts`), layout tokens (`theme/tokens.ts`), and motion timings (`theme/motion.ts`).
+Gluestack UI + NativeWind with a heritage palette (`theme/appTheme.ts`), layout tokens (`theme/tokens.ts`), and motion timings (`theme/motion.ts`).
 
 ## Features
 

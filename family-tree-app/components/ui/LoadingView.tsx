@@ -1,32 +1,17 @@
-import { StyleSheet, View } from "react-native";
-import { ActivityIndicator, Text, useTheme } from "react-native-paper";
+import { View } from "react-native";
 
-import { space } from "@/theme/tokens";
+import { AppText } from "@/components/ui/AppText";
+import { Spinner } from "@/components/ui/spinner";
 
 type LoadingViewProps = {
   message?: string;
 };
 
 export function LoadingView({ message }: LoadingViewProps) {
-  const theme = useTheme();
-
   return (
-    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
-      <ActivityIndicator size="large" />
-      {message ? (
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.md }}>
-          {message}
-        </Text>
-      ) : null}
+    <View className="flex-1 items-center justify-center gap-3 p-6">
+      <Spinner size="large" />
+      {message ? <AppText variant="bodyMedium">{message}</AppText> : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: space.xl,
-  },
-});

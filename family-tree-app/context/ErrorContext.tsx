@@ -7,10 +7,12 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { StyleSheet } from "react-native";
-import { Snackbar, Text, useTheme, type MD3Theme } from "react-native-paper";
+import { Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { semantic } from "@/theme/paperTheme";
+import { AppText } from "@/components/ui/AppText";
+import { semantic } from "@/theme/appTheme";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 import type { AppError } from "@/lib/errors/AppError";
 import { reportError, setErrorReporter } from "@/lib/errors/reportError";
@@ -25,16 +27,13 @@ const ErrorContext = createContext<ErrorContextValue | null>(null);
 
 type SnackKind = "error" | "success" | "info";
 
-function snackColors(
-  kind: SnackKind,
-  theme: MD3Theme,
-): { background: string; text: string; action: string } {
+function snackStyle(kind: SnackKind, colors: ReturnType<typeof useAppTheme>["colors"]) {
   switch (kind) {
     case "error":
       return {
-        background: theme.colors.errorContainer,
-        text: theme.colors.onErrorContainer,
-        action: theme.colors.error,
+        background: colors.errorContainer,
+        text: colors.onErrorContainer,
+        action: colors.error,
       };
     case "success":
       return {
@@ -44,9 +43,9 @@ function snackColors(
       };
     case "info":
       return {
-        background: theme.colors.inverseSurface,
-        text: theme.colors.inverseOnSurface,
-        action: theme.colors.inversePrimary,
+        background: colors.inverseSurface,
+        text: colors.inverseOnSurface,
+        action: colors.inversePrimary,
       };
     default: {
       const _exhaustive: never = kind;
@@ -55,7 +54,7 @@ function snackColors(
   }
 }
 
-function FeedbackSnackbar({
+function FeedbackToast({
   visible,
   message,
   kind,
@@ -66,33 +65,29 @@ function FeedbackSnackbar({
   kind: SnackKind;
   onDismiss: () => void;
 }) {
-  const theme = useTheme();
-  const colors = snackColors(kind, theme);
+  const theme = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const colors = snackStyle(kind, theme.colors);
+
+  if (!visible) return null;
 
   return (
-    <Snackbar
-      visible={visible}
-      onDismiss={onDismiss}
-      duration={kind === "error" ? 6000 : 3500}
-      action={{
-        label: "Dismiss",
-        onPress: onDismiss,
-        textColor: colors.action,
+    <View
+      className="absolute left-3 right-3 rounded-xl px-4 py-3 flex-row items-center gap-3 shadow-lg"
+      style={{
+        bottom: Math.max(insets.bottom, 12) + 8,
+        backgroundColor: colors.background,
       }}
-      style={[styles.snackbar, { backgroundColor: colors.background }]}
     >
-      <Text variant="bodyMedium" style={{ color: colors.text }}>
+      <AppText variant="bodyMedium" className="flex-1" style={{ color: colors.text }}>
         {message}
-      </Text>
-    </Snackbar>
+      </AppText>
+      <Pressable onPress={onDismiss} accessibilityRole="button">
+        <AppText variant="labelLarge" style={{ color: colors.action }}>Dismiss</AppText>
+      </Pressable>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  snackbar: {
-    marginBottom: 8,
-  },
-});
 
 export function ErrorProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
@@ -124,6 +119,13 @@ export function ErrorProvider({ children }: { children: ReactNode }) {
     return () => setErrorReporter(null);
   }, [present]);
 
+  useEffect(() => {
+    if (!visible) return;
+    const duration = kind === "error" ? 6000 : 3500;
+    const timer = setTimeout(() => setVisible(false), duration);
+    return () => clearTimeout(timer);
+  }, [visible, kind, message]);
+
   const value = useMemo(
     () => ({ showError, showSuccess, showInfo }),
     [showError, showSuccess, showInfo],
@@ -132,7 +134,7 @@ export function ErrorProvider({ children }: { children: ReactNode }) {
   return (
     <ErrorContext.Provider value={value}>
       {children}
-      <FeedbackSnackbar
+      <FeedbackToast
         visible={visible}
         message={message}
         kind={kind}

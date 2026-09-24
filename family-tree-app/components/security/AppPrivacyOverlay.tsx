@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { AppState, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
 
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { copy } from "@/content/businessCopy";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
 
 /** Hides tree content in the app switcher when a PIN is enabled. */
 export function AppPrivacyOverlay() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const prefs = useAppPreferences();
   const [hidden, setHidden] = useState(false);
 
@@ -29,9 +30,9 @@ export function AppPrivacyOverlay() {
       pointerEvents="none"
       style={[styles.overlay, { backgroundColor: theme.colors.background }]}
     >
-      <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+      <AppText variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant }}>
         {copy.security.privacyShield}
-      </Text>
+      </AppText>
     </View>
   );
 }

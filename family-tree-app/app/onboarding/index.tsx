@@ -2,19 +2,12 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  Button,
-  Card,
-  HelperText,
-  ProgressBar,
-  Text,
-  useTheme,
-} from "react-native-paper";
 import Animated, { SlideInRight, SlideOutLeft } from "react-native-reanimated";
 
 import { copy } from "@/content/businessCopy";
 import { BrandLogo } from "@/components/BrandLogo";
-import { AppCard } from "@/components/ui/AppCard";
+import { AppCard, AppCardContent } from "@/components/ui/AppCard";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button as GsButton, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { GenderField } from "@/components/ui/GenderField";
@@ -26,13 +19,15 @@ import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_LOGIN_EMAIL, DEFAULT_LOGIN_PASSWORD } from "@/context/AuthContext";
 import { setupDemoArchive } from "@/lib/localAccount/demoSetup";
 import type { Gender } from "@/lib/data/types";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
 
 type Step = "start" | "local" | "online";
 
 const STEPS: Step[] = ["start", "local", "online"];
 
 export default function OnboardingScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const router = useRouter();
   const storage = useStorage();
   const localAccount = useLocalAccount();
@@ -151,40 +146,42 @@ export default function OnboardingScreen() {
       >
         {step === "start" && (
           <AppCard>
-            <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">{copy.onboarding.welcomeTitle}</Text>
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            <AppCardContent style={styles.cardContent}>
+              <AppText variant="titleLarge">{copy.onboarding.welcomeTitle}</AppText>
+              <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.chooseStorageBody}
-              </Text>
-              <Button
+              </AppText>
+              <GsButton
                 testID="onboarding-get-started"
-                mode="contained"
                 onPress={() => void startPrivate()}
+                className="w-full"
               >
-                {copy.onboarding.privateChoice}
-              </Button>
-              <Button mode="outlined" onPress={() => void startCloud()}>
-                {copy.onboarding.cloudChoice}
-              </Button>
-              <Button
+                <ButtonText>{copy.onboarding.privateChoice}</ButtonText>
+              </GsButton>
+              <GsButton variant="outline" onPress={() => void startCloud()} className="w-full">
+                <ButtonText>{copy.onboarding.cloudChoice}</ButtonText>
+              </GsButton>
+              <GsButton
                 testID="onboarding-load-demo"
-                mode="text"
-                loading={busy}
+                variant="ghost"
+                disabled={busy}
                 onPress={() => void onLoadDemo()}
+                className="w-full"
               >
-                {copy.onboarding.loadDemoFamily}
-              </Button>
-            </Card.Content>
+                {busy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.onboarding.loadDemoFamily}</ButtonText>
+              </GsButton>
+            </AppCardContent>
           </AppCard>
         )}
 
         {step === "local" && (
           <AppCard>
-            <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">{copy.onboarding.registerTitle}</Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            <AppCardContent style={styles.cardContent}>
+              <AppText variant="titleLarge">{copy.onboarding.registerTitle}</AppText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.registerBody}
-              </Text>
+              </AppText>
               <FormTextInput
                 testID="onboarding-display-name"
                 label={copy.onboarding.displayName}
@@ -235,17 +232,17 @@ export default function OnboardingScreen() {
               <GsButton variant="ghost" onPress={() => go("start")} className="w-full">
                 <ButtonText>Back</ButtonText>
               </GsButton>
-            </Card.Content>
+            </AppCardContent>
           </AppCard>
         )}
 
         {step === "online" && (
           <AppCard>
-            <Card.Content style={styles.cardContent}>
-              <Text variant="titleLarge">{copy.onboarding.cloudTitle}</Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            <AppCardContent style={styles.cardContent}>
+              <AppText variant="titleLarge">{copy.onboarding.cloudTitle}</AppText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.cloudBody}
-              </Text>
+              </AppText>
               <FormTextInput
                 testID="onboarding-api-url"
                 label={copy.account.connectionAddress}
@@ -254,7 +251,9 @@ export default function OnboardingScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              <HelperText type="info">https://your-family-site.com</HelperText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                https://your-family-site.com
+              </AppText>
               <FormTextInput
                 label="Email"
                 value={serverEmail}
@@ -282,7 +281,7 @@ export default function OnboardingScreen() {
               <GsButton variant="ghost" onPress={() => go("start")} className="w-full">
                 <ButtonText>Back</ButtonText>
               </GsButton>
-            </Card.Content>
+            </AppCardContent>
           </AppCard>
         )}
       </Animated.View>

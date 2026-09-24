@@ -7,11 +7,11 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { useAppPreferences } from "@/context/AppPreferencesContext";
+import { useAppTheme } from "@/theme/useAppTheme";
 import { layout } from "@/theme/tokens";
 import { motion } from "@/theme/motion";
 
@@ -20,11 +20,9 @@ type ScreenProps = {
   scroll?: boolean;
   padded?: boolean;
   keyboardAvoiding?: boolean;
-  /** Entrance animation (disable on heavy lists / tab remounts). */
   animated?: boolean;
   style?: ViewStyle;
   testID?: string;
-  /** Extra bottom padding (e.g. above tab bar + FAB). */
   bottomInset?: number;
 };
 
@@ -38,7 +36,7 @@ export function Screen({
   bottomInset = 0,
   animated = true,
 }: ScreenProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const prefs = useAppPreferences();
   const textScale = prefs.textScale === "large" ? 1.12 : 1;
   const insets = useSafeAreaInsets();

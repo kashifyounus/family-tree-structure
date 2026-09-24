@@ -1,13 +1,13 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
-import { useTheme } from "react-native-paper";
 
 import { APP_NAME } from "@/constants/appMeta";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 export default function TabLayout() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const { impactLight } = useAppPreferences();
 
   return (

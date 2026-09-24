@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Checkbox, Text, useTheme } from "react-native-paper";
+import { Pressable, View } from "react-native";
 
+import { AppText } from "@/components/ui/AppText";
+import { Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from "@/components/ui/checkbox";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { copy } from "@/content/businessCopy";
@@ -25,7 +26,6 @@ export function CoupleParentPickerSheet({
   onDismiss,
   onSelectCouple,
 }: CoupleParentPickerSheetProps) {
-  const theme = useTheme();
   const [query, setQuery] = useState("");
   const [livingOnly, setLivingOnly] = useState(false);
   const [activeOnly, setActiveOnly] = useState(true);
@@ -49,76 +49,57 @@ export function CoupleParentPickerSheet({
       cancelLabel={copy.reports.cancel}
     >
       {replacingExisting ? (
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+        <AppText variant="bodySmall" className="text-muted-foreground">
           {copy.profile.confirmReplaceParents}
-        </Text>
+        </AppText>
       ) : null}
       <FormTextInput label="Search couples" value={query} onChangeText={setQuery} />
-      <View style={styles.filters}>
-        <Pressable onPress={() => setActiveOnly((v) => !v)} style={styles.filterRow}>
-          <Checkbox status={activeOnly ? "checked" : "unchecked"} />
-          <Text variant="labelMedium">Active marriages</Text>
+      <View className="flex-row flex-wrap gap-2">
+        <Pressable onPress={() => setActiveOnly((v) => !v)} className="flex-row items-center gap-1">
+          <Checkbox isChecked={activeOnly} onChange={setActiveOnly} value="active">
+            <CheckboxIndicator>
+              <CheckboxIcon />
+            </CheckboxIndicator>
+            <CheckboxLabel>Active marriages</CheckboxLabel>
+          </Checkbox>
         </Pressable>
-        <Pressable onPress={() => setLivingOnly((v) => !v)} style={styles.filterRow}>
-          <Checkbox status={livingOnly ? "checked" : "unchecked"} />
-          <Text variant="labelMedium">Living parents only</Text>
+        <Pressable onPress={() => setLivingOnly((v) => !v)} className="flex-row items-center gap-1">
+          <Checkbox isChecked={livingOnly} onChange={setLivingOnly} value="living">
+            <CheckboxIndicator>
+              <CheckboxIcon />
+            </CheckboxIndicator>
+            <CheckboxLabel>Living parents only</CheckboxLabel>
+          </Checkbox>
         </Pressable>
       </View>
-      <View style={[styles.tableHead, { borderColor: theme.colors.outlineVariant }]}>
-        <Text variant="labelSmall" style={styles.colParents}>Parents</Text>
-        <Text variant="labelSmall" style={styles.colCodes}>Codes</Text>
-        <Text variant="labelSmall" style={styles.colKids}>Kids</Text>
+      <View className="flex-row border-b border-border py-1 mt-1">
+        <AppText variant="labelSmall" className="flex-[1.4]">Parents</AppText>
+        <AppText variant="labelSmall" className="flex-1">Codes</AppText>
+        <AppText variant="labelSmall" className="w-7 text-right">Kids</AppText>
       </View>
       {filtered.map((row) => (
         <Pressable
           key={row.unionId}
           onPress={() => onSelectCouple(row)}
-          style={({ pressed }) => [
-            styles.row,
-            {
-              borderColor: theme.colors.outlineVariant,
-              backgroundColor: pressed ? theme.colors.surfaceVariant : theme.colors.surface,
-            },
-          ]}
+          className="flex-row items-center py-1.5 border-b border-border min-h-8 active:bg-muted"
         >
-          <Text variant="bodySmall" numberOfLines={1} style={styles.colParents}>
+          <AppText variant="bodySmall" numberOfLines={1} className="flex-[1.4] pr-1">
             {formatCoupleLabel(row)}
-          </Text>
-          <Text variant="labelSmall" numberOfLines={1} style={[styles.colCodes, { color: theme.colors.onSurfaceVariant }]}>
+          </AppText>
+          <AppText variant="labelSmall" numberOfLines={1} className="flex-1 text-muted-foreground">
             {row.partner1Code} · {row.partner2Code}
-          </Text>
-          <Text variant="labelSmall" style={styles.colKids}>{row.childCount}</Text>
+          </AppText>
+          <AppText variant="labelSmall" className="w-7 text-right">{row.childCount}</AppText>
         </Pressable>
       ))}
       {filtered.length === 0 ? (
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+        <AppText variant="bodySmall" className="text-muted-foreground">
           No matching couples. Try another search or add a marriage first.
-        </Text>
+        </AppText>
       ) : null}
-      <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
+      <AppText variant="labelSmall" className="text-muted-foreground mt-1">
         Tap a row to link this person as their child.
-      </Text>
+      </AppText>
     </FormBottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  filters: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  filterRow: { flexDirection: "row", alignItems: "center" },
-  tableHead: {
-    flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 4,
-    marginTop: 4,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    minHeight: 32,
-  },
-  colParents: { flex: 1.4, paddingRight: 6 },
-  colCodes: { flex: 1, paddingRight: 6 },
-  colKids: { width: 28, textAlign: "right" },
-});

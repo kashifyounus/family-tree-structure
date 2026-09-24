@@ -1,7 +1,9 @@
 import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { Button, Card, Text, useTheme } from "react-native-paper";
 
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { ComputedRelations, KinshipPerson, KinshipRelative } from "@/lib/kinship/types";
 
 type KinshipSectionsProps = {
@@ -16,28 +18,26 @@ function RelativeList({
   title: string;
   items: KinshipRelative[];
 }) {
-  const theme = useTheme();
   const router = useRouter();
   if (items.length === 0) return null;
   return (
     <View style={styles.block}>
-      <Text variant="titleSmall" style={{ color: theme.colors.onBackground }}>
-        {title}
-      </Text>
+      <AppText variant="titleSmall">{title}</AppText>
       {items.map((r) => (
         <Button
           key={r.id}
-          mode="text"
-          compact
+          variant="ghost"
+          className="justify-start"
           onPress={() =>
             router.push({
               pathname: "/member/[personId]",
               params: { personId: r.id, code: r.familyCode },
             })
           }
-          labelStyle={{ textAlign: "left" }}
         >
-          {r.kinshipLabel}: {r.firstName} {r.lastName} ({r.familyCode})
+          <ButtonText className="text-left">
+            {r.kinshipLabel}: {r.firstName} {r.lastName} ({r.familyCode})
+          </ButtonText>
         </Button>
       ))}
     </View>
@@ -45,34 +45,31 @@ function RelativeList({
 }
 
 export function KinshipSections({ parents, computed }: KinshipSectionsProps) {
-  const theme = useTheme();
   const router = useRouter();
 
   return (
     <View style={styles.wrap}>
-      <Text variant="titleMedium" style={{ color: theme.colors.onBackground }}>
-        Parents
-      </Text>
+      <AppText variant="titleMedium">Parents</AppText>
       {parents.length === 0 ? (
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+        <AppText variant="bodyMedium" className="text-muted-foreground">
           No parents recorded yet.
-        </Text>
+        </AppText>
       ) : (
         parents.map((p) => (
-          <Card key={p.id} mode="outlined" style={styles.parentCard}>
-            <Card.Content>
-              <Button
-                mode="text"
-                onPress={() =>
-                  router.push({
-                    pathname: "/member/[personId]",
-                    params: { personId: p.id, code: p.familyCode },
-                  })
-                }
-              >
+          <Card key={p.id} className="p-3 border border-border">
+            <Button
+              variant="ghost"
+              onPress={() =>
+                router.push({
+                  pathname: "/member/[personId]",
+                  params: { personId: p.id, code: p.familyCode },
+                })
+              }
+            >
+              <ButtonText>
                 {p.firstName} {p.lastName} ({p.familyCode})
-              </Button>
-            </Card.Content>
+              </ButtonText>
+            </Button>
           </Card>
         ))
       )}
@@ -94,5 +91,4 @@ export function KinshipSections({ parents, computed }: KinshipSectionsProps) {
 const styles = StyleSheet.create({
   wrap: { gap: 8, marginTop: 16 },
   block: { marginTop: 8 },
-  parentCard: { borderRadius: 12 },
 });

@@ -1,7 +1,8 @@
 import { StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { AppText } from "@/components/ui/AppText";
+import { useAppTheme } from "@/theme/useAppTheme";
 import { motion } from "@/theme/motion";
 import { space } from "@/theme/tokens";
 
@@ -12,25 +13,20 @@ type PageHeaderProps = {
 };
 
 export function PageHeader({ title, subtitle, meta }: PageHeaderProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   return (
     <Animated.View entering={FadeInDown.duration(motion.normal)} style={styles.wrap}>
-      <Text variant="headlineSmall" style={{ color: theme.colors.onBackground }}>
-        {title}
-      </Text>
+      <AppText variant="headlineSmall">{title}</AppText>
       {meta ? (
-        <Text variant="labelLarge" style={{ color: theme.colors.primary, marginTop: space.xs }}>
+        <AppText variant="labelLarge" style={{ color: theme.colors.primary, marginTop: space.xs }}>
           {meta}
-        </Text>
+        </AppText>
       ) : null}
       {subtitle ? (
-        <Text
-          variant="bodyMedium"
-          style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm, lineHeight: 22 }}
-        >
+        <AppText variant="bodyMedium" className="mt-2 leading-6 text-muted-foreground">
           {subtitle}
-        </Text>
+        </AppText>
       ) : null}
     </Animated.View>
   );

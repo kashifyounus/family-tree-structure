@@ -4,7 +4,7 @@
 
 ## Phase A — complete
 
-- CLI init, `global.css`, Metro + Babel, `GluestackThemeProvider` beside Paper
+- CLI init, `global.css`, Metro + Babel, `GluestackThemeProvider`
 - `components/ui/button` sample on Account
 
 ## Phase B — complete
@@ -13,11 +13,18 @@
 |------|--------|
 | **Sheets** | `FormBottomSheet` → Gluestack **Actionsheet** (+ backdrop, drag indicator, scroll) |
 | **Fields** | `FormTextInput` → Gluestack **Input** / **InputField** (all call sites) |
-| **Members** | `MembersSearchField` replaces Paper `Searchbar` |
+| **Members** | `MembersSearchField` replaces legacy search bar |
 | **Onboarding** | Register / cloud steps use Gluestack **Button** for primary actions |
 | **Components** | `npx gluestack-ui add actionsheet input` |
 
 Sheets still exposed as `FormBottomSheet` / `AppDialogForm` so screens did not need renames.
+
+## Phase C — complete
+
+- Removed **react-native-paper**; app root uses `GluestackThemeProvider` only
+- Theme: `theme/appTheme.ts` + `useAppTheme()` (replaces Paper `useTheme`)
+- Primitives: `AppText`, `AppCard`, `InfoBanner`, `SegmentedControl`, `FloatingActionButton`, `ListRow`, `ProgressBar`, Gluestack **Badge**, **Switch**, **Spinner**, **Divider**
+- All tab screens, member/marriage flows, onboarding, tools, reports, tree, and security lock screen migrated
 
 ### Add more components
 
@@ -25,11 +32,6 @@ Sheets still exposed as `FormBottomSheet` / `AppDialogForm` so screens did not n
 cd family-tree-app
 npx gluestack-ui add checkbox radio -y --use-npm
 ```
-
-## Phase C (next)
-
-- `GenderField`, lists (`MemberCard`), tabs chrome → Gluestack
-- Remove `react-native-paper` when coverage is complete
 
 ## Notes
 

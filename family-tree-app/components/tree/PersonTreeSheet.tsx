@@ -1,10 +1,11 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, RadioButton, Text, useTheme } from "react-native-paper";
-
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
+import { GenderField } from "@/components/ui/GenderField";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
@@ -34,7 +35,6 @@ export function PersonTreeSheet({
   onCenterTree,
   onFamilyChanged,
 }: PersonTreeSheetProps) {
-  const theme = useTheme();
   const router = useRouter();
   const { mode, bumpDataRevision } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
@@ -139,14 +139,12 @@ export function PersonTreeSheet({
         hideActions
         cancelLabel={copy.reports.cancel}
       >
-        <Text variant="bodySmall" style={{ color: theme.colors.primary }}>
+        <AppText variant="bodySmall" className="text-primary">
           {person.familyCode}
-        </Text>
+        </AppText>
         <View style={styles.actions}>
           {!isPrivate && (
             <Button
-              mode="contained"
-              icon="account"
               onPress={() => {
                 onDismiss();
                 router.push({
@@ -155,28 +153,26 @@ export function PersonTreeSheet({
                 });
               }}
             >
-              {copy.tree.sheetProfile}
+              <ButtonText>{copy.tree.sheetProfile}</ButtonText>
             </Button>
           )}
           {canAddLocal && (
             <Button
               testID="tree-sheet-add-spouse"
-              mode="contained-tonal"
-              icon="heart"
+              variant="secondary"
               onPress={() => {
                 setSpGender(defaultSpouseGender(person.gender) ?? "");
                 setSpLast(person.lastName);
                 setSpouseOpen(true);
               }}
             >
-              {copy.profile.addSpouse}
+              <ButtonText>{copy.profile.addSpouse}</ButtonText>
             </Button>
           )}
           {canAddLocal && (
             <Button
               testID="tree-sheet-add-child"
-              mode="contained-tonal"
-              icon="baby-carriage"
+              variant="secondary"
               onPress={() => {
                 const marriages = unionOptions(mode, person.id);
                 setChUnionId(marriages[0]?.id ?? "");
@@ -184,12 +180,12 @@ export function PersonTreeSheet({
                 setChildOpen(true);
               }}
             >
-              {copy.profile.addChild}
+              <ButtonText>{copy.profile.addChild}</ButtonText>
             </Button>
           )}
           {!isPrivate && (
-            <Button mode="outlined" icon="target" onPress={onCenterTree}>
-              {copy.tree.sheetCenter}
+            <Button variant="outline" onPress={onCenterTree}>
+              <ButtonText>{copy.tree.sheetCenter}</ButtonText>
             </Button>
           )}
         </View>
@@ -218,20 +214,22 @@ export function PersonTreeSheet({
           onChangeText={setSpLast}
           errorText={fieldErrors.spLast}
         />
-        <Text variant="labelLarge">Gender</Text>
         {fieldErrors.spGender ? (
-          <Text variant="bodySmall" style={{ color: theme.colors.error }}>
-            {fieldErrors.spGender}
-          </Text>
+          <AppText variant="bodySmall" className="text-destructive">{fieldErrors.spGender}</AppText>
         ) : null}
-        <RadioButton.Group
-          onValueChange={(value) => setSpGender(value as Gender)}
-          value={spGender}
-        >
-          <RadioButton.Item label="Female" value="FEMALE" />
-          <RadioButton.Item label="Male" value="MALE" />
-          <RadioButton.Item label="Other" value="OTHER" />
-        </RadioButton.Group>
+        {spGender ? (
+          <GenderField
+            value={spGender}
+            onChange={(g) => setSpGender(g)}
+            label="Gender"
+          />
+        ) : (
+          <GenderField
+            value="MALE"
+            onChange={(g) => setSpGender(g)}
+            label="Gender"
+          />
+        )}
       </FormBottomSheet>
 
       <FormBottomSheet
@@ -257,15 +255,7 @@ export function PersonTreeSheet({
           onChangeText={setChLast}
           errorText={fieldErrors.chLast}
         />
-        <Text variant="labelLarge">Gender</Text>
-        <RadioButton.Group
-          onValueChange={(value) => setChGender(value as Gender)}
-          value={chGender}
-        >
-          <RadioButton.Item label="Female" value="FEMALE" />
-          <RadioButton.Item label="Male" value="MALE" />
-          <RadioButton.Item label="Other" value="OTHER" />
-        </RadioButton.Group>
+        <GenderField value={chGender} onChange={setChGender} label="Gender" />
       </FormBottomSheet>
     </>
   );

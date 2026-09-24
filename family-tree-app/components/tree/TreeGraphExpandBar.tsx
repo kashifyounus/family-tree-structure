@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
-import { Button } from "react-native-paper";
 
+import { Button, ButtonText } from "@/components/ui/button";
 import { copy } from "@/content/businessCopy";
 
 type TreeGraphExpandBarProps = {
@@ -22,14 +22,14 @@ export function TreeGraphExpandBar({
 }: TreeGraphExpandBarProps) {
   return (
     <View style={styles.row}>
-      <Button compact mode="outlined" disabled={!canLoadParents} onPress={onLoadParents}>
-        {copy.tree.loadParents}
+      <Button size="sm" variant="outline" disabled={!canLoadParents} onPress={onLoadParents}>
+        <ButtonText>{copy.tree.loadParents}</ButtonText>
       </Button>
-      <Button compact mode="outlined" disabled={!canLoadSiblings} onPress={onLoadSiblings}>
-        {copy.tree.loadSiblings}
+      <Button size="sm" variant="outline" disabled={!canLoadSiblings} onPress={onLoadSiblings}>
+        <ButtonText>{copy.tree.loadSiblings}</ButtonText>
       </Button>
-      <Button compact mode="outlined" disabled={!canLoadChildren} onPress={onLoadChildren}>
-        {copy.tree.loadChildren}
+      <Button size="sm" variant="outline" disabled={!canLoadChildren} onPress={onLoadChildren}>
+        <ButtonText>{copy.tree.loadChildren}</ButtonText>
       </Button>
     </View>
   );

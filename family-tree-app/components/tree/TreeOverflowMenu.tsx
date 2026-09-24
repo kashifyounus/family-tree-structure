@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
-import { Button, Divider, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { View } from "react-native";
 
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
+import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { copy } from "@/content/businessCopy";
-import { space } from "@/theme/tokens";
 
 type TreeOverflowMenuProps = {
   visible: boolean;
@@ -26,92 +27,62 @@ export function TreeOverflowMenu({
   listLayout,
   onToggleListLayout,
 }: TreeOverflowMenuProps) {
-  const theme = useTheme();
   const router = useRouter();
 
   return (
-    <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={[
-          styles.sheet,
-          { backgroundColor: theme.colors.surface },
-        ]}
-      >
-        <Text variant="titleMedium">{copy.tree.menuTitle}</Text>
-        <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-          {familyCode}
-        </Text>
-        <Divider style={styles.divider} />
-        <View style={styles.actions}>
-          <Button icon="heart" mode="outlined" onPress={onCenterMarriage}>
-            {copy.tree.menuCenterMarriage}
+    <FormBottomSheet
+      visible={visible}
+      title={copy.tree.menuTitle}
+      onDismiss={onDismiss}
+      hideActions
+      cancelLabel={copy.reports.cancel}
+    >
+      <AppText variant="bodySmall" className="text-muted-foreground">{familyCode}</AppText>
+      <View className="gap-2 mt-2">
+        <Button variant="outline" onPress={onCenterMarriage}>
+          <ButtonText>{copy.tree.menuCenterMarriage}</ButtonText>
+        </Button>
+        <Button variant="outline" onPress={onReload}>
+          <ButtonText>{copy.tree.menuReload}</ButtonText>
+        </Button>
+        {onToggleListLayout ? (
+          <Button testID="tree-menu-list-toggle" variant="outline" onPress={onToggleListLayout}>
+            <ButtonText>{listLayout ? copy.tree.menuShowGraph : copy.tree.menuShowList}</ButtonText>
           </Button>
-          <Button icon="refresh" mode="outlined" onPress={onReload}>
-            {copy.tree.menuReload}
-          </Button>
-          {onToggleListLayout ? (
-            <Button
-              testID="tree-menu-list-toggle"
-              icon={listLayout ? "graph" : "format-list-bulleted"}
-              mode="outlined"
-              onPress={onToggleListLayout}
-            >
-              {listLayout ? copy.tree.menuShowGraph : copy.tree.menuShowList}
-            </Button>
-          ) : null}
-          <Button
-            testID="tree-menu-kinship"
-            icon="account-switch"
-            mode="outlined"
-            onPress={() => {
-              onDismiss();
-              router.push({
-                pathname: "/(tabs)/tools",
-                params: focalFamilyCode
-                  ? { compareA: focalFamilyCode }
-                  : undefined,
-              });
-            }}
-          >
-            {copy.tree.menuKinship}
-          </Button>
-          <Button
-            icon="chart-bar"
-            mode="outlined"
-            onPress={() => {
-              onDismiss();
-              router.push("/(tabs)/reports");
-            }}
-          >
-            {copy.home.insights}
-          </Button>
-          <Button
-            testID="tree-menu-more-tools"
-            icon="toolbox"
-            mode="contained-tonal"
-            onPress={() => {
-              onDismiss();
-              router.push("/(tabs)/tools");
-            }}
-          >
-            {copy.tree.menuMoreTools}
-          </Button>
-          <Button onPress={onDismiss}>{copy.reports.cancel}</Button>
-        </View>
-      </Modal>
-    </Portal>
+        ) : null}
+        <Button
+          testID="tree-menu-kinship"
+          variant="outline"
+          onPress={() => {
+            onDismiss();
+            router.push({
+              pathname: "/(tabs)/tools",
+              params: focalFamilyCode ? { compareA: focalFamilyCode } : undefined,
+            });
+          }}
+        >
+          <ButtonText>{copy.tree.menuKinship}</ButtonText>
+        </Button>
+        <Button
+          variant="outline"
+          onPress={() => {
+            onDismiss();
+            router.push("/(tabs)/reports");
+          }}
+        >
+          <ButtonText>{copy.home.insights}</ButtonText>
+        </Button>
+        <Button
+          testID="tree-menu-more-tools"
+          variant="secondary"
+          onPress={() => {
+            onDismiss();
+            router.push("/(tabs)/tools");
+          }}
+        >
+          <ButtonText>{copy.tree.menuMoreTools}</ButtonText>
+        </Button>
+      </View>
+    </FormBottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  sheet: {
-    marginHorizontal: space.lg,
-    marginBottom: space.xl,
-    padding: space.lg,
-    borderRadius: 16,
-  },
-  divider: { marginVertical: space.md },
-  actions: { gap: space.sm },
-});

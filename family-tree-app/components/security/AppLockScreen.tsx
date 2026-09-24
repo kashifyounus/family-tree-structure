@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Button, Text, useTheme } from "react-native-paper";
 
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { copy } from "@/content/businessCopy";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useAppFeedback } from "@/context/ErrorContext";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 
 type AppLockScreenProps = {
   onUnlocked: () => void;
 };
 
 export function AppLockScreen({ onUnlocked }: AppLockScreenProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const prefs = useAppPreferences();
   const { showError } = useAppFeedback();
   const [pin, setPin] = useState("");
@@ -69,12 +71,12 @@ export function AppLockScreen({ onUnlocked }: AppLockScreenProps) {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
-      <Text variant="headlineSmall" style={{ color: theme.colors.onSurface }}>
+      <AppText variant="headlineSmall" style={{ color: theme.colors.onSurface }}>
         {copy.security.unlockTitle}
-      </Text>
-      <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 8 }}>
+      </AppText>
+      <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: 8 }}>
         {copy.security.unlockBody}
-      </Text>
+      </AppText>
       <FormTextInput
         label={copy.security.pinLabel}
         value={pin}
@@ -88,12 +90,13 @@ export function AppLockScreen({ onUnlocked }: AppLockScreenProps) {
         maxLength={6}
         style={{ marginTop: 24 }}
       />
-      <Button mode="contained" loading={busy} onPress={() => void submit()} style={{ marginTop: 16 }}>
-        {copy.security.unlockButton}
+      <Button disabled={busy} onPress={() => void submit()} style={{ marginTop: 16 }}>
+        {busy ? <ButtonSpinner /> : null}
+        <ButtonText>{copy.security.unlockButton}</ButtonText>
       </Button>
       {prefs.biometricUnlockEnabled ? (
-        <Button mode="outlined" onPress={() => void tryBiometric()} style={{ marginTop: 12 }}>
-          {copy.security.biometricUnlock}
+        <Button variant="outline" onPress={() => void tryBiometric()} style={{ marginTop: 12 }}>
+          <ButtonText>{copy.security.biometricUnlock}</ButtonText>
         </Button>
       ) : null}
     </View>

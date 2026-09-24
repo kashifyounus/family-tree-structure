@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Text, useTheme } from "react-native-paper";
 
 import { GraphWebView } from "@/components/tree/GraphWebView";
 import { copy } from "@/content/businessCopy";
@@ -17,6 +16,9 @@ import {
   getLocalUnionsForPerson,
 } from "@/lib/db/localRepository";
 import type { GraphPersonSummary } from "@/lib/graph/types";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
 
 type LocalFamilyTreeProps = {
   familyCode: string;
@@ -35,7 +37,7 @@ export function LocalFamilyTree({
   zoomScale,
   onZoomChange,
 }: LocalFamilyTreeProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const router = useRouter();
   const view = layout;
   const [gensUp, setGensUp] = useState(2);
@@ -92,9 +94,9 @@ export function LocalFamilyTree({
   if (!focal) {
     return (
       <View style={styles.empty}>
-        <Text style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}>
+        <AppText style={{ color: theme.colors.onSurfaceVariant, textAlign: "center" }}>
           {copy.tree.notFound}
-        </Text>
+        </AppText>
       </View>
     );
   }
@@ -104,28 +106,28 @@ export function LocalFamilyTree({
       {view === "graph" && (
         <View style={styles.expandRow}>
           <Button
-            compact
-            mode="outlined"
+            size="sm"
+            variant="outline"
             disabled={!more.parents}
             onPress={() => setGensUp((g) => g + 1)}
           >
-            {copy.tree.loadParents}
+            <ButtonText>{copy.tree.loadParents}</ButtonText>
           </Button>
           <Button
-            compact
-            mode="outlined"
+            size="sm"
+            variant="outline"
             disabled={!more.siblings}
             onPress={() => setSiblingSteps((s) => s + 1)}
           >
-            {copy.tree.loadSiblings}
+            <ButtonText>{copy.tree.loadSiblings}</ButtonText>
           </Button>
           <Button
-            compact
-            mode="outlined"
+            size="sm"
+            variant="outline"
             disabled={!more.children}
             onPress={() => setGensDown((g) => g + 1)}
           >
-            {copy.tree.loadChildren}
+            <ButtonText>{copy.tree.loadChildren}</ButtonText>
           </Button>
         </View>
       )}
@@ -156,29 +158,29 @@ export function LocalFamilyTree({
               })
             }
           >
-            <Text variant="titleLarge" style={{ color: theme.colors.onSurface }}>
+            <AppText variant="titleLarge" style={{ color: theme.colors.onSurface }}>
               {focal.firstName} {focal.lastName}
-            </Text>
-            <Text variant="labelMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
+            </AppText>
+            <AppText variant="labelMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
               {focal.familyCode}
-            </Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
+            </AppText>
+            <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
               {formatGender(focal.gender)}
               {focal.birthDate ? ` · ${focal.birthDate}` : ""}
               {focal.currentCity ? ` · ${focal.currentCity}` : ""}
-            </Text>
-            <Text variant="labelSmall" style={{ color: theme.colors.primary, marginTop: 8 }}>
+            </AppText>
+            <AppText variant="labelSmall" style={{ color: theme.colors.primary, marginTop: 8 }}>
               {copy.tree.tapProfile}
-            </Text>
+            </AppText>
           </Pressable>
 
-          <Text variant="titleSmall" style={{ color: theme.colors.onBackground, marginTop: 16 }}>
+          <AppText variant="titleSmall" style={{ color: theme.colors.onBackground, marginTop: 16 }}>
             {copy.tree.marriagesSection}
-          </Text>
+          </AppText>
           {marriages.length === 0 ? (
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
               {copy.tree.noMarriages}
-            </Text>
+            </AppText>
           ) : (
             marriages.map((m) => (
               <View
@@ -191,16 +193,16 @@ export function LocalFamilyTree({
                   },
                 ]}
               >
-                <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>
+                <AppText variant="titleSmall" style={{ color: theme.colors.onSurface }}>
                   {m.isActive ? copy.profile.currentMarriage : copy.profile.previousMarriage}
-                </Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurface, marginTop: 4 }}>
+                </AppText>
+                <AppText variant="bodyMedium" style={{ color: theme.colors.onSurface, marginTop: 4 }}>
                   {copy.tree.marriageTo(m.partner1Name, m.partner2Name)}
-                </Text>
+                </AppText>
                 {m.children.length === 0 ? (
-                  <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                  <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                     {copy.tree.noChildrenInMarriage}
-                  </Text>
+                  </AppText>
                 ) : (
                   m.children.map((c) => (
                     <Pressable
@@ -212,23 +214,23 @@ export function LocalFamilyTree({
                         })
                       }
                     >
-                      <Text variant="bodyMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
+                      <AppText variant="bodyMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
                         · {copy.tree.childLine(c.name, c.familyCode)}
-                      </Text>
+                      </AppText>
                     </Pressable>
                   ))
                 )}
               </View>
             ))
           )}
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 16 }}>
+          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 16 }}>
             {copy.tree.privateFooter}
-          </Text>
+          </AppText>
         </ScrollView>
       )}
       {!immersive && (
-        <Button mode="text" onPress={resetExpansion}>
-          {copy.tree.menuReload}
+        <Button variant="ghost" onPress={resetExpansion}>
+          <ButtonText>{copy.tree.menuReload}</ButtonText>
         </Button>
       )}
     </View>

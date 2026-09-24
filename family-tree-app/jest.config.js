@@ -12,6 +12,6 @@ module.exports = {
     ),
   },
   transformIgnorePatterns: [
-    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-apps/.*|react-navigation|@react-navigation/.*|react-native-paper|react-native-vector-icons|@react-native-google-signin/.*)",
+    "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-apps/.*|react-navigation|@react-navigation/.*|react-native-vector-icons|@react-native-google-signin/.*)",
   ],
 };

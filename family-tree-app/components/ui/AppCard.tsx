@@ -1,22 +1,33 @@
-import { Card } from "react-native-paper";
-import Animated, { FadeInUp } from "react-native-reanimated";
-import type { StyleProp, ViewStyle } from "react-native";
 import type { ReactNode } from "react";
+import { View, type ViewStyle } from "react-native";
 
-import { motion } from "@/theme/motion";
-import { radius } from "@/theme/tokens";
+import { Card } from "@/components/ui/card";
 
 type AppCardProps = {
   children: ReactNode;
-  delay?: number;
-  style?: StyleProp<ViewStyle>;
-  mode?: "elevated" | "outlined" | "contained";
+  className?: string;
+  style?: ViewStyle;
 };
 
-export function AppCard({ delay = 0, style, children, mode = "elevated" }: AppCardProps) {
+export function AppCard({ children, className, style }: AppCardProps) {
   return (
-    <Animated.View entering={FadeInUp.delay(delay).duration(motion.normal)}>
-      <Card mode={mode} style={[{ borderRadius: radius.lg }, style]}>{children}</Card>
-    </Animated.View>
+    <Card className={`border border-border mb-4 ${className ?? ""}`} style={style}>
+      {children}
+    </Card>
   );
 }
+
+export function AppCardContent({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: ViewStyle;
+}) {
+  return <View className="p-4 gap-3" style={style}>{children}</View>;
+}
+
+/** @deprecated use AppCard + children — shim for migrated screens */
+export const PaperCardShim = {
+  Content: AppCardContent,
+};

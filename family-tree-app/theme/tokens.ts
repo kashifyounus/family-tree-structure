@@ -1,4 +1,4 @@
-/** Layout and shape tokens — keep in sync with `paperTheme.roundness`. */
+/** Layout and shape tokens — keep in sync with `appTheme` roundness. */
 export const radius = {
   sm: 8,
   md: 12,

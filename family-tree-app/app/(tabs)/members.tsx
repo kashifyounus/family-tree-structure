@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Banner, FAB, Text, useTheme } from "react-native-paper";
 
 import { MemberCard } from "@/components/members/MemberCard";
 import { MembersSearchField } from "@/components/members/MembersSearchField";
@@ -22,9 +21,13 @@ import { createMember, listMembers, removeMember } from "@/lib/data/memberReposi
 import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import type { Gender, MemberRecord } from "@/lib/data/types";
 import { layout, radius, space } from "@/theme/tokens";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
+import { InfoBanner } from "@/components/ui/InfoBanner";
 
 export default function MembersScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 56 + insets.bottom;
   const router = useRouter();
@@ -137,9 +140,9 @@ export default function MembersScreen() {
   return (
     <Screen testID="members-screen" scroll={false} padded={false} animated={false}>
       <View style={styles.header}>
-        <Banner visible icon="information" style={styles.banner}>
+        <InfoBanner icon="information">
           {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
-        </Banner>
+        </InfoBanner>
         <MembersSearchField
           value={query}
           placeholder={copy.members.searchPlaceholder}
@@ -149,9 +152,9 @@ export default function MembersScreen() {
       </View>
 
       {error ? (
-        <Text variant="bodyMedium" style={{ color: theme.colors.error, padding: space.lg }}>
+        <AppText variant="bodyMedium" style={{ color: theme.colors.error, padding: space.lg }}>
           {error}
-        </Text>
+        </AppText>
       ) : (
         <FlatList
           testID="members-list"
@@ -228,12 +231,11 @@ export default function MembersScreen() {
       </AppDialogForm>
 
       {canCreate && !createOpen && (
-        <FAB
+        <FloatingActionButton
           testID="members-add"
           icon="plus"
-          style={[styles.fab, { bottom: tabBarHeight + layout.fabOffset }]}
+          style={{ ...styles.fab, bottom: tabBarHeight + layout.fabOffset }}
           onPress={() => setCreateOpen(true)}
-          label={copy.members.addMember}
         />
       )}
     </Screen>

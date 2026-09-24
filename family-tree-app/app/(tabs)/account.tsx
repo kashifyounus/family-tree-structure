@@ -1,19 +1,13 @@
 import { useRouter } from "expo-router";
+import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  ActivityIndicator,
-  Button,
-  Card,
-  Divider,
-  SegmentedButtons,
-  Switch,
-  Text,
-  TextInput,
-  useTheme,
-} from "react-native-paper";
 
-import { Button as GsButton, ButtonText } from "@/components/ui/button";
+import { Button as GsButton, ButtonSpinner, ButtonText } from "@/components/ui/button";
+import { Divider } from "@/components/ui/divider";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 
 import { AppDialogForm } from "@/components/ui/AppDialogForm";
 import { FormTextInput } from "@/components/ui/FormTextInput";
@@ -37,9 +31,11 @@ import {
 } from "@/lib/db/comprehensiveSeed";
 import type { StorageMode } from "@/lib/data/types";
 import { normalizeApiBaseUrl, probeMobileApiHealth } from "@/lib/apiUrl";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
 
 export default function AccountScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const router = useRouter();
   const prefs = useAppPreferences();
   const auth = useAuth();
@@ -119,88 +115,88 @@ export default function AccountScreen() {
   if (!storage.ready || auth.loading || localAccount.loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <Spinner size="large" />
       </View>
     );
   }
 
   return (
     <Screen testID="account-screen">
-      <Text variant="titleMedium" style={{ marginBottom: 12 }}>
+      <AppText variant="titleMedium" style={{ marginBottom: 12 }}>
         {APP_NAME}
-      </Text>
+      </AppText>
       <CreditFooter />
 
       {storage.mode === "local" && localAccount.session && (
-        <Card mode="elevated" style={styles.card}>
-          <Card.Content style={styles.gap}>
-            <Text variant="titleMedium">{copy.account.householdProfile}</Text>
-            <Text variant="bodyLarge">{localAccount.session.displayName}</Text>
-            <Text variant="bodySmall">{localAccount.session.email}</Text>
-            <Text variant="labelSmall">
+        <AppCard style={styles.card}>
+          <AppCardContent style={styles.gap}>
+            <AppText variant="titleMedium">{copy.account.householdProfile}</AppText>
+            <AppText variant="bodyLarge">{localAccount.session.displayName}</AppText>
+            <AppText variant="bodySmall">{localAccount.session.email}</AppText>
+            <AppText variant="labelSmall">
               {copy.account.memberReference}: {localAccount.session.focalFamilyCode}
-            </Text>
-            <Button mode="outlined" onPress={() => void localAccount.signOut()}>
-              {copy.account.signOutDevice}
-            </Button>
-          </Card.Content>
-        </Card>
+            </AppText>
+            <GsButton variant="outline" onPress={() => void localAccount.signOut()}>
+              <ButtonText>{copy.account.signOutDevice}</ButtonText>
+            </GsButton>
+          </AppCardContent>
+        </AppCard>
       )}
 
-      <Card mode="elevated" style={styles.card}>
-        <Card.Content style={styles.gap}>
-          <Text variant="titleMedium">{copy.account.appearanceTitle}</Text>
-          <SegmentedButtons
+      <AppCard style={styles.card}>
+        <AppCardContent style={styles.gap}>
+          <AppText variant="titleMedium">{copy.account.appearanceTitle}</AppText>
+          <SegmentedControl
             value={prefs.theme}
-            onValueChange={(v) => void prefs.setTheme(v as "light" | "dark")}
-            buttons={[
-              { value: "light", label: copy.account.themeLight, icon: "white-balance-sunny" },
-              { value: "dark", label: copy.account.themeDark, icon: "moon-waning-crescent" },
+            onChange={(v) => void prefs.setTheme(v)}
+            options={[
+              { value: "light", label: copy.account.themeLight },
+              { value: "dark", label: copy.account.themeDark },
             ]}
           />
-          <Text variant="titleSmall">{copy.account.textSizeTitle}</Text>
-          <SegmentedButtons
+          <AppText variant="titleSmall">{copy.account.textSizeTitle}</AppText>
+          <SegmentedControl
             value={prefs.textScale}
-            onValueChange={(v) => void prefs.setTextScale(v as "normal" | "large")}
-            buttons={[
+            onChange={(v) => void prefs.setTextScale(v)}
+            options={[
               { value: "normal", label: copy.account.textNormal },
               { value: "large", label: copy.account.textLarge },
             ]}
           />
           <View style={styles.rowBetween}>
-            <Text variant="bodyMedium">{copy.account.hapticsTitle}</Text>
+            <AppText variant="bodyMedium">{copy.account.hapticsTitle}</AppText>
             <Switch
               value={prefs.hapticsEnabled}
               onValueChange={(v) => void prefs.setHapticsEnabled(v)}
             />
           </View>
-          <Text variant="titleSmall">{copy.security.pinTitle}</Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+          <AppText variant="titleSmall">{copy.security.pinTitle}</AppText>
+          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
             {copy.security.pinHelp}
-          </Text>
+          </AppText>
           {prefs.pinEnabled ? (
             <>
               <View style={styles.rowBetween}>
-                <Text variant="bodyMedium">{copy.security.biometricTitle}</Text>
+                <AppText variant="bodyMedium">{copy.security.biometricTitle}</AppText>
                 <Switch
                   value={prefs.biometricUnlockEnabled}
                   onValueChange={(v) => void prefs.setBiometricUnlockEnabled(v)}
                 />
               </View>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.security.biometricHelp}
-              </Text>
-              <Button mode="outlined" onPress={() => void prefs.clearPin().then(() => showSuccess(copy.security.pinRemoved))}>
-                {copy.security.removePin}
-              </Button>
+              </AppText>
+              <GsButton variant="outline" onPress={() => void prefs.clearPin().then(() => showSuccess(copy.security.pinRemoved))}>
+                <ButtonText>{copy.security.removePin}</ButtonText>
+              </GsButton>
             </>
           ) : (
-            <Button mode="outlined" onPress={() => setPinDialogOpen(true)}>
-              {copy.security.setPin}
-            </Button>
+            <GsButton variant="outline" onPress={() => setPinDialogOpen(true)}>
+              <ButtonText>{copy.security.setPin}</ButtonText>
+            </GsButton>
           )}
-        </Card.Content>
-      </Card>
+        </AppCardContent>
+      </AppCard>
 
       <AppDialogForm
         visible={pinDialogOpen}
@@ -258,43 +254,37 @@ export default function AccountScreen() {
         />
       </AppDialogForm>
 
-      <Card mode="elevated" style={styles.card}>
-        <Card.Content style={styles.gap}>
-          <Text variant="titleMedium">{copy.account.dataTitle}</Text>
-          <Button
-            mode="outlined"
-            icon="toolbox"
-            onPress={() => router.push("/(tabs)/tools")}
-          >
-            {copy.account.openTools}
-          </Button>
-        </Card.Content>
-      </Card>
+      <AppCard style={styles.card}>
+        <AppCardContent style={styles.gap}>
+          <AppText variant="titleMedium">{copy.account.dataTitle}</AppText>
+          <GsButton variant="outline" onPress={() => router.push("/(tabs)/tools")}>
+            <ButtonText>{copy.account.openTools}</ButtonText>
+          </GsButton>
+        </AppCardContent>
+      </AppCard>
 
-      <Card mode="elevated" style={styles.card}>
-        <Card.Content style={styles.gap}>
-          <Text variant="titleMedium">{copy.storage.whereRecordsKept}</Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+      <AppCard style={styles.card}>
+        <AppCardContent style={styles.gap}>
+          <AppText variant="titleMedium">{copy.storage.whereRecordsKept}</AppText>
+          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
             {copy.storage.privateHelp}
-          </Text>
-          <SegmentedButtons
+          </AppText>
+          <SegmentedControl
             value={storage.mode}
-            onValueChange={(v) => void setMode(v as StorageMode)}
-            buttons={[
-              { value: "local", label: copy.storage.privateArchiveShort, icon: "home-heart" },
-              { value: "online", label: copy.storage.familyCloudShort, icon: "cloud" },
+            onChange={(v) => void setMode(v)}
+            options={[
+              { value: "local", label: copy.storage.privateArchiveShort },
+              { value: "online", label: copy.storage.familyCloudShort },
             ]}
           />
-          <Text variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</Text>
+          <AppText variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</AppText>
           {storage.mode === "local" && (
             <>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.account.sampleFixtureCount(countFixturePeople())}
-              </Text>
-              <Button
-                mode="outlined"
-                icon="seed"
-                loading={fixtureBusy}
+              </AppText>
+              <GsButton
+                variant="outline"
                 disabled={fixtureBusy}
                 onPress={() => {
                   setFixtureBusy(true);
@@ -309,8 +299,9 @@ export default function AccountScreen() {
                   }
                 }}
               >
-                {copy.account.loadSampleFamily}
-              </Button>
+                {fixtureBusy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.account.loadSampleFamily}</ButtonText>
+              </GsButton>
               <GsButton
                 variant="outline"
                 disabled={fixtureBusy || countFixturePeople() === 0}
@@ -333,26 +324,25 @@ export default function AccountScreen() {
             </>
           )}
           {storage.mode === "local" && (
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+            <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
               {copy.storage.cloudUrlWhenOnline}
-            </Text>
+            </AppText>
           )}
-        </Card.Content>
-      </Card>
+        </AppCardContent>
+      </AppCard>
 
       {storage.mode === "online" && (
-        <Card mode="elevated" style={styles.card}>
-          <Card.Content style={styles.gap}>
-            <Text variant="titleMedium">{copy.account.familyCloudSignIn}</Text>
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+        <AppCard style={styles.card}>
+          <AppCardContent style={styles.gap}>
+            <AppText variant="titleMedium">{copy.account.familyCloudSignIn}</AppText>
+            <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
               {copy.account.connectionAddressHelp}
-            </Text>
-            <Text variant="labelMedium" style={{ color: theme.colors.primary }}>
+            </AppText>
+            <AppText variant="labelMedium" style={{ color: theme.colors.primary }}>
               {copy.account.connectionCurrent(storage.apiUrl)}
-            </Text>
-            <TextInput
+            </AppText>
+            <FormTextInput
               testID="account-api-url"
-              mode="outlined"
               label={copy.account.connectionAddress}
               value={apiDraft}
               onChangeText={setApiDraft}
@@ -361,55 +351,54 @@ export default function AccountScreen() {
               keyboardType="url"
             />
             <View style={styles.rowButtons}>
-              <Button
-                mode="outlined"
-                loading={testingConnection}
+              <GsButton
+                variant="outline"
                 disabled={testingConnection}
                 onPress={() => void onTestConnection()}
                 style={styles.flexBtn}
               >
-                {copy.account.testConnection}
-              </Button>
-              <Button
-                mode="contained-tonal"
+                {testingConnection ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.account.testConnection}</ButtonText>
+              </GsButton>
+              <GsButton
+                variant="secondary"
                 onPress={() => void onSaveConnection()}
                 style={styles.flexBtn}
               >
-                {copy.account.saveConnection}
-              </Button>
+                <ButtonText>{copy.account.saveConnection}</ButtonText>
+              </GsButton>
             </View>
             {auth.token ? (
               <>
-                <Text variant="titleSmall">{copy.account.signedIn}</Text>
-                {auth.displayName && <Text>{auth.displayName}</Text>}
-                {auth.role && <Text variant="labelMedium">{auth.role}</Text>}
-                <Button mode="outlined" textColor="#b91c1c" onPress={() => void auth.signOut()}>
-                  {copy.account.signOut}
-                </Button>
+                <AppText variant="titleSmall">{copy.account.signedIn}</AppText>
+                {auth.displayName && <AppText variant="bodyMedium">{auth.displayName}</AppText>}
+                {auth.role && <AppText variant="labelMedium">{auth.role}</AppText>}
+                <GsButton variant="outline" onPress={() => void auth.signOut()}>
+                  <ButtonText className="text-destructive">{copy.account.signOut}</ButtonText>
+                </GsButton>
               </>
             ) : (
               <>
-                <TextInput
-                  mode="outlined"
+                <FormTextInput
                   label="Email"
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
                 />
-                <TextInput
-                  mode="outlined"
+                <FormTextInput
                   label="Password"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
                 />
-                <Button mode="contained" loading={submitting} onPress={() => void onSignIn()}>
-                  Sign in
-                </Button>
+                <GsButton disabled={submitting} onPress={() => void onSignIn()}>
+                  {submitting ? <ButtonSpinner /> : null}
+                  <ButtonText>Sign in</ButtonText>
+                </GsButton>
               </>
             )}
-          </Card.Content>
-        </Card>
+          </AppCardContent>
+        </AppCard>
       )}
 
       <Divider style={styles.divider} />

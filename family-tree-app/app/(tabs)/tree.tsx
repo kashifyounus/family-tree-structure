@@ -1,13 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  ActivityIndicator,
-  Banner,
-  IconButton,
-  Text,
-  useTheme,
-} from "react-native-paper";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GraphWebView } from "@/components/tree/GraphWebView";
@@ -21,6 +14,11 @@ import { useStorage } from "@/context/StorageContext";
 import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
 import type { FamilyGraph } from "@/lib/graph/types";
 import type { GraphPersonSummary } from "@/lib/graph/types";
+import { IconButton } from "@/components/ui/IconButton";
+import { InfoBanner } from "@/components/ui/InfoBanner";
+import { Spinner } from "@/components/ui/spinner";
+import { AppText } from "@/components/ui/AppText";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
   return {
@@ -64,7 +62,7 @@ function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
 }
 
 export default function TreeScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const { mode, apiUrl, dataRevision, setMode } = useStorage();
   const localAccount = useLocalAccount();
@@ -160,13 +158,13 @@ export default function TreeScreen() {
       ]}
     >
       <View style={[styles.topBar, { backgroundColor: theme.colors.surface }]}>
-        <Text
+        <AppText
           variant="titleSmall"
           numberOfLines={1}
           style={{ color: theme.colors.onSurface, flex: 1, marginLeft: 8 }}
         >
           {copy.tree.title} · {loadedCode}
-        </Text>
+        </AppText>
         <IconButton
           icon="magnify-plus-outline"
           accessibilityLabel={copy.tree.zoomIn}
@@ -186,22 +184,25 @@ export default function TreeScreen() {
       </View>
 
       {!isLocal && offline && (
-        <Banner
-          visible
-          icon="cloud-off-outline"
-          actions={[
-            {
-              label: copy.tree.retryLoad,
-              onPress: () => loadOnlineGraph(),
-            },
-            {
-              label: copy.storage.privateArchiveShort,
-              onPress: () => void setMode("local"),
-            },
-          ]}
-        >
-          {copy.tree.offlineBanner}
-        </Banner>
+        <View className="px-3 py-2 gap-2">
+          <InfoBanner icon="cloud-off-outline">{copy.tree.offlineBanner}</InfoBanner>
+          <View className="flex-row gap-2">
+            <AppText
+              variant="labelLarge"
+              className="text-primary"
+              onPress={() => loadOnlineGraph()}
+            >
+              {copy.tree.retryLoad}
+            </AppText>
+            <AppText
+              variant="labelLarge"
+              className="text-primary"
+              onPress={() => void setMode("local")}
+            >
+              {copy.storage.privateArchiveShort}
+            </AppText>
+          </View>
+        </View>
       )}
 
       <View style={styles.canvas}>
@@ -217,7 +218,7 @@ export default function TreeScreen() {
           />
         ) : graphLoading ? (
           <View style={styles.loading}>
-            <ActivityIndicator size="large" />
+            <Spinner size="large" />
           </View>
         ) : onlineGraph && !useWebFallback ? (
           <>
@@ -242,7 +243,7 @@ export default function TreeScreen() {
             startInLoadingState
             renderLoading={() => (
               <View style={styles.loading}>
-                <ActivityIndicator size="large" />
+                <Spinner size="large" />
               </View>
             )}
             allowsBackForwardNavigationGestures

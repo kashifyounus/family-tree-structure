@@ -1,7 +1,6 @@
 import { Link, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Searchbar, Text, useTheme } from "react-native-paper";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 import { BrandLogo } from "@/components/BrandLogo";
@@ -22,9 +21,12 @@ import { buildLocalReports } from "@/lib/db/localReports";
 import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
 import { motion } from "@/theme/motion";
 import { space } from "@/theme/tokens";
+import { useAppTheme } from "@/theme/useAppTheme";
+import { AppText } from "@/components/ui/AppText";
+import { MembersSearchField } from "@/components/members/MembersSearchField";
 
 export default function HomeScreen() {
-  const theme = useTheme();
+  const theme = useAppTheme();
   const router = useRouter();
   const { mode, localMemberCount, apiUrl, dataRevision } = useStorage();
   const localAccount = useLocalAccount();
@@ -111,14 +113,12 @@ export default function HomeScreen() {
 
       <PageHeader title={APP_NAME} subtitle={copy.app.tagline} />
 
-      <Searchbar
+      <MembersSearchField
         testID="home-search"
-        placeholder={copy.home.searchPlaceholder}
         value={query}
+        placeholder={copy.home.searchPlaceholder}
         onChangeText={setQuery}
-        onSubmitEditing={() => void runSearch(query)}
-        onIconPress={() => void runSearch(query)}
-        style={{ marginBottom: space.sm, backgroundColor: theme.colors.surfaceVariant }}
+        onSubmit={() => void runSearch(query)}
       />
       {matches.length > 0 && (
         <View style={styles.matchList}>
@@ -132,16 +132,16 @@ export default function HomeScreen() {
                 })
               }
             >
-              <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>
+              <AppText variant="bodyMedium" style={{ color: theme.colors.primary }}>
                 {m.firstName} {m.lastName} · {m.familyCode}
-              </Text>
+              </AppText>
               {m.fatherName || m.motherName ? (
-                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                <AppText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
                   {formatParentLine({
                     fatherName: m.fatherName ?? null,
                     motherName: m.motherName ?? null,
                   })}
-                </Text>
+                </AppText>
               ) : null}
             </Pressable>
           ))}
@@ -150,19 +150,19 @@ export default function HomeScreen() {
 
       {localAccount.session && mode === "local" && (
         <SectionCard>
-          <Text variant="titleMedium">{copy.home.greeting(localAccount.session.displayName)}</Text>
+          <AppText variant="titleMedium">{copy.home.greeting(localAccount.session.displayName)}</AppText>
           <ReferenceText label={copy.account.memberReference} code={localAccount.session.focalFamilyCode} />
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
+          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
             {copy.home.statsPrivate(localMemberCount, living)}
-          </Text>
+          </AppText>
         </SectionCard>
       )}
 
       {mode === "online" && cloudStatsLine && (
         <SectionCard>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
             {cloudStatsLine}
-          </Text>
+          </AppText>
         </SectionCard>
       )}
 
@@ -179,12 +179,12 @@ export default function HomeScreen() {
               }
               style={{ paddingVertical: 6 }}
             >
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+              <AppText variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
                 {r.displayName}
-              </Text>
-              <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              </AppText>
+              <AppText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {r.familyCode}
-              </Text>
+              </AppText>
             </Pressable>
           ))}
         </SectionCard>
@@ -192,24 +192,16 @@ export default function HomeScreen() {
 
       <View style={styles.actions}>
         <Link href="/(tabs)/tree" asChild>
-          <ActionTile icon="family-tree" mode="contained">
-            {copy.home.openTree}
-          </ActionTile>
+          <ActionTile icon="family-tree" title={copy.home.openTree} />
         </Link>
         <Link href={`/(tabs)/tree?familyCode=${branchReference}`} asChild>
-          <ActionTile icon="account-group">
-            {copy.home.yourBranch}
-          </ActionTile>
+          <ActionTile icon="account-group" title={copy.home.yourBranch} />
         </Link>
         <Link href="/(tabs)/members" asChild>
-          <ActionTile testID="home-directory" icon="account-multiple">
-            {copy.home.directory}
-          </ActionTile>
+          <ActionTile testID="home-directory" icon="account-multiple" title={copy.home.directory} />
         </Link>
         <Link href="/(tabs)/reports" asChild>
-          <ActionTile icon="chart-bar">
-            {copy.home.insights}
-          </ActionTile>
+          <ActionTile icon="chart-bar" title={copy.home.insights} />
         </Link>
       </View>
     </Screen>

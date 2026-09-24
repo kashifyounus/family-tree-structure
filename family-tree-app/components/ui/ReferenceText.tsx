@@ -1,29 +1,22 @@
-import { Platform, StyleSheet } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { View } from "react-native";
+
+import { AppText } from "@/components/ui/AppText";
+import { useAppTheme } from "@/theme/useAppTheme";
 
 type ReferenceTextProps = {
-  label?: string;
+  label: string;
   code: string;
 };
 
 export function ReferenceText({ label, code }: ReferenceTextProps) {
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   return (
-    <Text variant="labelLarge" style={{ color: theme.colors.primary }}>
-      {label ? `${label}: ` : ""}
-      <Text style={styles.mono}>{code}</Text>
-    </Text>
+    <View className="mt-1">
+      <AppText variant="labelSmall">{label}</AppText>
+      <AppText variant="titleSmall" style={{ color: theme.colors.primary }}>
+        {code}
+      </AppText>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  mono: {
-    fontFamily: Platform.select({
-      ios: "Menlo",
-      android: "monospace",
-      default: "monospace",
-    }),
-    letterSpacing: 0.5,
-  },
-});
