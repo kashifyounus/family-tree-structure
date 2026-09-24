@@ -1,10 +1,63 @@
-import type { Gender } from "@/lib/data/types";
 import type {
   OnlineComputedRelations,
   OnlineParentLink,
+  OnlinePersonDetails,
   OnlinePersonSummary,
 } from "@/lib/api";
+import type { LocalUnionView, MemberRecord } from "@/lib/data/types";
 import type { ComputedRelations, KinshipPerson, KinshipRelative } from "@/lib/kinship/types";
+
+export type OnlineMappedPersonBundle = {
+  member: MemberRecord;
+  unions: LocalUnionView[];
+  parents: KinshipPerson[];
+  computed: ComputedRelations | null;
+  onlineDetails: OnlinePersonDetails;
+};
+
+function mapOnlinePersonToMember(m: OnlinePersonSummary): MemberRecord {
+  return {
+    id: m.id,
+    familyCode: m.familyCode,
+    firstName: m.firstName,
+    lastName: m.lastName,
+    nickname: m.nickname,
+    urduFirstName: m.urduFirstName,
+    urduLastName: m.urduLastName,
+    gender: m.gender,
+    birthDate: m.birthDate,
+    deathDate: m.deathDate,
+    birthPlace: m.birthPlace ?? null,
+    homeTown: m.homeTown ?? null,
+    currentCity: m.currentCity,
+    occupation: m.occupation,
+    bio: m.bio,
+  };
+}
+
+export function mapOnlineDetailsToBundle(data: OnlinePersonDetails): OnlineMappedPersonBundle {
+  return {
+    member: mapOnlinePersonToMember(data.person),
+    unions: data.unions.map((u) => ({
+      id: u.id,
+      partner1Id: u.partner1.id,
+      partner2Id: u.partner2.id,
+      partner1Name: `${u.partner1.firstName} ${u.partner1.lastName}`,
+      partner2Name: `${u.partner2.firstName} ${u.partner2.lastName}`,
+      marriageDate: u.marriageDate ?? null,
+      divorceDate: u.divorceDate ?? null,
+      isActive: u.isActive ?? true,
+      children: u.children.map((c) => ({
+        id: c.id,
+        name: `${c.firstName} ${c.lastName}`,
+        familyCode: c.familyCode,
+      })),
+    })),
+    parents: parentsFromOnlineParentLinks(data.parentLinks ?? []),
+    computed: computedRelationsFromOnline(data.computed),
+    onlineDetails: data,
+  };
+}
 
 export function mapOnlineSummaryToKinshipPerson(p: OnlinePersonSummary): KinshipPerson {
   return {

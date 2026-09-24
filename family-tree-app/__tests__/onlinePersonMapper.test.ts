@@ -1,6 +1,7 @@
 import type { OnlinePersonSummary } from "@/lib/api";
 import {
   computedRelationsFromOnline,
+  mapOnlineDetailsToBundle,
   parentsFromOnlineParentLinks,
 } from "@/lib/data/onlinePersonMapper";
 
@@ -44,6 +45,35 @@ describe("onlinePersonMapper", () => {
     ]);
     expect(parents).toHaveLength(2);
     expect(parents.map((p) => p.id).sort()).toEqual(["p1", "p2"]);
+  });
+
+  it("builds a full bundle from online person details", () => {
+    const father = person("p1", "FAM-1", "Hassan", "Khan", "MALE");
+    const mother = person("p2", "FAM-2", "Ayesha", "Khan", "FEMALE");
+    const focal = person("p3", "FAM-3", "Ali", "Khan", "MALE");
+    const bundle = mapOnlineDetailsToBundle({
+      person: focal,
+      parentLinks: [
+        {
+          childshipId: "c1",
+          unionId: "u-parent",
+          relationshipType: "BIOLOGICAL",
+          partners: [father, mother],
+        },
+      ],
+      unions: [],
+      computed: {
+        fullSiblings: [],
+        halfSiblings: [],
+        paternalUncles: [],
+        paternalAunts: [],
+        maternalUncles: [],
+        maternalAunts: [],
+      },
+    });
+    expect(bundle.member.id).toBe("p3");
+    expect(bundle.parents).toHaveLength(2);
+    expect(bundle.onlineDetails.person.familyCode).toBe("FAM-3");
   });
 
   it("preserves relative ids from cloud computed payload", () => {

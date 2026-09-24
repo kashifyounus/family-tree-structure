@@ -171,6 +171,19 @@ export async function fetchOnlinePersonByCode(
   }
 }
 
+export async function fetchOnlinePersonById(
+  personId: string,
+): Promise<OnlinePersonDetails | null> {
+  try {
+    const data = await apiFetch<{ details: OnlinePersonDetails }>(
+      `/api/mobile/person/${encodeURIComponent(personId)}`,
+    );
+    return data.details;
+  } catch {
+    return null;
+  }
+}
+
 export type OnlineReports = {
   city: { currentCity: { label: string; count: number }[] } | null;
   ages: { range: string; count: number }[];

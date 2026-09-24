@@ -1,6 +1,7 @@
 import {
   createMemberOnline,
   fetchOnlinePersonByCode,
+  fetchOnlinePersonById,
   fetchOnlineReports,
   type OnlinePersonDetails,
   type OnlineReports,
@@ -11,10 +12,7 @@ import {
   getParentsForPerson,
 } from "@/lib/kinship/kinshipCore";
 import type { ComputedRelations, KinshipPerson } from "@/lib/kinship/types";
-import {
-  computedRelationsFromOnline,
-  parentsFromOnlineParentLinks,
-} from "@/lib/data/onlinePersonMapper";
+import { mapOnlineDetailsToBundle } from "@/lib/data/onlinePersonMapper";
 import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
 import type {
@@ -79,34 +77,24 @@ function enrichLocalBundle(member: MemberRecord): PersonBundle {
   };
 }
 
-function mapOnlinePerson(m: OnlinePersonDetails["person"]): MemberRecord {
-  return {
-    id: m.id,
-    familyCode: m.familyCode,
-    firstName: m.firstName,
-    lastName: m.lastName,
-    nickname: m.nickname,
-    urduFirstName: m.urduFirstName,
-    urduLastName: m.urduLastName,
-    gender: m.gender,
-    birthDate: m.birthDate,
-    deathDate: m.deathDate,
-    birthPlace: m.birthPlace ?? null,
-    homeTown: m.homeTown ?? null,
-    currentCity: m.currentCity,
-    occupation: m.occupation,
-    bio: m.bio,
-  };
+async function loadOnlinePersonBundle(
+  fetchDetails: () => Promise<OnlinePersonDetails | null>,
+): Promise<PersonBundle | null> {
+  const data = await fetchDetails();
+  if (!data) return null;
+  return mapOnlineDetailsToBundle(data);
 }
 
 export async function loadPersonById(
   mode: StorageMode,
   personId: string,
 ): Promise<PersonBundle | null> {
-  if (mode !== "local") return null;
-  const member = getLocalMemberById(personId);
-  if (!member) return null;
-  return enrichLocalBundle(member);
+  if (mode === "local") {
+    const member = getLocalMemberById(personId);
+    if (!member) return null;
+    return enrichLocalBundle(member);
+  }
+  return loadOnlinePersonBundle(() => fetchOnlinePersonById(personId));
 }
 
 export async function loadPersonByCode(
@@ -118,31 +106,7 @@ export async function loadPersonByCode(
     if (!member) return null;
     return enrichLocalBundle(member);
   }
-  const data = await fetchOnlinePersonByCode(familyCode);
-  if (!data) return null;
-  const member = mapOnlinePerson(data.person);
-  const parents = parentsFromOnlineParentLinks(data.parentLinks ?? []);
-  return {
-    member,
-    unions: data.unions.map((u) => ({
-      id: u.id,
-      partner1Id: u.partner1.id,
-      partner2Id: u.partner2.id,
-      partner1Name: `${u.partner1.firstName} ${u.partner1.lastName}`,
-      partner2Name: `${u.partner2.firstName} ${u.partner2.lastName}`,
-      marriageDate: u.marriageDate ?? null,
-      divorceDate: u.divorceDate ?? null,
-      isActive: u.isActive ?? true,
-      children: u.children.map((c) => ({
-        id: c.id,
-        name: `${c.firstName} ${c.lastName}`,
-        familyCode: c.familyCode,
-      })),
-    })),
-    parents,
-    computed: computedRelationsFromOnline(data.computed),
-    onlineDetails: data,
-  };
+  return loadOnlinePersonBundle(() => fetchOnlinePersonByCode(familyCode));
 }
 
 function requireLocal(mode: StorageMode): void {
