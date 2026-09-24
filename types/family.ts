@@ -144,6 +144,8 @@ export type DashboardMember = SearchResult & {
   gender: Gender;
   currentCity: string | null;
   updatedAt: string;
+  fatherName?: string | null;
+  motherName?: string | null;
 };
 
 export type CreateStandalonePersonInput = {

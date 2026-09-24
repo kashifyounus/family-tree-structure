@@ -95,6 +95,8 @@ export type DashboardMember = {
   lastName: string;
   gender: string;
   currentCity: string | null;
+  fatherName?: string | null;
+  motherName?: string | null;
 };
 
 export async function fetchMembers(query = ""): Promise<DashboardMember[]> {

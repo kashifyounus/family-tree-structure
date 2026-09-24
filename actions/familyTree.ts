@@ -22,6 +22,7 @@ import {
   maskPersonSummary,
   maskUnionSummary,
 } from "@/lib/privacy";
+import { parentNamesFromUnionPartners } from "@/lib/parentDisplay";
 import { birthYearFromPerson, toPersonSummary } from "@/lib/personMapper";
 import { loadRuleGraph } from "@/lib/ruleGraph";
 import {
@@ -675,21 +676,39 @@ export async function listMembersForDashboard(
       : undefined,
     take: limit,
     orderBy: [{ updatedAt: "desc" }],
+    include: {
+      childships: {
+        take: 1,
+        include: {
+          union: { include: { partner1: true, partner2: true } },
+        },
+      },
+    },
   });
 
-  return people.map((p) => ({
-    id: p.id,
-    familyCode: p.familyCode,
-    firstName: p.firstName,
-    lastName: p.lastName,
-    nickname: p.nickname,
-    urduFirstName: p.urduFirstName,
-    urduLastName: p.urduLastName,
-    birthYear: birthYearFromPerson(p),
-    gender: p.gender,
-    currentCity: p.currentCity,
-    updatedAt: p.updatedAt.toISOString(),
-  }));
+  return people.map((p) => {
+    const childship = p.childships[0];
+    const partners = childship
+      ? [childship.union.partner1, childship.union.partner2]
+      : [];
+    const { fatherName, motherName } = parentNamesFromUnionPartners(partners);
+
+    return {
+      id: p.id,
+      familyCode: p.familyCode,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      nickname: p.nickname,
+      urduFirstName: p.urduFirstName,
+      urduLastName: p.urduLastName,
+      birthYear: birthYearFromPerson(p),
+      gender: p.gender,
+      currentCity: p.currentCity,
+      updatedAt: p.updatedAt.toISOString(),
+      fatherName,
+      motherName,
+    };
+  });
 }
 
 export async function createStandalonePerson(

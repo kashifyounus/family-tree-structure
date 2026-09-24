@@ -23,6 +23,8 @@ function fromDashboard(m: DashboardMember): MemberRecord {
     currentCity: m.currentCity,
     occupation: null,
     bio: null,
+    fatherName: m.fatherName ?? null,
+    motherName: m.motherName ?? null,
   };
 }
 

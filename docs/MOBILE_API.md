@@ -35,7 +35,7 @@ Keep both shapes aligned when adding fields. After fetching, the app runs `norma
 
 - `GET /api/mobile/health` — connection test  
 - `POST /api/mobile/auth/login` — bearer token  
-- `GET /api/mobile/members` — directory search  
+- `GET /api/mobile/members` — directory search (`fatherName` / `motherName` from birth union when known)  
 - `POST /api/mobile/members/create` — new person (role-checked server-side)  
 - `GET /api/mobile/graph/[familyCode]` — tree graph JSON  
 - `GET /api/mobile/reports/[familyCode]` — insights  
