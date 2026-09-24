@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Banner, FAB, Searchbar, Text, useTheme } from "react-native-paper";
+import { Banner, FAB, Text, useTheme } from "react-native-paper";
 
 import { MemberCard } from "@/components/members/MemberCard";
+import { MembersSearchField } from "@/components/members/MembersSearchField";
 
 import { AppDialogForm } from "@/components/ui/AppDialogForm";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -139,18 +140,11 @@ export default function MembersScreen() {
         <Banner visible icon="information" style={styles.banner}>
           {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
         </Banner>
-        <Searchbar
-          testID="members-search"
-          placeholder={copy.members.searchPlaceholder}
+        <MembersSearchField
           value={query}
+          placeholder={copy.members.searchPlaceholder}
           onChangeText={setQuery}
-          onSubmitEditing={() => void load(query)}
-          onIconPress={() => void load(query)}
-          elevation={layout.fabOffset === 16 ? 1 : 1}
-          style={[styles.search, { backgroundColor: theme.colors.surfaceVariant }]}
-          inputStyle={{ color: theme.colors.onSurface }}
-          iconColor={theme.colors.onSurfaceVariant}
-          placeholderTextColor={theme.colors.onSurfaceVariant}
+          onSubmit={() => void load(query)}
         />
       </View>
 

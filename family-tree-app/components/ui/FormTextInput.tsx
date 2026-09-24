@@ -1,31 +1,38 @@
-import { StyleSheet, View } from "react-native";
-import { HelperText, TextInput, type TextInputProps } from "react-native-paper";
+import { Text, View, type TextInputProps } from "react-native";
 
-type FormTextInputProps = TextInputProps & {
+import { Input, InputField } from "@/components/ui/input";
+
+export type FormTextInputProps = TextInputProps & {
+  label?: string;
   errorText?: string;
 };
 
-/** Outlined Paper field with consistent spacing for forms. */
-export function FormTextInput({ errorText, ...props }: FormTextInputProps) {
+/** Gluestack outlined field with label and error line (used across forms). */
+export function FormTextInput({
+  label,
+  errorText,
+  style,
+  className,
+  ...props
+}: FormTextInputProps) {
   return (
-    <View style={styles.wrap}>
-      <TextInput
-        mode="outlined"
-        dense={false}
-        error={!!errorText}
-        style={[styles.field, props.style]}
-        {...props}
-      />
+    <View className="gap-1 mb-1 w-full">
+      {label ? (
+        <Text className="text-sm font-medium text-foreground">{label}</Text>
+      ) : null}
+      <Input
+        className={`w-full ${errorText ? "border-destructive" : ""} ${className ?? ""}`}
+        isDisabled={props.editable === false}
+      >
+        <InputField
+          {...props}
+          style={style}
+          placeholderTextColor={undefined}
+        />
+      </Input>
       {errorText ? (
-        <HelperText type="error" visible padding="none">
-          {errorText}
-        </HelperText>
+        <Text className="text-xs text-destructive">{errorText}</Text>
       ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { marginBottom: 4 },
-  field: {},
-});

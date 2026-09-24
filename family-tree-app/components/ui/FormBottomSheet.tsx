@@ -1,17 +1,16 @@
 import type { ReactNode } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
-import { Button, Text, useTheme } from "react-native-paper";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { space } from "@/theme/tokens";
+import {
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper,
+  ActionsheetScrollView,
+} from "@/components/ui/actionsheet";
+import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 
 export type FormBottomSheetProps = {
   visible: boolean;
@@ -29,7 +28,7 @@ export type FormBottomSheetProps = {
 };
 
 /**
- * Reusable keyboard-aware bottom sheet for all create/edit forms.
+ * Gluestack Actionsheet wrapper for keyboard-aware create/edit forms.
  */
 export function FormBottomSheet({
   visible,
@@ -44,102 +43,54 @@ export function FormBottomSheet({
   hideActions,
   maxHeightRatio = 0.92,
 }: FormBottomSheetProps) {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const maxHeightPercent = Math.round(maxHeightRatio * 100);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onDismiss}
-      statusBarTranslucent
-    >
-      <Pressable style={styles.backdrop} onPress={onDismiss} accessibilityLabel="Close" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboard}
-        keyboardVerticalOffset={insets.bottom}
+    <Actionsheet isOpen={visible} onClose={onDismiss}>
+      <ActionsheetBackdrop />
+      <ActionsheetContent
+        className="pb-2"
+        style={{ maxHeight: `${maxHeightPercent}%`, paddingBottom: Math.max(insets.bottom, 12) }}
       >
-        <View
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: theme.colors.surface,
-              paddingBottom: Math.max(insets.bottom, space.md),
-              maxHeight: `${maxHeightRatio * 100}%`,
-            },
-          ]}
+        <ActionsheetDragIndicatorWrapper>
+          <ActionsheetDragIndicator />
+        </ActionsheetDragIndicatorWrapper>
+
+        <Text className="text-xl font-bold text-foreground w-full mb-3">{title}</Text>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ width: "100%", flexShrink: 1 }}
+          keyboardVerticalOffset={insets.bottom}
         >
-          <View style={styles.handle} />
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
-            {title}
-          </Text>
-          <ScrollView
+          <ActionsheetScrollView
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: 12, paddingBottom: 8 }}
           >
             {children}
-          </ScrollView>
-          {!hideActions && onSubmit ? (
-            <View style={styles.actions}>
-              <Button onPress={onDismiss} disabled={loading}>{cancelLabel}</Button>
-              <Button
-                testID={submitTestID}
-                mode="contained"
-                onPress={onSubmit}
-                loading={loading}
-              >
-                {submitLabel}
-              </Button>
-            </View>
-          ) : (
-            <View style={styles.actions}>
-              <Button onPress={onDismiss}>{cancelLabel}</Button>
-            </View>
-          )}
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+          </ActionsheetScrollView>
+        </KeyboardAvoidingView>
+
+        {!hideActions && onSubmit ? (
+          <View className="flex-row justify-end gap-2 w-full pt-2">
+            <Button variant="ghost" onPress={onDismiss} disabled={loading}>
+              <ButtonText>{cancelLabel}</ButtonText>
+            </Button>
+            <Button testID={submitTestID} onPress={onSubmit} disabled={loading}>
+              {loading ? <ButtonSpinner /> : null}
+              <ButtonText>{submitLabel}</ButtonText>
+            </Button>
+          </View>
+        ) : hideActions ? (
+          <View className="flex-row justify-end w-full pt-2">
+            <Button variant="ghost" onPress={onDismiss}>
+              <ButtonText>{cancelLabel}</ButtonText>
+            </Button>
+          </View>
+        ) : null}
+      </ActionsheetContent>
+    </Actionsheet>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0,0,0,0.45)",
-  },
-  keyboard: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: space.lg,
-    paddingTop: space.sm,
-  },
-  handle: {
-    alignSelf: "center",
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "rgba(0,0,0,0.15)",
-    marginBottom: space.sm,
-  },
-  title: {
-    fontWeight: "700",
-    marginBottom: space.md,
-  },
-  scrollContent: {
-    gap: space.md,
-    paddingBottom: space.md,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: space.sm,
-    paddingTop: space.sm,
-  },
-});
