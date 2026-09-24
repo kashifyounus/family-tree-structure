@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 type ReferenceTextProps = {
@@ -19,7 +19,11 @@ export function ReferenceText({ label, code }: ReferenceTextProps) {
 
 const styles = StyleSheet.create({
   mono: {
-    fontFamily: "SpaceMono",
+    fontFamily: Platform.select({
+      ios: "Menlo",
+      android: "monospace",
+      default: "monospace",
+    }),
     letterSpacing: 0.5,
   },
 });

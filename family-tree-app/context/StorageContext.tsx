@@ -25,6 +25,7 @@ import {
 import { AppError } from "@/lib/errors/AppError";
 import { normalizeApiBaseUrl, validateApiBaseUrl } from "@/lib/apiUrl";
 import { getLocalAccountCount } from "@/lib/localAccount/service";
+import { log } from "@/lib/logging/logger";
 
 const MODE_KEY = "mughals_storage_mode";
 
@@ -71,6 +72,11 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       setOnboardingCompleteState(onboardingDone);
       setLocalMemberCount(members);
       setReady(true);
+      log.lifecycle("Local database opened", {
+        members,
+        mode: storedMode ?? "local",
+        hasApiOverride: Boolean(url),
+      });
     })();
   }, []);
 

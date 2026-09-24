@@ -67,6 +67,10 @@ npx expo start
 
 Press `a` for Android emulator or scan QR with Expo Go.
 
+## Download APK (GitHub)
+
+See **[RELEASE.md](./RELEASE.md)** — CI builds a release APK on each `app-v*` tag and on manual workflow runs. Download the artifact from GitHub Actions or the Releases page.
+
 ## Build APK (local Gradle — no EAS)
 
 This project is set up for **local Android release builds** (no Expo Application Services required).
