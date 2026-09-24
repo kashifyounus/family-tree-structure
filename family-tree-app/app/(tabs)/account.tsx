@@ -28,7 +28,11 @@ import {
 } from "@/context/AuthContext";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
-import { seedLocalDemoFamily } from "@/lib/db/seedLocalDemo";
+import {
+  countFixturePeople,
+  seedComprehensiveFixture,
+  wipeFixtureDataset,
+} from "@/lib/db/comprehensiveSeed";
 import type { StorageMode } from "@/lib/data/types";
 import { normalizeApiBaseUrl, probeMobileApiHealth } from "@/lib/apiUrl";
 
@@ -50,6 +54,7 @@ export default function AccountScreen() {
   const [pinConfirmDraft, setPinConfirmDraft] = useState("");
   const [pinFieldError, setPinFieldError] = useState<string | undefined>();
   const [pinConfirmError, setPinConfirmError] = useState<string | undefined>();
+  const [fixtureBusy, setFixtureBusy] = useState(false);
 
   useEffect(() => {
     setApiDraft(storage.apiUrl);
@@ -280,17 +285,50 @@ export default function AccountScreen() {
           />
           <Text variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</Text>
           {storage.mode === "local" && (
-            <Button
-              mode="outlined"
-              icon="seed"
-              onPress={() => {
-                const code = seedLocalDemoFamily();
-                storage.bumpDataRevision();
-                showSuccess(copy.account.loadSampleSuccess(code));
-              }}
-            >
-              {copy.account.loadSampleFamily}
-            </Button>
+            <>
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                {copy.account.sampleFixtureCount(countFixturePeople())}
+              </Text>
+              <Button
+                mode="outlined"
+                icon="seed"
+                loading={fixtureBusy}
+                disabled={fixtureBusy}
+                onPress={() => {
+                  setFixtureBusy(true);
+                  try {
+                    const result = seedComprehensiveFixture();
+                    storage.bumpDataRevision();
+                    showSuccess(copy.account.loadSampleSuccess(result.focalFamilyCode));
+                  } catch (e) {
+                    showError(e);
+                  } finally {
+                    setFixtureBusy(false);
+                  }
+                }}
+              >
+                {copy.account.loadSampleFamily}
+              </Button>
+              <Button
+                mode="text"
+                icon="delete-sweep"
+                disabled={fixtureBusy || countFixturePeople() === 0}
+                onPress={() => {
+                  setFixtureBusy(true);
+                  try {
+                    const { removed } = wipeFixtureDataset();
+                    storage.bumpDataRevision();
+                    showSuccess(copy.account.clearSampleSuccess(removed));
+                  } catch (e) {
+                    showError(e);
+                  } finally {
+                    setFixtureBusy(false);
+                  }
+                }}
+              >
+                {copy.account.clearSampleFamily}
+              </Button>
+            </>
           )}
           {storage.mode === "local" && (
             <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>

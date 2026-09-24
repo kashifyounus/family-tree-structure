@@ -18,6 +18,8 @@ export type MemberRecord = {
   currentCity: string | null;
   occupation: string | null;
   bio: string | null;
+  fatherName?: string | null;
+  motherName?: string | null;
 };
 
 export type CreateMemberInput = {

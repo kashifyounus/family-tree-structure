@@ -2,7 +2,7 @@ import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 
 import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
-import { seedLocalDemoFamily } from "@/lib/db/seedLocalDemo";
+import { seedComprehensiveFixture } from "@/lib/db/comprehensiveSeed";
 import { getDatabase } from "@/lib/db/database";
 import type { LocalAccountSession } from "@/lib/localAccount/service";
 
@@ -19,8 +19,8 @@ async function hashPassword(email: string, password: string): Promise<string> {
 
 /** Loads sample tree and a device account centered on the demo focal member. */
 export async function setupDemoArchive(): Promise<LocalAccountSession> {
-  const focalCode = seedLocalDemoFamily();
-  const focal = getLocalMemberByFamilyCode(focalCode);
+  const seeded = seedComprehensiveFixture();
+  const focal = getLocalMemberByFamilyCode(seeded.focalFamilyCode);
   if (!focal) {
     throw new Error("Demo family could not be loaded.");
   }

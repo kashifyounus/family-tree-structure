@@ -1,5 +1,7 @@
 import * as SQLite from "expo-sqlite";
 
+import { runSqliteMigrations } from "@/lib/db/migrations";
+
 export const DB_NAME = "mughals_family.db";
 
 let database: SQLite.SQLiteDatabase | null = null;
@@ -73,6 +75,7 @@ export function getDatabase(): SQLite.SQLiteDatabase {
   if (!database) {
     database = SQLite.openDatabaseSync(DB_NAME);
     database.execSync(SCHEMA_SQL);
+    runSqliteMigrations(database);
   }
   return database;
 }

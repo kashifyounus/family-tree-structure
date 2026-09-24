@@ -1,19 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import {
-  Button,
-  Card,
-  Chip,
-  Dialog,
-  Portal,
-  RadioButton,
-  Text,
-  useTheme,
-} from "react-native-paper";
+import { Button, Card, Chip, RadioButton, Text, useTheme } from "react-native-paper";
 
 import { KinshipSections } from "@/components/KinshipSections";
 import { PersonFacts } from "@/components/PersonFacts";
+import { CoupleParentPickerSheet } from "@/components/parents/CoupleParentPickerSheet";
+import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ReferenceText } from "@/components/ui/ReferenceText";
@@ -28,13 +21,14 @@ import { useStorage } from "@/context/StorageContext";
 import {
   addChild,
   addSpouse,
-  assignParents,
+  assignParentsToCouple,
   loadPersonByCode,
   loadPersonById,
-  peopleForPicker,
+  parentCouplesForPicker,
   unionOptions,
   updatePerson,
 } from "@/lib/data/personService";
+import { formatParentLine } from "@/lib/db/parentDisplay";
 import type { PersonBundle } from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
 import { formatBilingualName } from "@/lib/format/displayName";
@@ -76,9 +70,6 @@ export default function MemberDetailScreen() {
   const [chUnionId, setChUnionId] = useState("");
   const [parentsOpen, setParentsOpen] = useState(false);
   const [parentQuery, setParentQuery] = useState("");
-  const [parentA, setParentA] = useState("");
-  const [parentB, setParentB] = useState("");
-  const [confirmParents, setConfirmParents] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const reload = useCallback(async () => {
@@ -248,21 +239,16 @@ export default function MemberDetailScreen() {
     }
   };
 
-  const submitParents = () => {
-    if (bundle.parents.length > 0 && !confirmParents) {
-      showError(copy.profile.confirmReplaceParents);
-      return;
-    }
+  const parentCoupleRows =
+    canEditLocal && parentsOpen
+      ? parentCouplesForPicker(mode, m.id, parentQuery)
+      : [];
+
+  const onSelectParentCouple = (unionId: string) => {
     try {
-      assignParents(mode, {
-        personId: m.id,
-        parentAId: parentA,
-        parentBId: parentB,
-      });
+      assignParentsToCouple(mode, m.id, unionId);
       setParentsOpen(false);
-      setParentA("");
-      setParentB("");
-      setConfirmParents(false);
+      setParentQuery("");
       bumpDataRevision();
       void reload();
       impactLight();
@@ -272,14 +258,19 @@ export default function MemberDetailScreen() {
     }
   };
 
-  const pickerPeople =
-    canEditLocal && parentsOpen
-      ? peopleForPicker(mode).filter(
-          (person) =>
-            person.id !== m.id &&
-            (`${person.name} ${person.familyCode}`).toLowerCase().includes(parentQuery.trim().toLowerCase()),
-        )
-      : [];
+  const fatherParent = bundle.parents.find((p) => p.gender === "MALE");
+  const motherParent = bundle.parents.find((p) => p.gender === "FEMALE");
+  const parentSubtitle =
+    bundle.parents.length > 0
+      ? formatParentLine({
+          fatherName: fatherParent
+            ? `${fatherParent.firstName} ${fatherParent.lastName}`.trim()
+            : null,
+          motherName: motherParent
+            ? `${motherParent.firstName} ${motherParent.lastName}`.trim()
+            : null,
+        })
+      : undefined;
 
   return (
     <>
@@ -287,6 +278,7 @@ export default function MemberDetailScreen() {
         <PageHeader
           title={formatBilingualName(m)}
           meta={m.familyCode}
+          subtitle={parentSubtitle}
         />
         <ReferenceText label={copy.account.memberReference} code={m.familyCode} />
         {!editing && (
@@ -481,140 +473,99 @@ export default function MemberDetailScreen() {
         </Button>
       </Screen>
 
-      <Portal>
-        <Dialog visible={spouseOpen} onDismiss={() => setSpouseOpen(false)}>
-          <Dialog.Title>{copy.profile.addSpouse}</Dialog.Title>
-          <Dialog.ScrollArea style={styles.dialogScroll}>
-            <View style={styles.dialogInner}>
-              <FormTextInput
-                testID="member-spouse-first"
-                label="First name"
-                value={spFirst}
-                onChangeText={setSpFirst}
-                errorText={fieldErrors.spFirst}
-              />
-              <FormTextInput
-                testID="member-spouse-last"
-                label="Last name"
-                value={spLast}
-                onChangeText={setSpLast}
-                errorText={fieldErrors.spLast}
-              />
-              <Text variant="labelLarge">Gender</Text>
-              {fieldErrors.spGender ? (
-                <Text variant="bodySmall" style={{ color: theme.colors.error }}>
-                  {fieldErrors.spGender}
-                </Text>
-              ) : null}
-              <RadioButton.Group
-                onValueChange={(value) => setSpGender(value as Gender)}
-                value={spGender}
-              >
-                <RadioButton.Item label="Female" value="FEMALE" />
-                <RadioButton.Item label="Male" value="MALE" />
-                <RadioButton.Item label="Other" value="OTHER" />
-              </RadioButton.Group>
-            </View>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setSpouseOpen(false)}>{copy.reports.cancel}</Button>
-            <Button testID="member-spouse-save" mode="contained" onPress={submitSpouse}>
-              {copy.profile.saveChanges}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+      <FormBottomSheet
+        visible={spouseOpen}
+        title={copy.profile.addSpouse}
+        onDismiss={() => setSpouseOpen(false)}
+        onSubmit={submitSpouse}
+        submitLabel={copy.profile.saveChanges}
+        submitTestID="member-spouse-save"
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          testID="member-spouse-first"
+          label="First name"
+          value={spFirst}
+          onChangeText={setSpFirst}
+          errorText={fieldErrors.spFirst}
+        />
+        <FormTextInput
+          testID="member-spouse-last"
+          label="Last name"
+          value={spLast}
+          onChangeText={setSpLast}
+          errorText={fieldErrors.spLast}
+        />
+        <Text variant="labelLarge">Gender</Text>
+        {fieldErrors.spGender ? (
+          <Text variant="bodySmall" style={{ color: theme.colors.error }}>
+            {fieldErrors.spGender}
+          </Text>
+        ) : null}
+        <RadioButton.Group
+          onValueChange={(value) => setSpGender(value as Gender)}
+          value={spGender}
+        >
+          <RadioButton.Item label="Female" value="FEMALE" />
+          <RadioButton.Item label="Male" value="MALE" />
+          <RadioButton.Item label="Other" value="OTHER" />
+        </RadioButton.Group>
+      </FormBottomSheet>
 
-        <Dialog visible={childOpen} onDismiss={() => setChildOpen(false)}>
-          <Dialog.Title>{copy.profile.addChild}</Dialog.Title>
-          <Dialog.ScrollArea style={styles.dialogScroll}>
-            <View style={styles.dialogInner}>
-              <FormTextInput
-                testID="member-child-first"
-                label="Given name"
-                value={chFirst}
-                onChangeText={setChFirst}
-                errorText={fieldErrors.chFirst}
-              />
-              <FormTextInput
-                testID="member-child-last"
-                label="Family name"
-                value={chLast}
-                onChangeText={setChLast}
-                errorText={fieldErrors.chLast}
-              />
-              <Text variant="labelLarge">Gender</Text>
-              <RadioButton.Group
-                onValueChange={(value) => setChGender(value as Gender)}
-                value={chGender}
-              >
-                <RadioButton.Item label="Male" value="MALE" />
-                <RadioButton.Item label="Female" value="FEMALE" />
-                <RadioButton.Item label="Other" value="OTHER" />
-              </RadioButton.Group>
-              {unionOptions(mode, m.id).map((marriage) => (
-                <Button
-                  key={marriage.id}
-                  mode={chUnionId === marriage.id ? "contained" : "outlined"}
-                  onPress={() => setChUnionId(marriage.id)}
-                >
-                  {marriage.label}
-                </Button>
-              ))}
-            </View>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setChildOpen(false)}>{copy.reports.cancel}</Button>
-            <Button testID="member-child-save" mode="contained" onPress={submitChild}>
-              {copy.profile.saveChanges}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+      <FormBottomSheet
+        visible={childOpen}
+        title={copy.profile.addChild}
+        onDismiss={() => setChildOpen(false)}
+        onSubmit={submitChild}
+        submitLabel={copy.profile.saveChanges}
+        submitTestID="member-child-save"
+        cancelLabel={copy.reports.cancel}
+      >
+        <FormTextInput
+          testID="member-child-first"
+          label="Given name"
+          value={chFirst}
+          onChangeText={setChFirst}
+          errorText={fieldErrors.chFirst}
+        />
+        <FormTextInput
+          testID="member-child-last"
+          label="Family name"
+          value={chLast}
+          onChangeText={setChLast}
+          errorText={fieldErrors.chLast}
+        />
+        <Text variant="labelLarge">Gender</Text>
+        <RadioButton.Group
+          onValueChange={(value) => setChGender(value as Gender)}
+          value={chGender}
+        >
+          <RadioButton.Item label="Male" value="MALE" />
+          <RadioButton.Item label="Female" value="FEMALE" />
+          <RadioButton.Item label="Other" value="OTHER" />
+        </RadioButton.Group>
+        {unionOptions(mode, m.id).map((marriage) => (
+          <Button
+            key={marriage.id}
+            mode={chUnionId === marriage.id ? "contained" : "outlined"}
+            onPress={() => setChUnionId(marriage.id)}
+          >
+            {marriage.label}
+          </Button>
+        ))}
+      </FormBottomSheet>
 
-        <Dialog visible={parentsOpen} onDismiss={() => setParentsOpen(false)}>
-          <Dialog.Title>
-            {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
-          </Dialog.Title>
-          <Dialog.ScrollArea style={styles.dialogScroll}>
-            <View style={styles.dialogInner}>
-              {bundle.parents.length > 0 && (
-                <Text variant="bodySmall">{copy.profile.confirmReplaceParents}</Text>
-              )}
-              {bundle.parents.length > 0 && (
-                <Button mode={confirmParents ? "contained" : "outlined"} onPress={() => setConfirmParents(true)}>
-                  Confirm parent change
-                </Button>
-              )}
-              <FormTextInput
-                label="Search people"
-                value={parentQuery}
-                onChangeText={setParentQuery}
-              />
-              {pickerPeople.slice(0, 8).map((person) => (
-                <View key={person.id} style={styles.actions}>
-                  <Button
-                    mode={parentA === person.id ? "contained" : "text"}
-                    onPress={() => setParentA(person.id)}
-                  >
-                    Parent: {person.name}
-                  </Button>
-                  <Button
-                    mode={parentB === person.id ? "contained" : "text"}
-                    onPress={() => setParentB(person.id)}
-                  >
-                    Other parent
-                  </Button>
-                </View>
-              ))}
-            </View>
-          </Dialog.ScrollArea>
-          <Dialog.Actions>
-            <Button onPress={() => setParentsOpen(false)}>{copy.reports.cancel}</Button>
-            <Button mode="contained" onPress={submitParents}>
-              {copy.profile.saveChanges}
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <CoupleParentPickerSheet
+        visible={parentsOpen}
+        title={bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
+        rows={parentCoupleRows}
+        replacingExisting={bundle.parents.length > 0}
+        onDismiss={() => {
+          setParentsOpen(false);
+          setParentQuery("");
+        }}
+        onSelectCouple={(row) => onSelectParentCouple(row.unionId)}
+      />
     </>
   );
 }

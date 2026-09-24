@@ -1,6 +1,7 @@
 import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
 import { getDatabase } from "@/lib/db/database";
+import { getParentNamesForPerson } from "@/lib/db/parentDisplay";
 import { uniqueFamilyCode } from "@/lib/db/familyCode";
 import type {
   CreateMemberInput,
@@ -71,7 +72,15 @@ export function listLocalMembers(query = ""): MemberRecord[] {
     : db.getAllSync<PersonRow>(
         "SELECT * FROM persons ORDER BY updated_at DESC LIMIT 200",
       );
-  return rows.map(mapRow);
+  return rows.map((row) => {
+    const member = mapRow(row);
+    const parents = getParentNamesForPerson(row.id);
+    return {
+      ...member,
+      fatherName: parents.fatherName,
+      motherName: parents.motherName,
+    };
+  });
 }
 
 export function createLocalMember(input: CreateMemberInput): MemberRecord {

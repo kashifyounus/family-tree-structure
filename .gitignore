@@ -16,6 +16,8 @@
 /playwright-report/
 /playwright-output/
 .playwright-database-url
+.cloud-database-url
+.cloudflared-url.log
 /blob-report/
 
 # next.js

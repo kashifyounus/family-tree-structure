@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Avatar, Text, useTheme } from "react-native-paper";
 
 import { formatBilingualName } from "@/lib/format/displayName";
+import { formatParentLine } from "@/lib/db/parentDisplay";
 import { formatGender } from "@/lib/format/gender";
 import type { MemberRecord } from "@/lib/data/types";
 import { layout, radius, space } from "@/theme/tokens";
@@ -56,6 +57,18 @@ export function MemberCard({
           {member.familyCode} · {formatGender(member.gender)}
           {member.currentCity ? ` · ${member.currentCity}` : ""}
         </Text>
+        {member.fatherName || member.motherName ? (
+          <Text
+            variant="labelSmall"
+            numberOfLines={1}
+            style={{ color: theme.colors.onSurfaceVariant, marginTop: 2 }}
+          >
+            {formatParentLine({
+              fatherName: member.fatherName ?? null,
+              motherName: member.motherName ?? null,
+            })}
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );

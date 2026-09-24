@@ -17,6 +17,7 @@ import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { listMembers } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
+import { formatParentLine } from "@/lib/db/parentDisplay";
 import { buildLocalReports } from "@/lib/db/localReports";
 import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
 import { motion } from "@/theme/motion";
@@ -134,6 +135,14 @@ export default function HomeScreen() {
               <Text variant="bodyMedium" style={{ color: theme.colors.primary }}>
                 {m.firstName} {m.lastName} · {m.familyCode}
               </Text>
+              {m.fatherName || m.motherName ? (
+                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                  {formatParentLine({
+                    fatherName: m.fatherName ?? null,
+                    motherName: m.motherName ?? null,
+                  })}
+                </Text>
+              ) : null}
             </Pressable>
           ))}
         </View>

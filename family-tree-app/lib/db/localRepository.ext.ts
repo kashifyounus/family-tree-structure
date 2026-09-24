@@ -363,6 +363,24 @@ export function setLocalParents(input: SetParentsInput): { unionId: string } {
   return { unionId };
 }
 
+/** Links a person as child of an existing marriage (creates childship immediately). */
+export function assignLocalPersonToCouple(
+  personId: string,
+  unionId: string,
+): { unionId: string } {
+  const db = getDatabase();
+  const union = db.getFirstSync<{ partner_1_id: string; partner_2_id: string }>(
+    "SELECT partner_1_id, partner_2_id FROM unions WHERE id = ?",
+    [unionId],
+  );
+  if (!union) throw new Error(ruleMessages.marriageMissing);
+  return setLocalParents({
+    personId,
+    parentAId: union.partner_1_id,
+    parentBId: union.partner_2_id,
+  });
+}
+
 export function updateLocalMarriage(input: UpdateMarriageInput): void {
   const db = getDatabase();
   const current = db.getFirstSync<{

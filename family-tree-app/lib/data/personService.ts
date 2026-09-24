@@ -34,10 +34,16 @@ import {
   linkLocalSpouse,
   listLocalPeopleBrief,
   listLocalUnionOptions,
+  assignLocalPersonToCouple,
   setLocalParents,
   updateLocalMarriage,
   updateLocalMember,
 } from "@/lib/db/localRepository.ext";
+import {
+  listParentCoupleRows,
+  type ParentCoupleFilters,
+  type ParentCoupleRow,
+} from "@/lib/db/parentCouples";
 import {
   getLocalMemberByFamilyCode,
   getLocalUnionsForPerson,
@@ -211,6 +217,25 @@ export function linkChild(mode: StorageMode, input: LinkChildInput): void {
 export function assignParents(mode: StorageMode, input: SetParentsInput): { unionId: string } {
   requireLocal(mode);
   return setLocalParents(input);
+}
+
+export function assignParentsToCouple(
+  mode: StorageMode,
+  personId: string,
+  unionId: string,
+): { unionId: string } {
+  requireLocal(mode);
+  return assignLocalPersonToCouple(personId, unionId);
+}
+
+export function parentCouplesForPicker(
+  mode: StorageMode,
+  personId: string,
+  query: string,
+  filters?: ParentCoupleFilters,
+): ParentCoupleRow[] {
+  requireLocal(mode);
+  return listParentCoupleRows(query, personId, filters);
 }
 
 export function saveMarriage(mode: StorageMode, input: UpdateMarriageInput): void {

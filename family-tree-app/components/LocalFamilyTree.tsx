@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
 
-import { FamilyTreeGraphView } from "@/components/FamilyTreeGraphView";
+import { GraphWebView } from "@/components/tree/GraphWebView";
 import { copy } from "@/content/businessCopy";
 import { formatGender } from "@/lib/format/gender";
 import {
@@ -130,12 +130,7 @@ export function LocalFamilyTree({
         </View>
       )}
       {view === "graph" && graph ? (
-        <FamilyTreeGraphView
-          graph={graph}
-          onPersonPress={onPersonPress}
-          zoomScale={zoomScale}
-          onZoomChange={onZoomChange}
-        />
+        <GraphWebView graph={graph} testID="local-tree-graph-webview" />
       ) : (
         <ScrollView
           style={styles.scroll}
