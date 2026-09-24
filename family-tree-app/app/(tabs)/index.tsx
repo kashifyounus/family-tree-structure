@@ -19,6 +19,10 @@ import type { MemberRecord } from "@/lib/data/types";
 import { formatParentLine } from "@/lib/db/parentDisplay";
 import { buildLocalReports } from "@/lib/db/localReports";
 import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
+import {
+  resolveCloudFocalFamilyCode,
+  resolveLocalFocalFamilyCode,
+} from "@/lib/tree/focalFamilyCode";
 import { motion } from "@/theme/motion";
 import { space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
@@ -36,6 +40,7 @@ export default function HomeScreen() {
   const [recent, setRecent] = useState<RecentPerson[]>([]);
   const [cloudMemberCount, setCloudMemberCount] = useState<number | null>(null);
   const [cloudStatsLoading, setCloudStatsLoading] = useState(false);
+  const [branchReference, setBranchReference] = useState(DEFAULT_FAMILY_CODE);
 
   useEffect(() => {
     if (mode === "local") {
@@ -83,10 +88,17 @@ export default function HomeScreen() {
     return () => clearTimeout(handle);
   }, [query, runSearch]);
 
-  const branchReference =
-    mode === "local" && localAccount.session
-      ? localAccount.session.focalFamilyCode
-      : DEFAULT_FAMILY_CODE;
+  useEffect(() => {
+    if (mode === "local") {
+      setBranchReference(
+        resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode),
+      );
+      return;
+    }
+    void resolveCloudFocalFamilyCode(localAccount.session?.focalFamilyCode).then(
+      setBranchReference,
+    );
+  }, [mode, localAccount.session?.focalFamilyCode, dataRevision]);
 
   useEffect(() => {
     if (mode !== "online") return;
