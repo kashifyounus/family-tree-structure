@@ -1,32 +1,48 @@
-# Gluestack UI (React Native) — compatibility notes
+# Gluestack UI (React Native) — migration
 
-**Target:** Kuriosity Family Tree (`family-tree-app`, Expo SDK 57, React Native 0.79+).
+**App:** `family-tree-app` · Expo SDK 57 · **Gluestack UI v5 alpha** + **NativeWind v5** (Tailwind v4).
 
-## Current status
+## Phase A — complete
 
-The app still uses **React Native Paper (MD3)** for production screens. New shared primitives (for example `FormBottomSheet`) use React Native core layout plus Paper actions until Gluestack is wired globally.
+| Item | Location |
+|------|----------|
+| CLI init | `npx gluestack-ui init --nativewind -y` |
+| Global CSS + tokens | `global.css` (Kuriosity primary `#1B4332`) |
+| Metro | `metro.config.js` → `withNativewind` + `../shared` watch folder |
+| Babel | `babel.config.js` → `nativewind/babel`, `module-resolver` |
+| Provider | `GluestackThemeProvider` wraps Paper in `AppProviders.tsx` |
+| Sample component | `components/ui/button` — used on Account → **Remove sample data** |
+| Paper coexistence | All existing screens unchanged; new UI should import from `@/components/ui/button` etc. |
 
-## Latest Gluestack (2026)
+### Add more components
 
-| Package | Role |
-|---------|------|
-| `gluestack-ui` v5 | CLI / project scaffolding |
-| `@gluestack-ui/themed` | Pre-styled components (older v1 track) |
-| Gluestack v2+ | **NativeWind** + copy-paste components |
+```bash
+cd family-tree-app
+npx gluestack-ui add input actionsheet -y --use-npm
+```
 
-Expo 57 is compatible with **NativeWind v4** and Gluestack’s NativeWind-based kits, but migration is **not a drop-in**: it requires `tailwind.config`, babel plugin, `GluestackUIProvider`, and replacing Paper tokens across ~40 screens.
+### Usage pattern
 
-## Recommended migration path
+```tsx
+import { Button, ButtonText } from "@/components/ui/button";
 
-1. **Phase A — Provider only:** Add NativeWind + `GluestackUIProvider` beside Paper; new components use Gluestack.
-2. **Phase B — Sheets & lists:** Replace `FormBottomSheet` internals with Gluestack `Actionsheet` / `Modal`.
-3. **Phase C — Remove Paper:** Switch theme, inputs, buttons, and lists screen-by-screen (Account → Members → Profile → Tree).
+<Button variant="default" onPress={onSave}>
+  <ButtonText>Save</ButtonText>
+</Button>
+```
 
-## Risk
+## Phase B (next)
 
-- Bundle size increases until Paper is removed.
-- Maestro tests rely on `testID`s — preserve them when swapping components.
+- `FormBottomSheet` → Gluestack Actionsheet / Modal
+- Lists & inputs on Members / onboarding
 
-## Decision
+## Phase C (later)
 
-Proceed with **phased migration** after UX sheets and parent picker ship on Paper. Revisit when you want a dedicated UI-only sprint.
+- Remove `react-native-paper` after screen-by-screen port
+- Align MD3 tokens fully with `global.css` variables
+
+## Notes
+
+- Init fell back to **NativeWind v5** for Expo (CLI message).
+- Jest mocks `@/global.css` in `jest.setup.js`.
+- Maestro: keep `testID` when replacing controls.

@@ -13,6 +13,8 @@ import {
   useTheme,
 } from "react-native-paper";
 
+import { Button as GsButton, ButtonText } from "@/components/ui/button";
+
 import { AppDialogForm } from "@/components/ui/AppDialogForm";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { Screen } from "@/components/ui/Screen";
@@ -309,9 +311,8 @@ export default function AccountScreen() {
               >
                 {copy.account.loadSampleFamily}
               </Button>
-              <Button
-                mode="text"
-                icon="delete-sweep"
+              <GsButton
+                variant="outline"
                 disabled={fixtureBusy || countFixturePeople() === 0}
                 onPress={() => {
                   setFixtureBusy(true);
@@ -325,9 +326,10 @@ export default function AccountScreen() {
                     setFixtureBusy(false);
                   }
                 }}
+                className="self-start"
               >
-                {copy.account.clearSampleFamily}
-              </Button>
+                <ButtonText>{copy.account.clearSampleFamily}</ButtonText>
+              </GsButton>
             </>
           )}
           {storage.mode === "local" && (

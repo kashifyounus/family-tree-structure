@@ -9,6 +9,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { installGlobalErrorHandlers } from "@/lib/globalErrorHandlers";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
+import { GluestackThemeProvider } from "@/providers/GluestackThemeProvider";
 import { AppPreferencesProvider, useAppPreferences } from "@/context/AppPreferencesContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { ErrorProvider } from "@/context/ErrorContext";
@@ -25,23 +26,25 @@ function ThemedApp({ children }: AppProvidersProps) {
   const theme = prefs.theme === "dark" ? darkTheme : lightTheme;
 
   return (
-    <PaperProvider
-      theme={theme}
-      settings={{
-        icon: (props) => <MaterialCommunityIcons {...props} />,
-      }}
-    >
-      <StatusBar style={prefs.theme === "dark" ? "light" : "dark"} />
-      <AppErrorBoundary>
-        <ErrorProvider>
-          <StorageProvider>
-            <LocalAccountProvider>
-              <AuthProvider>{children}</AuthProvider>
-            </LocalAccountProvider>
-          </StorageProvider>
-        </ErrorProvider>
-      </AppErrorBoundary>
-    </PaperProvider>
+    <GluestackThemeProvider>
+      <PaperProvider
+        theme={theme}
+        settings={{
+          icon: (props) => <MaterialCommunityIcons {...props} />,
+        }}
+      >
+        <StatusBar style={prefs.theme === "dark" ? "light" : "dark"} />
+        <AppErrorBoundary>
+          <ErrorProvider>
+            <StorageProvider>
+              <LocalAccountProvider>
+                <AuthProvider>{children}</AuthProvider>
+              </LocalAccountProvider>
+            </StorageProvider>
+          </ErrorProvider>
+        </AppErrorBoundary>
+      </PaperProvider>
+    </GluestackThemeProvider>
   );
 }
 

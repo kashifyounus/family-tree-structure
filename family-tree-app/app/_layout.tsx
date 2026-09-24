@@ -3,6 +3,8 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
+import "@/global.css";
+
 import { GenealogyBootScreen } from "@/components/GenealogyBootScreen";
 import { NavigationGate } from "@/components/NavigationGate";
 import { APP_NAME, APP_VERSION_LABEL } from "@/constants/appMeta";
