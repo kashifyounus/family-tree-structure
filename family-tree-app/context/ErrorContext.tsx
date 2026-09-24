@@ -7,7 +7,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Snackbar, useTheme } from "react-native-paper";
+import { StyleSheet } from "react-native";
+import { Snackbar, Text, useTheme } from "react-native-paper";
 
 import { semantic } from "@/theme/paperTheme";
 
@@ -24,6 +25,36 @@ const ErrorContext = createContext<ErrorContextValue | null>(null);
 
 type SnackKind = "error" | "success" | "info";
 
+function snackColors(
+  kind: SnackKind,
+  theme: ReturnType<typeof useTheme>,
+): { background: string; text: string; action: string } {
+  switch (kind) {
+    case "error":
+      return {
+        background: theme.colors.errorContainer,
+        text: theme.colors.onErrorContainer,
+        action: theme.colors.error,
+      };
+    case "success":
+      return {
+        background: semantic.successContainer,
+        text: semantic.onSuccessContainer,
+        action: semantic.success,
+      };
+    case "info":
+      return {
+        background: theme.colors.inverseSurface,
+        text: theme.colors.inverseOnSurface,
+        action: theme.colors.inversePrimary,
+      };
+    default: {
+      const _exhaustive: never = kind;
+      return _exhaustive;
+    }
+  }
+}
+
 function FeedbackSnackbar({
   visible,
   message,
@@ -36,25 +67,32 @@ function FeedbackSnackbar({
   onDismiss: () => void;
 }) {
   const theme = useTheme();
-  const backgroundColor =
-    kind === "error"
-      ? theme.colors.errorContainer
-      : kind === "success"
-        ? semantic.successContainer
-        : theme.colors.inverseSurface;
+  const colors = snackColors(kind, theme);
 
   return (
     <Snackbar
       visible={visible}
       onDismiss={onDismiss}
       duration={kind === "error" ? 6000 : 3500}
-      action={{ label: "Dismiss", onPress: onDismiss }}
-      style={{ backgroundColor }}
+      action={{
+        label: "Dismiss",
+        onPress: onDismiss,
+        textColor: colors.action,
+      }}
+      style={[styles.snackbar, { backgroundColor: colors.background }]}
     >
-      {message}
+      <Text variant="bodyMedium" style={{ color: colors.text }}>
+        {message}
+      </Text>
     </Snackbar>
   );
 }
+
+const styles = StyleSheet.create({
+  snackbar: {
+    marginBottom: 8,
+  },
+});
 
 export function ErrorProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);

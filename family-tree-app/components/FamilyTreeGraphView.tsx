@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -8,12 +8,14 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 import Svg, { Line } from "react-native-svg";
 import { Text, useTheme } from "react-native-paper";
 
 import { copy } from "@/content/businessCopy";
 import { formatGraphPersonName } from "@/lib/format/displayName";
 import type { FamilyGraph, GraphPersonSummary } from "@/lib/graph/types";
+import { clampGraphScale } from "@/lib/graph/graphScale";
 import { buildPedigreeConnectorSegments } from "../../shared/pedigreeConnectors";
 
 const NODE_W = 148;
@@ -35,10 +37,6 @@ function genderIcon(
   return "account";
 }
 
-function clampScale(value: number): number {
-  return Math.min(2.5, Math.max(0.55, value));
-}
-
 export function FamilyTreeGraphView({
   graph,
   onPersonPress,
@@ -49,21 +47,40 @@ export function FamilyTreeGraphView({
   const { width: screenW } = useWindowDimensions();
   const [internalScale, setInternalScale] = useState(1);
   const scale = controlledScale ?? internalScale;
-  const pinchBase = useMemo(() => ({ value: scale }), [scale]);
+  const pinchBaseRef = useRef(scale);
 
-  const setScale = (next: number) => {
-    const clamped = clampScale(next);
-    if (onZoomChange) onZoomChange(clamped);
-    else setInternalScale(clamped);
-  };
+  const setScale = useCallback(
+    (next: number) => {
+      const clamped = clampGraphScale(next);
+      if (onZoomChange) onZoomChange(clamped);
+      else setInternalScale(clamped);
+    },
+    [onZoomChange],
+  );
+
+  pinchBaseRef.current = scale;
+
+  const applyPinchScale = useCallback(
+    (factor: number) => {
+      setScale(pinchBaseRef.current * factor);
+    },
+    [setScale],
+  );
+
+  const onPinchBegin = useCallback(() => {
+    pinchBaseRef.current = scale;
+  }, [scale]);
 
   const pinch = Gesture.Pinch()
     .onBegin(() => {
-      pinchBase.value = scale;
+      runOnJS(onPinchBegin)();
     })
     .onUpdate((e) => {
-      setScale(pinchBase.value * e.scale);
+      runOnJS(applyPinchScale)(e.scale);
     });
+
+  const scrollGesture = Gesture.Native();
+  const composed = Gesture.Simultaneous(pinch, scrollGesture);
 
   const layout = useMemo(() => {
     if (graph.nodes.length === 0) {
@@ -105,7 +122,7 @@ export function FamilyTreeGraphView({
   const scaledH = layout.height * scale;
 
   return (
-    <GestureDetector gesture={pinch}>
+    <GestureDetector gesture={composed}>
       <ScrollView
         horizontal
         nestedScrollEnabled
@@ -153,10 +170,10 @@ export function FamilyTreeGraphView({
             {layout.nodes.map((n) => {
               const left = n.position.x - layout.minX + PADDING;
               const top = n.position.y - layout.minY + PADDING;
-            const p = n.data.person;
-            const focal = n.data.isFocal;
-            const deceased = n.data.isDeceased;
-            const isPrivate = p.treeDisplayIsPrivate === true;
+              const p = n.data.person;
+              const focal = n.data.isFocal;
+              const deceased = n.data.isDeceased;
+              const isPrivate = p.treeDisplayIsPrivate === true;
               return (
                 <Pressable
                   key={n.id}

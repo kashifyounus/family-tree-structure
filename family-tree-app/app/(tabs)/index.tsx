@@ -10,7 +10,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ReferenceText } from "@/components/ui/ReferenceText";
 import { Screen } from "@/components/ui/Screen";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { APP_NAME, APP_OWNER, APP_VERSION, DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
+import { APP_NAME, DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
+import { CreditFooter } from "@/components/CreditFooter";
 import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
@@ -104,9 +105,7 @@ export default function HomeScreen() {
     <Screen testID="home-screen">
       <Animated.View entering={FadeIn.duration(motion.slow)} style={styles.hero}>
         <BrandLogo size={80} />
-        <Text variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
-          v{APP_VERSION} · {APP_OWNER}
-        </Text>
+        <CreditFooter showVersion={false} />
       </Animated.View>
 
       <PageHeader title={APP_NAME} subtitle={copy.app.tagline} />

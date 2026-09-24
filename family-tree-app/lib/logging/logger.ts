@@ -3,7 +3,7 @@
  * Verbose logs are dev-only; warnings and errors always emit to logcat.
  */
 
-const PREFIX = "MughalsFamilyTree";
+const PREFIX = "KuriosityFamilyTree";
 
 type LogFields = Record<string, unknown>;
 

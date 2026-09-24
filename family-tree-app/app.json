@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Mughal's Family Tree",
-    "slug": "mughals-family-tree",
-    "version": "1.4.0",
+    "name": "Kuriosity Family Tree",
+    "slug": "kuriosity-family-tree",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mughalsfamilytree",
+    "scheme": "kuriosityfamilytree",
     "userInterfaceStyle": "automatic",
-    "description": "Family genealogy — private archive on your phone or shared records on your family website.",
+    "description": "Family genealogy — private archive on your phone or shared records on your family website. By Kuriosity Engineering.",
     "primaryColor": "#1B4332",
     "ios": {
       "supportsTablet": true,
@@ -15,8 +15,8 @@
     },
     "android": {
       "package": "com.mughals.familytree",
-      "versionCode": 5,
-      "label": "Mughal's Family Tree",
+      "versionCode": 6,
+      "label": "Kuriosity Family Tree",
       "softwareKeyboardLayoutMode": "resize",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
@@ -52,8 +52,9 @@
       "typedRoutes": true
     },
     "extra": {
+      "company": "Kuriosity Engineering",
       "author": "Kashif Younus",
-      "ownerEmail": "kashifyounus@mughals.local"
+      "ownerEmail": "kashifyounus@kuriosity.engineering"
     }
   }
 }
