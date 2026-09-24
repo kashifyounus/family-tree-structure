@@ -111,11 +111,36 @@ export type OnlinePersonSummary = {
   gender: "MALE" | "FEMALE" | "OTHER";
   birthDate: string | null;
   deathDate: string | null;
+  birthPlace?: string | null;
+  homeTown?: string | null;
   currentCity: string | null;
   occupation: string | null;
   bio: string | null;
   isLiving: boolean;
   age: number | null;
+  treeDisplayIsPrivate?: boolean;
+};
+
+export type OnlineParentLink = {
+  childshipId: string;
+  unionId: string;
+  relationshipType: string;
+  partners: OnlinePersonSummary[];
+};
+
+export type OnlineKinshipRelative = OnlinePersonSummary & {
+  kinshipLabel?: string;
+  side?: "paternal" | "maternal" | "neutral";
+  degree?: "full" | "half" | "step" | "unknown";
+};
+
+export type OnlineComputedRelations = {
+  fullSiblings: OnlineKinshipRelative[];
+  halfSiblings: OnlineKinshipRelative[];
+  paternalUncles: OnlineKinshipRelative[];
+  paternalAunts: OnlineKinshipRelative[];
+  maternalUncles: OnlineKinshipRelative[];
+  maternalAunts: OnlineKinshipRelative[];
 };
 
 export type OnlinePersonDetails = {
@@ -129,12 +154,8 @@ export type OnlinePersonDetails = {
     partner2: OnlinePersonSummary;
     children: (OnlinePersonSummary & { relationshipType?: string })[];
   }[];
-  computed?: {
-    fullSiblings: { firstName: string; lastName: string; familyCode: string }[];
-    halfSiblings: { firstName: string; lastName: string; familyCode: string }[];
-    paternalUncles?: { firstName: string; lastName: string; familyCode: string }[];
-    maternalUncles?: { firstName: string; lastName: string; familyCode: string }[];
-  };
+  parentLinks?: OnlineParentLink[];
+  computed?: OnlineComputedRelations;
 };
 
 export async function fetchOnlinePersonByCode(

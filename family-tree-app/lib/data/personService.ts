@@ -11,6 +11,10 @@ import {
   getParentsForPerson,
 } from "@/lib/kinship/kinshipCore";
 import type { ComputedRelations, KinshipPerson } from "@/lib/kinship/types";
+import {
+  computedRelationsFromOnline,
+  parentsFromOnlineParentLinks,
+} from "@/lib/data/onlinePersonMapper";
 import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
 import type {
@@ -87,50 +91,11 @@ function mapOnlinePerson(m: OnlinePersonDetails["person"]): MemberRecord {
     gender: m.gender,
     birthDate: m.birthDate,
     deathDate: m.deathDate,
-    birthPlace: (m as { birthPlace?: string | null }).birthPlace ?? null,
-    homeTown: (m as { homeTown?: string | null }).homeTown ?? null,
+    birthPlace: m.birthPlace ?? null,
+    homeTown: m.homeTown ?? null,
     currentCity: m.currentCity,
     occupation: m.occupation,
     bio: m.bio,
-  };
-}
-
-function computedFromOnline(details: OnlinePersonDetails): ComputedRelations | null {
-  const c = details.computed;
-  if (!c) return null;
-  const toRel = (
-    items: { firstName: string; lastName: string; familyCode: string; id?: string }[],
-    label: string,
-    side: ComputedRelations["paternalUncles"][0]["side"],
-  ) =>
-    items.map((p) => ({
-      id: p.id ?? p.familyCode,
-      familyCode: p.familyCode,
-      firstName: p.firstName,
-      lastName: p.lastName,
-      nickname: null,
-      urduFirstName: null,
-      urduLastName: null,
-      gender: "OTHER" as const,
-      birthDate: null,
-      deathDate: null,
-      currentCity: null,
-      birthPlace: null,
-      homeTown: null,
-      occupation: null,
-      bio: null,
-      kinshipLabel: label,
-      side,
-      degree: "unknown" as const,
-    }));
-
-  return {
-    fullSiblings: toRel(c.fullSiblings ?? [], "Full sibling", "neutral"),
-    halfSiblings: toRel(c.halfSiblings ?? [], "Half sibling", "neutral"),
-    paternalUncles: toRel(c.paternalUncles ?? [], "Paternal uncle", "paternal"),
-    paternalAunts: toRel((c as { paternalAunts?: typeof c.fullSiblings }).paternalAunts ?? [], "Paternal aunt", "paternal"),
-    maternalUncles: toRel(c.maternalUncles ?? [], "Maternal uncle", "maternal"),
-    maternalAunts: toRel((c as { maternalAunts?: typeof c.fullSiblings }).maternalAunts ?? [], "Maternal aunt", "maternal"),
   };
 }
 
@@ -156,7 +121,7 @@ export async function loadPersonByCode(
   const data = await fetchOnlinePersonByCode(familyCode);
   if (!data) return null;
   const member = mapOnlinePerson(data.person);
-  const parents: KinshipPerson[] = [];
+  const parents = parentsFromOnlineParentLinks(data.parentLinks ?? []);
   return {
     member,
     unions: data.unions.map((u) => ({
@@ -175,7 +140,7 @@ export async function loadPersonByCode(
       })),
     })),
     parents,
-    computed: computedFromOnline(data),
+    computed: computedRelationsFromOnline(data.computed),
     onlineDetails: data,
   };
 }
