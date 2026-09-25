@@ -62,10 +62,13 @@ export const UIActionsheet = createActionsheet({
   AnimatePresence: AnimatePresence,
 });
 
-const actionsheetStyle = tva({ base: 'w-full h-full web:pointer-events-none' });
+const actionsheetStyle = tva({
+  base: 'w-full h-full flex flex-col justify-end web:pointer-events-none',
+});
 
 const actionsheetContentStyle = tva({
-  base: 'items-center rounded-t-lg p-4 bg-background web:pointer-events-auto web:select-none border-t border-border dark:border-border/10 max-h-[80vh] pb-safe',
+  base:
+    'w-full self-stretch items-stretch rounded-t-3xl rounded-b-none px-0 pt-1 pb-safe bg-background web:pointer-events-auto web:select-none border-t border-border dark:border-border/10 shadow-lg',
 });
 
 const actionsheetItemStyle = tva({
@@ -91,7 +94,7 @@ const actionsheetItemTextStyle = tva({
 });
 
 const actionsheetDragIndicatorStyle = tva({
-  base: 'w-[100px] h-2 bg-muted rounded-full',
+  base: 'w-12 h-1 bg-muted-foreground/30 rounded-full',
 });
 
 const actionsheetDragIndicatorWrapperStyle = tva({

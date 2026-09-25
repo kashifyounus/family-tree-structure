@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import { Dimensions, Platform, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
@@ -11,6 +11,7 @@ import {
   ActionsheetScrollView,
 } from "@/components/ui/actionsheet";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
+import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 
 export type FormBottomSheetProps = {
   visible: boolean;
@@ -26,6 +27,8 @@ export type FormBottomSheetProps = {
   hideActions?: boolean;
   maxHeightRatio?: number;
 };
+
+const windowHeight = Dimensions.get("window").height;
 
 /**
  * Gluestack Actionsheet wrapper for keyboard-aware create/edit forms.
@@ -44,37 +47,49 @@ export function FormBottomSheet({
   maxHeightRatio = 0.92,
 }: FormBottomSheetProps) {
   const insets = useSafeAreaInsets();
-  const maxHeightPercent = Math.round(maxHeightRatio * 100);
+  const keyboardHeight = useKeyboardHeight();
+  const maxSheetHeight = Math.round(windowHeight * maxHeightRatio);
+  const footerPad = Math.max(insets.bottom, 12);
+  const scrollBottomPad = keyboardHeight > 0 ? keyboardHeight - footerPad + 16 : 16;
 
   return (
-    <Actionsheet isOpen={visible} onClose={onDismiss}>
+    <Actionsheet isOpen={visible} onClose={onDismiss} isKeyboardDismissable>
       <ActionsheetBackdrop />
       <ActionsheetContent
-        className="pb-2"
-        style={{ maxHeight: `${maxHeightPercent}%`, paddingBottom: Math.max(insets.bottom, 12) }}
+        className="px-0 pt-2 pb-0 gap-0"
+        style={{
+          maxHeight: maxSheetHeight,
+          width: "100%",
+        }}
       >
         <ActionsheetDragIndicatorWrapper>
           <ActionsheetDragIndicator />
         </ActionsheetDragIndicatorWrapper>
 
-        <Text className="text-xl font-bold text-foreground w-full mb-3">{title}</Text>
+        <View className="w-full px-5 pb-1">
+          <Text className="text-lg font-semibold text-foreground tracking-tight">{title}</Text>
+        </View>
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ width: "100%", flexShrink: 1 }}
-          keyboardVerticalOffset={insets.bottom}
+        <ActionsheetScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
+          contentContainerStyle={{
+            gap: 14,
+            paddingHorizontal: 20,
+            paddingTop: 4,
+            paddingBottom: scrollBottomPad,
+          }}
+          style={{ width: "100%", flexGrow: 0, flexShrink: 1 }}
         >
-          <ActionsheetScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ gap: 12, paddingBottom: 8 }}
-          >
-            {children}
-          </ActionsheetScrollView>
-        </KeyboardAvoidingView>
+          {children}
+        </ActionsheetScrollView>
 
         {!hideActions && onSubmit ? (
-          <View className="flex-row justify-end gap-2 w-full pt-2">
+          <View
+            className="w-full flex-row justify-end gap-2 border-t border-border bg-background px-5 pt-3"
+            style={{ paddingBottom: footerPad + (keyboardHeight > 0 ? 4 : 0) }}
+          >
             <Button variant="ghost" onPress={onDismiss} disabled={loading}>
               <ButtonText>{cancelLabel}</ButtonText>
             </Button>
@@ -84,7 +99,10 @@ export function FormBottomSheet({
             </Button>
           </View>
         ) : hideActions ? (
-          <View className="flex-row justify-end w-full pt-2">
+          <View
+            className="w-full flex-row justify-end border-t border-border bg-background px-5 pt-3"
+            style={{ paddingBottom: footerPad }}
+          >
             <Button variant="ghost" onPress={onDismiss}>
               <ButtonText>{cancelLabel}</ButtonText>
             </Button>
