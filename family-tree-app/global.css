@@ -10,21 +10,21 @@
    3. :root.dark / :root.light — higher specificity for web class toggle. */
 @layer theme {
   :root {
-    /* Kuriosity brand green (#1B4332) */
+    /* Kuriosity brand green (#1B4332) + warm archive surfaces */
     --primary: 27 67 50;
     --primary-foreground: 255 255 255;
-    --card: 255 255 255;
-    --secondary: 245 245 245;
+    --card: 255 253 248;
+    --secondary: 239 230 214;
     --secondary-foreground: 23 23 23;
-    --background: 255 255 255;
-    --popover: 255 255 255;
+    --background: 246 241 231;
+    --popover: 255 253 248;
     --popover-foreground: 10 10 10;
-    --muted: 245 245 245;
-    --muted-foreground: 115 115 115;
+    --muted: 239 230 214;
+    --muted-foreground: 92 83 70;
     --destructive: 231 0 11;
-    --foreground: 10 10 10;
-    --border: 229 229 229;
-    --input: 229 229 229;
+    --foreground: 26 24 20;
+    --border: 221 211 196;
+    --input: 221 211 196;
     --ring: 212 212 212;
     --accent: 247 247 247;
     --accent-foreground: 52 52 52;
@@ -75,18 +75,18 @@
   :root.light {
     --primary: 27 67 50;
     --primary-foreground: 255 255 255;
-    --card: 255 255 255;
-    --secondary: 245 245 245;
+    --card: 255 253 248;
+    --secondary: 239 230 214;
     --secondary-foreground: 23 23 23;
-    --background: 255 255 255;
-    --popover: 255 255 255;
+    --background: 246 241 231;
+    --popover: 255 253 248;
     --popover-foreground: 10 10 10;
-    --muted: 245 245 245;
-    --muted-foreground: 115 115 115;
+    --muted: 239 230 214;
+    --muted-foreground: 92 83 70;
     --destructive: 231 0 11;
-    --foreground: 10 10 10;
-    --border: 229 229 229;
-    --input: 229 229 229;
+    --foreground: 26 24 20;
+    --border: 221 211 196;
+    --input: 221 211 196;
     --ring: 212 212 212;
     --accent: 247 247 247;
     --accent-foreground: 52 52 52;

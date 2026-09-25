@@ -77,6 +77,7 @@ export const copy = {
     hapticsOff: "Vibration off",
     dataTitle: "Your data",
     openTools: "Backup, export & kinship tools",
+    openUiGallery: "UI / UX gallery (Gluestack mockups)",
     loadSampleSuccess: (reference: string) =>
       `Sample family loaded. Explore member reference ${reference}.`,
   },

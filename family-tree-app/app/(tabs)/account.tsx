@@ -260,6 +260,9 @@ export default function AccountScreen() {
           <GsButton variant="outline" onPress={() => router.push("/(tabs)/tools")}>
             <ButtonText>{copy.account.openTools}</ButtonText>
           </GsButton>
+          <GsButton variant="outline" onPress={() => router.push("/design-gallery")}>
+            <ButtonText>{copy.account.openUiGallery}</ButtonText>
+          </GsButton>
         </AppCardContent>
       </AppCard>
 

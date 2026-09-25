@@ -38,6 +38,10 @@ export default function RootLayout() {
             name="marriage/[unionId]"
             options={{ title: "Marriage record", headerBackTitle: "Back" }}
           />
+          <Stack.Screen
+            name="design-gallery"
+            options={{ title: "UI gallery", headerBackTitle: "Back" }}
+          />
         </Stack>
       </NavigationGate>
     </AppProviders>
