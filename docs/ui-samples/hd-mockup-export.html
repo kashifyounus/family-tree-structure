@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Kuriosity HD UI Mockups</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #d8d0c4;
+      padding: 48px;
+      color: #1a1814;
+    }
+    h1 { font-size: 28px; margin-bottom: 8px; }
+    .sub { color: #5c5346; margin-bottom: 40px; font-size: 15px; max-width: 900px; line-height: 1.5; }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 48px;
+      justify-content: center;
+    }
+    figure { text-align: center; }
+    figcaption {
+      margin-top: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #3a3329;
+    }
+    /* 390×844 logical @ 3× export = 1170×2532 px per frame */
+    .device {
+      width: 390px;
+      height: 844px;
+      border-radius: 44px;
+      background: #111;
+      padding: 12px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.35);
+    }
+    .screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 36px;
+      overflow: hidden;
+      background: #f6f1e7;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .status {
+      height: 44px;
+      background: #fffdf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .nav-title {
+      padding: 12px 20px;
+      background: #fffdf8;
+      border-bottom: 1px solid #ddd3c4;
+      font-weight: 600;
+      font-size: 17px;
+    }
+    .content { flex: 1; overflow: hidden; }
+    .tabs {
+      display: flex;
+      background: #fffdf8;
+      border-top: 1px solid #ddd3c4;
+      padding: 10px 0 16px;
+    }
+    .tab { flex: 1; text-align: center; font-size: 11px; color: #5c5346; }
+    .tab.on { color: #1b4332; font-weight: 700; }
+    .px { padding: 0 20px; }
+    .btn {
+      display: inline-block;
+      background: #1b4332;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .btn.outline {
+      background: transparent;
+      color: #1b4332;
+      border: 2px solid #1b4332;
+    }
+    .banner {
+      background: #d8f3dc;
+      color: #081c15;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      margin: 12px 20px;
+      line-height: 1.4;
+    }
+    .search {
+      margin: 0 20px 12px;
+      height: 48px;
+      border-radius: 12px;
+      border: 1px solid #ddd3c4;
+      background: #efe6d6;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      color: #5c5346;
+      font-size: 15px;
+    }
+    .tile {
+      margin: 0 20px 10px;
+      padding: 16px;
+      background: #fffdf8;
+      border: 1px solid #ddd3c4;
+      border-radius: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .tile-icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(27,67,50,.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .tree-bg {
+      background: #f3f4f6;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 24px;
+    }
+    .pcard {
+      width: 108px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 10px rgba(15,23,42,.1);
+      text-align: center;
+      overflow: hidden;
+    }
+    .pcard.focal { border: 2px solid #1b4332; box-shadow: 0 0 0 3px rgba(27,67,50,.25); }
+    .pbar { height: 5px; }
+    .pbar.m { background: #7eb6e0; }
+    .pbar.f { background: #f4a6c1; }
+    .pav {
+      width: 44px; height: 44px; border-radius: 50%; margin: 10px auto 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px;
+    }
+    .pav.m { background: #e3f0fb; border: 2px solid #7eb6e0; }
+    .pav.f { background: #fde8f0; border: 2px solid #f4a6c1; }
+    .pname { font-size: 11px; font-weight: 600; padding: 0 6px; }
+    .pyears { font-size: 10px; color: #6b7280; margin: 4px 0 8px; }
+    .row { display: flex; gap: 12px; }
+    .vline { width: 2px; height: 28px; background: #b8bcc4; }
+    .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: #fffdf8;
+      border-radius: 24px 24px 0 0;
+      padding: 8px 0 28px;
+      border-top: 1px solid #ddd3c4;
+      box-shadow: 0 -12px 40px rgba(0,0,0,.15);
+    }
+    .handle {
+      width: 48px; height: 4px; background: #c4b8a8;
+      border-radius: 99px; margin: 6px auto 16px;
+    }
+    .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .field input, .field .fake {
+      width: 100%; min-height: 48px; border-radius: 12px;
+      border: 1px solid #ddd3c4; background: #efe6d6;
+      padding: 12px 14px; font-size: 16px; margin-bottom: 14px;
+    }
+    .radio-box {
+      border: 1px solid #ddd3c4; border-radius: 12px; overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .radio-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px; border-bottom: 1px solid #ddd3c4; font-size: 15px;
+    }
+    .radio-row:last-child { border-bottom: none; }
+    .dot {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid #1b4332; display: flex; align-items: center; justify-content: center;
+    }
+    .dot::after {
+      content: ""; width: 11px; height: 11px; border-radius: 50%; background: #1b4332;
+    }
+    .dim { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+    .list-row {
+      padding: 14px 20px;
+      border-bottom: 1px solid #ddd3c4;
+      font-size: 15px;
+    }
+    .list-row small { display: block; color: #5c5346; font-size: 13px; margin-top: 4px; }
+    .logo-area { text-align: center; padding: 48px 28px 24px; flex: 1; }
+    .logo {
+      width: 88px; height: 88px; border-radius: 20px;
+      background: #1b4332; color: #fff; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; font-weight: 700;
+    }
+    .foot-btns { padding: 0 28px 40px; }
+    h2.screen-title { font-size: 22px; margin-bottom: 6px; }
+    .meta { color: #1b4332; font-weight: 600; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Kuriosity Family Tree — HD mockups (3×)</h1>
+  <p class="sub">Export at deviceScaleFactor 3 for 1170×2532 px per screen. Tokens: #1B4332 primary, #f6f1e7 background, Gluestack-style forms & pedigree.</p>
+  <div class="grid">
+    <figure id="mockup-onboarding">
+      <div class="device"><div class="screen">
+        <div class="logo-area">
+          <div class="logo">K</div>
+          <h2 class="screen-title">Welcome to your family story</h2>
+          <p style="color:#5c5346;line-height:1.55;margin-top:12px;font-size:15px">Document relatives, marriages, and children — privately or on your family cloud.</p>
+        </div>
+        <div class="foot-btns">
+          <div class="btn">Begin setup</div>
+          <div class="btn outline">Load demo family</div>
+        </div>
+      </div></div>
+      <figcaption>01 — Onboarding</figcaption>
+    </figure>
+
+    <figure id="mockup-home">
+      <div class="device"><div class="screen">
+        <div class="status"><span>9:41</span><span>100%</span></div>
+        <div class="px" style="padding-top:16px"><h2 class="screen-title">Home</h2></div>
+        <div class="banner">Private archive — for your eyes on this device.</div>
+        <div class="search">Search members</div>
+        <div class="tile"><div class="tile-icon">🌳</div><div><strong>Open family tree</strong><br><span style="font-size:13px;color:#5c5346">Pedigree view</span></div></div>
+        <div class="tile"><div class="tile-icon">👥</div><div><strong>Browse members</strong><br><span style="font-size:13px;color:#5c5346">2,514 in demo</span></div></div>
+        <div class="tabs"><div class="tab on">Home</div><div class="tab">Tree</div><div class="tab">Members</div><div class="tab">Account</div></div>
+      </div></div>
+      <figcaption>02 — Home</figcaption>
+    </figure>
+
+    <figure id="mockup-tree">
+      <div class="device"><div class="screen">
+        <div class="status"><span>9:41</span><span>100%</span></div>
+        <div class="nav-title">Tree · Hassan Khan</div>
+        <div class="content tree-bg">
+          <div class="row" style="margin-bottom:8px">
+            <div class="pcard"><div class="pbar m"></div><div class="pav m">HK</div><div class="pname">Hassan Khan</div><div class="pyears">1955–</div></div>
+            <div class="pcard"><div class="pbar f"></div><div class="pav f">AK</div><div class="pname">Ayesha Khan</div><div class="pyears">1960–2020</div></div>
+          </div>
+          <div class="vline"></div>
+          <div class="row" style="margin-top:8px">
+            <div class="pcard"><div class="pbar m"></div><div class="pav m">AK</div><div class="pname">Ali Khan</div><div class="pyears">1982–</div></div>
+            <div class="pcard focal"><div class="pbar m"></div><div class="pav m">ZK</div><div class="pname">Zain Khan</div><div class="pyears">2010–</div></div>
+            <div class="pcard"><div class="pbar f"></div><div class="pav f">FK</div><div class="pname">Fatima Khan</div><div class="pyears">1988–</div></div>
+          </div>
+        </div>
+        <div class="tabs"><div class="tab">Home</div><div class="tab on">Tree</div><div class="tab">Members</div><div class="tab">Account</div></div>
+      </div></div>
+      <figcaption>03 — Pedigree tree</figcaption>
+    </figure>
+
+    <figure id="mockup-members">
+      <div class="device"><div class="screen">
+        <div class="status"><span>9:41</span><span>100%</span></div>
+        <div class="px" style="padding-top:16px"><h2 class="screen-title">Members</h2></div>
+        <div class="search" style="margin-top:12px">Khan</div>
+        <div class="list-row">Hassan Khan<small>FAM-10004 · Karachi</small></div>
+        <div class="list-row">Ayesha Khan<small>FAM-10005 · Lahore</small></div>
+        <div class="list-row">Zain Khan<small>FAM-10012 · Dubai</small></div>
+        <div class="tabs"><div class="tab">Home</div><div class="tab">Tree</div><div class="tab on">Members</div><div class="tab">Account</div></div>
+      </div></div>
+      <figcaption>04 — Members</figcaption>
+    </figure>
+
+    <figure id="mockup-sheet">
+      <div class="device"><div class="screen">
+        <div class="status"><span>9:41</span><span>100%</span></div>
+        <div class="nav-title">Family member</div>
+        <div class="content" style="background:#f6f1e7"></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <h2 style="font-size:18px;padding:0 20px 12px">Add child</h2>
+          <div class="px field"><label>Given name</label><div class="fake" style="color:#9ca3af">Given name</div></div>
+          <div class="px field"><label>Family name</label><div class="fake">Khan</div></div>
+          <div class="px field"><label>Gender</label>
+            <div class="radio-box">
+              <div class="radio-row"><span>Male</span><div class="dot"></div></div>
+              <div class="radio-row"><span>Female</span><div style="width:22px;height:22px;border-radius:50%;border:2px solid #c4b8a8"></div></div>
+              <div class="radio-row"><span>Other</span><div style="width:22px;height:22px;border-radius:50%;border:2px solid #c4b8a8"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;padding:12px 20px 0;border-top:1px solid #ddd3c4">
+            <span style="padding:12px 16px">Cancel</span>
+            <span class="btn" style="width:auto;padding:12px 20px">Save changes</span>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>05 — Bottom sheet form</figcaption>
+    </figure>
+
+    <figure id="mockup-account">
+      <div class="device"><div class="screen">
+        <div class="status"><span>9:41</span><span>100%</span></div>
+        <div class="px" style="padding-top:16px"><h2 class="screen-title">Account</h2>
+          <p class="meta" style="margin-top:8px">2,514 sample members loaded</p>
+        </div>
+        <div style="padding:20px">
+          <div class="btn outline" style="margin-bottom:10px">Load huge demo family</div>
+          <div class="btn outline">Remove sample data only</div>
+        </div>
+        <div class="tabs"><div class="tab">Home</div><div class="tab">Tree</div><div class="tab">Members</div><div class="tab on">Account</div></div>
+      </div></div>
+      <figcaption>06 — Account & demo</figcaption>
+    </figure>
+  </div>
+</body>
+</html>

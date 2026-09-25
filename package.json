@@ -16,6 +16,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:huge": "tsx prisma/seedHugeDemo.ts",
     "demo:export": "tsx scripts/export-demo-dataset.ts",
+    "mockups:hd": "node scripts/export-hd-mockups.mjs",
     "postinstall": "prisma generate"
   },
   "prisma": {

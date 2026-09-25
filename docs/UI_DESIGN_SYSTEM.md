@@ -33,6 +33,16 @@ Screens included: onboarding, home, tree, members, member profile, bottom-sheet 
 
 `docs/ui-samples/mobile-ui-preview.html` — quick browser sketch; prefer **design-gallery** for accurate Gluestack rendering.
 
-## Export screenshots
+## HD mockups (PNG)
 
-With the app on web or device, scroll the gallery and capture frames. Optional: add Maestro flow targeting `testID="design-gallery"` and child `mockup-*` IDs.
+Pre-rendered **1170×2532** frames (3×) live in `docs/ui-samples/hd/`. Regenerate:
+
+```bash
+npm run mockups:hd
+```
+
+See `docs/ui-samples/hd/README.md` for filenames.
+
+## Export screenshots (live app)
+
+With the app on web or device, scroll `/design-gallery` and capture frames.
