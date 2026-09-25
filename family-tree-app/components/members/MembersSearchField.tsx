@@ -16,7 +16,7 @@ export function MembersSearchField({
   testID = "members-search",
 }: MembersSearchFieldProps) {
   return (
-    <Input className="w-full bg-muted/30">
+    <Input className="w-full min-h-12 rounded-xl bg-muted/30 border-border">
       <InputField
         testID={testID}
         value={value}

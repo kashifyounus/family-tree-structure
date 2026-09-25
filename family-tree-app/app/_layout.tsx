@@ -42,6 +42,11 @@ export default function RootLayout() {
             name="design-gallery"
             options={{ title: "UI gallery", headerBackTitle: "Back" }}
           />
+          <Stack.Screen
+            name="notifications"
+            options={{ title: "Notifications", headerBackTitle: "Home" }}
+          />
+          <Stack.Screen name="story/[storyId]" options={{ title: "Story" }} />
         </Stack>
       </NavigationGate>
     </AppProviders>
