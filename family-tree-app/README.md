@@ -6,11 +6,21 @@ React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering*
 
 **Gluestack UI v5** + **NativeWind v5** with heritage tokens (`theme/appTheme.ts`, `theme/tokens.ts`, `theme/motion.ts`). React Native Paper was removed in Phase C — see [`docs/GLUESTACK_MIGRATION.md`](../docs/GLUESTACK_MIGRATION.md).
 
+## Figma / mockups
+
+Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md) (full) and [`docs/prompts/SPRINT_1_FIGMA_PROMPT.md`](../docs/prompts/SPRINT_1_FIGMA_PROMPT.md). Showcase copy lives in `lib/mock/kuriosityShowcase.ts`; HD PNGs in `docs/ui-samples/hd/`.
+
+| Area | Path |
+|------|------|
+| Home (Figma layout) | `app/(tabs)/index.tsx`, `components/home/*` |
+| Notifications / Story | `app/notifications.tsx`, `app/story/[storyId].tsx` |
+| Design tokens | `global.css`, `theme/appTheme.ts`, `lib/design/kuriosityDesignSystem.ts` |
+
 ## Navigation
 
 | Tab bar | Route | Notes |
 |---------|--------|--------|
-| Home | `/(tabs)/` | Search, shortcuts to tree, directory, insights |
+| Home | `/(tabs)/` | Stats, activity, search, add member CTA |
 | Tree | `/(tabs)/tree` | Local SQLite graph or online WebView / native graph |
 | Members | `/(tabs)/members` | Directory (private archive or family cloud) |
 | Account | `/(tabs)/account` | Mode, API URL, household profile, backup |
