@@ -3,6 +3,9 @@ import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { AccountFigmaSections } from "@/components/account/AccountFigmaSections";
+import { AccountProfileHero } from "@/components/account/AccountProfileHero";
+
 import { Button as GsButton, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
@@ -120,12 +123,31 @@ export default function AccountScreen() {
     );
   }
 
+  const onSignOut = () => {
+    if (localAccount.session) {
+      void localAccount.signOut();
+      return;
+    }
+    if (auth.token) {
+      void auth.signOut();
+    }
+  };
+
   return (
     <Screen testID="account-screen">
-      <AppText variant="titleMedium" style={{ marginBottom: 12 }}>
-        {APP_NAME}
+      <AccountProfileHero
+        displayName={localAccount.session?.displayName}
+        email={localAccount.session?.email}
+      />
+      <AccountFigmaSections
+        privateArchiveOn={storage.mode === "local"}
+        onPrivateArchiveChange={(on) => void setMode(on ? "local" : "online")}
+        onSignOut={onSignOut}
+      />
+
+      <AppText variant="labelMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+        Advanced
       </AppText>
-      <CreditFooter />
 
       {storage.mode === "local" && localAccount.session && (
         <AppCard style={styles.card}>

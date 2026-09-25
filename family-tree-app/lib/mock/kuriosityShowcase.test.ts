@@ -2,6 +2,7 @@ import {
   filterShowcaseMembers,
   showcaseMemberRows,
   SHOWCASE_MARGARET_ID,
+  shouldShowShowcasePedigree,
 } from "./kuriosityShowcase";
 
 describe("filterShowcaseMembers", () => {
@@ -15,5 +16,13 @@ describe("filterShowcaseMembers", () => {
     const results = filterShowcaseMembers(showcaseMemberRows, "margaret", "all");
     expect(results).toHaveLength(1);
     expect(results[0]?.name).toBe("Margaret Khan");
+  });
+});
+
+describe("shouldShowShowcasePedigree", () => {
+  it("shows only for empty local archive", () => {
+    expect(shouldShowShowcasePedigree(0, "local")).toBe(true);
+    expect(shouldShowShowcasePedigree(3, "local")).toBe(false);
+    expect(shouldShowShowcasePedigree(0, "online")).toBe(false);
   });
 });

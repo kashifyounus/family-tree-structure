@@ -1,3 +1,5 @@
+import type { Gender } from "@/lib/data/types";
+
 /** Showcase copy + stats for Figma-aligned Home (Kay Hassan archive). */
 
 export type HomeActivity = {
@@ -251,6 +253,107 @@ export function filterShowcaseMembers(
 export function showcaseMembersCount(localCount: number): number {
   if (localCount <= 0) return showcaseStatsDefault.members;
   return Math.max(localCount, showcaseStatsDefault.members);
+}
+
+export type ShowcasePedigreePerson = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  gender: Gender;
+  years: string;
+  subtitle?: string;
+  isFocal?: boolean;
+};
+
+/** Three-generation Hassan–Khan pedigree for empty-archive Tree tab. */
+export const showcasePedigree: {
+  generation1: ShowcasePedigreePerson[];
+  generation2: ShowcasePedigreePerson[];
+  generation3: ShowcasePedigreePerson[];
+} = {
+  generation1: [
+    {
+      id: "showcase-omar-hassan",
+      firstName: "Omar",
+      lastName: "Hassan",
+      gender: "MALE",
+      years: "1934–2010",
+      subtitle: "Grandfather",
+    },
+    {
+      id: "showcase-fatima-khan",
+      firstName: "Fatima",
+      lastName: "Khan",
+      gender: "FEMALE",
+      years: "1938–2018",
+      subtitle: "Grandmother",
+    },
+  ],
+  generation2: [
+    {
+      id: "showcase-rashid-hassan",
+      firstName: "Rashid",
+      lastName: "Hassan",
+      gender: "MALE",
+      years: "1960–2019",
+      subtitle: "Father",
+    },
+    {
+      id: "showcase-nadia-hassan",
+      firstName: "Nadia",
+      lastName: "Hassan",
+      gender: "FEMALE",
+      years: "1964 —",
+      subtitle: "Mother",
+    },
+    {
+      id: SHOWCASE_MARGARET_ID,
+      firstName: "Margaret",
+      lastName: "Khan",
+      gender: "FEMALE",
+      years: "1962 —",
+      subtitle: "Aunt",
+    },
+  ],
+  generation3: [
+    {
+      id: "showcase-kay-hassan",
+      firstName: "Kay",
+      lastName: "Hassan",
+      gender: "MALE",
+      years: "1990 —",
+      subtitle: "You",
+      isFocal: true,
+    },
+    {
+      id: "showcase-emma-khan",
+      firstName: "Emma",
+      lastName: "Khan",
+      gender: "FEMALE",
+      years: "1992 —",
+      subtitle: "Sister",
+    },
+    {
+      id: "showcase-ali-khan",
+      firstName: "Ali",
+      lastName: "Khan",
+      gender: "MALE",
+      years: "1994 —",
+      subtitle: "Brother",
+    },
+    {
+      id: "showcase-sara-khan",
+      firstName: "Sara",
+      lastName: "Khan",
+      gender: "FEMALE",
+      years: "1996 —",
+      subtitle: "Sister",
+    },
+  ],
+};
+
+export function shouldShowShowcasePedigree(localMemberCount: number, mode: string): boolean {
+  return mode === "local" && localMemberCount === 0;
 }
 
 export const showcaseStoryLahore = {

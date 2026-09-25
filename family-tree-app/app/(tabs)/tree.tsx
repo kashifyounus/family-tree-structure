@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ShowcasePedigreeTree } from "@/components/tree/ShowcasePedigreeTree";
 import { GraphWebView } from "@/components/tree/GraphWebView";
+import { shouldShowShowcasePedigree } from "@/lib/mock/kuriosityShowcase";
 import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { PersonTreeSheet } from "@/components/tree/PersonTreeSheet";
 import { TreeGraphExpandBar } from "@/components/tree/TreeGraphExpandBar";
@@ -70,7 +72,7 @@ function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
 export default function TreeScreen() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
-  const { mode, apiUrl, dataRevision, setMode } = useStorage();
+  const { mode, apiUrl, dataRevision, setMode, localMemberCount } = useStorage();
   const localAccount = useLocalAccount();
   const params = useLocalSearchParams<{ familyCode?: string }>();
   const paramCode =
@@ -98,6 +100,7 @@ export default function TreeScreen() {
   }, [apiUrl, loadedCode]);
 
   const isLocal = mode === "local";
+  const showcaseTree = shouldShowShowcasePedigree(localMemberCount, mode);
 
   const loadOnlineGraph = useCallback(() => {
     if (isLocal) return;
@@ -188,8 +191,13 @@ export default function TreeScreen() {
           numberOfLines={1}
           style={{ color: theme.colors.onSurface, flex: 1, marginLeft: 8 }}
         >
-          {copy.tree.title} · {loadedCode}
+          {showcaseTree ? "Family tree" : `${copy.tree.title} · ${loadedCode}`}
         </AppText>
+        <IconButton
+          icon="filter-variant"
+          accessibilityLabel="Filter tree"
+          onPress={() => setMenuOpen(true)}
+        />
         <IconButton
           icon="magnify-plus-outline"
           accessibilityLabel={copy.tree.zoomIn}
@@ -231,7 +239,9 @@ export default function TreeScreen() {
       )}
 
       <View style={styles.canvas}>
-        {isLocal ? (
+        {showcaseTree ? (
+          <ShowcasePedigreeTree zoomScale={zoom} />
+        ) : isLocal ? (
           <LocalFamilyTree
             key={`${loadedCode}-${dataRevision}-${reloadKey}-${listLayout ? "list" : "graph"}`}
             familyCode={loadedCode.trim()}

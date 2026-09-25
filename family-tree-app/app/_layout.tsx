@@ -47,6 +47,10 @@ export default function RootLayout() {
             options={{ title: "Notifications", headerBackTitle: "Home" }}
           />
           <Stack.Screen name="story/[storyId]" options={{ title: "Story" }} />
+          <Stack.Screen
+            name="add-member"
+            options={{ title: "Add member", presentation: "modal" }}
+          />
         </Stack>
       </NavigationGate>
     </AppProviders>

@@ -169,7 +169,7 @@ export default function HomeScreen() {
       <PrimaryPillButton
         testID="home-add-member"
         label="Add family member"
-        onPress={() => router.push("/(tabs)/members")}
+        onPress={() => router.push("/add-member")}
       />
 
       <AppText
