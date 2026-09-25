@@ -35,6 +35,7 @@ maestro test maestro/flows/01-onboarding-private-archive.yaml
 | `05-complete-family-workflow` | Full flow with Maestro screenshots (onboarding → spouse → marriage → child → search) |
 | `06-link-existing-spouse` | Onboarding → add second member → **link existing** as spouse (create vs link toggle) |
 | `07-link-existing-child` | Marriage (new spouse) → add third member → **link existing** as child on union |
+| `08-figma-kuriosity-smoke` | Home → add-member sheet → Members → Margaret showcase profile (no clean-state required) |
 
 Run `01` before `02` on a clean install. Flows `03` and `04` assume onboarding completed. Flows `05`–`07` clear app state and are self-contained.
 

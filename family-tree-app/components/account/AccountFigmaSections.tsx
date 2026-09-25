@@ -25,9 +25,10 @@ export function AccountFigmaSections({
         </AppText>
         <ListRow
           title="Archive settings"
-          description="Household profile and backup"
+          description="Export, backup, and restore"
           leftIcon="archive-outline"
-          onPress={() => router.push("/(tabs)/tools")}
+          onPress={() => router.push("/archive-settings")}
+          testID="account-archive-settings"
         />
         <View className="flex-row items-center justify-between py-3 border-b border-border">
           <View className="flex-1 pr-3">
@@ -56,7 +57,8 @@ export function AccountFigmaSections({
         <ListRow
           title="Export data"
           leftIcon="export-variant"
-          onPress={() => router.push("/(tabs)/tools")}
+          onPress={() => router.push("/archive-settings")}
+          testID="account-export-data"
         />
         <ListRow
           title="Invite family"

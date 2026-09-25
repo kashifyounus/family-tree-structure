@@ -9,13 +9,21 @@ type ListRowProps = {
   description?: string;
   leftIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
   onPress?: () => void;
+  testID?: string;
 };
 
-export function ListRow({ title, description, leftIcon = "account", onPress }: ListRowProps) {
+export function ListRow({
+  title,
+  description,
+  leftIcon = "account",
+  onPress,
+  testID,
+}: ListRowProps) {
   const theme = useAppTheme();
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       className="flex-row items-center gap-3 py-3 border-b border-border"
     >

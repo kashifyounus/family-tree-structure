@@ -49,7 +49,11 @@ export default function RootLayout() {
           <Stack.Screen name="story/[storyId]" options={{ title: "Story" }} />
           <Stack.Screen
             name="add-member"
-            options={{ title: "Add member", presentation: "modal" }}
+            options={{ title: "Add member", presentation: "transparentModal", headerShown: false }}
+          />
+          <Stack.Screen
+            name="archive-settings"
+            options={{ title: "Archive settings", headerBackTitle: "Account" }}
           />
         </Stack>
       </NavigationGate>

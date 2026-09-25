@@ -10,10 +10,7 @@ import {
 import { MembersSearchField } from "@/components/members/MembersSearchField";
 import { PersonRow } from "@/components/members/PersonRow";
 
-import { AppDialogForm } from "@/components/ui/AppDialogForm";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FormTextInput } from "@/components/ui/FormTextInput";
-import { GenderField } from "@/components/ui/GenderField";
 import { LoadingView } from "@/components/ui/LoadingView";
 import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
@@ -21,9 +18,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
-import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
-import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
-import type { Gender, MemberRecord } from "@/lib/data/types";
+import { listMembers, removeMember } from "@/lib/data/memberRepository";
+import type { MemberRecord } from "@/lib/data/types";
 import { formatBilingualName } from "@/lib/format/displayName";
 import {
   SHOWCASE_MARGARET_ID,
@@ -48,7 +44,7 @@ export default function MembersScreen() {
   const router = useRouter();
   const { mode, dataRevision, bumpDataRevision, localMemberCount } = useStorage();
   const auth = useAuth();
-  const { showError, showSuccess } = useAppFeedback();
+  const { showError } = useAppFeedback();
   const { impactLight } = useAppPreferences();
   const canCreate =
     mode === "local" ||
@@ -58,13 +54,6 @@ export default function MembersScreen() {
   const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [gender, setGender] = useState<Gender>("MALE");
-  const [birthDate, setBirthDate] = useState("");
-  const [createCity, setCreateCity] = useState("");
-  const [createFieldErrors, setCreateFieldErrors] = useState<FieldErrors>({});
 
   const load = useCallback(
     async (q: string) => {
@@ -139,41 +128,6 @@ export default function MembersScreen() {
     return [...showcase, ...dbRows];
   }, [chip, members, query]);
 
-  const onCreate = async () => {
-    const errors: FieldErrors = {
-      firstName: required(firstName, "First name"),
-      lastName: required(lastName, "Last name"),
-    };
-    const filtered = Object.fromEntries(
-      Object.entries(errors).filter(([, message]) => message),
-    ) as FieldErrors;
-    if (Object.keys(filtered).length > 0) {
-      setCreateFieldErrors(filtered);
-      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
-      return;
-    }
-    setCreateFieldErrors({});
-    try {
-      await createMember(mode, {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        gender,
-        birthDate: birthDate.trim() || undefined,
-        currentCity: createCity.trim() || undefined,
-      });
-      setCreateOpen(false);
-      setFirstName("");
-      setLastName("");
-      setBirthDate("");
-      setCreateCity("");
-      bumpDataRevision();
-      impactLight();
-      showSuccess(copy.success.saved);
-    } catch (e) {
-      showError(e);
-    }
-  };
-
   const onDelete = (member: MemberRecord) => {
     Alert.alert(
       copy.members.removeTitle,
@@ -226,6 +180,13 @@ export default function MembersScreen() {
     });
   };
 
+  const rowTestId = (row: ListRow, index: number) => {
+    if (row.kind === "showcase") {
+      return `members-row-${row.id}`;
+    }
+    return index === 0 ? "members-first-card" : undefined;
+  };
+
   return (
     <Screen testID="members-screen" scroll={false} padded={false} animated={false}>
       <View style={styles.header}>
@@ -265,7 +226,7 @@ export default function MembersScreen() {
           onRefresh={() => void load(query)}
           renderItem={({ item, index }) => (
             <PersonRow
-              testID={index === 0 ? "members-first-card" : undefined}
+              testID={rowTestId(item, index)}
               initials={
                 item.kind === "showcase"
                   ? item.initials
@@ -296,58 +257,20 @@ export default function MembersScreen() {
               icon="account-multiple-outline"
               title={mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
               actionLabel={canCreate ? copy.members.addMember : undefined}
-              onAction={canCreate ? () => setCreateOpen(true) : undefined}
+              onAction={canCreate ? () => router.push("/add-member") : undefined}
             />
           }
         />
       )}
 
-      <AppDialogForm
-        visible={createOpen}
-        title={copy.members.newMemberTitle}
-        onDismiss={() => {
-          setCreateOpen(false);
-          setCreateFieldErrors({});
-        }}
-        onSubmit={() => void onCreate()}
-        submitLabel={copy.members.saveMember}
-        submitTestID="members-create-save"
-        cancelLabel={copy.reports.cancel}
-      >
-        <FormTextInput
-          testID="members-create-first"
-          label="First name"
-          value={firstName}
-          onChangeText={setFirstName}
-          errorText={createFieldErrors.firstName}
-          autoCapitalize="words"
-        />
-        <FormTextInput
-          testID="members-create-last"
-          label="Last name"
-          value={lastName}
-          onChangeText={setLastName}
-          errorText={createFieldErrors.lastName}
-          autoCapitalize="words"
-        />
-        <FormTextInput
-          label="Date of birth"
-          value={birthDate}
-          onChangeText={setBirthDate}
-          placeholder="YYYY-MM-DD"
-        />
-        <FormTextInput label="City" value={createCity} onChangeText={setCreateCity} />
-        <GenderField value={gender} onChange={setGender} />
-      </AppDialogForm>
-
-      {canCreate && !createOpen && (
+      {canCreate && (
         <FloatingActionButton
           testID="members-add"
           icon="plus"
           accessibilityLabel={copy.members.addMember}
           accessibilityHint={copy.members.newMemberTitle}
           style={{ ...styles.fab, bottom: tabBarHeight + layout.fabOffset }}
-          onPress={() => setCreateOpen(true)}
+          onPress={() => router.push("/add-member")}
         />
       )}
     </Screen>
@@ -359,8 +282,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: layout.screenPaddingX,
     paddingTop: space.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "transparent",
   },
   fab: { position: "absolute", right: layout.screenPaddingX },
 });

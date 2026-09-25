@@ -8,7 +8,7 @@ React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering*
 
 ## Figma / mockups
 
-Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md) (full), Sprints [`1`](../docs/prompts/SPRINT_1_FIGMA_PROMPT.md), [`2`](../docs/prompts/SPRINT_2_FIGMA_PROMPT.md), [`3`](../docs/prompts/SPRINT_3_FIGMA_PROMPT.md). Showcase copy lives in `lib/mock/kuriosityShowcase.ts`; HD PNGs in `docs/ui-samples/hd/`.
+Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md) (full), Sprints [`1`](../docs/prompts/SPRINT_1_FIGMA_PROMPT.md)–[`4`](../docs/prompts/SPRINT_4_FIGMA_PROMPT.md). Showcase copy lives in `lib/mock/kuriosityShowcase.ts`; HD PNGs in `docs/ui-samples/hd/`.
 
 | Area | Path |
 |------|------|
@@ -16,7 +16,8 @@ Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs
 | Members (Figma) | `app/(tabs)/members.tsx`, `components/members/PersonRow.tsx` |
 | Person showcase | `components/members/ShowcasePersonDetail.tsx`, id `showcase-margaret-khan` |
 | Account (Figma) | `components/account/*`, `app/(tabs)/account.tsx` |
-| Add member modal | `app/add-member.tsx` |
+| Add member sheet | `components/members/AddMemberBottomSheet.tsx`, route `app/add-member.tsx` |
+| Archive settings | `app/archive-settings.tsx` |
 | Tree showcase | `components/tree/ShowcasePedigreeTree.tsx` (empty local DB) |
 | Notifications / Story | `app/notifications.tsx`, `app/story/[storyId].tsx` |
 | Design tokens | `global.css`, `theme/appTheme.ts`, `lib/design/kuriosityDesignSystem.ts` |
