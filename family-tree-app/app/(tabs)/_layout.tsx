@@ -75,6 +75,7 @@ export default function TabLayout() {
         name="members"
         options={{
           title: "Members",
+          headerShown: false,
           tabBarIcon: ({ color, size, focused }) => (
             <TabBarIcon
               focused={focused}

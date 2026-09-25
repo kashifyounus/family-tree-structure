@@ -1,4 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { ShowcasePersonDetail } from "@/components/members/ShowcasePersonDetail";
+import {
+  SHOWCASE_MARGARET_ID,
+  margaretKhanProfile,
+} from "@/lib/mock/kuriosityShowcase";
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -61,6 +66,7 @@ export default function MemberDetailScreen() {
     personId: string;
     code?: string;
   }>();
+  const isShowcaseMargaret = personId === SHOWCASE_MARGARET_ID;
   const [bundle, setBundle] = useState<PersonBundle | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -90,6 +96,10 @@ export default function MemberDetailScreen() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const reload = useCallback(async () => {
+    if (isShowcaseMargaret) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const data = code
@@ -114,11 +124,15 @@ export default function MemberDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [code, mode, personId]);
+  }, [code, isShowcaseMargaret, mode, personId]);
 
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  if (isShowcaseMargaret) {
+    return <ShowcasePersonDetail profile={margaretKhanProfile} />;
+  }
 
   if (loading) {
     return <LoadingView />;

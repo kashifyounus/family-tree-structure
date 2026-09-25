@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { MemberCard } from "@/components/members/MemberCard";
+import {
+  MemberFilterChips,
+  type MemberFilterChip,
+} from "@/components/members/MemberFilterChips";
 import { MembersSearchField } from "@/components/members/MembersSearchField";
+import { PersonRow } from "@/components/members/PersonRow";
 
 import { AppDialogForm } from "@/components/ui/AppDialogForm";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,19 +24,29 @@ import { useStorage } from "@/context/StorageContext";
 import { createMember, listMembers, removeMember } from "@/lib/data/memberRepository";
 import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import type { Gender, MemberRecord } from "@/lib/data/types";
+import { formatBilingualName } from "@/lib/format/displayName";
+import {
+  SHOWCASE_MARGARET_ID,
+  filterShowcaseMembers,
+  showcaseMemberRows,
+  showcaseMembersCount,
+} from "@/lib/mock/kuriosityShowcase";
 import { motion } from "@/theme/motion";
-import { layout, radius, space } from "@/theme/tokens";
+import { layout, space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
-import { InfoBanner } from "@/components/ui/InfoBanner";
+
+type ListRow =
+  | { kind: "showcase"; id: string; initials: string; name: string; subtitle: string }
+  | { kind: "member"; member: MemberRecord };
 
 export default function MembersScreen() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 56 + insets.bottom;
   const router = useRouter();
-  const { mode, dataRevision, bumpDataRevision } = useStorage();
+  const { mode, dataRevision, bumpDataRevision, localMemberCount } = useStorage();
   const auth = useAuth();
   const { showError, showSuccess } = useAppFeedback();
   const { impactLight } = useAppPreferences();
@@ -40,6 +54,7 @@ export default function MembersScreen() {
     mode === "local" ||
     (mode === "online" && auth.token && auth.role !== "VIEWER");
   const [query, setQuery] = useState("");
+  const [chip, setChip] = useState<MemberFilterChip>("all");
   const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +97,47 @@ export default function MembersScreen() {
     }, motion.screenEnter);
     return () => clearTimeout(handle);
   }, [query, load]);
+
+  const peopleCountLabel = useMemo(() => {
+    const count = showcaseMembersCount(
+      mode === "local" ? localMemberCount : members.length,
+    );
+    return `${count} people`;
+  }, [localMemberCount, members.length, mode]);
+
+  const listRows = useMemo((): ListRow[] => {
+    const showcase = filterShowcaseMembers(showcaseMemberRows, query, chip).map((r) => ({
+      kind: "showcase" as const,
+      id: r.id,
+      initials: r.initials,
+      name: r.name,
+      subtitle: r.subtitle,
+    }));
+
+    const q = query.trim().toLowerCase();
+    let db = members;
+    if (chip === "living") {
+      db = db.filter((m) => !m.deathDate);
+    }
+    if (chip === "generations") {
+      db = [...db].sort((a, b) => (a.birthDate ?? "").localeCompare(b.birthDate ?? ""));
+    }
+    if (q) {
+      db = db.filter(
+        (m) =>
+          m.familyCode.toLowerCase().includes(q) ||
+          m.firstName.toLowerCase().includes(q) ||
+          m.lastName.toLowerCase().includes(q),
+      );
+    }
+
+    const dbRows: ListRow[] = db.map((member) => ({
+      kind: "member",
+      member,
+    }));
+
+    return [...showcase, ...dbRows];
+  }, [chip, members, query]);
 
   const onCreate = async () => {
     const errors: FieldErrors = {
@@ -149,18 +205,45 @@ export default function MembersScreen() {
     return <LoadingView message={copy.members.searchPlaceholder} />;
   }
 
+  const openPerson = (row: ListRow) => {
+    if (row.kind === "showcase") {
+      if (row.id === SHOWCASE_MARGARET_ID) {
+        router.push({
+          pathname: "/member/[personId]",
+          params: { personId: SHOWCASE_MARGARET_ID },
+        });
+        return;
+      }
+      if (row.id === "showcase-kay-hassan") {
+        router.push("/(tabs)/account");
+        return;
+      }
+      return;
+    }
+    router.push({
+      pathname: "/member/[personId]",
+      params: { personId: row.member.id, code: row.member.familyCode },
+    });
+  };
+
   return (
     <Screen testID="members-screen" scroll={false} padded={false} animated={false}>
       <View style={styles.header}>
-        <InfoBanner icon="information">
-          {mode === "local" ? copy.members.bannerPrivate : copy.members.bannerCloud}
-        </InfoBanner>
+        <View className="mb-1">
+          <AppText variant="titleLarge" className="font-semibold text-foreground">
+            Members
+          </AppText>
+          <AppText variant="labelMedium" className="text-muted-foreground mt-0.5">
+            {peopleCountLabel}
+          </AppText>
+        </View>
         <MembersSearchField
           value={query}
-          placeholder={copy.members.searchPlaceholder}
+          placeholder="Search members"
           onChangeText={setQuery}
           onSubmit={() => void load(query.trim())}
         />
+        <MemberFilterChips value={chip} onChange={setChip} />
       </View>
 
       {error ? (
@@ -170,8 +253,10 @@ export default function MembersScreen() {
       ) : (
         <FlatList
           testID="members-list"
-          data={members}
-          keyExtractor={(item) => item.id}
+          data={listRows}
+          keyExtractor={(item) =>
+            item.kind === "showcase" ? item.id : item.member.id
+          }
           contentContainerStyle={[styles.listContent, { paddingBottom: listBottom }]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -179,18 +264,31 @@ export default function MembersScreen() {
           refreshing={loading}
           onRefresh={() => void load(query)}
           renderItem={({ item, index }) => (
-            <MemberCard
+            <PersonRow
               testID={index === 0 ? "members-first-card" : undefined}
-              member={item}
-              onPress={() =>
-                router.push({
-                  pathname: "/member/[personId]",
-                  params: { personId: item.id, code: item.familyCode },
-                })
+              initials={
+                item.kind === "showcase"
+                  ? item.initials
+                  : `${item.member.firstName[0] ?? ""}${item.member.lastName[0] ?? ""}`
               }
-              onLongPress={() => {
-                if (mode === "local") onDelete(item);
-              }}
+              name={
+                item.kind === "showcase"
+                  ? item.name
+                  : formatBilingualName(item.member)
+              }
+              subtitle={
+                item.kind === "showcase"
+                  ? item.subtitle
+                  : `${item.member.familyCode}${
+                      item.member.currentCity ? ` · ${item.member.currentCity}` : ""
+                    }`
+              }
+              onPress={() => openPerson(item)}
+              onLongPress={
+                item.kind === "member" && mode === "local"
+                  ? () => onDelete(item.member)
+                  : undefined
+              }
             />
           )}
           ListEmptyComponent={
@@ -258,8 +356,11 @@ export default function MembersScreen() {
 
 const styles = StyleSheet.create({
   header: { paddingHorizontal: layout.screenPaddingX, paddingTop: space.sm, gap: space.md },
-  banner: { borderRadius: radius.md },
-  search: { borderRadius: radius.md },
-  listContent: { paddingHorizontal: layout.screenPaddingX, paddingTop: space.xs },
+  listContent: {
+    paddingHorizontal: layout.screenPaddingX,
+    paddingTop: space.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "transparent",
+  },
   fab: { position: "absolute", right: layout.screenPaddingX },
 });

@@ -32,7 +32,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="member/[personId]"
-            options={{ title: "Family member", headerBackTitle: "Back" }}
+            options={{ title: "Family member", headerBackTitle: "Members" }}
           />
           <Stack.Screen
             name="marriage/[unionId]"

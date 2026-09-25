@@ -8,11 +8,13 @@ React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering*
 
 ## Figma / mockups
 
-Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md) (full) and [`docs/prompts/SPRINT_1_FIGMA_PROMPT.md`](../docs/prompts/SPRINT_1_FIGMA_PROMPT.md). Showcase copy lives in `lib/mock/kuriosityShowcase.ts`; HD PNGs in `docs/ui-samples/hd/`.
+Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md) (full), [`SPRINT_1`](../docs/prompts/SPRINT_1_FIGMA_PROMPT.md), [`SPRINT_2`](../docs/prompts/SPRINT_2_FIGMA_PROMPT.md). Showcase copy lives in `lib/mock/kuriosityShowcase.ts`; HD PNGs in `docs/ui-samples/hd/`.
 
 | Area | Path |
 |------|------|
 | Home (Figma layout) | `app/(tabs)/index.tsx`, `components/home/*` |
+| Members (Figma) | `app/(tabs)/members.tsx`, `components/members/PersonRow.tsx` |
+| Person showcase | `components/members/ShowcasePersonDetail.tsx`, id `showcase-margaret-khan` |
 | Notifications / Story | `app/notifications.tsx`, `app/story/[storyId].tsx` |
 | Design tokens | `global.css`, `theme/appTheme.ts`, `lib/design/kuriosityDesignSystem.ts` |
 

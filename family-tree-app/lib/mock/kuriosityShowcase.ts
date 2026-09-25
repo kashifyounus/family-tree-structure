@@ -101,6 +101,158 @@ export const showcaseNotifications: ShowcaseNotification[] = [
   },
 ];
 
+export const SHOWCASE_MARGARET_ID = "showcase-margaret-khan";
+
+export type ShowcaseMemberRow = {
+  id: string;
+  initials: string;
+  name: string;
+  subtitle: string;
+  living: boolean;
+  generation: number;
+};
+
+export const showcaseMemberRows: ShowcaseMemberRow[] = [
+  {
+    id: "showcase-kay-hassan",
+    initials: "KH",
+    name: "Kay Hassan",
+    subtitle: "You · Archive owner",
+    living: true,
+    generation: 3,
+  },
+  {
+    id: "showcase-emma-khan",
+    initials: "EK",
+    name: "Emma Khan",
+    subtitle: "Daughter · Gen 3",
+    living: true,
+    generation: 3,
+  },
+  {
+    id: "showcase-ali-khan",
+    initials: "AK",
+    name: "Ali Khan",
+    subtitle: "Son · Gen 3",
+    living: true,
+    generation: 3,
+  },
+  {
+    id: "showcase-sara-khan",
+    initials: "SK",
+    name: "Sara Khan",
+    subtitle: "Daughter · Gen 3",
+    living: true,
+    generation: 3,
+  },
+  {
+    id: SHOWCASE_MARGARET_ID,
+    initials: "MK",
+    name: "Margaret Khan",
+    subtitle: "Aunt · Gen 2",
+    living: true,
+    generation: 2,
+  },
+  {
+    id: "showcase-omar-hassan",
+    initials: "OH",
+    name: "Omar Hassan",
+    subtitle: "Grandfather · Gen 1",
+    living: false,
+    generation: 1,
+  },
+  {
+    id: "showcase-fatima-khan",
+    initials: "FK",
+    name: "Fatima Khan",
+    subtitle: "Grandmother · Gen 1",
+    living: false,
+    generation: 1,
+  },
+  {
+    id: "showcase-rashid-hassan",
+    initials: "RH",
+    name: "Rashid Hassan",
+    subtitle: "Father · Gen 2",
+    living: false,
+    generation: 2,
+  },
+];
+
+export type PersonDetailSegment = "about" | "photos" | "stories";
+
+export type ShowcasePersonProfile = {
+  id: string;
+  initials: string;
+  displayName: string;
+  lifeLine: string;
+  relationBadge: string;
+  born: string;
+  parents: { label: string; name: string }[];
+  sibling: string;
+  generation: string;
+  bio: string;
+  photos: { id: string; caption: string }[];
+  stories: { id: string; title: string; author: string }[];
+};
+
+export const margaretKhanProfile: ShowcasePersonProfile = {
+  id: SHOWCASE_MARGARET_ID,
+  initials: "MK",
+  displayName: "Margaret Khan",
+  lifeLine: "1962 — · Living",
+  relationBadge: "Aunt",
+  born: "12 March 1962 · Lahore, Pakistan",
+  parents: [
+    { label: "Father", name: "Omar Hassan" },
+    { label: "Mother", name: "Fatima Khan" },
+  ],
+  sibling: "Rashid Hassan (brother)",
+  generation: "2nd generation · Hassan–Khan line",
+  bio:
+    "Margaret kept the family letters when she moved to Manchester in 1989. She visits Lahore every few years and helps Kay verify names, dates, and wedding photos before they are added to the private archive.",
+  photos: [
+    { id: "p1", caption: "Mehndi night, Lahore 1988" },
+    { id: "p2", caption: "With Rashid and Nadia, 1995" },
+  ],
+  stories: [
+    {
+      id: "lahore-wedding",
+      title: "The wedding in Lahore",
+      author: "Sara Khan",
+    },
+  ],
+};
+
+export function filterShowcaseMembers(
+  rows: ShowcaseMemberRow[],
+  query: string,
+  chip: "all" | "living" | "generations",
+): ShowcaseMemberRow[] {
+  const q = query.trim().toLowerCase();
+  let list = rows;
+  if (q) {
+    list = list.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.subtitle.toLowerCase().includes(q) ||
+        r.initials.toLowerCase().includes(q),
+    );
+  }
+  if (chip === "living") {
+    list = list.filter((r) => r.living);
+  }
+  if (chip === "generations") {
+    list = [...list].sort((a, b) => a.generation - b.generation);
+  }
+  return list;
+}
+
+export function showcaseMembersCount(localCount: number): number {
+  if (localCount <= 0) return showcaseStatsDefault.members;
+  return Math.max(localCount, showcaseStatsDefault.members);
+}
+
 export const showcaseStoryLahore = {
   id: "lahore-wedding",
   title: "The wedding in Lahore",
