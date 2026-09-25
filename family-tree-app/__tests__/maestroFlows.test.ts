@@ -70,6 +70,7 @@ describe("Maestro flow files", () => {
     expect(files).toContain("04-reports-insights.yaml");
     expect(files).toContain("05-complete-family-workflow.yaml");
     expect(files).toContain("06-link-existing-spouse.yaml");
+    expect(files).toContain("07-link-existing-child.yaml");
     for (const file of files) {
       const body = readFileSync(join(flowsDir, file), "utf8");
       expect(body).toContain("appId: com.mughals.familytree");

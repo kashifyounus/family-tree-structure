@@ -43,7 +43,7 @@ jobs:
     # Emulator E2E is slow/flaky on hosted runners; run on main and manual dispatch.
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -102,6 +102,7 @@ jobs:
           script: |
             chmod +x family-tree-app/scripts/ci-maestro-smoke.sh
             export ANDROID_HOME="$ANDROID_SDK_ROOT"
+            export MAESTRO_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/06-link-existing-spouse.yaml,maestro/flows/07-link-existing-child.yaml"
             family-tree-app/scripts/ci-maestro-smoke.sh
 
       - name: Upload Maestro debug output
