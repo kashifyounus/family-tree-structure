@@ -4,8 +4,8 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { SlideInRight, SlideOutLeft } from "react-native-reanimated";
 
+import { OnboardingHero } from "@/components/onboarding/OnboardingHero";
 import { copy } from "@/content/businessCopy";
-import { BrandLogo } from "@/components/BrandLogo";
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button as GsButton, ButtonSpinner, ButtonText } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import { useStorage } from "@/context/StorageContext";
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_LOGIN_EMAIL, DEFAULT_LOGIN_PASSWORD } from "@/context/AuthContext";
 import { setupDemoArchive } from "@/lib/localAccount/demoSetup";
+import { setupKayShowcaseArchive } from "@/lib/localAccount/kayShowcaseSetup";
+import { showcaseUser } from "@/lib/mock/kuriosityShowcase";
 import type { Gender } from "@/lib/data/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
@@ -62,6 +64,10 @@ export default function OnboardingScreen() {
 
   const startPrivate = async () => {
     await storage.setMode("local");
+    setDisplayName(showcaseUser.displayName);
+    setEmail(showcaseUser.email);
+    setFirstName(showcaseUser.firstName);
+    setLastName("Hassan");
     go("local");
   };
 
@@ -85,6 +91,22 @@ export default function OnboardingScreen() {
       showSuccess(
         copy.onboarding.welcomeNamed(session.displayName, session.focalFamilyCode),
       );
+      await finish();
+    } catch (e) {
+      showError(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onKayShowcase = async () => {
+    setBusy(true);
+    try {
+      await storage.setMode("local");
+      const session = await setupKayShowcaseArchive();
+      await localAccount.refresh();
+      storage.bumpDataRevision();
+      showSuccess(copy.onboarding.welcomeNamed(session.displayName, session.focalFamilyCode));
       await finish();
     } catch (e) {
       showError(e);
@@ -136,7 +158,20 @@ export default function OnboardingScreen() {
   return (
     <Screen scroll testID="onboarding-screen">
       <ProgressBar progress={progress} style={styles.progress} />
-      <BrandLogo size={96} />
+      {step === "start" ? (
+        <OnboardingHero title={copy.onboarding.welcomeTitle} subtitle={copy.onboarding.welcomeBody} />
+      ) : (
+        <OnboardingHero
+          title={
+            step === "local"
+              ? copy.onboarding.registerTitle
+              : copy.onboarding.cloudTitle
+          }
+          subtitle={
+            step === "local" ? copy.onboarding.registerBody : copy.onboarding.cloudBody
+          }
+        />
+      )}
 
       <Animated.View
         key={step}
@@ -145,20 +180,36 @@ export default function OnboardingScreen() {
         style={styles.step}
       >
         {step === "start" && (
-          <AppCard>
+          <AppCard className="rounded-2xl border-border">
             <AppCardContent style={styles.cardContent}>
-              <AppText variant="titleLarge">{copy.onboarding.welcomeTitle}</AppText>
               <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.onboarding.chooseStorageBody}
               </AppText>
               <GsButton
+                testID="onboarding-kay-showcase"
+                onPress={() => void onKayShowcase()}
+                disabled={busy}
+                className="w-full rounded-full min-h-12"
+              >
+                {busy ? <ButtonSpinner /> : null}
+                <ButtonText className="font-semibold">{copy.onboarding.kayShowcaseTitle}</ButtonText>
+              </GsButton>
+              <AppText variant="labelSmall" className="text-muted-foreground text-center px-2">
+                {copy.onboarding.kayShowcaseBody}
+              </AppText>
+              <GsButton
                 testID="onboarding-get-started"
+                variant="outline"
                 onPress={() => void startPrivate()}
-                className="w-full"
+                className="w-full rounded-full min-h-12"
               >
                 <ButtonText>{copy.onboarding.privateChoice}</ButtonText>
               </GsButton>
-              <GsButton variant="outline" onPress={() => void startCloud()} className="w-full">
+              <GsButton
+                variant="outline"
+                onPress={() => void startCloud()}
+                className="w-full rounded-full min-h-12"
+              >
                 <ButtonText>{copy.onboarding.cloudChoice}</ButtonText>
               </GsButton>
               <GsButton
@@ -176,12 +227,8 @@ export default function OnboardingScreen() {
         )}
 
         {step === "local" && (
-          <AppCard>
+          <AppCard className="rounded-2xl border-border">
             <AppCardContent style={styles.cardContent}>
-              <AppText variant="titleLarge">{copy.onboarding.registerTitle}</AppText>
-              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.onboarding.registerBody}
-              </AppText>
               <FormTextInput
                 testID="onboarding-display-name"
                 label={copy.onboarding.displayName}
@@ -224,10 +271,10 @@ export default function OnboardingScreen() {
                 testID="onboarding-create-profile"
                 onPress={() => void onRegisterLocal()}
                 disabled={busy}
-                className="w-full"
+                className="w-full rounded-full min-h-12"
               >
                 {busy ? <ButtonSpinner /> : null}
-                <ButtonText>{copy.onboarding.createProfile}</ButtonText>
+                <ButtonText className="font-semibold">{copy.onboarding.createProfile}</ButtonText>
               </GsButton>
               <GsButton variant="ghost" onPress={() => go("start")} className="w-full">
                 <ButtonText>Back</ButtonText>
@@ -237,12 +284,8 @@ export default function OnboardingScreen() {
         )}
 
         {step === "online" && (
-          <AppCard>
+          <AppCard className="rounded-2xl border-border">
             <AppCardContent style={styles.cardContent}>
-              <AppText variant="titleLarge">{copy.onboarding.cloudTitle}</AppText>
-              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.onboarding.cloudBody}
-              </AppText>
               <FormTextInput
                 testID="onboarding-api-url"
                 label={copy.account.connectionAddress}
@@ -270,12 +313,16 @@ export default function OnboardingScreen() {
               <GsButton
                 onPress={() => void onOnlineSetup()}
                 disabled={busy}
-                className="w-full"
+                className="w-full rounded-full min-h-12"
               >
                 {busy ? <ButtonSpinner /> : null}
                 <ButtonText>{copy.onboarding.signInContinue}</ButtonText>
               </GsButton>
-              <GsButton variant="outline" onPress={() => void onSkipOnlineAuth()} className="w-full">
+              <GsButton
+                variant="outline"
+                onPress={() => void onSkipOnlineAuth()}
+                className="w-full rounded-full min-h-12"
+              >
                 <ButtonText>{copy.onboarding.saveAddressOnly}</ButtonText>
               </GsButton>
               <GsButton variant="ghost" onPress={() => go("start")} className="w-full">

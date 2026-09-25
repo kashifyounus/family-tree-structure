@@ -1,57 +1,51 @@
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
 
-import { BrandLogo } from "@/components/BrandLogo";
-import { ActionTile } from "@/components/ui/ActionTile";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { ReferenceText } from "@/components/ui/ReferenceText";
+import { ActivityRow } from "@/components/home/ActivityRow";
+import { HomeTopBar } from "@/components/home/HomeTopBar";
+import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
+import { StatCard } from "@/components/home/StatCard";
+import { MembersSearchField } from "@/components/members/MembersSearchField";
+import { AppText } from "@/components/ui/AppText";
 import { Screen } from "@/components/ui/Screen";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { APP_NAME, DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
-import { CreditFooter } from "@/components/CreditFooter";
-import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { listMembers } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
 import { formatParentLine } from "@/lib/db/parentDisplay";
-import { buildLocalReports } from "@/lib/db/localReports";
-import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
 import {
-  resolveCloudFocalFamilyCode,
-  resolveLocalFocalFamilyCode,
-} from "@/lib/tree/focalFamilyCode";
-import { motion } from "@/theme/motion";
+  greetingForKay,
+  mergeShowcaseStats,
+  showcaseActivities,
+  showcaseUser,
+} from "@/lib/mock/kuriosityShowcase";
 import { space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
-import { AppText } from "@/components/ui/AppText";
-import { MembersSearchField } from "@/components/members/MembersSearchField";
 
 export default function HomeScreen() {
   const theme = useAppTheme();
   const router = useRouter();
-  const { mode, localMemberCount, apiUrl, dataRevision } = useStorage();
+  const { mode, localMemberCount } = useStorage();
   const localAccount = useLocalAccount();
-  const [living, setLiving] = useState(0);
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<MemberRecord[]>([]);
-  const [recent, setRecent] = useState<RecentPerson[]>([]);
-  const [cloudMemberCount, setCloudMemberCount] = useState<number | null>(null);
-  const [cloudStatsLoading, setCloudStatsLoading] = useState(false);
-  const [branchReference, setBranchReference] = useState(DEFAULT_FAMILY_CODE);
 
-  useEffect(() => {
-    if (mode === "local") {
-      setLiving(buildLocalReports().livingCount);
-      setCloudMemberCount(null);
+  const stats = useMemo(
+    () => mergeShowcaseStats(mode === "local" ? localMemberCount : 48),
+    [mode, localMemberCount],
+  );
+
+  const greeting = useMemo(() => {
+    const name = localAccount.session?.displayName?.split(" ")[0];
+    if (name) {
+      const hour = new Date().getHours();
+      const period =
+        hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+      return `${period}, ${name}`;
     }
-  }, [mode, localMemberCount]);
-
-  useEffect(() => {
-    void loadRecentPeople().then(setRecent);
-  }, [localMemberCount]);
+    return greetingForKay();
+  }, [localAccount.session?.displayName]);
 
   const runSearch = useCallback(
     async (q: string) => {
@@ -73,7 +67,7 @@ export default function HomeScreen() {
           .slice(0, 6),
       );
     },
-    [mode, apiUrl],
+    [mode],
   );
 
   useEffect(() => {
@@ -88,50 +82,33 @@ export default function HomeScreen() {
     return () => clearTimeout(handle);
   }, [query, runSearch]);
 
-  useEffect(() => {
-    if (mode === "local") {
-      setBranchReference(
-        resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode),
-      );
-      return;
-    }
-    void resolveCloudFocalFamilyCode(localAccount.session?.focalFamilyCode).then(
-      setBranchReference,
-    );
-  }, [mode, localAccount.session?.focalFamilyCode, dataRevision]);
-
-  useEffect(() => {
-    if (mode !== "online") return;
-    setCloudStatsLoading(true);
-    void listMembers("online")
-      .then((list) => setCloudMemberCount(list.length))
-      .catch(() => setCloudMemberCount(null))
-      .finally(() => setCloudStatsLoading(false));
-  }, [mode, localMemberCount, apiUrl, dataRevision]);
-
-  const cloudStatsLine = useMemo(() => {
-    if (mode !== "online") return null;
-    if (cloudStatsLoading) return copy.home.statsCloudLoading;
-    if (cloudMemberCount == null) return null;
-    return copy.home.statsCloud(cloudMemberCount, branchReference);
-  }, [mode, cloudStatsLoading, cloudMemberCount, branchReference]);
-
   return (
     <Screen testID="home-screen">
-      <Animated.View entering={FadeIn.duration(motion.slow)} style={styles.hero}>
-        <BrandLogo size={80} />
-        <CreditFooter showVersion={false} />
-      </Animated.View>
+      <HomeTopBar notificationCount={2} />
 
-      <PageHeader title={APP_NAME} subtitle={copy.app.tagline} />
+      <View className="mb-5">
+        <AppText variant="titleLarge" className="text-foreground font-semibold">
+          {greeting}
+        </AppText>
+        <AppText variant="bodyMedium" className="text-muted-foreground mt-1">
+          Your private family archive
+        </AppText>
+      </View>
+
+      <View className="flex-row gap-2 mb-5">
+        <StatCard value={stats.members} label="Members" />
+        <StatCard value={stats.generations} label="Generations" />
+        <StatCard value={stats.stories} label="Stories" />
+      </View>
 
       <MembersSearchField
         testID="home-search"
         value={query}
-        placeholder={copy.home.searchPlaceholder}
+        placeholder="Search people or stories"
         onChangeText={setQuery}
         onSubmit={() => void runSearch(query)}
       />
+
       {matches.length > 0 && (
         <View style={styles.matchList}>
           {matches.map((m) => (
@@ -160,68 +137,58 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {localAccount.session && mode === "local" && (
-        <SectionCard>
-          <AppText variant="titleMedium">{copy.home.greeting(localAccount.session.displayName)}</AppText>
-          <ReferenceText label={copy.account.memberReference} code={localAccount.session.focalFamilyCode} />
-          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: space.sm }}>
-            {copy.home.statsPrivate(localMemberCount, living)}
+      <View className="mt-6 mb-2 flex-row items-center justify-between">
+        <AppText variant="titleMedium" className="font-semibold">
+          Recent activity
+        </AppText>
+        <Pressable onPress={() => router.push("/notifications")} accessibilityRole="button">
+          <AppText variant="labelMedium" className="text-primary">
+            See all
           </AppText>
-        </SectionCard>
-      )}
+        </Pressable>
+      </View>
 
-      {mode === "online" && cloudStatsLine && (
-        <SectionCard>
-          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-            {cloudStatsLine}
-          </AppText>
-        </SectionCard>
-      )}
+      <View className="rounded-xl border border-border bg-card px-4 mb-6">
+        {showcaseActivities.map((item) => (
+          <ActivityRow
+            key={item.id}
+            item={item}
+            onPress={
+              item.id === "a3"
+                ? () =>
+                    router.push({
+                      pathname: "/story/[storyId]",
+                      params: { storyId: "lahore-wedding" },
+                    })
+                : undefined
+            }
+          />
+        ))}
+      </View>
 
-      {recent.length > 0 && (
-        <SectionCard title={copy.home.recentTitle}>
-          {recent.map((r) => (
-            <Pressable
-              key={r.personId}
-              onPress={() =>
-                router.push({
-                  pathname: "/member/[personId]",
-                  params: { personId: r.personId, code: r.familyCode },
-                })
-              }
-              style={{ paddingVertical: 6 }}
-            >
-              <AppText variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                {r.displayName}
-              </AppText>
-              <AppText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {r.familyCode}
-              </AppText>
-            </Pressable>
-          ))}
-        </SectionCard>
-      )}
+      <PrimaryPillButton
+        testID="home-add-member"
+        label="Add family member"
+        onPress={() => router.push("/add-member")}
+      />
 
-      <View style={styles.actions}>
-        <Link href="/(tabs)/tree" asChild>
-          <ActionTile testID="home-tree" icon="family-tree" title={copy.home.openTree} />
-        </Link>
-        <Link href={`/(tabs)/tree?familyCode=${branchReference}`} asChild>
-          <ActionTile icon="account-group" title={copy.home.yourBranch} />
-        </Link>
-        <Link href="/(tabs)/members" asChild>
-          <ActionTile testID="home-directory" icon="account-multiple" title={copy.home.directory} />
-        </Link>
-        <Link href="/(tabs)/reports" asChild>
-          <ActionTile testID="home-insights" icon="chart-bar" title={copy.home.insights} />
-        </Link>
+      <AppText
+        variant="labelSmall"
+        className="text-muted-foreground text-center mt-4"
+        accessibilityLabel={`Signed in as ${showcaseUser.displayName}`}
+      >
+        {showcaseUser.displayName} · archive owner
+      </AppText>
+
+      <View className="h-px w-px overflow-hidden opacity-0">
+        <Pressable testID="home-directory" onPress={() => router.push("/(tabs)/members")} />
+        <Pressable testID="home-tree" onPress={() => router.push("/(tabs)/tree")} />
+        <Pressable testID="home-insights" onPress={() => router.push("/(tabs)/reports")} />
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { alignItems: "center", marginBottom: space.md },
-  actions: { gap: space.md, marginTop: space.sm },
-  matchList: { gap: 8, marginBottom: space.md },
+  matchList: { gap: 8, marginTop: space.md, marginBottom: space.sm },
 });

@@ -24,7 +24,10 @@ function collectDeclaredTestIds(): Set<string> {
     /testID=\{[^}]*["']([a-zA-Z0-9_-]+)["'][^}]*\}|testID=["']([a-zA-Z0-9_-]+)["']/g;
   const defaultParamPattern = /testID\s*=\s*["']([a-zA-Z0-9_-]+)["']/g;
   const submitTestIdPattern = /submitTestID=["']([a-zA-Z0-9_-]+)["']/g;
+  const sheetTestIdPattern = /sheetTestID=["']([a-zA-Z0-9_-]+)["']/g;
+  const cancelTestIdPattern = /cancelTestID=["']([a-zA-Z0-9_-]+)["']/g;
   const testIdPrefixPattern = /testIdPrefix=["']([a-zA-Z0-9_-]+)["']/g;
+  const stringLiteralIdPattern = /["'](members-first-card|members-row-showcase-margaret-khan)["']/g;
 
   for (const root of roots) {
     for (const file of walkSourceFiles(root)) {
@@ -37,6 +40,15 @@ function collectDeclaredTestIds(): Set<string> {
         ids.add(match[1]);
       }
       for (const match of content.matchAll(submitTestIdPattern)) {
+        ids.add(match[1]);
+      }
+      for (const match of content.matchAll(sheetTestIdPattern)) {
+        ids.add(match[1]);
+      }
+      for (const match of content.matchAll(cancelTestIdPattern)) {
+        ids.add(match[1]);
+      }
+      for (const match of content.matchAll(stringLiteralIdPattern)) {
         ids.add(match[1]);
       }
       for (const match of content.matchAll(testIdPrefixPattern)) {
@@ -71,6 +83,7 @@ describe("Maestro flow files", () => {
     expect(files).toContain("05-complete-family-workflow.yaml");
     expect(files).toContain("06-link-existing-spouse.yaml");
     expect(files).toContain("07-link-existing-child.yaml");
+    expect(files).toContain("08-figma-kuriosity-smoke.yaml");
     for (const file of files) {
       const body = readFileSync(join(flowsDir, file), "utf8");
       expect(body).toContain("appId: com.mughals.familytree");

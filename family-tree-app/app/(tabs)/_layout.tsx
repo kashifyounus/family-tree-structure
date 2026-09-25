@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 
+import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { APP_NAME } from "@/constants/appMeta";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useAppTheme } from "@/theme/useAppTheme";
@@ -26,14 +26,24 @@ export default function TabLayout() {
         headerShadowVisible: false,
         headerStyle: { backgroundColor: theme.colors.surface },
         sceneStyle: { backgroundColor: theme.colors.background },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "500",
+          marginBottom: Platform.OS === "ios" ? 0 : 4,
+        },
         tabBarStyle: Platform.select({
           android: {
             paddingBottom: 6,
             height: 64,
             backgroundColor: theme.colors.surface,
             borderTopColor: theme.colors.outlineVariant,
+            borderTopWidth: 1,
           },
-          default: { backgroundColor: theme.colors.surface },
+          default: {
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.outlineVariant,
+            borderTopWidth: 1,
+          },
         }),
       }}
     >
@@ -41,8 +51,15 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home" color={color} size={size} />
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabBarIcon
+              focused={focused}
+              color={color}
+              size={size}
+              outlineName="home-outline"
+              filledName="home"
+            />
           ),
         }}
         listeners={{ tabPress: () => impactLight() }}
@@ -52,8 +69,14 @@ export default function TabLayout() {
         options={{
           title: "Tree",
           headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="family-tree" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabBarIcon
+              focused={focused}
+              color={color}
+              size={size}
+              outlineName="family-tree"
+              filledName="family-tree"
+            />
           ),
         }}
         listeners={{ tabPress: () => impactLight() }}
@@ -62,8 +85,15 @@ export default function TabLayout() {
         name="members"
         options={{
           title: "Members",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-group" color={color} size={size} />
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabBarIcon
+              focused={focused}
+              color={color}
+              size={size}
+              outlineName="account-group-outline"
+              filledName="account-group"
+            />
           ),
         }}
         listeners={{ tabPress: () => impactLight() }}
@@ -86,8 +116,15 @@ export default function TabLayout() {
         name="account"
         options={{
           title: "Account",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-circle" color={color} size={size} />
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabBarIcon
+              focused={focused}
+              color={color}
+              size={size}
+              outlineName="account-circle-outline"
+              filledName="account-circle"
+            />
           ),
         }}
         listeners={{ tabPress: () => impactLight() }}

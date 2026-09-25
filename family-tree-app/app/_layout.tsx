@@ -32,7 +32,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="member/[personId]"
-            options={{ title: "Family member", headerBackTitle: "Back" }}
+            options={{ title: "Family member", headerBackTitle: "Members" }}
           />
           <Stack.Screen
             name="marriage/[unionId]"
@@ -41,6 +41,19 @@ export default function RootLayout() {
           <Stack.Screen
             name="design-gallery"
             options={{ title: "UI gallery", headerBackTitle: "Back" }}
+          />
+          <Stack.Screen
+            name="notifications"
+            options={{ title: "Notifications", headerBackTitle: "Home" }}
+          />
+          <Stack.Screen name="story/[storyId]" options={{ title: "Story" }} />
+          <Stack.Screen
+            name="add-member"
+            options={{ title: "Add member", presentation: "transparentModal", headerShown: false }}
+          />
+          <Stack.Screen
+            name="archive-settings"
+            options={{ title: "Archive settings", headerBackTitle: "Account" }}
           />
         </Stack>
       </NavigationGate>

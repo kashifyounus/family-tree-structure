@@ -21,11 +21,17 @@ export type FormBottomSheetProps = {
   submitLabel?: string;
   submitTestID?: string;
   cancelLabel?: string;
+  cancelTestID?: string;
   children: ReactNode;
   loading?: boolean;
   /** Hide footer when selection-only sheets handle their own actions */
   hideActions?: boolean;
   maxHeightRatio?: number;
+  /** Cancel | centered title | Save row (Figma add-member header) */
+  figmaNavBar?: boolean;
+  navSaveLabel?: string;
+  navSaveTestID?: string;
+  sheetTestID?: string;
 };
 
 const windowHeight = Dimensions.get("window").height;
@@ -45,6 +51,11 @@ export function FormBottomSheet({
   loading,
   hideActions,
   maxHeightRatio = 0.92,
+  figmaNavBar,
+  navSaveLabel = "Save",
+  navSaveTestID,
+  cancelTestID,
+  sheetTestID,
 }: FormBottomSheetProps) {
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
@@ -62,13 +73,47 @@ export function FormBottomSheet({
           width: "100%",
         }}
       >
+        {sheetTestID ? (
+          <View
+            testID={sheetTestID}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
+          />
+        ) : null}
+        {figmaNavBar ? (
+          <View className="w-full flex-row items-center justify-between px-4 pb-2 pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={onDismiss}
+              disabled={loading}
+              testID={cancelTestID}
+            >
+              <ButtonText>{cancelLabel}</ButtonText>
+            </Button>
+            <Text className="text-base font-semibold text-foreground">{title}</Text>
+            <Button
+              variant="ghost"
+              size="sm"
+              onPress={onSubmit}
+              disabled={loading || !onSubmit}
+              testID={navSaveTestID}
+            >
+              {loading ? <ButtonSpinner /> : null}
+              <ButtonText>{navSaveLabel}</ButtonText>
+            </Button>
+          </View>
+        ) : null}
         <ActionsheetDragIndicatorWrapper>
           <ActionsheetDragIndicator />
         </ActionsheetDragIndicatorWrapper>
 
-        <View className="w-full px-5 pb-1">
-          <Text className="text-lg font-semibold text-foreground tracking-tight">{title}</Text>
-        </View>
+        {!figmaNavBar ? (
+          <View className="w-full px-5 pb-1">
+            <Text className="text-lg font-semibold text-foreground tracking-tight">{title}</Text>
+          </View>
+        ) : null}
 
         <ActionsheetScrollView
           keyboardShouldPersistTaps="handled"

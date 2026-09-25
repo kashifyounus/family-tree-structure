@@ -1,0 +1,36 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+  - kuriosity
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 45000
+- tapOn:
+    id: home-add-member
+- extendedWaitUntil:
+    visible:
+      id: add-member-sheet
+    timeout: 10000
+- assertVisible:
+    id: add-member-first
+- tapOn:
+    id: add-member-cancel
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 10000
+- tapOn:
+    text: "Members"
+- extendedWaitUntil:
+    visible:
+      id: members-screen
+    timeout: 10000
+- tapOn:
+    id: members-row-showcase-margaret-khan
+- extendedWaitUntil:
+    visible:
+      id: member-profile-screen
+    timeout: 10000
