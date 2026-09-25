@@ -13,11 +13,25 @@ if [[ ! -f "$APK" ]]; then
   exit 1
 fi
 
-export PATH="${ANDROID_HOME:-}/platform-tools:${PATH:-}"
+if [[ -z "${ANDROID_HOME:-}" ]]; then
+  ANDROID_HOME="${ANDROID_SDK_ROOT:-}"
+fi
+export PATH="${ANDROID_HOME}/platform-tools:${PATH:-}"
 
-echo "Waiting for emulator..."
+echo "Waiting for emulator (ANDROID_HOME=$ANDROID_HOME)..."
 adb wait-for-device
-adb shell 'while [[ -z $(getprop sys.boot_completed 2>/dev/null | tr -d "\r") ]]; do sleep 2; done'
+boot_deadline=$(( $(date +%s) + ${BOOT_TIMEOUT_SEC:-900} ))
+while true; do
+  if adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r' | grep -q 1; then
+    break
+  fi
+  if [[ $(date +%s) -ge $boot_deadline ]]; then
+    echo "Emulator boot timed out after ${BOOT_TIMEOUT_SEC:-900}s"
+    exit 1
+  fi
+  sleep 3
+done
+while ! adb shell pm path android >/dev/null 2>&1; do sleep 2; done
 
 echo "Installing $APK (push + pm install — reliable on slow emulators)"
 adb push "$APK" /data/local/tmp/family-tree-debug.apk

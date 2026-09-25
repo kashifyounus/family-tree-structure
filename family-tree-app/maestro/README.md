@@ -56,9 +56,10 @@ Outputs under `/opt/cursor/artifacts/android-e2e/`:
 | Job | What runs |
 |-----|-----------|
 | **CI / Mobile** (`ci.yml`) | Jest `maestroFlows.test.ts` — flow files, `appId`, smoke tags, and **testID ↔ app** cross-check |
-| **Mobile — Maestro smoke** (`mobile-maestro.yml`) | Builds debug APK, boots API 30 emulator, runs flow `01-onboarding-private-archive.yaml` |
+| **Mobile — Maestro smoke / contracts** (`mobile-maestro.yml`) | Same static contracts on every PR |
+| **Mobile — Maestro smoke / emulator** (`mobile-maestro.yml`) | Debug APK + API 30 emulator + flow `01-onboarding-private-archive.yaml` on **main** push or **workflow_dispatch** only |
 
-Trigger the emulator job manually via **Actions → Mobile — Maestro smoke → Run workflow**, or on PRs that touch `family-tree-app/`.
+On feature PRs, only the fast **Maestro flow contracts** job runs (avoids flaky hosted emulators). Run full E2E manually: **Actions → Mobile — Maestro smoke → Run workflow** (pick your branch).
 
 Override the flow in automation with `MAESTRO_CI_FLOW` (see `scripts/ci-maestro-smoke.sh`).
 

@@ -16,10 +16,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  maestro-contracts:
+    name: Maestro flow contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: family-tree-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: family-tree-app/package-lock.json
+
+      - name: Install and validate flows
+        run: |
+          npm ci
+          npm run test:maestro:contracts
+
   maestro-onboarding-smoke:
     name: Android emulator — onboarding flow
+    needs: maestro-contracts
+    # Emulator E2E is slow/flaky on hosted runners; run on main and manual dispatch.
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -34,7 +58,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Set up Android SDK
+      - name: Set up Android SDK (build)
         run: |
           set -euxo pipefail
           SDK_ROOT="$HOME/android-sdk"
@@ -51,9 +75,7 @@ jobs:
             "platform-tools" \
             "platforms;android-35" \
             "build-tools;35.0.0" \
-            "ndk;27.1.12297006" \
-            "system-images;android-30;google_apis;x86_64" \
-            "emulator"
+            "ndk;27.1.12297006"
           echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
 
@@ -72,10 +94,14 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_6
-          disable-animations: true
+          disable-animations: false
+          emulator-boot-timeout-in-minutes: 20
+          cores: 2
+          ram-size: 4096M
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: |
             chmod +x family-tree-app/scripts/ci-maestro-smoke.sh
+            export ANDROID_HOME="$ANDROID_SDK_ROOT"
             family-tree-app/scripts/ci-maestro-smoke.sh
 
       - name: Upload Maestro debug output
