@@ -83,9 +83,12 @@ export const copy = {
   },
 
   onboarding: {
-    welcomeTitle: "Welcome to your family story",
+    welcomeTitle: "Your private family archive",
     welcomeBody:
-      "Kuriosity Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
+      "Keep names, relationships, photos, and stories in one place — starting on this device, with optional family cloud later.",
+    kayShowcaseTitle: "Start as Kay Hassan",
+    kayShowcaseBody:
+      "Opens the Kuriosity preview with sample activity, members, and a three-generation tree. You can add real relatives anytime.",
     getStarted: "Begin setup",
     shortPrivateCta: "Set up private archive",
     loadDemoFamily: "Load demo family",
@@ -131,7 +134,7 @@ export const copy = {
     statsCloud: (members: number, focalCode: string) =>
       `Family cloud: ${members} member${members === 1 ? "" : "s"} in your directory · branch ${focalCode}`,
     statsCloudLoading: "Loading family cloud summary…",
-    searchPlaceholder: "Find a family member",
+    searchPlaceholder: "Search people or stories",
     recentTitle: "Recently opened",
     openBackupTools: "Backup & tools",
   },

@@ -63,7 +63,8 @@ export function AccountFigmaSections({
         <ListRow
           title="Invite family"
           leftIcon="account-plus-outline"
-          onPress={() => {}}
+          onPress={() => router.push("/add-member")}
+          testID="account-invite-family"
         />
       </View>
 

@@ -8,7 +8,7 @@ React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering*
 
 ## Figma / mockups
 
-Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md) (full), Sprints [`1`](../docs/prompts/SPRINT_1_FIGMA_PROMPT.md)–[`4`](../docs/prompts/SPRINT_4_FIGMA_PROMPT.md). Showcase copy lives in `lib/mock/kuriosityShowcase.ts`; HD PNGs in `docs/ui-samples/hd/`.
+Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md) (full), Sprints [`1`](../docs/prompts/SPRINT_1_FIGMA_PROMPT.md)–[`5`](../docs/prompts/SPRINT_5_FIGMA_PROMPT.md). Status: [`docs/FIGMA_IMPLEMENTATION_STATUS.md`](../docs/FIGMA_IMPLEMENTATION_STATUS.md). Showcase copy lives in `lib/mock/kuriosityShowcase.ts`; HD PNGs in `docs/ui-samples/hd/`.
 
 | Area | Path |
 |------|------|

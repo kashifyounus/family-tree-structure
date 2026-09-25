@@ -7,7 +7,7 @@ import { AppText } from "@/components/ui/AppText";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Screen } from "@/components/ui/Screen";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { ProfileSegmentBar } from "@/components/ui/ProfileSegmentBar";
 import type {
   PersonDetailSegment,
   ShowcasePersonProfile,
@@ -62,7 +62,7 @@ export function ShowcasePersonDetail({ profile }: ShowcasePersonDetailProps) {
           </Badge>
         </View>
 
-        <SegmentedControl
+        <ProfileSegmentBar
           testIdPrefix="person-segment"
           value={segment}
           options={SEGMENTS}

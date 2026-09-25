@@ -26,14 +26,24 @@ export default function TabLayout() {
         headerShadowVisible: false,
         headerStyle: { backgroundColor: theme.colors.surface },
         sceneStyle: { backgroundColor: theme.colors.background },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "500",
+          marginBottom: Platform.OS === "ios" ? 0 : 4,
+        },
         tabBarStyle: Platform.select({
           android: {
             paddingBottom: 6,
             height: 64,
             backgroundColor: theme.colors.surface,
             borderTopColor: theme.colors.outlineVariant,
+            borderTopWidth: 1,
           },
-          default: { backgroundColor: theme.colors.surface },
+          default: {
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.outlineVariant,
+            borderTopWidth: 1,
+          },
         }),
       }}
     >

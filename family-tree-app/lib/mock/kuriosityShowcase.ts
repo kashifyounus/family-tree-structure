@@ -353,7 +353,7 @@ export const showcasePedigree: {
 };
 
 export function shouldShowShowcasePedigree(localMemberCount: number, mode: string): boolean {
-  return mode === "local" && localMemberCount === 0;
+  return mode === "local" && localMemberCount <= 1;
 }
 
 export const showcaseStoryLahore = {

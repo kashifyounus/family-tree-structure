@@ -20,8 +20,9 @@ describe("filterShowcaseMembers", () => {
 });
 
 describe("shouldShowShowcasePedigree", () => {
-  it("shows only for empty local archive", () => {
+  it("shows for empty or Kay-only local archive", () => {
     expect(shouldShowShowcasePedigree(0, "local")).toBe(true);
+    expect(shouldShowShowcasePedigree(1, "local")).toBe(true);
     expect(shouldShowShowcasePedigree(3, "local")).toBe(false);
     expect(shouldShowShowcasePedigree(0, "online")).toBe(false);
   });
