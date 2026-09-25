@@ -3,7 +3,7 @@
  * Keep in sync with `types/family.ts` → `PersonDetails` (server source of truth).
  *
  * Mobile app maps this into SQLite-shaped `PersonBundle` via `onlinePersonMapper`.
- * Fields present on the wire but not mapped to UI today: `household`, `photoUrl`,
+ * Fields present on the wire but not mapped to profile UI today: `photoUrl`,
  * `privacyLevel`, `motherTongue`, `permanentCity`, child `relationshipType`.
  */
 

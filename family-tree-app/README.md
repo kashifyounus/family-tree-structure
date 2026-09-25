@@ -1,17 +1,36 @@
 # Kuriosity Family Tree — Android (Expo)
 
-React Native **Expo SDK 57** app by **Kuriosity Engineering** (`family-tree-app`).
+React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering**.
 
-## UI (React Native Paper)
+## UI
 
-Gluestack UI + NativeWind with a heritage palette (`theme/appTheme.ts`), layout tokens (`theme/tokens.ts`), and motion timings (`theme/motion.ts`).
+**Gluestack UI v5** + **NativeWind v5** with heritage tokens (`theme/appTheme.ts`, `theme/tokens.ts`, `theme/motion.ts`). React Native Paper was removed in Phase C — see [`docs/GLUESTACK_MIGRATION.md`](../docs/GLUESTACK_MIGRATION.md).
 
-## Features
+## Navigation
 
-- **6 tabs**: Home, Members, Tree, Reports, Tools, Account
-- **Private SQLite** or **shared online** API
-- **Configurable family website URL** in Account (no rebuild)
-- Credits: **Kuriosity Engineering** · *by Kashif Younus*
+| Tab bar | Route | Notes |
+|---------|--------|--------|
+| Home | `/(tabs)/` | Search, shortcuts to tree, directory, insights |
+| Tree | `/(tabs)/tree` | Local SQLite graph or online WebView / native graph |
+| Members | `/(tabs)/members` | Directory (private archive or family cloud) |
+| Account | `/(tabs)/account` | Mode, API URL, household profile, backup |
+
+**Reports** and **Tools** open from Home (not on the tab bar).
+
+## Data modes
+
+- **Private archive** — SQLite on device; full local CRUD (members, marriages, children, parents, link-existing spouse/child).
+- **Family cloud** — read + create member via Next.js mobile API; edits on web. Contract: [`docs/MOBILE_API.md`](../docs/MOBILE_API.md).
+
+## Tests
+
+```bash
+npm test
+npm run test:maestro:contracts   # Maestro YAML + testID cross-check (CI)
+npm run test:e2e:smoke             # Device/emulator + Maestro CLI
+```
+
+Maestro flows and CI behaviour: [`maestro/README.md`](./maestro/README.md).
 
 ## Download APK (GitHub)
 

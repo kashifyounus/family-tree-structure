@@ -71,6 +71,9 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every pull request and on pu
 | **web-static** | ESLint, `tsc`, Jest (no database) |
 | **web-build** | Postgres, Prisma migrate + seed, `next build` |
 | **web-e2e** | After build passes: migrate + seed, `next build`, `next start`, Playwright E2E (HTML report uploaded on failure) |
-| **mobile** | `family-tree-app` typecheck + Jest (includes Maestro flow file smoke checks) |
+| **mobile** | `family-tree-app` typecheck + Jest + `npm run test:maestro:contracts` |
+| **mobile-maestro** (`.github/workflows/mobile-maestro.yml`) | PR: Maestro flow contracts; **main** / manual: Android emulator onboarding smoke |
 
 Local E2E: `npm run test:e2e` (Playwright global setup starts embedded Postgres or uses `DATABASE_URL`). CI sets `PLAYWRIGHT_USE_START=1` so tests hit the production server, not `next dev`.
+
+Mobile Maestro on device: `cd family-tree-app && npm run test:e2e:smoke` (see `family-tree-app/maestro/README.md`).
