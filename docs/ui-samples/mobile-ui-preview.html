@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kuriosity Family Tree — UI samples</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #e8eaed;
+      color: #111827;
+      padding: 24px;
+    }
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p.lead { color: #4b5563; margin: 0 0 24px; max-width: 720px; line-height: 1.5; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      align-items: flex-start;
+    }
+    .phone {
+      width: 320px;
+      border-radius: 28px;
+      background: #111;
+      padding: 10px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.25);
+    }
+    .screen {
+      border-radius: 22px;
+      overflow: hidden;
+      background: #f3f4f6;
+      min-height: 640px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .status {
+      height: 28px;
+      background: #fff;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      color: #374151;
+    }
+    .topbar {
+      background: #fff;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .tree-area {
+      flex: 1;
+      position: relative;
+      background: #f3f4f6;
+      padding: 12px 8px 56px;
+    }
+    .card {
+      position: absolute;
+      width: 96px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 8px rgba(15,23,42,.1);
+      text-align: center;
+      padding-bottom: 6px;
+    }
+    .card.focal { border: 2px solid #1b4332; box-shadow: 0 0 0 3px rgba(27,67,50,.2); }
+    .bar { height: 5px; border-radius: 12px 12px 0 0; }
+    .bar.m { background: #7eb6e0; }
+    .bar.f { background: #f4a6c1; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%; margin: 8px auto 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+    .avatar.m { background: #e3f0fb; color: #1f2937; border: 2px solid #7eb6e0; }
+    .avatar.f { background: #fde8f0; color: #1f2937; border: 2px solid #f4a6c1; }
+    .name { font-size: 10px; font-weight: 600; padding: 0 4px; line-height: 1.2; }
+    .years { font-size: 9px; color: #6b7280; margin-top: 2px; }
+    .lines {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    .lines line { stroke: #b8bcc4; stroke-width: 2; }
+    .tabs {
+      display: flex; background: #fff; border-top: 1px solid #e5e7eb;
+      padding: 6px 0 10px;
+    }
+    .tab { flex: 1; text-align: center; font-size: 10px; color: #6b7280; }
+    .tab.on { color: #1b4332; font-weight: 600; }
+    .backdrop {
+      position: absolute; inset: 0; background: rgba(0,0,0,.45);
+    }
+    .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: #fff;
+      border-radius: 24px 24px 0 0;
+      padding: 8px 20px 24px;
+      box-shadow: 0 -8px 30px rgba(0,0,0,.15);
+    }
+    .handle {
+      width: 48px; height: 4px; background: #d1d5db; border-radius: 99px;
+      margin: 4px auto 12px;
+    }
+    .sheet h2 { margin: 0 0 14px; font-size: 18px; }
+    label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+    .input {
+      width: 100%; min-height: 48px; border-radius: 12px;
+      border: 1px solid #e5e7eb; background: #f9fafb;
+      padding: 12px 14px; margin-bottom: 12px; font-size: 15px;
+    }
+    .radio-group {
+      border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;
+      margin-bottom: 16px; background: #fafafa;
+    }
+    .radio-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px; border-bottom: 1px solid #e5e7eb;
+      font-size: 15px;
+    }
+    .radio-row:last-child { border-bottom: none; }
+    .dot {
+      width: 20px; height: 20px; border-radius: 50%; border: 2px solid #1b4332;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dot::after {
+      content: ""; width: 10px; height: 10px; border-radius: 50%; background: #1b4332;
+    }
+    .footer {
+      display: flex; justify-content: flex-end; gap: 8px;
+      border-top: 1px solid #e5e7eb; padding-top: 12px;
+    }
+    .btn {
+      padding: 10px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+      border: none;
+    }
+    .btn.ghost { background: transparent; color: #374151; }
+    .btn.primary { background: #1b4332; color: #fff; }
+    figcaption {
+      font-size: 13px; color: #4b5563; margin-top: 10px; max-width: 320px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kuriosity Family Tree — mobile UI samples (current design)</h1>
+  <p class="lead">
+    Static previews aligned with the shipped canvas pedigree (light cards, gender stripe, connectors)
+    and Gluestack bottom-sheet forms. Open this file in a browser or export to PNG for decks.
+  </p>
+  <div class="row">
+    <figure>
+      <div class="phone">
+        <div class="screen">
+          <div class="status"><span>7:35</span><span>■■■ 62%</span></div>
+          <div class="topbar">← Tree · Hassan Khan</div>
+          <div class="tree-area">
+            <svg class="lines" viewBox="0 0 320 500">
+              <line x1="100" y1="130" x2="220" y2="130" />
+              <line x1="160" y1="130" x2="160" y2="175" />
+              <line x1="80" y1="175" x2="240" y2="175" />
+              <line x1="80" y1="175" x2="80" y2="220" />
+              <line x1="160" y1="175" x2="160" y2="320" />
+              <line x1="240" y1="175" x2="240" y2="220" />
+            </svg>
+            <div class="card" style="left:52px;top:48px">
+              <div class="bar m"></div>
+              <div class="avatar m">HK</div>
+              <div class="name">Hassan Khan</div>
+              <div class="years">1955–</div>
+            </div>
+            <div class="card" style="left:172px;top:48px">
+              <div class="bar f"></div>
+              <div class="avatar f">AK</div>
+              <div class="name">Ayesha Khan</div>
+              <div class="years">1960–2020</div>
+            </div>
+            <div class="card" style="left:32px;top:220px">
+              <div class="bar m"></div>
+              <div class="avatar m">AK</div>
+              <div class="name">Ali Khan</div>
+              <div class="years">1982–</div>
+            </div>
+            <div class="card focal" style="left:112px;top:320px">
+              <div class="bar m"></div>
+              <div class="avatar m">ZK</div>
+              <div class="name">Zain Khan</div>
+              <div class="years">2010–</div>
+            </div>
+            <div class="card" style="left:192px;top:220px">
+              <div class="bar f"></div>
+              <div class="avatar f">FK</div>
+              <div class="name">Fatima Khan</div>
+              <div class="years">1988–</div>
+            </div>
+          </div>
+          <div class="tabs">
+            <div class="tab">Home</div>
+            <div class="tab on">Tree</div>
+            <div class="tab">Members</div>
+            <div class="tab">Account</div>
+          </div>
+        </div>
+      </div>
+      <figcaption><strong>Tree tab</strong> — pedigree cards, gray connectors, focal ring (green), pinch/pan.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="screen">
+          <div class="status"><span>7:35</span><span>■■■ 62%</span></div>
+          <div class="topbar">← Family member</div>
+          <div class="tree-area" style="filter: blur(1px); opacity: .6">
+            <div class="card focal" style="left:112px;top:200px">
+              <div class="bar m"></div>
+              <div class="avatar m">ZK</div>
+              <div class="name">Zain Khan</div>
+            </div>
+          </div>
+          <div class="backdrop"></div>
+          <div class="sheet">
+            <div class="handle"></div>
+            <h2>Add child</h2>
+            <label>Given name</label>
+            <div class="input" style="color:#9ca3af">Given name</div>
+            <label>Family name</label>
+            <div class="input">Khan</div>
+            <label>Gender</label>
+            <div class="radio-group">
+              <div class="radio-row"><span>Male</span><div class="dot"></div></div>
+              <div class="radio-row"><span>Female</span><div style="width:20px;height:20px;border-radius:50%;border:2px solid #d1d5db"></div></div>
+              <div class="radio-row"><span>Other</span><div style="width:20px;height:20px;border-radius:50%;border:2px solid #d1d5db"></div></div>
+            </div>
+            <div class="footer">
+              <button class="btn ghost" type="button">Cancel</button>
+              <button class="btn primary" type="button">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><strong>Bottom sheet</strong> — slides up, tall inputs, radio gender list, sticky actions above keyboard.</figcaption>
+    </figure>
+  </div>
+</body>
+</html>
