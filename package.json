@@ -14,6 +14,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:huge": "tsx prisma/seedHugeDemo.ts",
+    "demo:export": "tsx scripts/export-demo-dataset.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

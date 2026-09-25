@@ -57,6 +57,8 @@ Legacy `@kinship.local` demo accounts remain enabled for older bookmarks.
 
 - `npm run db:migrate` — apply migrations
 - `npm run db:seed` — load demo polygamous family dataset
+- `npm run db:seed:huge` — replace DB with ~2,500-person generated demo tree (unique names, cities, mixed relationships)
+- `npm run demo:export` — write `family-tree-app/assets/demo/huge-demo.bundle.json` for offline import/inspection
 - `npm run build` — production build
 - `npm run test` — Jest unit tests (kinship, privacy, reporting)
 - `npm run test:e2e` — Playwright E2E (requires Postgres + seed via global setup)

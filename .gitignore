@@ -27,6 +27,9 @@
 # production
 /build
 
+# generated demo bundles (use npm run demo:export)
+family-tree-app/assets/demo/*.bundle.json
+
 # misc
 .DS_Store
 *.pem

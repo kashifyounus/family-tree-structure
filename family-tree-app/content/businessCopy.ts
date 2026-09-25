@@ -56,7 +56,7 @@ export const copy = {
     familyCloudSignIn: "Family cloud sign-in",
     signedIn: "You are signed in",
     signOut: "Sign out",
-    loadSampleFamily: "Load comprehensive sample (500+ members)",
+    loadSampleFamily: "Load huge demo family (2,500+ members)",
     clearSampleFamily: "Remove sample data only",
     sampleFixtureCount: (count: number) =>
       count > 0
