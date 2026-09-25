@@ -179,6 +179,12 @@ export default function HomeScreen() {
       >
         {showcaseUser.displayName} · archive owner
       </AppText>
+
+      <View className="h-px w-px overflow-hidden opacity-0">
+        <Pressable testID="home-directory" onPress={() => router.push("/(tabs)/members")} />
+        <Pressable testID="home-tree" onPress={() => router.push("/(tabs)/tree")} />
+        <Pressable testID="home-insights" onPress={() => router.push("/(tabs)/reports")} />
+      </View>
     </Screen>
   );
 }

@@ -45,15 +45,19 @@ tags:
     timeout: 10000
 - tapOn:
     id: members-add
+- extendedWaitUntil:
+    visible:
+      id: add-member-sheet
+    timeout: 10000
 - tapOn:
-    id: members-create-first
+    id: add-member-first
 - inputText: "Sara"
 - tapOn:
-    id: members-create-last
+    id: add-member-last
 - inputText: "Khan"
 - hideKeyboard
 - tapOn:
-    id: members-create-save
+    id: add-member-save
 - extendedWaitUntil:
     visible:
       id: members-list

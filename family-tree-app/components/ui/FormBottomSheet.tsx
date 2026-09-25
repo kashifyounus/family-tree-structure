@@ -67,13 +67,20 @@ export function FormBottomSheet({
     <Actionsheet isOpen={visible} onClose={onDismiss} isKeyboardDismissable>
       <ActionsheetBackdrop />
       <ActionsheetContent
-        testID={sheetTestID}
         className="px-0 pt-2 pb-0 gap-0"
         style={{
           maxHeight: maxSheetHeight,
           width: "100%",
         }}
       >
+        {sheetTestID ? (
+          <View
+            testID={sheetTestID}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0 }}
+          />
+        ) : null}
         {figmaNavBar ? (
           <View className="w-full flex-row items-center justify-between px-4 pb-2 pt-1">
             <Button

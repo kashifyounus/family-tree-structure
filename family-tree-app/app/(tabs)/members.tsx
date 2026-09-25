@@ -180,11 +180,13 @@ export default function MembersScreen() {
     });
   };
 
-  const rowTestId = (row: ListRow, index: number) => {
-    if (row.kind === "showcase") {
-      return `members-row-${row.id}`;
+  const rowTestId = (row: ListRow, index: number): string | undefined => {
+    if (index === 0) return "members-first-card";
+    if (row.kind === "showcase" && row.id === SHOWCASE_MARGARET_ID) {
+      return "members-row-showcase-margaret-khan";
     }
-    return index === 0 ? "members-first-card" : undefined;
+    if (row.kind === "showcase") return `members-row-${row.id}`;
+    return undefined;
   };
 
   return (
