@@ -61,6 +61,8 @@ export function ExistingMemberPicker({
           return (
             <Pressable
               key={m.id}
+              testID={`member-picker-${m.familyCode}`}
+              accessibilityLabel={`${m.name}, ${m.familyCode}`}
               onPress={() => onSelect(m.id)}
               style={[
                 styles.row,

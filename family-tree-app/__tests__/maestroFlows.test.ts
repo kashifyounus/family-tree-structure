@@ -23,6 +23,8 @@ function collectDeclaredTestIds(): Set<string> {
   const jsxPattern =
     /testID=\{[^}]*["']([a-zA-Z0-9_-]+)["'][^}]*\}|testID=["']([a-zA-Z0-9_-]+)["']/g;
   const defaultParamPattern = /testID\s*=\s*["']([a-zA-Z0-9_-]+)["']/g;
+  const submitTestIdPattern = /submitTestID=["']([a-zA-Z0-9_-]+)["']/g;
+  const testIdPrefixPattern = /testIdPrefix=["']([a-zA-Z0-9_-]+)["']/g;
 
   for (const root of roots) {
     for (const file of walkSourceFiles(root)) {
@@ -33,6 +35,14 @@ function collectDeclaredTestIds(): Set<string> {
       }
       for (const match of content.matchAll(defaultParamPattern)) {
         ids.add(match[1]);
+      }
+      for (const match of content.matchAll(submitTestIdPattern)) {
+        ids.add(match[1]);
+      }
+      for (const match of content.matchAll(testIdPrefixPattern)) {
+        const prefix = match[1];
+        ids.add(`${prefix}-create`);
+        ids.add(`${prefix}-link`);
       }
     }
   }
@@ -59,6 +69,7 @@ describe("Maestro flow files", () => {
     expect(files).toContain("03-tools-backup-export.yaml");
     expect(files).toContain("04-reports-insights.yaml");
     expect(files).toContain("05-complete-family-workflow.yaml");
+    expect(files).toContain("06-link-existing-spouse.yaml");
     for (const file of files) {
       const body = readFileSync(join(flowsDir, file), "utf8");
       expect(body).toContain("appId: com.mughals.familytree");

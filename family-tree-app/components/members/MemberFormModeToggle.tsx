@@ -17,6 +17,7 @@ export function MemberFormModeToggle({ mode, onChange }: MemberFormModeTogglePro
         { value: "create", label: copy.profile.memberFormCreate },
         { value: "link", label: copy.profile.memberFormLink },
       ]}
+      testIdPrefix="member-form-mode"
     />
   );
 }

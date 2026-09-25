@@ -33,8 +33,9 @@ maestro test maestro/flows/01-onboarding-private-archive.yaml
 | `03-tools-backup-export` | Tools screen → export backup (no crash) |
 | `04-reports-insights` | Reports screen loads |
 | `05-complete-family-workflow` | Full flow with Maestro screenshots (onboarding → spouse → marriage → child → search) |
+| `06-link-existing-spouse` | Onboarding → add second member → **link existing** as spouse (create vs link toggle) |
 
-Run `01` before `02` on a clean install. Flows `03` and `04` assume onboarding completed. Flow `05` clears app state and is self-contained.
+Run `01` before `02` on a clean install. Flows `03` and `04` assume onboarding completed. Flows `05` and `06` clear app state and are self-contained.
 
 ## Screenshots and video (CI / cloud agent)
 
@@ -61,7 +62,11 @@ Outputs under `/opt/cursor/artifacts/android-e2e/`:
 
 On feature PRs, only the fast **Maestro flow contracts** job runs (avoids flaky hosted emulators). Run full E2E manually: **Actions → Mobile — Maestro smoke → Run workflow** (pick your branch).
 
-Override the flow in automation with `MAESTRO_CI_FLOW` (see `scripts/ci-maestro-smoke.sh`).
+Override automation with `MAESTRO_CI_FLOW` (single flow) or comma-separated `MAESTRO_CI_FLOWS` (see `scripts/ci-maestro-smoke.sh`). Example on a device after merge:
+
+```bash
+MAESTRO_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/06-link-existing-spouse.yaml" npm run test:e2e:smoke
+```
 
 Set `MAESTRO_APP_ID` if you use a different application id.
 

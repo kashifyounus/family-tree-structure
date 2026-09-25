@@ -6,7 +6,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 APK="${APK:-$ROOT/android/app/build/outputs/apk/debug/app-debug.apk}"
-FLOW="${MAESTRO_CI_FLOW:-maestro/flows/01-onboarding-private-archive.yaml}"
+DEFAULT_FLOW="maestro/flows/01-onboarding-private-archive.yaml"
+FLOW="${MAESTRO_CI_FLOW:-$DEFAULT_FLOW}"
 
 if [[ ! -f "$APK" ]]; then
   echo "Missing debug APK at $APK"
@@ -43,5 +44,17 @@ if ! command -v maestro >/dev/null; then
   export PATH="$PATH:$HOME/.maestro/bin"
 fi
 
-echo "Running Maestro flow: $FLOW"
-maestro test --config maestro/config.yaml "$FLOW"
+run_flow() {
+  local path="$1"
+  echo "Running Maestro flow: $path"
+  maestro test --config maestro/config.yaml "$path"
+}
+
+if [[ -n "${MAESTRO_CI_FLOWS:-}" ]]; then
+  IFS=',' read -ra EXTRA <<< "$MAESTRO_CI_FLOWS"
+  for path in "${EXTRA[@]}"; do
+    run_flow "$(echo "$path" | xargs)"
+  done
+else
+  run_flow "$FLOW"
+fi

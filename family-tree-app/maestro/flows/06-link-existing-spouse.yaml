@@ -1,0 +1,87 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+  - link
+---
+# Private archive: two members, then link an existing person as spouse (no duplicate create).
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: onboarding-screen
+    timeout: 30000
+- tapOn:
+    id: onboarding-get-started
+- extendedWaitUntil:
+    visible:
+      id: onboarding-create-profile
+    timeout: 10000
+- tapOn:
+    id: onboarding-display-name
+- inputText: "Link E2E"
+- tapOn:
+    id: onboarding-email
+- inputText: "link.e2e@family.local"
+- tapOn:
+    id: onboarding-password
+- inputText: "family123"
+- tapOn:
+    id: onboarding-first-name
+- inputText: "Ahmad"
+- tapOn:
+    id: onboarding-last-name
+- inputText: "Khan"
+- tapOn:
+    id: onboarding-create-profile
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    id: home-directory
+- extendedWaitUntil:
+    visible:
+      id: members-screen
+    timeout: 10000
+- tapOn:
+    id: members-add
+- tapOn:
+    id: members-create-first
+- inputText: "Sara"
+- tapOn:
+    id: members-create-last
+- inputText: "Khan"
+- hideKeyboard
+- tapOn:
+    id: members-create-save
+- extendedWaitUntil:
+    visible:
+      id: members-list
+    timeout: 15000
+- tapOn:
+    id: members-search
+- inputText: "Ahmad"
+- extendedWaitUntil:
+    visible:
+      text: "Ahmad"
+    timeout: 10000
+- tapOn:
+    text: "Ahmad Khan"
+- extendedWaitUntil:
+    visible:
+      id: member-profile-screen
+    timeout: 10000
+- tapOn:
+    id: member-add-spouse
+- tapOn:
+    id: member-form-mode-link
+- tapOn:
+    text: "Sara Khan"
+- tapOn:
+    text: "Save changes"
+- extendedWaitUntil:
+    visible:
+      text: "Marriage:"
+    timeout: 10000
+- assertVisible:
+    text: "Sara"
