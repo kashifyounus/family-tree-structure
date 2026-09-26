@@ -52,6 +52,8 @@ export function mapOnlineDetailsToBundle(data: MobilePersonDetails): OnlineMappe
         id: c.id,
         name: `${c.firstName} ${c.lastName}`,
         familyCode: c.familyCode,
+        birthDate: c.birthDate,
+        deathDate: c.deathDate,
       })),
     })),
     parents: parentsFromParentLinks(data.parentLinks),
