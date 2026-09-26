@@ -224,7 +224,7 @@ export const copy = {
     currentMarriage: "Current marriage",
     previousMarriage: "Previous marriage",
     spouseSaved: "Marriage saved. Both people are now linked.",
-    childSaved: "Child saved on this marriage.",
+    childSaved: "Child saved and linked to this parent.",
     parentsSaved: "Parents saved.",
     parentSlotStagedFather: "Father recorded. Add mother to finish linking parents.",
     parentSlotStagedMother: "Mother recorded. Add father to finish linking parents.",

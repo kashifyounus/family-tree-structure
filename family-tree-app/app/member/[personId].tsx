@@ -35,6 +35,7 @@ import {
   assignParentsToCouple,
   createAndAssignParentSlot,
   linkChild,
+  linkChildToParent,
   linkSpouse,
   loadPersonByCode,
   loadPersonById,
@@ -251,20 +252,20 @@ export default function MemberDetailScreen() {
   ) => {
     const marriages = unionOptions(mode, m.id);
     const unionId = chUnionId || marriages[0]?.id;
-    if (!unionId) {
-      showError(copy.profile.needMarriageFirst);
-      return;
-    }
     if (!childId) {
       showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
     try {
-      linkChild(mode, {
-        unionId,
-        childId,
-        relationshipType: options?.relationshipType,
-      });
+      if (unionId) {
+        linkChild(mode, {
+          unionId,
+          childId,
+          relationshipType: options?.relationshipType,
+        });
+      } else {
+        linkChildToParent(mode, m.id, childId);
+      }
       setChildOpen(false);
       bumpDataRevision();
       void reload();
@@ -283,10 +284,6 @@ export default function MemberDetailScreen() {
   }) => {
     const marriages = unionOptions(mode, m.id);
     const unionId = chUnionId || marriages[0]?.id;
-    if (!unionId) {
-      showError(copy.profile.needMarriageFirst);
-      return;
-    }
     const errors: FieldErrors = {
       chFirst: required(payload.firstName, "First name"),
       chLast: required(payload.lastName, "Last name"),
@@ -303,7 +300,7 @@ export default function MemberDetailScreen() {
     try {
       addChild(mode, {
         parentPersonId: m.id,
-        unionId,
+        unionId: unionId || undefined,
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
@@ -327,16 +324,7 @@ export default function MemberDetailScreen() {
   const applyParentAssignResult = (
     result: ReturnType<typeof assignParentSlot>,
   ) => {
-    if (result.status === "needs_other_parent") {
-      setParentStaged({ parentId: result.stagedParentId, slot: result.stagedSlot });
-      setParentSlot(result.otherSlot);
-      showSuccess(
-        result.otherSlot === "mother"
-          ? copy.profile.parentSlotStagedFather
-          : copy.profile.parentSlotStagedMother,
-      );
-      return;
-    }
+    if (result.status !== "complete") return;
     setParentStaged(null);
     setParentsOpen(false);
     bumpDataRevision();

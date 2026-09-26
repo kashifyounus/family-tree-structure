@@ -17,6 +17,7 @@ import {
   assignParentsToCouple,
   createAndAssignParentSlot,
   linkChild,
+  linkChildToParent,
   linkSpouse,
   parentCouplesForPicker,
   peopleForPicker,
@@ -101,16 +102,7 @@ export function PersonTreeSheet({
   const applyParentAssignResult = (
     result: ReturnType<typeof assignParentSlot>,
   ) => {
-    if (result.status === "needs_other_parent") {
-      setParentStaged({ parentId: result.stagedParentId, slot: result.stagedSlot });
-      setParentSlot(result.otherSlot);
-      showSuccess(
-        result.otherSlot === "mother"
-          ? copy.profile.parentSlotStagedFather
-          : copy.profile.parentSlotStagedMother,
-      );
-      return;
-    }
+    if (result.status !== "complete") return;
     setParentStaged(null);
     setParentsOpen(false);
     bumpDataRevision();
@@ -178,20 +170,20 @@ export function PersonTreeSheet({
     options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
   ) => {
     const unionId = chUnionId || marriageOptions[0]?.id;
-    if (!unionId) {
-      showError(copy.profile.needMarriageFirst);
-      return;
-    }
     if (!childId) {
       showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
     try {
-      linkChild(mode, {
-        unionId,
-        childId,
-        relationshipType: options?.relationshipType,
-      });
+      if (unionId) {
+        linkChild(mode, {
+          unionId,
+          childId,
+          relationshipType: options?.relationshipType,
+        });
+      } else {
+        linkChildToParent(mode, person.id, childId);
+      }
       setChildOpen(false);
       bumpDataRevision();
       onFamilyChanged?.();
@@ -208,10 +200,6 @@ export function PersonTreeSheet({
     gender: Gender;
   }) => {
     const unionId = chUnionId || marriageOptions[0]?.id;
-    if (!unionId) {
-      showError(copy.profile.needMarriageFirst);
-      return;
-    }
     const errors: FieldErrors = {
       chFirst: required(payload.firstName, "First name"),
       chLast: required(payload.lastName, "Last name"),
@@ -228,7 +216,7 @@ export function PersonTreeSheet({
     try {
       addChild(mode, {
         parentPersonId: person.id,
-        unionId,
+        unionId: unionId || undefined,
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,

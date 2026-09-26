@@ -102,6 +102,20 @@ describe("relationship rules", () => {
     );
   });
 
+  it("allows assigning one known parent with an unknown co-parent sentinel", () => {
+    const family: RuleGraph = {
+      people: [
+        { id: "child", gender: "MALE", birthDate: null, deathDate: null },
+        { id: "dad", gender: "MALE", birthDate: null, deathDate: null },
+        { id: "unk-mom", gender: "FEMALE", birthDate: null, deathDate: null },
+      ],
+      unions: [],
+    };
+    expect(() =>
+      assertCanAssignParents(family, "child", "dad", "unk-mom"),
+    ).not.toThrow();
+  });
+
   it("rejects a spouse or descendant as a parent and accepts two new parents", () => {
     const family = graph();
     expect(() => assertCanAssignParents(family, "son", "wife", "mother")).toThrow(
