@@ -1,11 +1,11 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { View } from "react-native";
+import { ColorValue, View } from "react-native";
 
 import { useAppTheme } from "@/theme/useAppTheme";
 
 type TabBarIconProps = {
   focused: boolean;
-  color: string;
+  color: ColorValue;
   size: number;
   outlineName: keyof typeof MaterialCommunityIcons.glyphMap;
   filledName: keyof typeof MaterialCommunityIcons.glyphMap;

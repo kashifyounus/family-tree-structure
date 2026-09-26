@@ -10,6 +10,9 @@ describe("memberProfileEditForm", () => {
       familyCode: "FAM-1",
       firstName: "Ali",
       lastName: "Khan",
+      nickname: null,
+      urduFirstName: null,
+      urduLastName: null,
       gender: "MALE",
       birthDate: "1990-02-01",
       deathDate: null,
@@ -18,7 +21,6 @@ describe("memberProfileEditForm", () => {
       homeTown: "Lahore",
       occupation: "Engineer",
       bio: "Notes",
-      isLiving: true,
     });
     expect(fields.firstName).toBe("Ali");
     expect(fields.city).toBe("Karachi");

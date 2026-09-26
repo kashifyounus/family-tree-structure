@@ -22,7 +22,7 @@ jest.mock("@/lib/db/kinshipLoader", () => ({
       deathDate: null,
       isLiving: true,
     };
-    const peopleById = new Map([
+    const peopleById = new Map<string, typeof father | typeof child>([
       ["f", father],
       ["c", child],
     ]);

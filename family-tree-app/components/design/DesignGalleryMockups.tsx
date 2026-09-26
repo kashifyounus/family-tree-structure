@@ -54,9 +54,14 @@ export function MockupHomeScreen() {
             <AppText variant="labelSmall" className="text-muted-foreground">Private archive</AppText>
           </View>
         </View>
-        <InfoBanner message="For your eyes on this device — not shared online." />
-        <MembersSearchField value="" onChangeText={() => {}} placeholder="Search members" />
-        <ActionTile icon="account-tree" title="Open family tree" subtitle="Pedigree view" />
+        <InfoBanner>For your eyes on this device — not shared online.</InfoBanner>
+        <MembersSearchField
+          value=""
+          onChangeText={() => {}}
+          placeholder="Search members"
+          onSubmit={() => {}}
+        />
+        <ActionTile icon="family-tree" title="Open family tree" subtitle="Pedigree view" />
         <ActionTile icon="account-multiple" title="Browse members" subtitle="2,514 in demo data" />
         <View className="flex-row gap-2 flex-wrap">
           <Badge><BadgeText>Living 1,842</BadgeText></Badge>
@@ -118,7 +123,12 @@ export function MockupMembersScreen() {
             { value: "online", label: "Cloud" },
           ]}
         />
-        <MembersSearchField value="Khan" onChangeText={() => {}} />
+        <MembersSearchField
+          value="Khan"
+          onChangeText={() => {}}
+          placeholder="Search members"
+          onSubmit={() => {}}
+        />
         <ListRow title="Hassan Khan" description="FAM-10004 · Karachi" onPress={() => {}} />
         <ListRow title="Ayesha Khan" description="FAM-10005 · Lahore" onPress={() => {}} />
         <ListRow title="Zain Khan" description="FAM-10012 · Dubai" onPress={() => {}} />

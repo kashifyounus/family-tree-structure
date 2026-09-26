@@ -65,6 +65,7 @@ describe("marriage children profile data", () => {
       computed: {
         fullSiblings: [],
         halfSiblings: [],
+        stepSiblings: [],
         paternalUncles: [],
         paternalAunts: [],
         maternalUncles: [],
