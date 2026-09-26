@@ -242,6 +242,17 @@ export const copy = {
       "Sign in to your private archive to see how this person relates to you.",
     fullSibling: (name: string) => `Full sibling: ${name}`,
     halfSibling: (name: string) => `Half sibling: ${name}`,
+    stepSibling: (name: string) => `Step sibling: ${name}`,
+    fullSiblingsSection: "Full siblings",
+    halfSiblingsSection: "Half siblings",
+    stepSiblingsSection: "Step siblings",
+    noFullSiblings: "No full siblings recorded.",
+    noHalfSiblings: "No half siblings recorded.",
+    noStepSiblings: "No step siblings recorded.",
+    childRelationshipBiological: "Biological",
+    childRelationshipAdopted: "Adopted",
+    childRelationshipStep: "Step",
+    childRelationshipLabel: "Relationship to parents",
   },
 
   tools: {

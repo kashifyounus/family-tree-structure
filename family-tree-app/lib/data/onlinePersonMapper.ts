@@ -117,6 +117,7 @@ export function computedRelationsFromMobile(
   return {
     fullSiblings: mapComputedList(computed.fullSiblings),
     halfSiblings: mapComputedList(computed.halfSiblings),
+    stepSiblings: mapComputedList(computed.stepSiblings ?? []),
     paternalUncles: mapComputedList(computed.paternalUncles),
     paternalAunts: mapComputedList(computed.paternalAunts),
     maternalUncles: mapComputedList(computed.maternalUncles),

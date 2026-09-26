@@ -214,6 +214,7 @@ export function PersonWorkspace({
       <SectionCard title="Other relatives">
         <RelativeGroup title="Full siblings" people={computed.fullSiblings} />
         <RelativeGroup title="Half siblings" people={computed.halfSiblings} />
+        <RelativeGroup title="Step siblings" people={computed.stepSiblings ?? []} />
         <RelativeGroup title="Paternal uncles" people={computed.paternalUncles} />
         <RelativeGroup title="Paternal aunts" people={computed.paternalAunts} />
         <RelativeGroup title="Maternal uncles" people={computed.maternalUncles} />

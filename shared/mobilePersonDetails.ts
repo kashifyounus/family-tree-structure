@@ -66,6 +66,7 @@ export type MobileComputedRelations = {
   maternalUncles: MobileKinshipRelative[];
   maternalAunts: MobileKinshipRelative[];
   halfSiblings: MobileKinshipRelative[];
+  stepSiblings: MobileKinshipRelative[];
   fullSiblings: MobileKinshipRelative[];
 };
 
@@ -106,6 +107,7 @@ export type MobilePersonDetails = {
 const emptyComputed = (): MobileComputedRelations => ({
   fullSiblings: [],
   halfSiblings: [],
+  stepSiblings: [],
   paternalUncles: [],
   paternalAunts: [],
   maternalUncles: [],
@@ -125,6 +127,7 @@ export function normalizeMobilePersonDetails(
       ...details.computed,
       fullSiblings: details.computed?.fullSiblings ?? [],
       halfSiblings: details.computed?.halfSiblings ?? [],
+      stepSiblings: details.computed?.stepSiblings ?? [],
       paternalUncles: details.computed?.paternalUncles ?? [],
       paternalAunts: details.computed?.paternalAunts ?? [],
       maternalUncles: details.computed?.maternalUncles ?? [],

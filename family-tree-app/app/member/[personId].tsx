@@ -244,7 +244,10 @@ export default function MemberDetailScreen() {
     }
   };
 
-  const linkChildMember = (childId: string) => {
+  const linkChildMember = (
+    childId: string,
+    options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
+  ) => {
     const marriages = unionOptions(mode, m.id);
     const unionId = chUnionId || marriages[0]?.id;
     if (!unionId) {
@@ -256,7 +259,11 @@ export default function MemberDetailScreen() {
       return;
     }
     try {
-      linkChild(mode, { unionId, childId });
+      linkChild(mode, {
+        unionId,
+        childId,
+        relationshipType: options?.relationshipType,
+      });
       setChildOpen(false);
       bumpDataRevision();
       void reload();
@@ -271,6 +278,7 @@ export default function MemberDetailScreen() {
     firstName: string;
     lastName: string;
     gender: Gender;
+    relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
   }) => {
     const marriages = unionOptions(mode, m.id);
     const unionId = chUnionId || marriages[0]?.id;
@@ -298,6 +306,7 @@ export default function MemberDetailScreen() {
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
+        relationshipType: payload.relationshipType,
       });
       setChildOpen(false);
       bumpDataRevision();
@@ -667,10 +676,39 @@ export default function MemberDetailScreen() {
         )}
 
         <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
-          Full siblings
+          {copy.profile.fullSiblingsSection}
         </AppText>
         <SiblingsTable
           siblings={bundle.computed?.fullSiblings ?? []}
+          emptyMessage={copy.profile.noFullSiblings}
+          onPressSibling={(personId, familyCode) =>
+            router.push({
+              pathname: "/member/[personId]",
+              params: { personId, code: familyCode },
+            })
+          }
+        />
+
+        <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+          {copy.profile.halfSiblingsSection}
+        </AppText>
+        <SiblingsTable
+          siblings={bundle.computed?.halfSiblings ?? []}
+          emptyMessage={copy.profile.noHalfSiblings}
+          onPressSibling={(personId, familyCode) =>
+            router.push({
+              pathname: "/member/[personId]",
+              params: { personId, code: familyCode },
+            })
+          }
+        />
+
+        <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+          {copy.profile.stepSiblingsSection}
+        </AppText>
+        <SiblingsTable
+          siblings={bundle.computed?.stepSiblings ?? []}
+          emptyMessage={copy.profile.noStepSiblings}
           onPressSibling={(personId, familyCode) =>
             router.push({
               pathname: "/member/[personId]",

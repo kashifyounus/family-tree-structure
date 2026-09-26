@@ -73,6 +73,7 @@ describe("onlinePersonMapper", () => {
       computed: {
         fullSiblings: [],
         halfSiblings: [],
+        stepSiblings: [],
         paternalUncles: [],
         paternalAunts: [],
         maternalUncles: [],
@@ -96,6 +97,7 @@ describe("onlinePersonMapper", () => {
     const computed = computedRelationsFromMobile({
       fullSiblings: [],
       halfSiblings: [],
+      stepSiblings: [],
       paternalUncles: [uncle],
       paternalAunts: [],
       maternalUncles: [],

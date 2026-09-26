@@ -173,7 +173,10 @@ export function PersonTreeSheet({
     }
   };
 
-  const linkChildMember = (childId: string) => {
+  const linkChildMember = (
+    childId: string,
+    options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
+  ) => {
     const unionId = chUnionId || marriageOptions[0]?.id;
     if (!unionId) {
       showError(copy.profile.needMarriageFirst);
@@ -184,7 +187,11 @@ export function PersonTreeSheet({
       return;
     }
     try {
-      linkChild(mode, { unionId, childId });
+      linkChild(mode, {
+        unionId,
+        childId,
+        relationshipType: options?.relationshipType,
+      });
       setChildOpen(false);
       bumpDataRevision();
       onFamilyChanged?.();

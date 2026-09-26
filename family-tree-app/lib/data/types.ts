@@ -50,6 +50,8 @@ export type AddSpouseInput = {
   marriageDate?: string;
 };
 
+export type ChildRelationshipType = "BIOLOGICAL" | "ADOPTED" | "STEP";
+
 export type AddChildInput = {
   parentPersonId: string;
   unionId?: string;
@@ -57,6 +59,7 @@ export type AddChildInput = {
   firstName: string;
   lastName: string;
   gender: Gender;
+  relationshipType?: ChildRelationshipType;
 };
 
 export type ReportBucket = { label: string; count: number };
@@ -89,7 +92,7 @@ export type LinkSpouseInput = {
 export type LinkChildInput = {
   unionId: string;
   childId: string;
-  relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
+  relationshipType?: ChildRelationshipType;
 };
 
 export type SetParentsInput = {
