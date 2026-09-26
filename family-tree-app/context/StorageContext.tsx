@@ -11,6 +11,7 @@ import {
 
 import type { StorageMode } from "@/lib/data/types";
 import { getDatabase } from "@/lib/db/database";
+import { migrateLegacyDatabaseIfNeeded } from "@/lib/db/legacyDatabaseMigration";
 import { countLocalMembers } from "@/lib/db/localRepository";
 import {
   isOnboardingComplete,
@@ -55,6 +56,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void (async () => {
+      await migrateLegacyDatabaseIfNeeded();
       getDatabase();
       const storedMode = await AsyncStorage.getItem(MODE_KEY);
       if (storedMode === "local" || storedMode === "online") {

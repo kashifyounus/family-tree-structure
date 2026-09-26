@@ -1,36 +1,22 @@
-# SQLite rename migration plan (spike)
+# SQLite rename migration
 
-**Status:** Plan only — production still uses `mughals_family.db`. See [`SQLITE_STORAGE.md`](./SQLITE_STORAGE.md).
+**Status:** Implemented in app code (`migrateLegacyDatabaseIfNeeded`).
 
-## Target state (future)
+## What ships
 
-| Artifact | Current | Proposed |
-|----------|---------|----------|
-| On-device DB file | `mughals_family.db` | `kuriosity_family.db` (example) |
-| Cache export prefix | `mughals_family_` | keep or alias both during transition |
-| AsyncStorage keys | `@mughals/*`, `mughals_*` | migrate key-by-key with read fallback |
+1. New installs use **`kuriosity_family.db`** only.
+2. Upgrades with **`mughals_family.db`**:
+   - If Kuriosity file already exists → delete legacy file.
+   - Else if legacy has people → SQLite backup into Kuriosity file, then delete legacy.
+   - Else → delete empty legacy file.
+3. Cache export / Drive backup filenames use `kuriosity_family_*` / `kuriosity-family-*`.
 
-## Migration algorithm (sketch)
+## Not migrated (by design)
 
-1. On app start, if `kuriosity_family.db` missing and `mughals_family.db` exists:
-   - Copy file with `expo-file-system` / SQLite backup API (not `INSERT` replay — preserve indices).
-   - Set flag `kuriosity_db_migrated_v1` in secure storage.
-2. Open only the new filename once copy verifies (`PRAGMA user_version` or row count spot-check).
-3. Keep reading old filename for one release if copy fails; log non-fatal telemetry in dev.
-4. Update `exportDatabase` / Drive backup names in a follow-up PR.
+- AsyncStorage keys (`mughals_storage_mode`, etc.)
+- Android `applicationId` / iOS bundle identifier
 
-## Out of scope for spike
+## Verification
 
-- No automatic rename in this repo until QA signs off on dual-file rollback.
-- No change to Android `applicationId` / iOS bundle id.
-
-## Implementation hook
-
-`family-tree-app/lib/db/databaseIdentity.ts` exports stable constants and `plannedKuriosityDatabaseName` for tests/docs alignment. Wire `getDatabase()` to a migration runner in a dedicated PR.
-
-## Verification checklist (when implemented)
-
-- [ ] Upgrade test: seed `mughals_family.db` fixture → launch app → data visible, same focal person.
-- [ ] Fresh install uses new name only.
-- [ ] Backup restore round-trip still works.
-- [ ] Maestro smoke on private archive after migration.
+- Unit tests: `legacyDatabaseMigration.test.ts`, `databaseIdentity.test.ts`
+- Manual: install over old build with demo data → members still visible; only one DB file remains.

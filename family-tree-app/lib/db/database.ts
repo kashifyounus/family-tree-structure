@@ -1,8 +1,9 @@
 import * as SQLite from "expo-sqlite";
 
 import { runSqliteMigrations } from "@/lib/db/migrations";
+import { KURIOSITY_DATABASE_NAME } from "@/lib/db/legacyDatabaseMigration";
 
-export const DB_NAME = "mughals_family.db";
+export const DB_NAME = KURIOSITY_DATABASE_NAME;
 
 let database: SQLite.SQLiteDatabase | null = null;
 

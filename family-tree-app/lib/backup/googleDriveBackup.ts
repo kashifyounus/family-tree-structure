@@ -64,7 +64,7 @@ function toFileUri(path: string): string {
 export async function backupDatabaseToGoogleDrive(): Promise<string> {
   const dbPath = await copyDatabaseToCache();
   const token = await getAccessToken();
-  const fileName = `mughals-family-${new Date().toISOString().slice(0, 10)}.db`;
+  const fileName = `kuriosity-family-${new Date().toISOString().slice(0, 10)}.db`;
   const metadata = JSON.stringify({
     name: fileName,
     mimeType: "application/x-sqlite3",

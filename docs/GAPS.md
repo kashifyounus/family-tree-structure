@@ -21,7 +21,6 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 ### Engineering follow-ups (no issue yet)
 
 - Kinship “once removed” and other asymmetric paths may still use `KINSHIP_LABEL_FALLBACK`
-- SQLite file rename — plan in `docs/SQLITE_MIGRATION_PLAN.md` (not implemented)
 
 ## Recently shipped (do not re-implement)
 

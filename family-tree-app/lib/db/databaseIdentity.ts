@@ -1,24 +1,24 @@
 import { DB_NAME } from "@/lib/db/database";
+import {
+  KURIOSITY_DATABASE_NAME,
+  LEGACY_DATABASE_NAME,
+} from "@/lib/db/legacyDatabaseMigration";
 
-/** Production SQLite filename (legacy Mughal prefix — do not rename without migration). */
 export const ACTIVE_DATABASE_NAME = DB_NAME;
-
-/**
- * Reserved for a future one-time file copy migration.
- * Not used by `getDatabase()` until `docs/SQLITE_MIGRATION_PLAN.md` is implemented.
- */
-export const PLANNED_KURIOSITY_DATABASE_NAME = "kuriosity_family.db";
+export const LEGACY_DATABASE_FILE = LEGACY_DATABASE_NAME;
 
 export type DatabaseIdentity = {
   activeDatabaseName: string;
-  plannedDatabaseName: string;
+  legacyDatabaseName: string;
   migrationImplemented: boolean;
 };
 
 export function getDatabaseIdentity(): DatabaseIdentity {
   return {
     activeDatabaseName: ACTIVE_DATABASE_NAME,
-    plannedDatabaseName: PLANNED_KURIOSITY_DATABASE_NAME,
-    migrationImplemented: false,
+    legacyDatabaseName: LEGACY_DATABASE_FILE,
+    migrationImplemented: true,
   };
 }
+
+export { KURIOSITY_DATABASE_NAME };

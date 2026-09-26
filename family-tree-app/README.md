@@ -1,6 +1,6 @@
 # Kuriosity Family Tree — Android (Expo)
 
-React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering**. Some internal identifiers (SQLite `mughals_family.db`, Android `com.mughals.familytree`) are legacy; see [`docs/SQLITE_STORAGE.md`](../docs/SQLITE_STORAGE.md).
+React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering**. On-device SQLite is `kuriosity_family.db` (legacy `mughals_family.db` is migrated away on launch). Android package id remains `com.mughals.familytree`; see [`docs/SQLITE_STORAGE.md`](../docs/SQLITE_STORAGE.md).
 
 Cursor agents: open `[GAP]` backlog at [`/docs/GAPS.md`](../docs/GAPS.md) (repo root).
 
