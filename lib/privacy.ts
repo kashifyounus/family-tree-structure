@@ -131,6 +131,9 @@ export function maskPersonDetails(
       halfSiblings: details.computed.halfSiblings.map((r) =>
         maskKinshipRelative(r, viewer),
       ),
+      stepSiblings: (details.computed.stepSiblings ?? []).map((r) =>
+        maskKinshipRelative(r, viewer),
+      ),
     },
     household: details.household
       ? {

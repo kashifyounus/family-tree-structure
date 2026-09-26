@@ -356,6 +356,11 @@ export function shouldShowShowcasePedigree(localMemberCount: number, mode: strin
   return mode === "local" && localMemberCount <= 1;
 }
 
+/** Demo Home activity/stats chrome only when the private archive is still empty or focal-only. */
+export function shouldShowShowcaseHome(localMemberCount: number, mode: string): boolean {
+  return shouldShowShowcasePedigree(localMemberCount, mode);
+}
+
 export const showcaseStoryLahore = {
   id: "lahore-wedding",
   title: "The wedding in Lahore",

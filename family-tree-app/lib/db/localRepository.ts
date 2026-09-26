@@ -203,6 +203,8 @@ export function getLocalUnionsForPerson(personId: string): LocalUnionView[] {
         id: c.id,
         name: `${c.first_name} ${c.last_name}`,
         familyCode: c.family_code,
+        birthDate: c.birth_date,
+        deathDate: c.death_date,
       })),
     };
   });

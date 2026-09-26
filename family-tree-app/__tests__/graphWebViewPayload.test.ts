@@ -66,5 +66,7 @@ describe("graph webview payload", () => {
     expect(payload.nodes[0]?.years).toContain("1955");
     expect(payload.nodes[1]?.years).toContain("1960");
     expect(payload.segments.length).toBeGreaterThan(0);
+    expect(payload.theme.canvas).toBe("#F6F1E7");
+    expect(payload.theme.primary).toBe("#1B4332");
   });
 });

@@ -151,7 +151,7 @@ export const copy = {
     noMarriages: "No marriages have been recorded for this person yet.",
     marriageTo: (a: string, b: string) => `Marriage: ${a} and ${b}`,
     noChildrenInMarriage: "No children recorded for this marriage.",
-    childLine: (name: string, ref: string) => `${name} · ${ref}`,
+    childLine: (name: string, _ref?: string) => name,
     privateFooter:
       "These records are in your private archive. Link the family cloud from Account to work with your shared registry.",
     tapProfile: "Open full profile",
@@ -216,7 +216,7 @@ export const copy = {
     needMarriageFirst:
       "Record a marriage (add a spouse) before adding a child to this branch.",
     cloudReadOnly:
-      "Shared family records can be viewed here. Add marriages, children, and parents on the family website, or switch to the private archive on this device.",
+      "You are browsing the shared family website (read-only on this device). To add marriages, children, or parents, use the website—or switch to your private archive for full editing offline.",
     parentsSection: "Parents",
     noParents: "No parents recorded yet.",
     addParents: "Add parents",
@@ -224,7 +224,7 @@ export const copy = {
     currentMarriage: "Current marriage",
     previousMarriage: "Previous marriage",
     spouseSaved: "Marriage saved. Both people are now linked.",
-    childSaved: "Child saved on this marriage.",
+    childSaved: "Child saved and linked to this parent.",
     parentsSaved: "Parents saved.",
     parentSlotStagedFather: "Father recorded. Add mother to finish linking parents.",
     parentSlotStagedMother: "Mother recorded. Add father to finish linking parents.",
@@ -242,6 +242,17 @@ export const copy = {
       "Sign in to your private archive to see how this person relates to you.",
     fullSibling: (name: string) => `Full sibling: ${name}`,
     halfSibling: (name: string) => `Half sibling: ${name}`,
+    stepSibling: (name: string) => `Step sibling: ${name}`,
+    fullSiblingsSection: "Full siblings",
+    halfSiblingsSection: "Half siblings",
+    stepSiblingsSection: "Step siblings",
+    noFullSiblings: "No full siblings recorded.",
+    noHalfSiblings: "No half siblings recorded.",
+    noStepSiblings: "No step siblings recorded.",
+    childRelationshipBiological: "Biological",
+    childRelationshipAdopted: "Adopted",
+    childRelationshipStep: "Step",
+    childRelationshipLabel: "Relationship to parents",
   },
 
   tools: {

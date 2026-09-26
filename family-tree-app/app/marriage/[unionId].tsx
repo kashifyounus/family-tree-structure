@@ -19,6 +19,7 @@ import {
   saveMarriage,
 } from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
+import { memberPickerSubtitle } from "@/lib/members/memberPickerSubtitle";
 import { space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
@@ -84,13 +85,20 @@ export default function MarriageScreen() {
     ...marriage.children.map((c) => c.id),
   ];
 
-  const linkChildMember = (childId: string) => {
+  const linkChildMember = (
+    childId: string,
+    options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
+  ) => {
     if (!childId) {
       showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
     try {
-      linkChild(mode, { unionId: marriage.id, childId });
+      linkChild(mode, {
+        unionId: marriage.id,
+        childId,
+        relationshipType: options?.relationshipType,
+      });
       setChildOpen(false);
       bumpDataRevision();
       impactLight();
@@ -104,6 +112,8 @@ export default function MarriageScreen() {
     firstName: string;
     lastName: string;
     gender: Gender;
+    birthDate?: string;
+    relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
   }) => {
     try {
       addChild(mode, {
@@ -112,6 +122,8 @@ export default function MarriageScreen() {
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
+        birthDate: payload.birthDate,
+        relationshipType: payload.relationshipType,
       });
       setChildOpen(false);
       bumpDataRevision();
@@ -176,7 +188,11 @@ export default function MarriageScreen() {
           <ListRow
             key={child.id}
             title={`${child.first_name} ${child.last_name}`}
-            description={child.family_code}
+            description={memberPickerSubtitle({
+              id: child.id,
+              name: `${child.first_name} ${child.last_name}`,
+              familyCode: child.family_code,
+            })}
             leftIcon="account-child"
             onPress={() =>
               router.push({

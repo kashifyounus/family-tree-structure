@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { GraphWebView } from "@/components/tree/GraphWebView";
 import { copy } from "@/content/businessCopy";
+import { formatDisplayDate } from "@/lib/format/displayDate";
 import { formatGender } from "@/lib/format/gender";
 import {
   buildLocalFamilyGraph,
@@ -15,6 +16,7 @@ import {
   getLocalMemberByFamilyCode,
   getLocalUnionsForPerson,
 } from "@/lib/db/localRepository";
+import { memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
 import type { GraphPersonSummary } from "@/lib/graph/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
@@ -65,6 +67,15 @@ export function LocalFamilyTree({
     () => buildLocalFamilyGraph(familyCode.trim(), graphOptions),
     [familyCode, graphOptions],
   );
+
+  const focalMetaLine = useMemo(() => {
+    if (!focal) return "";
+    const born = formatDisplayDate(focal.birthDate ?? undefined);
+    const parts = [formatGender(focal.gender)];
+    if (born) parts.push(`Born ${born}`);
+    if (focal.currentCity?.trim()) parts.push(focal.currentCity.trim());
+    return parts.join(" · ");
+  }, [focal]);
 
   const canLoadMore = useCallback(() => {
     if (!focal || !graph) return { parents: false, children: false, siblings: false };
@@ -144,13 +155,7 @@ export function LocalFamilyTree({
           keyboardShouldPersistTaps="handled"
         >
           <Pressable
-            style={[
-              styles.focalCard,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.primary,
-              },
-            ]}
+            className="rounded-2xl border-2 border-primary bg-card p-4 active:opacity-95"
             onPress={() =>
               router.push({
                 pathname: "/member/[personId]",
@@ -158,55 +163,51 @@ export function LocalFamilyTree({
               })
             }
           >
-            <AppText variant="titleLarge" style={{ color: theme.colors.onSurface }}>
+            <AppText variant="titleLarge" className="text-foreground font-semibold">
               {focal.firstName} {focal.lastName}
             </AppText>
-            <AppText variant="labelMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
-              {focal.familyCode}
+            <AppText variant="labelSmall" className="text-muted-foreground mt-1">
+              {memberRecordSubtitle(focal)}
             </AppText>
-            <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>
-              {formatGender(focal.gender)}
-              {focal.birthDate ? ` · ${focal.birthDate}` : ""}
-              {focal.currentCity ? ` · ${focal.currentCity}` : ""}
-            </AppText>
-            <AppText variant="labelSmall" style={{ color: theme.colors.primary, marginTop: 8 }}>
+            {focalMetaLine ? (
+              <AppText variant="bodySmall" className="text-muted-foreground mt-2">
+                {focalMetaLine}
+              </AppText>
+            ) : null}
+            <AppText variant="labelMedium" className="text-primary mt-3">
               {copy.tree.tapProfile}
             </AppText>
           </Pressable>
 
-          <AppText variant="titleSmall" style={{ color: theme.colors.onBackground, marginTop: 16 }}>
+          <AppText variant="titleSmall" className="text-foreground font-semibold mt-5 mb-2">
             {copy.tree.marriagesSection}
           </AppText>
           {marriages.length === 0 ? (
-            <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            <AppText variant="bodySmall" className="text-muted-foreground">
               {copy.tree.noMarriages}
             </AppText>
           ) : (
             marriages.map((m) => (
               <View
                 key={m.id}
-                style={[
-                  styles.marriageCard,
-                  {
-                    backgroundColor: theme.colors.surfaceVariant,
-                    opacity: m.isActive ? 1 : 0.65,
-                  },
-                ]}
+                className="rounded-xl border border-border bg-card p-4 mt-2"
+                style={{ opacity: m.isActive ? 1 : 0.75 }}
               >
-                <AppText variant="titleSmall" style={{ color: theme.colors.onSurface }}>
+                <AppText variant="labelSmall" className="text-muted-foreground uppercase">
                   {m.isActive ? copy.profile.currentMarriage : copy.profile.previousMarriage}
                 </AppText>
-                <AppText variant="bodyMedium" style={{ color: theme.colors.onSurface, marginTop: 4 }}>
+                <AppText variant="titleSmall" className="text-foreground mt-1">
                   {copy.tree.marriageTo(m.partner1Name, m.partner2Name)}
                 </AppText>
                 {m.children.length === 0 ? (
-                  <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                  <AppText variant="bodySmall" className="text-muted-foreground mt-2">
                     {copy.tree.noChildrenInMarriage}
                   </AppText>
                 ) : (
                   m.children.map((c) => (
                     <Pressable
                       key={c.id}
+                      className="mt-2 py-1 active:opacity-80"
                       onPress={() =>
                         router.push({
                           pathname: "/member/[personId]",
@@ -214,8 +215,8 @@ export function LocalFamilyTree({
                         })
                       }
                     >
-                      <AppText variant="bodyMedium" style={{ color: theme.colors.primary, marginTop: 4 }}>
-                        · {copy.tree.childLine(c.name, c.familyCode)}
+                      <AppText variant="bodyMedium" className="text-primary">
+                        {copy.tree.childLine(c.name, c.familyCode)}
                       </AppText>
                     </Pressable>
                   ))
@@ -223,7 +224,7 @@ export function LocalFamilyTree({
               </View>
             ))
           )}
-          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 16 }}>
+          <AppText variant="bodySmall" className="text-muted-foreground mt-5">
             {copy.tree.privateFooter}
           </AppText>
         </ScrollView>
@@ -247,16 +248,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   scroll: { flex: 1 },
-  content: { padding: 12, paddingBottom: 32 },
+  content: { padding: 16, paddingBottom: 32 },
   empty: { flex: 1, padding: 20, justifyContent: "center" },
-  focalCard: {
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-  },
-  marriageCard: {
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 8,
-  },
 });

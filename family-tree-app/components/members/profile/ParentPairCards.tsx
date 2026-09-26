@@ -5,6 +5,7 @@ import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
 import type { KinshipPerson } from "@/lib/kinship/types";
 import { memberInitials } from "@/lib/members/memberPickerSubtitle";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
+import { formatPersonDisplayName } from "../../../../shared/unknownCoParent";
 
 type ParentPairCardsProps = {
   father?: KinshipPerson | null;
@@ -21,7 +22,13 @@ function ParentCard({
   person?: KinshipPerson | null;
   onPress?: () => void;
 }) {
-  const name = person ? `${person.firstName} ${person.lastName}`.trim() : "Not recorded";
+  const name = person
+    ? formatPersonDisplayName({
+        firstName: person.firstName,
+        lastName: person.lastName,
+        familyCode: person.familyCode,
+      })
+    : "Not recorded";
   return (
     <Pressable
       onPress={onPress}

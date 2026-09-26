@@ -50,6 +50,8 @@ export type AddSpouseInput = {
   marriageDate?: string;
 };
 
+export type ChildRelationshipType = "BIOLOGICAL" | "ADOPTED" | "STEP";
+
 export type AddChildInput = {
   parentPersonId: string;
   unionId?: string;
@@ -57,6 +59,8 @@ export type AddChildInput = {
   firstName: string;
   lastName: string;
   gender: Gender;
+  birthDate?: string;
+  relationshipType?: ChildRelationshipType;
 };
 
 export type ReportBucket = { label: string; count: number };
@@ -68,6 +72,14 @@ export type LocalReports = {
   ages: ReportBucket[];
 };
 
+export type UnionChildView = {
+  id: string;
+  name: string;
+  familyCode: string;
+  birthDate?: string | null;
+  deathDate?: string | null;
+};
+
 export type LocalUnionView = {
   id: string;
   partner1Id?: string;
@@ -77,7 +89,7 @@ export type LocalUnionView = {
   marriageDate?: string | null;
   divorceDate?: string | null;
   isActive?: boolean;
-  children: { id: string; name: string; familyCode: string }[];
+  children: UnionChildView[];
 };
 
 export type LinkSpouseInput = {
@@ -89,7 +101,7 @@ export type LinkSpouseInput = {
 export type LinkChildInput = {
   unionId: string;
   childId: string;
-  relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
+  relationshipType?: ChildRelationshipType;
 };
 
 export type SetParentsInput = {

@@ -24,6 +24,12 @@ import {
   type RuleGender,
   type RuleGraph,
 } from "@/lib/rules/relationshipRules";
+import { formatPersonDisplayName } from "../../../shared/unknownCoParent";
+import {
+  ensureSingleParentUnion,
+  findSingleParentUnionId,
+  isUnknownCoParentRow,
+} from "@/lib/db/unknownCoParent";
 
 type PersonRow = {
   id: string;
@@ -240,7 +246,7 @@ export function addLocalChild(input: AddChildInput): MemberRecord {
     );
   }
   if (!unionId) {
-    throw new Error(copy.errors.needMarriageForChild);
+    unionId = ensureSingleParentUnion(db, parent.id);
   }
   if (input.unionId) {
     const chosen = loadLocalRuleGraph().unions.find((union) => union.id === input.unionId);
@@ -255,14 +261,23 @@ export function addLocalChild(input: AddChildInput): MemberRecord {
   const now = new Date().toISOString();
 
   db.runSync(
-    `INSERT INTO persons (id, family_code, first_name, last_name, gender, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [childId, familyCode, input.firstName, input.lastName, input.gender, now, now],
+    `INSERT INTO persons (id, family_code, first_name, last_name, gender, birth_date, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      childId,
+      familyCode,
+      input.firstName,
+      input.lastName,
+      input.gender,
+      input.birthDate ?? null,
+      now,
+      now,
+    ],
   );
 
   db.runSync(
-    `INSERT INTO children (id, union_id, child_id, relationship_type) VALUES (?, ?, ?, 'BIOLOGICAL')`,
-    [newId(), unionId, childId],
+    `INSERT INTO children (id, union_id, child_id, relationship_type) VALUES (?, ?, ?, ?)`,
+    [newId(), unionId, childId, input.relationshipType ?? "BIOLOGICAL"],
   );
 
   touchPerson(db, parent.id);
@@ -287,7 +302,13 @@ export function listLocalUnionOptions(personId: string): { id: string; label: st
     const other = db.getFirstSync<PersonRow>("SELECT * FROM persons WHERE id = ?", [
       otherId,
     ]);
-    const name = other ? `${other.first_name} ${other.last_name}` : "Partner";
+    const name = other
+      ? formatPersonDisplayName({
+          firstName: other.first_name,
+          lastName: other.last_name,
+          familyCode: other.family_code,
+        })
+      : "Partner";
     return { id: u.id, label: `Marriage ${index + 1} · ${name}` };
   });
 }
@@ -317,11 +338,96 @@ export function linkLocalChild(input: LinkChildInput): void {
   );
 }
 
+export function linkLocalChildToParent(
+  parentPersonId: string,
+  childId: string,
+  relationshipType?: LinkChildInput["relationshipType"],
+): void {
+  const db = getDatabase();
+  let unionId = findSingleParentUnionId(db, parentPersonId);
+  if (!unionId) {
+    const marriages = db.getAllSync<{ id: string }>(
+      `SELECT id FROM unions WHERE partner_1_id = ? OR partner_2_id = ? LIMIT 1`,
+      [parentPersonId, parentPersonId],
+    );
+    unionId = marriages[0]?.id ?? ensureSingleParentUnion(db, parentPersonId);
+  }
+  linkLocalChild({ unionId, childId, relationshipType });
+}
+
+function tryUpgradeUnionReplacingUnknownCoParent(
+  db: ReturnType<typeof getDatabase>,
+  graph: RuleGraph,
+  childId: string,
+  parentAId: string,
+  parentBId: string,
+): string | null {
+  const existing = db.getFirstSync<{ union_id: string }>(
+    "SELECT union_id FROM children WHERE child_id = ? ORDER BY id LIMIT 1",
+    [childId],
+  );
+  if (!existing) return null;
+  const union = graph.unions.find((item) => item.id === existing.union_id);
+  if (!union) return null;
+
+  const partner1Unknown = isUnknownCoParentFamilyCodeInGraph(graph, union.partner1Id);
+  const partner2Unknown = isUnknownCoParentFamilyCodeInGraph(graph, union.partner2Id);
+  if (!partner1Unknown && !partner2Unknown) return null;
+
+  const knownPartnerId = partner1Unknown ? union.partner2Id : union.partner1Id;
+  const unknownPartnerId = partner1Unknown ? union.partner1Id : union.partner2Id;
+  const nextIds = new Set([parentAId, parentBId]);
+  if (!nextIds.has(knownPartnerId)) return null;
+
+  const replacementId = parentAId === knownPartnerId ? parentBId : parentAId;
+  if (replacementId === unknownPartnerId) return null;
+  if (
+    isUnknownCoParentFamilyCodeInGraph(graph, replacementId) &&
+    replacementId !== unknownPartnerId
+  ) {
+    return null;
+  }
+
+  if (partner1Unknown) {
+    const [partner1Id, partner2Id] = canonicalPartnerIds(replacementId, knownPartnerId);
+    db.runSync(
+      "UPDATE unions SET partner_1_id = ?, partner_2_id = ? WHERE id = ?",
+      [partner1Id, partner2Id, union.id],
+    );
+  } else {
+    const [partner1Id, partner2Id] = canonicalPartnerIds(knownPartnerId, replacementId);
+    db.runSync(
+      "UPDATE unions SET partner_1_id = ?, partner_2_id = ? WHERE id = ?",
+      [partner1Id, partner2Id, union.id],
+    );
+  }
+  return union.id;
+}
+
+function isUnknownCoParentFamilyCodeInGraph(
+  graph: RuleGraph,
+  personId: string,
+): boolean {
+  const db = getDatabase();
+  const row = db.getFirstSync<{ family_code: string }>(
+    "SELECT family_code FROM persons WHERE id = ?",
+    [personId],
+  );
+  return row ? isUnknownCoParentRow(row) : false;
+}
+
 export function setLocalParents(input: SetParentsInput): { unionId: string } {
   const graph = loadLocalRuleGraph();
   assertCanAssignParents(graph, input.personId, input.parentAId, input.parentBId);
   const db = getDatabase();
-  let unionId = findMarriage(graph, input.parentAId, input.parentBId)?.id;
+  let unionId =
+    tryUpgradeUnionReplacingUnknownCoParent(
+      db,
+      graph,
+      input.personId,
+      input.parentAId,
+      input.parentBId,
+    ) ?? findMarriage(graph, input.parentAId, input.parentBId)?.id;
   if (!unionId) {
     assertCanCreateMarriage(graph, input.parentAId, input.parentBId);
     unionId = newId();
@@ -477,9 +583,14 @@ export function listLocalPeopleBrief(): {
     }>(
       "SELECT id, first_name, last_name, family_code, birth_date, current_city, gender FROM persons ORDER BY last_name, first_name",
     )
+    .filter((person) => !isUnknownCoParentRow(person))
     .map((person) => ({
       id: person.id,
-      name: `${person.first_name} ${person.last_name}`,
+      name: formatPersonDisplayName({
+        firstName: person.first_name,
+        lastName: person.last_name,
+        familyCode: person.family_code,
+      }),
       familyCode: person.family_code,
       birthDate: person.birth_date,
       currentCity: person.current_city,

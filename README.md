@@ -4,6 +4,10 @@
 
 Mobile-friendly family tree web application built with **Next.js 15**, **TypeScript**, **PostgreSQL**, **Prisma**, **Tailwind CSS**, and **React Flow**.
 
+## Agent backlog
+
+Cursor agents: see [`docs/GAPS.md`](docs/GAPS.md) and root [`AGENTS.md`](AGENTS.md) for open `[GAP]` work (issues [#11](https://github.com/kashifyounus/family-tree-structure/issues/11)–[#18](https://github.com/kashifyounus/family-tree-structure/issues/18)). Epic: [#10](https://github.com/kashifyounus/family-tree-structure/issues/10).
+
 ## Features
 
 - **Union-based model** — multiple spouses per person, children linked to a specific union (full vs half siblings).

@@ -4,8 +4,8 @@ import {
   SHOWCASE_MARGARET_ID,
   margaretKhanProfile,
 } from "@/lib/mock/kuriosityShowcase";
+import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
-import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -13,6 +13,7 @@ import { StyleSheet, View } from "react-native";
 import { AddRelationSheet } from "@/components/members/AddRelationSheet";
 import { MemberProfileHero } from "@/components/members/profile/MemberProfileHero";
 import { ParentPairCards } from "@/components/members/profile/ParentPairCards";
+import { MarriageChildrenList } from "@/components/members/profile/MarriageChildrenList";
 import { SiblingsTable } from "@/components/members/profile/SiblingsTable";
 import { SpousePill } from "@/components/members/profile/SpousePill";
 import { CoupleParentPickerSheet } from "@/components/parents/CoupleParentPickerSheet";
@@ -34,6 +35,7 @@ import {
   assignParentsToCouple,
   createAndAssignParentSlot,
   linkChild,
+  linkChildToParent,
   linkSpouse,
   loadPersonByCode,
   loadPersonById,
@@ -244,19 +246,26 @@ export default function MemberDetailScreen() {
     }
   };
 
-  const linkChildMember = (childId: string) => {
+  const linkChildMember = (
+    childId: string,
+    options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
+  ) => {
     const marriages = unionOptions(mode, m.id);
     const unionId = chUnionId || marriages[0]?.id;
-    if (!unionId) {
-      showError(copy.profile.needMarriageFirst);
-      return;
-    }
     if (!childId) {
       showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
     try {
-      linkChild(mode, { unionId, childId });
+      if (unionId) {
+        linkChild(mode, {
+          unionId,
+          childId,
+          relationshipType: options?.relationshipType,
+        });
+      } else {
+        linkChildToParent(mode, m.id, childId);
+      }
       setChildOpen(false);
       bumpDataRevision();
       void reload();
@@ -271,13 +280,11 @@ export default function MemberDetailScreen() {
     firstName: string;
     lastName: string;
     gender: Gender;
+    birthDate?: string;
+    relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
   }) => {
     const marriages = unionOptions(mode, m.id);
     const unionId = chUnionId || marriages[0]?.id;
-    if (!unionId) {
-      showError(copy.profile.needMarriageFirst);
-      return;
-    }
     const errors: FieldErrors = {
       chFirst: required(payload.firstName, "First name"),
       chLast: required(payload.lastName, "Last name"),
@@ -294,10 +301,12 @@ export default function MemberDetailScreen() {
     try {
       addChild(mode, {
         parentPersonId: m.id,
-        unionId,
+        unionId: unionId || undefined,
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
+        birthDate: payload.birthDate,
+        relationshipType: payload.relationshipType,
       });
       setChildOpen(false);
       bumpDataRevision();
@@ -317,16 +326,7 @@ export default function MemberDetailScreen() {
   const applyParentAssignResult = (
     result: ReturnType<typeof assignParentSlot>,
   ) => {
-    if (result.status === "needs_other_parent") {
-      setParentStaged({ parentId: result.stagedParentId, slot: result.stagedSlot });
-      setParentSlot(result.otherSlot);
-      showSuccess(
-        result.otherSlot === "mother"
-          ? copy.profile.parentSlotStagedFather
-          : copy.profile.parentSlotStagedMother,
-      );
-      return;
-    }
+    if (result.status !== "complete") return;
     setParentStaged(null);
     setParentsOpen(false);
     bumpDataRevision();
@@ -517,22 +517,24 @@ export default function MemberDetailScreen() {
           </AppText>
         )}
 
-        <Button
-          variant="secondary"
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/tree",
-              params: { familyCode: m.familyCode },
-            })
-          }
-        >
-          <ButtonText>{copy.profile.openInTree}</ButtonText>
-        </Button>
+        <View className="mt-4 mb-2">
+          <PrimaryPillButton
+            testID="member-show-in-tree"
+            label={copy.profile.openInTree}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/tree",
+                params: { familyCode: m.familyCode },
+              })
+            }
+          />
+        </View>
 
         {canEditLocal && (
           <View style={styles.actions}>
             <Button
               variant="outline"
+              className="rounded-full min-h-11"
               onPress={() => {
                 if (editing) {
                   setFirstName(m.firstName);
@@ -551,14 +553,16 @@ export default function MemberDetailScreen() {
             </Button>
             <Button
               testID="member-add-spouse"
-              variant="secondary"
+              variant="outline"
+              className="rounded-full min-h-11"
               onPress={() => setSpouseOpen(true)}
             >
               <ButtonText>{copy.profile.addSpouse}</ButtonText>
             </Button>
             <Button
               testID="member-add-child"
-              variant="secondary"
+              variant="outline"
+              className="rounded-full min-h-11"
               onPress={() => {
                 setChUnionId(marriageOptions[0]?.id ?? "");
                 setChildOpen(true);
@@ -566,7 +570,12 @@ export default function MemberDetailScreen() {
             >
               <ButtonText>{copy.profile.addChild}</ButtonText>
             </Button>
-            <Button testID="member-add-parents" variant="secondary" onPress={openParentSheet}>
+            <Button
+              testID="member-add-parents"
+              variant="outline"
+              className="rounded-full min-h-11"
+              onPress={openParentSheet}
+            >
               <ButtonText>
                 {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
               </ButtonText>
@@ -629,14 +638,10 @@ export default function MemberDetailScreen() {
                 u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage
               }
             >
-              <Badge variant="outline" className="self-start">
-                <BadgeText>
-                  {u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage}
-                </BadgeText>
-              </Badge>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
+                className="self-start rounded-full"
                 onPress={() =>
                   router.push({
                     pathname: "/marriage/[unionId]",
@@ -646,31 +651,25 @@ export default function MemberDetailScreen() {
               >
                 <ButtonText>View marriage</ButtonText>
               </Button>
-              {u.children.map((c) => (
-                <Button
-                  key={c.id}
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/member/[personId]",
-                      params: { personId: c.id, code: c.familyCode },
-                    })
-                  }
-                >
-                  <ButtonText>{c.name} ({c.familyCode})</ButtonText>
-                </Button>
-              ))}
+              <MarriageChildrenList
+                unionChildren={u.children}
+                onPressChild={(childId, familyCode) =>
+                  router.push({
+                    pathname: "/member/[personId]",
+                    params: { personId: childId, code: familyCode },
+                  })
+                }
+              />
             </SectionCard>
           ))
         )}
 
         <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
-          Full siblings
+          {copy.profile.fullSiblingsSection}
         </AppText>
         <SiblingsTable
           siblings={bundle.computed?.fullSiblings ?? []}
+          emptyMessage={copy.profile.noFullSiblings}
           onPressSibling={(personId, familyCode) =>
             router.push({
               pathname: "/member/[personId]",
@@ -679,18 +678,34 @@ export default function MemberDetailScreen() {
           }
         />
 
-        <Button
-          variant="outline"
-          style={styles.treeBtn}
-          onPress={() =>
+        <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+          {copy.profile.halfSiblingsSection}
+        </AppText>
+        <SiblingsTable
+          siblings={bundle.computed?.halfSiblings ?? []}
+          emptyMessage={copy.profile.noHalfSiblings}
+          onPressSibling={(personId, familyCode) =>
             router.push({
-              pathname: "/(tabs)/tree",
-              params: { familyCode: m.familyCode },
+              pathname: "/member/[personId]",
+              params: { personId, code: familyCode },
             })
           }
-        >
-          <ButtonText>{copy.profile.openInTree}</ButtonText>
-        </Button>
+        />
+
+        <AppText variant="titleMedium" style={[styles.section, { color: theme.colors.onBackground }]}>
+          {copy.profile.stepSiblingsSection}
+        </AppText>
+        <SiblingsTable
+          siblings={bundle.computed?.stepSiblings ?? []}
+          emptyMessage={copy.profile.noStepSiblings}
+          onPressSibling={(personId, familyCode) =>
+            router.push({
+              pathname: "/member/[personId]",
+              params: { personId, code: familyCode },
+            })
+          }
+        />
+
       </Screen>
 
       <AddRelationSheet
@@ -766,7 +781,6 @@ const styles = StyleSheet.create({
   block: { marginTop: 12, borderRadius: 16 },
   gap: { gap: 10 },
   section: { marginTop: 20 },
-  treeBtn: { marginTop: 24, marginBottom: 8 },
   dialogScroll: { maxHeight: 420 },
   dialogInner: { gap: 12, paddingHorizontal: 24, paddingVertical: 8 },
 });

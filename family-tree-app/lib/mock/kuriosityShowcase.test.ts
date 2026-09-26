@@ -2,6 +2,7 @@ import {
   filterShowcaseMembers,
   showcaseMemberRows,
   SHOWCASE_MARGARET_ID,
+  shouldShowShowcaseHome,
   shouldShowShowcasePedigree,
 } from "./kuriosityShowcase";
 
@@ -25,5 +26,12 @@ describe("shouldShowShowcasePedigree", () => {
     expect(shouldShowShowcasePedigree(1, "local")).toBe(true);
     expect(shouldShowShowcasePedigree(3, "local")).toBe(false);
     expect(shouldShowShowcasePedigree(0, "online")).toBe(false);
+  });
+});
+
+describe("shouldShowShowcaseHome", () => {
+  it("matches pedigree showcase gate", () => {
+    expect(shouldShowShowcaseHome(0, "local")).toBe(shouldShowShowcasePedigree(0, "local"));
+    expect(shouldShowShowcaseHome(4, "local")).toBe(false);
   });
 });

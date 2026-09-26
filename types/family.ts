@@ -54,6 +54,7 @@ export type ComputedRelations = {
   maternalUncles: KinshipRelative[];
   maternalAunts: KinshipRelative[];
   halfSiblings: KinshipRelative[];
+  stepSiblings: KinshipRelative[];
   fullSiblings: KinshipRelative[];
 };
 

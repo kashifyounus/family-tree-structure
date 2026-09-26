@@ -33,6 +33,7 @@ import {
   getLocalMarriage,
   getLocalMemberById,
   linkLocalChild,
+  linkLocalChildToParent,
   linkLocalSpouse,
   listLocalPeopleBrief,
   listLocalUnionOptions,
@@ -141,6 +142,15 @@ export function linkSpouse(mode: StorageMode, input: LinkSpouseInput): { unionId
 export function linkChild(mode: StorageMode, input: LinkChildInput): void {
   requireLocal(mode);
   linkLocalChild(input);
+}
+
+export function linkChildToParent(
+  mode: StorageMode,
+  parentPersonId: string,
+  childId: string,
+): void {
+  requireLocal(mode);
+  linkLocalChildToParent(parentPersonId, childId);
 }
 
 export function assignParents(mode: StorageMode, input: SetParentsInput): { unionId: string } {

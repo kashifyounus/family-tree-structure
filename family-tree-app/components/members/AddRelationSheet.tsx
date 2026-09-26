@@ -17,7 +17,7 @@ import { GenderField } from "@/components/ui/GenderField";
 import { OutlineChip } from "@/components/ui/OutlineChip";
 import { Button, ButtonText } from "@/components/ui/button";
 import { copy } from "@/content/businessCopy";
-import type { Gender } from "@/lib/data/types";
+import type { ChildRelationshipType, Gender } from "@/lib/data/types";
 import { type FieldErrors } from "@/lib/forms/fieldErrors";
 import type { ParentSlot } from "@/lib/rules/parentSlots";
 import { parentSlotGender } from "@/lib/rules/parentSlots";
@@ -32,9 +32,36 @@ export type AddRelationCreatePayload = {
   marriageDate?: string;
   birthDate?: string;
   parentSlot?: ParentSlot;
+  relationshipType?: ChildRelationshipType;
 };
 
 type MarriageOption = { id: string; label: string };
+
+export type AddRelationLinkOptions = {
+  relationshipType?: ChildRelationshipType;
+};
+
+const CHILD_RELATIONSHIP_OPTIONS: {
+  value: ChildRelationshipType;
+  label: string;
+  testID: string;
+}[] = [
+  {
+    value: "BIOLOGICAL",
+    label: copy.profile.childRelationshipBiological,
+    testID: "child-rel-biological",
+  },
+  {
+    value: "ADOPTED",
+    label: copy.profile.childRelationshipAdopted,
+    testID: "child-rel-adopted",
+  },
+  {
+    value: "STEP",
+    label: copy.profile.childRelationshipStep,
+    testID: "child-rel-step",
+  },
+];
 
 type AddRelationSheetProps = {
   visible: boolean;
@@ -52,7 +79,7 @@ type AddRelationSheetProps = {
   onLinkParentCouple?: () => void;
   onDismiss: () => void;
   onSubmitCreate: (payload: AddRelationCreatePayload) => void;
-  onSubmitLink: (memberId: string) => void;
+  onSubmitLink: (memberId: string, options?: AddRelationLinkOptions) => void;
   submitTestID?: string;
   fieldErrors?: FieldErrors;
 };
@@ -85,6 +112,8 @@ export function AddRelationSheet({
   const [gender, setGender] = useState<Gender>(defaultGender);
   const [marriageDate, setMarriageDate] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [childRelationshipType, setChildRelationshipType] =
+    useState<ChildRelationshipType>("BIOLOGICAL");
 
   const slotGender = kind === "parent" ? parentSlotGender(parentSlot) : gender;
 
@@ -97,11 +126,15 @@ export function AddRelationSheet({
     setGender(kind === "parent" ? parentSlotGender(parentSlot) : defaultGender);
     setMarriageDate("");
     setBirthDate("");
+    setChildRelationshipType("BIOLOGICAL");
   }, [visible, defaultGender, kind, parentSlot]);
 
   const handleSubmit = () => {
     if (mode === "link") {
-      onSubmitLink(linkId);
+      onSubmitLink(
+        linkId,
+        kind === "child" ? { relationshipType: childRelationshipType } : undefined,
+      );
       return;
     }
     onSubmitCreate({
@@ -109,8 +142,12 @@ export function AddRelationSheet({
       lastName: lastName.trim(),
       gender: kind === "parent" ? slotGender : gender,
       marriageDate: kind === "spouse" ? marriageDate || undefined : undefined,
-      birthDate: kind === "parent" ? birthDate || undefined : undefined,
+      birthDate:
+        kind === "parent" || kind === "child"
+          ? birthDate || undefined
+          : undefined,
       parentSlot: kind === "parent" ? parentSlot : undefined,
+      ...(kind === "child" ? { relationshipType: childRelationshipType } : {}),
     });
   };
 
@@ -158,6 +195,24 @@ export function AddRelationSheet({
               <ButtonText>{marriage.label}</ButtonText>
             </Button>
           ))}
+        </View>
+      ) : null}
+      {kind === "child" ? (
+        <View className="gap-2">
+          <AppText variant="labelSmall" className="text-muted-foreground">
+            {copy.profile.childRelationshipLabel}
+          </AppText>
+          <View className="flex-row flex-wrap gap-2">
+            {CHILD_RELATIONSHIP_OPTIONS.map((option) => (
+              <OutlineChip
+                key={option.value}
+                testID={option.testID}
+                label={option.label}
+                selected={childRelationshipType === option.value}
+                onPress={() => setChildRelationshipType(option.value)}
+              />
+            ))}
+          </View>
         </View>
       ) : null}
       {mode === "link" ? (
@@ -236,6 +291,12 @@ export function AddRelationSheet({
             errorText={fieldErrors.chLast}
           />
           <GenderField value={gender} onChange={setGender} label="Gender" />
+          <DatePickerField
+            label="Date of birth"
+            value={birthDate}
+            onChange={setBirthDate}
+            testID="member-child-birth-date"
+          />
         </>
       )}
       {kind === "parent" && onLinkParentCouple ? (

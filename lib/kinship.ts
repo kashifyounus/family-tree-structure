@@ -5,6 +5,10 @@ import type {
   RelationshipPathStep,
 } from "@/types/family";
 import { toPersonSummary } from "@/lib/personMapper";
+import {
+  humanKinshipLabelFromSteps,
+  KINSHIP_LABEL_FALLBACK,
+} from "../shared/humanKinshipLabel";
 
 export type PersonWithChildships = Person & {
   childships: {
@@ -30,10 +34,11 @@ export type UnionRecord = {
   childships: { childId: string; child: Person; relationshipType: string }[];
 };
 
-function childUnionContext(u: UnionRecord) {
+function childUnionContext(u: UnionRecord, personId: string) {
+  const childship = u.childships.find((c) => c.childId === personId);
   return {
     unionId: u.id,
-    relationshipType: "BIOLOGICAL",
+    relationshipType: childship?.relationshipType ?? "BIOLOGICAL",
     union: {
       id: u.id,
       partner1Id: u.partner1Id,
@@ -151,6 +156,7 @@ export function computeAuntsAndUncles(
   maternalAunts: KinshipRelative[];
   fullSiblings: KinshipRelative[];
   halfSiblings: KinshipRelative[];
+  stepSiblings: KinshipRelative[];
 } {
   const parentIds = getParentIdsFromUnions(personId, unionsAsChild);
   const father = pickParentByGender(parentIds, peopleById, "MALE");
@@ -182,7 +188,7 @@ export function computeAuntsAndUncles(
     );
     const fatherSiblings = getSiblings(
       father.id,
-      fatherAsChildUnions.map(childUnionContext),
+      fatherAsChildUnions.map((u) => childUnionContext(u, father.id)),
       allUnions,
     );
     for (const s of fatherSiblings) {
@@ -198,7 +204,7 @@ export function computeAuntsAndUncles(
     );
     const motherSiblings = getSiblings(
       mother.id,
-      motherAsChildUnions.map(childUnionContext),
+      motherAsChildUnions.map((u) => childUnionContext(u, mother.id)),
       allUnions,
     );
     for (const s of motherSiblings) {
@@ -211,14 +217,17 @@ export function computeAuntsAndUncles(
   const ownSiblings = getSiblings(personId, unionsAsChild, allUnions);
   const fullSiblings: KinshipRelative[] = [];
   const halfSiblings: KinshipRelative[] = [];
+  const stepSiblings: KinshipRelative[] = [];
   for (const s of ownSiblings) {
-    const rel = toKinship(
-      s.person,
-      s.degree === "full" ? "Full Sibling" : "Half Sibling",
-      "neutral",
-      s.degree,
-    );
+    const kinshipLabel =
+      s.degree === "full"
+        ? "Full Sibling"
+        : s.degree === "step"
+          ? "Step Sibling"
+          : "Half Sibling";
+    const rel = toKinship(s.person, kinshipLabel, "neutral", s.degree);
     if (s.degree === "full") fullSiblings.push(rel);
+    else if (s.degree === "step") stepSiblings.push(rel);
     else halfSiblings.push(rel);
   }
 
@@ -229,6 +238,7 @@ export function computeAuntsAndUncles(
     maternalAunts,
     fullSiblings,
     halfSiblings,
+    stepSiblings,
   };
 }
 
@@ -296,11 +306,21 @@ export function computeRelationshipPath(
       };
       const newPath = [...current.path, step];
       if (edge.to === to.id) {
+        const labelSteps = newPath.map((s) => {
+          const target = peopleById.get(s.toId);
+          return { relation: s.relation, toGender: target?.gender ?? null };
+        });
+        const humanLabel = humanKinshipLabelFromSteps(labelSteps);
+        const summary =
+          humanLabel ??
+          (newPath.length > 0
+            ? KINSHIP_LABEL_FALLBACK
+            : describePath(newPath, peopleById));
         return {
           from: toPersonSummary(from),
           to: toPersonSummary(to),
           steps: newPath,
-          summary: describePath(newPath, peopleById),
+          summary,
         };
       }
       visited.add(edge.to);

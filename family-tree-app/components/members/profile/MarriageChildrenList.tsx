@@ -1,35 +1,26 @@
 import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
+import type { UnionChildView } from "@/lib/data/types";
 import { formatDisplayDate } from "@/lib/format/displayDate";
-import type { KinshipRelative } from "@/lib/kinship/types";
 
-type SiblingsTableProps = {
-  siblings: KinshipRelative[];
-  emptyMessage: string;
-  onPressSibling?: (personId: string, familyCode: string) => void;
+type MarriageChildrenListProps = {
+  unionChildren: UnionChildView[];
+  onPressChild?: (personId: string, familyCode: string) => void;
 };
 
-function statusLabel(sibling: KinshipRelative): string {
-  if (sibling.deathDate) return "Deceased";
+function statusLabel(child: UnionChildView): string {
+  if (child.deathDate) return "Deceased";
   return "Living";
 }
 
-export function SiblingsTable({
-  siblings,
-  emptyMessage,
-  onPressSibling,
-}: SiblingsTableProps) {
-  if (siblings.length === 0) {
-    return (
-      <AppText variant="bodyMedium" className="text-muted-foreground">
-        {emptyMessage}
-      </AppText>
-    );
+export function MarriageChildrenList({ unionChildren, onPressChild }: MarriageChildrenListProps) {
+  if (unionChildren.length === 0) {
+    return null;
   }
 
   return (
-    <View className="rounded-xl border border-border bg-card overflow-hidden">
+    <View className="mt-2 rounded-xl border border-border bg-card overflow-hidden">
       <View className="flex-row border-b border-border bg-muted/30 px-3.5 py-2">
         <AppText variant="labelSmall" className="flex-[1.4] font-semibold text-muted-foreground">
           Name
@@ -41,23 +32,23 @@ export function SiblingsTable({
           Status
         </AppText>
       </View>
-      {siblings.map((sibling) => {
-        const name = `${sibling.firstName} ${sibling.lastName}`.trim();
-        const born = formatDisplayDate(sibling.birthDate) ?? "—";
+      {unionChildren.map((child) => {
+        const born = formatDisplayDate(child.birthDate ?? undefined) ?? "—";
         return (
           <Pressable
-            key={sibling.id}
-            onPress={() => onPressSibling?.(sibling.id, sibling.familyCode)}
+            key={child.id}
+            onPress={() => onPressChild?.(child.id, child.familyCode)}
             className="flex-row items-center px-3.5 py-2.5 border-b border-border active:bg-muted/40"
+            accessibilityRole="button"
           >
             <AppText variant="bodyMedium" className="flex-[1.4] text-foreground pr-2" numberOfLines={1}>
-              {name}
+              {child.name}
             </AppText>
             <AppText variant="labelSmall" className="flex-1 text-muted-foreground" numberOfLines={1}>
               {born}
             </AppText>
             <AppText variant="labelSmall" className="w-16 text-right text-muted-foreground">
-              {statusLabel(sibling)}
+              {statusLabel(child)}
             </AppText>
           </Pressable>
         );

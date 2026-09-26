@@ -120,9 +120,11 @@ export function loadKinshipDataset(): KinshipDataset {
   const unionsAsChildFor = (personId: string): ChildUnionContext[] =>
     allUnions
       .filter((u) => u.childships.some((c) => c.childId === personId))
-      .map((u) => ({
+      .map((u) => {
+        const childship = u.childships.find((c) => c.childId === personId);
+        return {
         unionId: u.id,
-        relationshipType: "BIOLOGICAL",
+        relationshipType: childship?.relationshipType ?? "BIOLOGICAL",
         union: {
           id: u.id,
           partner1Id: u.partner1Id,
@@ -134,7 +136,8 @@ export function loadKinshipDataset(): KinshipDataset {
             child: c.child,
           })),
         },
-      }));
+      };
+      });
 
   return { peopleById, allUnions, unionsAsChildFor };
 }

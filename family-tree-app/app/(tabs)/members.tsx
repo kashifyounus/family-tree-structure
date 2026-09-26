@@ -21,6 +21,7 @@ import { useStorage } from "@/context/StorageContext";
 import { listMembers, removeMember } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
 import { formatBilingualName } from "@/lib/format/displayName";
+import { memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
 import {
   SHOWCASE_MARGARET_ID,
   filterShowcaseMembers,
@@ -242,9 +243,7 @@ export default function MembersScreen() {
               subtitle={
                 item.kind === "showcase"
                   ? item.subtitle
-                  : `${item.member.familyCode}${
-                      item.member.currentCity ? ` · ${item.member.currentCity}` : ""
-                    }`
+                  : memberRecordSubtitle(item.member)
               }
               onPress={() => openPerson(item)}
               onLongPress={

@@ -7,10 +7,14 @@ import type {
   KinshipUnionRecord,
 } from "@/lib/kinship/types";
 
-function childUnionContext(u: KinshipUnionRecord): ChildUnionContext {
+function childUnionContext(
+  u: KinshipUnionRecord,
+  personId: string,
+): ChildUnionContext {
+  const childship = u.childships.find((c) => c.childId === personId);
   return {
     unionId: u.id,
-    relationshipType: "BIOLOGICAL",
+    relationshipType: childship?.relationshipType ?? "BIOLOGICAL",
     union: {
       id: u.id,
       partner1Id: u.partner1Id,
@@ -147,7 +151,7 @@ export function computeKinshipForPerson(
     );
     const fatherSiblings = getSiblings(
       father.id,
-      fatherAsChildUnions.map(childUnionContext),
+      fatherAsChildUnions.map((u) => childUnionContext(u, father.id)),
       allUnions,
     );
     for (const s of fatherSiblings) {
@@ -163,7 +167,7 @@ export function computeKinshipForPerson(
     );
     const motherSiblings = getSiblings(
       mother.id,
-      motherAsChildUnions.map(childUnionContext),
+      motherAsChildUnions.map((u) => childUnionContext(u, mother.id)),
       allUnions,
     );
     for (const s of motherSiblings) {
@@ -176,14 +180,17 @@ export function computeKinshipForPerson(
   const ownSiblings = getSiblings(personId, unionsAsChild, allUnions);
   const fullSiblings: KinshipRelative[] = [];
   const halfSiblings: KinshipRelative[] = [];
+  const stepSiblings: KinshipRelative[] = [];
   for (const s of ownSiblings) {
-    const rel = toKinship(
-      s.person,
-      s.degree === "full" ? "Full sibling" : "Half sibling",
-      "neutral",
-      s.degree,
-    );
+    const kinshipLabel =
+      s.degree === "full"
+        ? "Full sibling"
+        : s.degree === "step"
+          ? "Step sibling"
+          : "Half sibling";
+    const rel = toKinship(s.person, kinshipLabel, "neutral", s.degree);
     if (s.degree === "full") fullSiblings.push(rel);
+    else if (s.degree === "step") stepSiblings.push(rel);
     else halfSiblings.push(rel);
   }
 
@@ -194,6 +201,7 @@ export function computeKinshipForPerson(
     maternalAunts,
     fullSiblings,
     halfSiblings,
+    stepSiblings,
   };
 }
 

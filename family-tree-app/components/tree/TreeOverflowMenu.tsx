@@ -37,7 +37,12 @@ export function TreeOverflowMenu({
       hideActions
       cancelLabel={copy.reports.cancel}
     >
-      <AppText variant="bodySmall" className="text-muted-foreground">{familyCode}</AppText>
+      <AppText variant="labelSmall" className="text-muted-foreground mt-1">
+        {copy.account.memberReference}
+      </AppText>
+      <AppText variant="bodySmall" className="text-foreground font-mono">
+        {familyCode}
+      </AppText>
       <View className="gap-2 mt-2">
         <Button variant="outline" onPress={onCenterMarriage}>
           <ButtonText>{copy.tree.menuCenterMarriage}</ButtonText>

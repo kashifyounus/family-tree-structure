@@ -1,11 +1,12 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { ActivityRow } from "@/components/home/ActivityRow";
 import { HomeTopBar } from "@/components/home/HomeTopBar";
 import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { StatCard } from "@/components/home/StatCard";
+import { PersonRow } from "@/components/members/PersonRow";
 import { MembersSearchField } from "@/components/members/MembersSearchField";
 import { AppText } from "@/components/ui/AppText";
 import { Screen } from "@/components/ui/Screen";
@@ -13,23 +14,23 @@ import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { listMembers } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
-import { formatParentLine } from "@/lib/db/parentDisplay";
+import { memberInitials, memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
 import {
   greetingForKay,
   mergeShowcaseStats,
+  shouldShowShowcaseHome,
   showcaseActivities,
   showcaseUser,
 } from "@/lib/mock/kuriosityShowcase";
-import { space } from "@/theme/tokens";
-import { useAppTheme } from "@/theme/useAppTheme";
-
+import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
 export default function HomeScreen() {
-  const theme = useAppTheme();
   const router = useRouter();
-  const { mode, localMemberCount } = useStorage();
+  const { mode, localMemberCount, dataRevision } = useStorage();
   const localAccount = useLocalAccount();
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<MemberRecord[]>([]);
+  const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
+  const showDemoHome = shouldShowShowcaseHome(localMemberCount, mode);
 
   const stats = useMemo(
     () => mergeShowcaseStats(mode === "local" ? localMemberCount : 48),
@@ -82,6 +83,14 @@ export default function HomeScreen() {
     return () => clearTimeout(handle);
   }, [query, runSearch]);
 
+  useEffect(() => {
+    if (showDemoHome) {
+      setRecentPeople([]);
+      return;
+    }
+    void loadRecentPeople().then(setRecentPeople);
+  }, [dataRevision, showDemoHome]);
+
   return (
     <Screen testID="home-screen">
       <HomeTopBar notificationCount={2} />
@@ -110,60 +119,81 @@ export default function HomeScreen() {
       />
 
       {matches.length > 0 && (
-        <View style={styles.matchList}>
+        <View className="rounded-xl border border-border bg-card px-3 mt-3 mb-1">
           {matches.map((m) => (
-            <Pressable
+            <PersonRow
               key={m.id}
+              initials={memberInitials(`${m.firstName} ${m.lastName}`)}
+              name={`${m.firstName} ${m.lastName}`}
+              subtitle={memberRecordSubtitle(m)}
               onPress={() =>
                 router.push({
                   pathname: "/member/[personId]",
                   params: { personId: m.id, code: m.familyCode },
                 })
               }
-            >
-              <AppText variant="bodyMedium" style={{ color: theme.colors.primary }}>
-                {m.firstName} {m.lastName} · {m.familyCode}
-              </AppText>
-              {m.fatherName || m.motherName ? (
-                <AppText variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                  {formatParentLine({
-                    fatherName: m.fatherName ?? null,
-                    motherName: m.motherName ?? null,
-                  })}
-                </AppText>
-              ) : null}
-            </Pressable>
+            />
           ))}
         </View>
       )}
 
       <View className="mt-6 mb-2 flex-row items-center justify-between">
-        <AppText variant="titleMedium" className="font-semibold">
-          Recent activity
-        </AppText>
-        <Pressable onPress={() => router.push("/notifications")} accessibilityRole="button">
-          <AppText variant="labelMedium" className="text-primary">
-            See all
+        <View>
+          <AppText variant="titleMedium" className="font-semibold">
+            {showDemoHome ? "Recent activity" : "Recently viewed"}
           </AppText>
-        </Pressable>
+          {showDemoHome ? (
+            <AppText variant="labelSmall" className="text-muted-foreground mt-0.5">
+              Demo archive preview
+            </AppText>
+          ) : null}
+        </View>
+        {showDemoHome ? (
+          <Pressable onPress={() => router.push("/notifications")} accessibilityRole="button">
+            <AppText variant="labelMedium" className="text-primary">
+              See all
+            </AppText>
+          </Pressable>
+        ) : null}
       </View>
 
       <View className="rounded-xl border border-border bg-card px-4 mb-6">
-        {showcaseActivities.map((item) => (
-          <ActivityRow
-            key={item.id}
-            item={item}
-            onPress={
-              item.id === "a3"
-                ? () =>
-                    router.push({
-                      pathname: "/story/[storyId]",
-                      params: { storyId: "lahore-wedding" },
-                    })
-                : undefined
-            }
-          />
-        ))}
+        {showDemoHome ? (
+          showcaseActivities.map((item) => (
+            <ActivityRow
+              key={item.id}
+              item={item}
+              onPress={
+                item.id === "a3"
+                  ? () =>
+                      router.push({
+                        pathname: "/story/[storyId]",
+                        params: { storyId: "lahore-wedding" },
+                      })
+                  : undefined
+              }
+            />
+          ))
+        ) : recentPeople.length === 0 ? (
+          <AppText variant="bodyMedium" className="text-muted-foreground py-4">
+            Open a profile from Members or search to see people here.
+          </AppText>
+        ) : (
+          recentPeople.map((person) => (
+            <PersonRow
+              key={person.personId}
+              initials={memberInitials(person.displayName)}
+              name={person.displayName}
+              subtitle="Recently viewed"
+              onPress={() =>
+                router.push({
+                  pathname: "/member/[personId]",
+                  params: { personId: person.personId, code: person.familyCode },
+                })
+              }
+            />
+          ))
+        )}
       </View>
 
       <PrimaryPillButton
@@ -175,9 +205,11 @@ export default function HomeScreen() {
       <AppText
         variant="labelSmall"
         className="text-muted-foreground text-center mt-4"
-        accessibilityLabel={`Signed in as ${showcaseUser.displayName}`}
+        accessibilityLabel={`Signed in as ${
+          localAccount.session?.displayName ?? showcaseUser.displayName
+        }`}
       >
-        {showcaseUser.displayName} · archive owner
+        {localAccount.session?.displayName ?? showcaseUser.displayName} · archive owner
       </AppText>
 
       <View className="h-px w-px overflow-hidden opacity-0">
@@ -188,7 +220,3 @@ export default function HomeScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  matchList: { gap: 8, marginTop: space.md, marginBottom: space.sm },
-});

@@ -1,5 +1,10 @@
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import type { KinshipPerson, KinshipUnionRecord } from "@/lib/kinship/types";
+import {
+  humanKinshipLabelFromSteps,
+  KINSHIP_LABEL_FALLBACK,
+  type KinshipLabelStep,
+} from "../../../shared/humanKinshipLabel";
 
 type AdjacencyEdge = { to: string; relation: string };
 
@@ -31,6 +36,16 @@ function buildAdjacency(
   return adj;
 }
 
+function stepsToLabelSteps(
+  steps: { fromId: string; toId: string; relation: string }[],
+  peopleById: Map<string, KinshipPerson>,
+): KinshipLabelStep[] {
+  return steps.map((s) => {
+    const to = peopleById.get(s.toId);
+    return { relation: s.relation, toGender: to?.gender ?? null };
+  });
+}
+
 function describePath(
   steps: { fromId: string; toId: string; relation: string }[],
   peopleById: Map<string, KinshipPerson>,
@@ -44,6 +59,16 @@ function describePath(
       return `${fromName} → (${s.relation}) → ${toName}`;
     })
     .join("; ");
+}
+
+function summarizeRelation(
+  steps: { fromId: string; toId: string; relation: string }[],
+  peopleById: Map<string, KinshipPerson>,
+): string {
+  const label = humanKinshipLabelFromSteps(stepsToLabelSteps(steps, peopleById));
+  if (label) return label;
+  if (steps.length > 0) return KINSHIP_LABEL_FALLBACK;
+  return describePath(steps, peopleById);
 }
 
 export function computeRelationSummary(
@@ -78,7 +103,7 @@ export function computeRelationSummary(
       };
       const newPath = [...current.path, step];
       if (edge.to === to.id) {
-        return describePath(newPath, peopleById);
+        return summarizeRelation(newPath, peopleById);
       }
       visited.add(edge.to);
       queue.push({ id: edge.to, path: newPath });
