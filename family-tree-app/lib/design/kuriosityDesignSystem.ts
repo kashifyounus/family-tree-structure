@@ -18,8 +18,8 @@ export const kuriosityDesign = {
     femaleAccent: "#f4a6c1",
     neutralAccent: "#c4c4c4",
     connector: kuriosityPedigreeTheme.connector,
-    cardWidth: 112,
-    cardMinHeight: 118,
+    cardWidth: kuriosityPedigreeTheme.cardWidth,
+    cardMinHeight: kuriosityPedigreeTheme.cardHeight,
   },
   sheet: {
     topRadius: radius.xl,

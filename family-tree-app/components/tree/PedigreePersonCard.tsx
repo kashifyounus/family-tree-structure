@@ -42,12 +42,13 @@ export function PedigreePersonCard({
 
   return (
     <View
-      className="bg-card overflow-hidden"
+      className="overflow-hidden"
       style={{
         width: w,
         borderRadius: 12 * scale,
-        borderWidth: isFocal ? 2 : 1,
+        borderWidth: isFocal ? 3 : 1,
         borderColor: isFocal ? kuriosityDesign.brand.primary : "#e5e7eb",
+        backgroundColor: isFocal ? kuriosityDesign.colors.selectedRowFill : "#FFFDF8",
         shadowColor: "#0f172a",
         shadowOpacity: 0.08,
         shadowRadius: 6,

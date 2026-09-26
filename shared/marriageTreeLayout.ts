@@ -2,6 +2,13 @@
  * Union-centric pedigree layout shared by web and mobile tree views.
  */
 
+import {
+  PEDIGREE_CARD_W,
+  PEDIGREE_COUPLE_OFFSET,
+  PEDIGREE_COLUMN_STEP,
+  PEDIGREE_ROW_STEP,
+} from "./pedigreeLayoutTokens";
+
 export type MarriageLayoutChildship = {
   childId: string;
 };
@@ -30,6 +37,11 @@ export type MarriageLayoutEdge = {
 export type MarriageLayoutOptions = {
   /** When set, this union is treated as the primary marriage row (first spouse column). */
   preferredFocalUnionId?: string | null;
+  /**
+   * Phone default: only one parent branch above the focal couple (husband line left).
+   * Wife-side parents stay off-tree until the user loads more generations.
+   */
+  phoneSingleParentSide?: boolean;
 };
 
 export type MarriageLayoutResult = {
@@ -42,8 +54,9 @@ export type MarriageLayoutResult = {
   edges: MarriageLayoutEdge[];
 };
 
-export const MARRIAGE_H_SPACING = 220;
-export const MARRIAGE_V_SPACING = 160;
+/** @deprecated Use pedigreeLayoutTokens — kept for tests referencing spacing scale. */
+export const MARRIAGE_H_SPACING = PEDIGREE_COLUMN_STEP;
+export const MARRIAGE_V_SPACING = PEDIGREE_ROW_STEP;
 
 function birthTime(p: MarriageLayoutPerson): number {
   if (!p.birthDate) return Number.POSITIVE_INFINITY;
@@ -205,8 +218,9 @@ export function layoutMarriageCentricGraph(
     };
   }
 
-  const H = MARRIAGE_H_SPACING;
-  const V = MARRIAGE_V_SPACING;
+  const H = PEDIGREE_COLUMN_STEP;
+  const V = PEDIGREE_ROW_STEP;
+  const coupleStep = PEDIGREE_COUPLE_OFFSET;
 
   ensurePosition(positions, focalId, originX, originY);
 
@@ -232,7 +246,7 @@ export function layoutMarriageCentricGraph(
   }
 
   spouseEntries.forEach((entry, index) => {
-    const spouseX = originX + (index + 1) * H;
+    const spouseX = originX + (index + 1) * coupleStep;
     ensurePosition(positions, entry.spouseId, spouseX, originY);
     edges.push({
       id: `spouse-${focalId}-${entry.spouseId}`,
@@ -254,7 +268,7 @@ export function layoutMarriageCentricGraph(
     ensurePosition(positions, sib.id, x, originY);
   });
 
-  let rightMost = originX + spouseEntries.length * H;
+  let rightMost = originX + spouseEntries.length * coupleStep;
   for (const entry of spouseEntries) {
     const spouseSiblings = sortByBirthOldestFirst(
       siblingsOf(entry.spouseId, unions)
@@ -332,14 +346,17 @@ export function layoutMarriageCentricGraph(
     const husbandX = positions.get(husbandId)?.x ?? focalX;
     const wifeX = positions.get(wifeId)?.x ?? spouseX;
     placeParentsAbove(husbandId, husbandX, "left");
-    placeParentsAbove(wifeId, wifeX, "right");
+    if (!options?.phoneSingleParentSide) {
+      placeParentsAbove(wifeId, wifeX, "right");
+    }
   } else {
     placeParentsAbove(focalId, originX, "center");
   }
 
   spouseEntries.forEach((entry, unionIndex) => {
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
-    const columnCenter = (originX + spouseX) / 2;
+    const egoX = positions.get(focalId)?.x ?? originX;
+    const coupleMidCenter = (egoX + spouseX + PEDIGREE_CARD_W) / 2;
     const children = sortByBirthOldestFirst(
       entry.union.childships
         .map((c) => peopleById.get(c.childId))
@@ -350,7 +367,8 @@ export function layoutMarriageCentricGraph(
     );
     children.forEach((child, index) => {
       const x =
-        columnCenter +
+        coupleMidCenter -
+        PEDIGREE_CARD_W / 2 +
         (index - (children.length - 1) / 2) * H +
         unionIndex * 24;
       ensurePosition(positions, child.id, x, originY + V);

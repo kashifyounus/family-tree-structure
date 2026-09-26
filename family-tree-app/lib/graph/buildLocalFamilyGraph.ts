@@ -96,7 +96,10 @@ export function buildLocalFamilyGraph(
     included,
     0,
     0,
-    { preferredFocalUnionId: options.focalUnionId },
+    {
+      preferredFocalUnionId: options.focalUnionId,
+      phoneSingleParentSide: generationsUp <= 1,
+    },
   );
 
   const nodes: FamilyGraphNode[] = [];

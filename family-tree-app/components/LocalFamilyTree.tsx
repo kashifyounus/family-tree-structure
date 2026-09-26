@@ -42,7 +42,7 @@ export function LocalFamilyTree({
   const theme = useAppTheme();
   const router = useRouter();
   const view = layout;
-  const [gensUp, setGensUp] = useState(2);
+  const [gensUp, setGensUp] = useState(1);
   const [gensDown, setGensDown] = useState(2);
   const [siblingSteps, setSiblingSteps] = useState(0);
 

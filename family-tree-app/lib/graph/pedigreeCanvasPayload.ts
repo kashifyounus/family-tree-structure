@@ -1,21 +1,25 @@
-import { formatBilingualName } from "@/lib/format/displayName";
 import type { FamilyGraph } from "@/lib/graph/types";
 import {
   buildPedigreeConnectorSegments,
   type PedigreeGraphEdge,
   type PedigreeSegment,
 } from "../../../shared/pedigreeConnectors";
+import {
+  PEDIGREE_CARD_H,
+  PEDIGREE_CARD_W,
+  PEDIGREE_CHEVRON_OFFSET,
+} from "../../../shared/pedigreeLayoutTokens";
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 
-/** Match web `PedigreeConnectorsLayer` box size (FamilySearch-style card footprint). */
-export const PEDIGREE_CARD_W = 112;
-export const PEDIGREE_CARD_H = 118;
+export { PEDIGREE_CARD_W, PEDIGREE_CARD_H };
 
 export type PedigreeCanvasNode = {
   id: string;
   familyCode: string;
   label: string;
+  nameLine1: string;
+  nameLine2: string;
   initials: string;
   years: string;
   gender: string;
@@ -49,6 +53,8 @@ export type PedigreeCanvasPayload = {
   nodes: PedigreeCanvasNode[];
   segments: PedigreeSegment[];
   marriageBand?: PedigreeMarriageBand | null;
+  framingNodeIds?: string[];
+  chevronOffset: number;
   theme: PedigreeCanvasTheme;
 };
 
@@ -94,15 +100,16 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
   const nodes: PedigreeCanvasNode[] = graph.nodes.map((n) => {
     const p = n.data.person;
     const isPrivate = p.treeDisplayIsPrivate === true;
+    const nameLine1 = isPrivate ? p.firstName : p.firstName.trim();
+    const nameLine2 = isPrivate ? "" : p.lastName.trim();
     return {
       id: n.id,
       familyCode: p.familyCode,
-      label: formatBilingualName({
-        firstName: p.firstName,
-        lastName: p.lastName,
-        urduFirstName: p.urduFirstName ?? null,
-        urduLastName: p.urduLastName ?? null,
-      }),
+      label: isPrivate
+        ? p.firstName
+        : `${nameLine1} ${nameLine2}`.trim(),
+      nameLine1,
+      nameLine2,
       initials: initialsFor(p.firstName, p.lastName, isPrivate),
       years: isPrivate
         ? ""
@@ -155,11 +162,30 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
     }
   }
 
+  const framingNodeIds = new Set<string>([graph.focalPersonId]);
+  if (partnerId) framingNodeIds.add(partnerId);
+  for (const e of graph.edges) {
+    if (e.type === "child" && e.source === graph.focalPersonId) {
+      framingNodeIds.add(e.target);
+    }
+  }
+  const focalNode = nodes.find((n) => n.id === graph.focalPersonId);
+  if (focalNode) {
+    for (const n of nodes) {
+      if (n.y >= focalNode.y) continue;
+      if (n.x <= focalNode.x + focalNode.w / 2) {
+        framingNodeIds.add(n.id);
+      }
+    }
+  }
+
   return {
     focalPersonId: graph.focalPersonId,
     nodes,
     segments,
     marriageBand,
+    framingNodeIds: [...framingNodeIds],
+    chevronOffset: PEDIGREE_CHEVRON_OFFSET,
     theme: defaultPedigreeCanvasTheme,
   };
 }

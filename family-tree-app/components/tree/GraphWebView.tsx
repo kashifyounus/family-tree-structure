@@ -20,8 +20,8 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], focalId = '', marriageBand = null;
-let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8' };
+let nodes = [], segments = [], focalId = '', marriageBand = null, framingNodeIds = null, chevronOffset = 8;
+let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
 
@@ -41,9 +41,11 @@ function resize(){ canvas.width = window.innerWidth; canvas.height = window.inne
 
 function fitView(){
   if(!nodes.length){ return; }
-  const pad = 56;
+  const pad = 48;
+  const useIds = framingNodeIds && framingNodeIds.length ? new Set(framingNodeIds) : null;
+  const viewNodes = useIds ? nodes.filter(n=>useIds.has(n.id)) : nodes;
   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-  for(const n of nodes){
+  for(const n of viewNodes){
     minX=Math.min(minX,n.x); minY=Math.min(minY,n.y);
     maxX=Math.max(maxX,n.x+n.w); maxY=Math.max(maxY,n.y+n.h);
   }
@@ -51,14 +53,15 @@ function fitView(){
     minX=Math.min(minX,s.x1,s.x2); minY=Math.min(minY,s.y1,s.y2);
     maxX=Math.max(maxX,s.x1,s.x2); maxY=Math.max(maxY,s.y1,s.y2);
   }
+  if(!Number.isFinite(minX)){ return; }
   const cw=Math.max(1,maxX-minX+pad*2), ch=Math.max(1,maxY-minY+pad*2);
-  scale = Math.min(canvas.width/cw, canvas.height/ch, 1.12);
-  scale = Math.max(0.32, scale);
-  const focal = nodes.find(n=>n.id===focalId) || nodes.find(n=>n.isFocal) || nodes[0];
+  scale = Math.min(canvas.width/cw, canvas.height/ch, 1.05);
+  scale = Math.max(0.35, scale);
+  const focal = viewNodes.find(n=>n.id===focalId) || viewNodes.find(n=>n.isFocal) || viewNodes[0];
   const fx = focal.x + focal.w/2;
-  const fy = focal.y + focal.h;
+  const fy = focal.y + focal.h * 0.55;
   ox = canvas.width/2 - fx * scale;
-  oy = canvas.height * 0.74 - fy * scale;
+  oy = canvas.height * 0.68 - fy * scale;
 }
 
 function roundRect(x,y,w,h,r){
@@ -78,29 +81,23 @@ function drawMarriageBand(){
   const x2 = marriageBand.x2;
   if(x2 <= x1 + 8) return;
   ctx.strokeStyle = theme.primary;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(x1, midY);
   ctx.lineTo(x2, midY);
   ctx.stroke();
-  const label = marriageBand.label || 'Married';
-  ctx.font = '600 10px system-ui';
-  const tw = ctx.measureText(label).width + 16;
+  const label = marriageBand.label || '';
+  if(!label) return;
   const cx = (x1 + x2) / 2;
-  const pillW = Math.min(tw, x2 - x1 - 4);
-  const pillH = 18;
-  const px = cx - pillW/2;
-  const py = midY - pillH/2;
-  roundRect(px, py, pillW, pillH, 9);
-  ctx.fillStyle = '#e8f0ea';
-  ctx.fill();
-  ctx.strokeStyle = theme.primary;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = theme.primary;
+  const labelY = midY + 14;
+  ctx.font = '500 10px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(label.length>22?label.slice(0,21)+'…':label, cx, midY);
+  const tw = ctx.measureText(label).width;
+  ctx.fillStyle = theme.canvas;
+  ctx.fillRect(cx - tw/2 - 4, labelY - 7, tw + 8, 14);
+  ctx.fillStyle = '#6b7280';
+  ctx.fillText(label.length>24?label.slice(0,23)+'…':label, cx, labelY);
 }
 
 function drawSegments(){
@@ -115,18 +112,26 @@ function drawSegments(){
   }
 }
 
+function wrapName(line, maxW){
+  if(!line) return '';
+  if(ctx.measureText(line).width <= maxW) return line;
+  let t = line;
+  while(t.length>1 && ctx.measureText(t+'…').width > maxW) t = t.slice(0,-1);
+  return t+'…';
+}
+
 function drawCard(n){
   const x=n.x, y=n.y, w=n.w, h=n.h;
   ctx.save();
-  ctx.shadowColor = 'rgba(15,23,42,0.12)';
-  ctx.shadowBlur = 8;
+  ctx.shadowColor = 'rgba(15,23,42,0.1)';
+  ctx.shadowBlur = 6;
   ctx.shadowOffsetY = 2;
   roundRect(x,y,w,h,12);
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = n.isFocal ? (theme.focalFill || '#E8F5EE') : (theme.surface || '#FFFDF8');
   ctx.fill();
   ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = n.isFocal ? theme.primary : '#e5e7eb';
-  ctx.lineWidth = n.isFocal ? 2.5 : 1;
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
   roundRect(x,y,w,h,12);
   ctx.stroke();
 
@@ -137,7 +142,7 @@ function drawCard(n){
   ctx.fillRect(x,y+barH,w,2);
 
   const cx = x + w/2;
-  const cy = y + 36;
+  const cy = y + 34;
   const r = 22;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI*2);
@@ -153,43 +158,48 @@ function drawCard(n){
   ctx.fillText((n.initials||'?').slice(0,2), cx, cy);
 
   ctx.fillStyle = '#111827';
-  ctx.font = '600 11px system-ui';
-  const name = (n.label||'').length>16 ? (n.label||'').slice(0,15)+'…' : (n.label||'');
-  ctx.fillText(name, cx, y + 68);
+  ctx.font = '700 11px system-ui';
+  const line1 = wrapName(n.nameLine1 || (n.label||'').split(' ')[0] || '', w - 12);
+  const line2 = wrapName(n.nameLine2 || (n.label||'').split(' ').slice(1).join(' ') || '', w - 12);
+  ctx.fillText(line1, cx, y + 66);
+  if(line2) ctx.fillText(line2, cx, y + 80);
 
   if(n.years){
     ctx.fillStyle = '#6b7280';
     ctx.font = '10px system-ui';
-    ctx.fillText(n.years, cx, y + 84);
+    ctx.fillText(n.years, cx, y + 96);
   }
 
+  const chev = chevronOffset || 8;
   if(n.hasUnexpandedParents){
+    const cyUp = y - chev;
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#9ca3af';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(cx, y - 10, 9, 0, Math.PI*2);
+    ctx.arc(cx, cyUp, 9, 0, Math.PI*2);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = '#4b5563';
     ctx.font = '10px system-ui';
-    ctx.fillText('↑', cx, y - 10);
+    ctx.fillText('↑', cx, cyUp);
   }
   if(n.hasUnexpandedChildren){
+    const cyDn = y + h + chev;
     ctx.fillStyle = '#ffffff';
     ctx.strokeStyle = '#9ca3af';
     ctx.beginPath();
-    ctx.arc(cx, y + h + 10, 9, 0, Math.PI*2);
+    ctx.arc(cx, cyDn, 9, 0, Math.PI*2);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = '#4b5563';
-    ctx.fillText('↓', cx, y + h + 10);
+    ctx.fillText('↓', cx, cyDn);
   }
 
   if(n.isFocal){
-    ctx.strokeStyle = 'rgba(27,67,50,0.35)';
+    ctx.strokeStyle = theme.primary;
     ctx.lineWidth = 3;
-    roundRect(x-3,y-3,w+6,h+6,14);
+    roundRect(x-2,y-2,w+4,h+4,14);
     ctx.stroke();
   }
   ctx.restore();
@@ -229,6 +239,8 @@ function onGraph(g){
   segments = g.segments || [];
   focalId = g.focalPersonId || '';
   marriageBand = g.marriageBand || null;
+  framingNodeIds = g.framingNodeIds || null;
+  chevronOffset = g.chevronOffset || 8;
   if(g.theme) theme = Object.assign(theme, g.theme);
   fitView();
   resize();
