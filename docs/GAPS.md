@@ -27,7 +27,7 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 | [#14](https://github.com/kashifyounus/family-tree-structure/issues/14) | Child create sheet — date of birth field |
 | [#15](https://github.com/kashifyounus/family-tree-structure/issues/15) | Cream pedigree canvas + tokenized connectors |
 | [#16](https://github.com/kashifyounus/family-tree-structure/issues/16) | Human kinship labels + shared kinship module |
-| [#17](https://github.com/kashifyounus/family-tree-structure/issues/17) | Document local-first vs cloud mutations; refresh MOBILE_API |
+| [#17](https://github.com/kashifyounus/family-tree-structure/issues/17) | Document local-first vs cloud mutations; refresh MOBILE_API — see `docs/ARCHITECTURE_SYNC.md` |
 
 ## P2 — engineering health
 

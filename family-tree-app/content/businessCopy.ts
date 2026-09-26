@@ -216,7 +216,7 @@ export const copy = {
     needMarriageFirst:
       "Record a marriage (add a spouse) before adding a child to this branch.",
     cloudReadOnly:
-      "Shared family records can be viewed here. Add marriages, children, and parents on the family website, or switch to the private archive on this device.",
+      "You are browsing the shared family website (read-only on this device). To add marriages, children, or parents, use the website—or switch to your private archive for full editing offline.",
     parentsSection: "Parents",
     noParents: "No parents recorded yet.",
     addParents: "Add parents",
