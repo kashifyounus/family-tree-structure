@@ -1,13 +1,17 @@
 import type { StorageMode } from "@/lib/data/types";
-import { createLocalMember, getLocalMemberById } from "@/lib/db/localRepository";
+import { createLocalMember } from "@/lib/db/localRepository";
+import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { setLocalParents } from "@/lib/db/localRepository.ext";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import { getParentsForPerson } from "@/lib/kinship/kinshipCore";
+import { getDatabase } from "@/lib/db/database";
+import { unknownCoParentIds } from "@/lib/db/unknownCoParent";
 import {
   parentSlotGender,
   splitParentsByRole,
   type ParentSlot,
 } from "@/lib/rules/parentSlots";
+import { pairParentsWithUnknownCoParent } from "../../../shared/unknownCoParent";
 
 function requireLocal(mode: StorageMode): void {
   if (mode !== "local") {
@@ -15,14 +19,7 @@ function requireLocal(mode: StorageMode): void {
   }
 }
 
-export type AssignParentSlotResult =
-  | { status: "complete"; unionId: string }
-  | {
-      status: "needs_other_parent";
-      stagedParentId: string;
-      otherSlot: ParentSlot;
-      stagedSlot: ParentSlot;
-    };
+export type AssignParentSlotResult = { status: "complete"; unionId: string };
 
 type AssignInput = {
   childId: string;
@@ -56,27 +53,23 @@ function resolveParentPair(
     motherId = input.parentPersonId;
   }
 
-  if (fatherId && motherId) {
-    const { unionId } = setLocalParents({
-      personId: childId,
-      parentAId: fatherId,
-      parentBId: motherId,
-    });
-    return { status: "complete", unionId };
+  const db = getDatabase();
+  const { maleId, femaleId } = unknownCoParentIds(db);
+  const pair = pairParentsWithUnknownCoParent({
+    fatherId,
+    motherId,
+    unknownMaleId: maleId,
+    unknownFemaleId: femaleId,
+  });
+  if (!pair) {
+    throw new Error("Could not record parents.");
   }
-
-  const stagedParentId = fatherId ?? motherId;
-  if (!stagedParentId) {
-    throw new Error("Could not stage parent.");
-  }
-  const otherSlot: ParentSlot = fatherId ? "mother" : "father";
-  const stagedSlot: ParentSlot = fatherId ? "father" : "mother";
-  return {
-    status: "needs_other_parent",
-    stagedParentId,
-    otherSlot,
-    stagedSlot,
-  };
+  const { unionId } = setLocalParents({
+    personId: childId,
+    parentAId: pair.parentAId,
+    parentBId: pair.parentBId,
+  });
+  return { status: "complete", unionId };
 }
 
 export function assignParentSlot(mode: StorageMode, input: AssignInput): AssignParentSlotResult {
