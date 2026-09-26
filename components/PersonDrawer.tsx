@@ -325,6 +325,7 @@ export function PersonDrawer({
             <RelativeList title="Maternal aunts" items={computed.maternalAunts} />
             <RelativeList title="Full siblings" items={computed.fullSiblings} />
             <RelativeList title="Half siblings" items={computed.halfSiblings} />
+            <RelativeList title="Step siblings" items={computed.stepSiblings ?? []} />
           </section>
         </div>
       </aside>

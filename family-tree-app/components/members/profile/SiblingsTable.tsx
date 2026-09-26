@@ -6,6 +6,7 @@ import type { KinshipRelative } from "@/lib/kinship/types";
 
 type SiblingsTableProps = {
   siblings: KinshipRelative[];
+  emptyMessage: string;
   onPressSibling?: (personId: string, familyCode: string) => void;
 };
 
@@ -14,11 +15,15 @@ function statusLabel(sibling: KinshipRelative): string {
   return "Living";
 }
 
-export function SiblingsTable({ siblings, onPressSibling }: SiblingsTableProps) {
+export function SiblingsTable({
+  siblings,
+  emptyMessage,
+  onPressSibling,
+}: SiblingsTableProps) {
   if (siblings.length === 0) {
     return (
       <AppText variant="bodyMedium" className="text-muted-foreground">
-        No full siblings recorded.
+        {emptyMessage}
       </AppText>
     );
   }

@@ -61,6 +61,12 @@ describe("kinship engine", () => {
     lastName: "Khan",
     gender: "MALE",
   });
+  const stepChild = mockPerson({
+    id: "childD",
+    firstName: "Sara",
+    lastName: "Khan",
+    gender: "FEMALE",
+  });
 
   const gpUnion = unionWithChildren("u-gp", grandfather, grandmother, [
     { child: father },
@@ -72,6 +78,7 @@ describe("kinship engine", () => {
   ]);
   const secondUnion = unionWithChildren("u-wife2", father, wife2, [
     { child: halfChild },
+    { child: stepChild, relationshipType: "STEP" },
   ]);
 
   const allUnions: UnionRecord[] = [gpUnion, parentsUnion, secondUnion];
@@ -107,6 +114,12 @@ describe("kinship engine", () => {
     expect(half?.degree).toBe("half");
   });
 
+  it("labels step-siblings when child relationship is STEP", () => {
+    const siblings = getSiblings(childA.id, childAAsChild, allUnions);
+    const step = siblings.find((s) => s.person.id === stepChild.id);
+    expect(step?.degree).toBe("step");
+  });
+
   it("resolves paternal uncle and maternal side (empty when mother has no siblings in graph)", () => {
     const peopleById = new Map(
       [
@@ -118,6 +131,7 @@ describe("kinship engine", () => {
         childA,
         childB,
         halfChild,
+        stepChild,
         wife2,
       ].map((p) => [p.id, p]),
     );
@@ -133,6 +147,8 @@ describe("kinship engine", () => {
     expect(computed.maternalUncles).toHaveLength(0);
     expect(computed.fullSiblings.map((s) => s.id)).toContain(childB.id);
     expect(computed.halfSiblings.map((s) => s.id)).toContain(halfChild.id);
+    expect(computed.stepSiblings.map((s) => s.id)).toContain(stepChild.id);
+    expect(computed.halfSiblings.map((s) => s.id)).not.toContain(stepChild.id);
   });
 
   it("finds relationship path via BFS between grandparent and grandchild", () => {

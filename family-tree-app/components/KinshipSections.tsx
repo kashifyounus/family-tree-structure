@@ -78,6 +78,7 @@ export function KinshipSections({ parents, computed }: KinshipSectionsProps) {
         <>
           <RelativeList title="Full siblings" items={computed.fullSiblings} />
           <RelativeList title="Half siblings" items={computed.halfSiblings} />
+          <RelativeList title="Step siblings" items={computed.stepSiblings} />
           <RelativeList title="Paternal uncles" items={computed.paternalUncles} />
           <RelativeList title="Paternal aunts" items={computed.paternalAunts} />
           <RelativeList title="Maternal uncles" items={computed.maternalUncles} />

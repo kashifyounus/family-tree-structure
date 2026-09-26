@@ -261,8 +261,8 @@ export function addLocalChild(input: AddChildInput): MemberRecord {
   );
 
   db.runSync(
-    `INSERT INTO children (id, union_id, child_id, relationship_type) VALUES (?, ?, ?, 'BIOLOGICAL')`,
-    [newId(), unionId, childId],
+    `INSERT INTO children (id, union_id, child_id, relationship_type) VALUES (?, ?, ?, ?)`,
+    [newId(), unionId, childId, input.relationshipType ?? "BIOLOGICAL"],
   );
 
   touchPerson(db, parent.id);

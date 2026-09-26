@@ -84,13 +84,20 @@ export default function MarriageScreen() {
     ...marriage.children.map((c) => c.id),
   ];
 
-  const linkChildMember = (childId: string) => {
+  const linkChildMember = (
+    childId: string,
+    options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
+  ) => {
     if (!childId) {
       showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
     try {
-      linkChild(mode, { unionId: marriage.id, childId });
+      linkChild(mode, {
+        unionId: marriage.id,
+        childId,
+        relationshipType: options?.relationshipType,
+      });
       setChildOpen(false);
       bumpDataRevision();
       impactLight();
@@ -104,6 +111,7 @@ export default function MarriageScreen() {
     firstName: string;
     lastName: string;
     gender: Gender;
+    relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
   }) => {
     try {
       addChild(mode, {
@@ -112,6 +120,7 @@ export default function MarriageScreen() {
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
+        relationshipType: payload.relationshipType,
       });
       setChildOpen(false);
       bumpDataRevision();
