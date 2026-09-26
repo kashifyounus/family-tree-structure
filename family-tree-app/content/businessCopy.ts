@@ -151,7 +151,7 @@ export const copy = {
     noMarriages: "No marriages have been recorded for this person yet.",
     marriageTo: (a: string, b: string) => `Marriage: ${a} and ${b}`,
     noChildrenInMarriage: "No children recorded for this marriage.",
-    childLine: (name: string, ref: string) => `${name} · ${ref}`,
+    childLine: (name: string, _ref?: string) => name,
     privateFooter:
       "These records are in your private archive. Link the family cloud from Account to work with your shared registry.",
     tapProfile: "Open full profile",

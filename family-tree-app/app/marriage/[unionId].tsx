@@ -19,6 +19,7 @@ import {
   saveMarriage,
 } from "@/lib/data/personService";
 import type { Gender } from "@/lib/data/types";
+import { memberPickerSubtitle } from "@/lib/members/memberPickerSubtitle";
 import { space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
@@ -187,7 +188,11 @@ export default function MarriageScreen() {
           <ListRow
             key={child.id}
             title={`${child.first_name} ${child.last_name}`}
-            description={child.family_code}
+            description={memberPickerSubtitle({
+              id: child.id,
+              name: `${child.first_name} ${child.last_name}`,
+              familyCode: child.family_code,
+            })}
             leftIcon="account-child"
             onPress={() =>
               router.push({

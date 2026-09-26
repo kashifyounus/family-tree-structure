@@ -4,7 +4,7 @@ import { AppText } from "@/components/ui/AppText";
 import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
 import { formatBilingualName } from "@/lib/format/displayName";
 import { formatParentLine } from "@/lib/db/parentDisplay";
-import { formatGender } from "@/lib/format/gender";
+import { memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
 import type { MemberRecord } from "@/lib/data/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { layout, radius, space } from "@/theme/tokens";
@@ -46,8 +46,7 @@ export function MemberCard({
       <View style={styles.body}>
         <AppText variant="titleSmall" numberOfLines={2}>{title}</AppText>
         <AppText variant="bodySmall" className="mt-0.5">
-          {member.familyCode} · {formatGender(member.gender)}
-          {member.currentCity ? ` · ${member.currentCity}` : ""}
+          {memberRecordSubtitle(member)}
         </AppText>
         {member.fatherName || member.motherName ? (
           <AppText variant="labelSmall" numberOfLines={1} className="mt-0.5">

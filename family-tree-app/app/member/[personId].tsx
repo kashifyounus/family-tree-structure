@@ -4,8 +4,8 @@ import {
   SHOWCASE_MARGARET_ID,
   margaretKhanProfile,
 } from "@/lib/mock/kuriosityShowcase";
+import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
-import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -517,22 +517,24 @@ export default function MemberDetailScreen() {
           </AppText>
         )}
 
-        <Button
-          variant="secondary"
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/tree",
-              params: { familyCode: m.familyCode },
-            })
-          }
-        >
-          <ButtonText>{copy.profile.openInTree}</ButtonText>
-        </Button>
+        <View className="mt-4 mb-2">
+          <PrimaryPillButton
+            testID="member-show-in-tree"
+            label={copy.profile.openInTree}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/tree",
+                params: { familyCode: m.familyCode },
+              })
+            }
+          />
+        </View>
 
         {canEditLocal && (
           <View style={styles.actions}>
             <Button
               variant="outline"
+              className="rounded-full min-h-11"
               onPress={() => {
                 if (editing) {
                   setFirstName(m.firstName);
@@ -551,14 +553,16 @@ export default function MemberDetailScreen() {
             </Button>
             <Button
               testID="member-add-spouse"
-              variant="secondary"
+              variant="outline"
+              className="rounded-full min-h-11"
               onPress={() => setSpouseOpen(true)}
             >
               <ButtonText>{copy.profile.addSpouse}</ButtonText>
             </Button>
             <Button
               testID="member-add-child"
-              variant="secondary"
+              variant="outline"
+              className="rounded-full min-h-11"
               onPress={() => {
                 setChUnionId(marriageOptions[0]?.id ?? "");
                 setChildOpen(true);
@@ -566,7 +570,12 @@ export default function MemberDetailScreen() {
             >
               <ButtonText>{copy.profile.addChild}</ButtonText>
             </Button>
-            <Button testID="member-add-parents" variant="secondary" onPress={openParentSheet}>
+            <Button
+              testID="member-add-parents"
+              variant="outline"
+              className="rounded-full min-h-11"
+              onPress={openParentSheet}
+            >
               <ButtonText>
                 {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
               </ButtonText>
@@ -629,14 +638,10 @@ export default function MemberDetailScreen() {
                 u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage
               }
             >
-              <Badge variant="outline" className="self-start">
-                <BadgeText>
-                  {u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage}
-                </BadgeText>
-              </Badge>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
+                className="self-start rounded-full"
                 onPress={() =>
                   router.push({
                     pathname: "/marriage/[unionId]",
@@ -701,18 +706,6 @@ export default function MemberDetailScreen() {
           }
         />
 
-        <Button
-          variant="outline"
-          style={styles.treeBtn}
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/tree",
-              params: { familyCode: m.familyCode },
-            })
-          }
-        >
-          <ButtonText>{copy.profile.openInTree}</ButtonText>
-        </Button>
       </Screen>
 
       <AddRelationSheet
@@ -788,7 +781,6 @@ const styles = StyleSheet.create({
   block: { marginTop: 12, borderRadius: 16 },
   gap: { gap: 10 },
   section: { marginTop: 20 },
-  treeBtn: { marginTop: 24, marginBottom: 8 },
   dialogScroll: { maxHeight: 420 },
   dialogInner: { gap: 12, paddingHorizontal: 24, paddingVertical: 8 },
 });

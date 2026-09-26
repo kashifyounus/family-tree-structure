@@ -12,6 +12,7 @@ import { TreeGraphExpandBar } from "@/components/tree/TreeGraphExpandBar";
 import { TreeOverflowMenu } from "@/components/tree/TreeOverflowMenu";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { copy } from "@/content/businessCopy";
+import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
@@ -166,6 +167,20 @@ export default function TreeScreen() {
     (n) => n.id === onlineGraph.focalPersonId,
   )?.data;
 
+  const treeHeaderTitle = useMemo(() => {
+    if (showcaseTree) return copy.tree.title;
+    const trimmed = loadedCode.trim();
+    if (isLocal) {
+      const member = getLocalMemberByFamilyCode(trimmed);
+      if (member) return `${member.firstName} ${member.lastName}`;
+    } else if (onlineGraph) {
+      const person = onlineGraph.nodes.find((n) => n.id === onlineGraph.focalPersonId)?.data
+        .person;
+      if (person) return `${person.firstName} ${person.lastName}`;
+    }
+    return copy.tree.title;
+  }, [showcaseTree, loadedCode, isLocal, onlineGraph]);
+
   const centerOnMyMarriage = () => {
     void (async () => {
       const code =
@@ -191,7 +206,7 @@ export default function TreeScreen() {
           numberOfLines={1}
           style={{ color: theme.colors.onSurface, flex: 1, marginLeft: 8 }}
         >
-          {showcaseTree ? "Family tree" : `${copy.tree.title} · ${loadedCode}`}
+          {treeHeaderTitle}
         </AppText>
         <IconButton
           icon="filter-variant"

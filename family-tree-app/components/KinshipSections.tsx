@@ -36,7 +36,7 @@ function RelativeList({
           }
         >
           <ButtonText className="text-left">
-            {r.kinshipLabel}: {r.firstName} {r.lastName} ({r.familyCode})
+            {r.kinshipLabel}: {r.firstName} {r.lastName}
           </ButtonText>
         </Button>
       ))}
@@ -67,7 +67,7 @@ export function KinshipSections({ parents, computed }: KinshipSectionsProps) {
               }
             >
               <ButtonText>
-                {p.firstName} {p.lastName} ({p.familyCode})
+                {p.firstName} {p.lastName}
               </ButtonText>
             </Button>
           </Card>
