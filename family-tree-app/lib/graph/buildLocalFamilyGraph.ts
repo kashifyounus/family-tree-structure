@@ -49,6 +49,8 @@ export type BuildLocalGraphOptions = {
   generationsDown?: number;
   siblingSteps?: number;
   focalUnionId?: string | null;
+  /** Always include these person ids (e.g. find-relation path). */
+  ensurePersonIds?: string[];
 };
 
 export function buildLocalFamilyGraph(
@@ -73,6 +75,9 @@ export function buildLocalFamilyGraph(
     generationsDown,
     siblingSteps,
   );
+  for (const id of options.ensurePersonIds ?? []) {
+    if (peopleById.has(id)) included.add(id);
+  }
 
   const layoutPeople = new Map(
     [...included]

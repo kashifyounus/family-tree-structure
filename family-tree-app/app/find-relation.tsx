@@ -72,17 +72,21 @@ export default function FindRelationScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Find relation", headerBackTitle: "Tree" }} />
+      <Stack.Screen
+        options={{ title: copy.tools.findRelationTitle, headerBackTitle: copy.tree.title }}
+      />
       <Screen safeTop scroll>
         <AppText variant="headlineSmall" className="font-semibold mb-2">
-          Find relation
+          {copy.tools.findRelationTitle}
         </AppText>
         <AppText variant="bodySmall" className="text-muted-foreground mb-4">
-          Choose two people in your archive. We list every kinship path we find (up to 32) and summarize how they relate.
+          {copy.tools.findRelationIntro}
         </AppText>
         <View className="gap-4">
           <View>
-            <AppText variant="labelLarge" className="mb-2">Person 1</AppText>
+            <AppText variant="labelLarge" className="mb-2">
+              {copy.tools.findRelationPerson1}
+            </AppText>
             <ExistingMemberPicker
               members={members}
               selectedId={personA}
@@ -90,7 +94,9 @@ export default function FindRelationScreen() {
             />
           </View>
           <View>
-            <AppText variant="labelLarge" className="mb-2">Person 2</AppText>
+            <AppText variant="labelLarge" className="mb-2">
+              {copy.tools.findRelationPerson2}
+            </AppText>
             <ExistingMemberPicker
               members={members}
               excludeIds={personA ? [personA] : []}
@@ -99,11 +105,11 @@ export default function FindRelationScreen() {
             />
           </View>
           <Button onPress={runSearch} disabled={!personA || !personB}>
-            <ButtonText>Show relation</ButtonText>
+            <ButtonText>{copy.tools.findRelationRun}</ButtonText>
           </Button>
 
           {result ? (
-            <SectionCard title="Result">
+            <SectionCard title={copy.tools.findRelationResult}>
               <AppText variant="bodyMedium" className="text-foreground mb-2">
                 {result.ok ? activeSummary : result.message}
               </AppText>
@@ -121,16 +127,19 @@ export default function FindRelationScreen() {
               ) : null}
               {result.truncated ? (
                 <AppText variant="labelSmall" className="text-muted-foreground mb-2">
-                  Large family — only the first 32 paths are listed. Narrow the tree or pick closer relatives to see more.
+                  {copy.tools.findRelationPathsTruncated}
                 </AppText>
               ) : null}
               {result.ok ? (
                 <>
                   <AppText variant="labelMedium" className="text-muted-foreground mb-1">
-                    {result.paths.length} path{result.paths.length === 1 ? "" : "s"} · {result.nodeIdsOnPaths.length} people on paths
+                    {copy.tools.findRelationPathMeta(
+                      result.paths.length,
+                      result.nodeIdsOnPaths.length,
+                    )}
                   </AppText>
                   <Button variant="outline" onPress={openOnTree}>
-                    <ButtonText>Open tree (selected path)</ButtonText>
+                    <ButtonText>{copy.tools.findRelationOpenTree}</ButtonText>
                   </Button>
                 </>
               ) : null}

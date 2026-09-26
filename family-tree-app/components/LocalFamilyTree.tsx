@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { GraphWebView } from "@/components/tree/GraphWebView";
@@ -29,6 +29,11 @@ type LocalFamilyTreeProps = {
   onPersonPress?: (person: GraphPersonSummary) => void;
   zoomScale?: number;
   onZoomChange?: (scale: number) => void;
+  pathHighlightPersonIds?: string[];
+  highlightPersonIds?: string[];
+  ensurePersonIds?: string[];
+  seedGenerationsUp?: number;
+  seedGenerationsDown?: number;
 };
 
 export function LocalFamilyTree({
@@ -38,21 +43,40 @@ export function LocalFamilyTree({
   onPersonPress,
   zoomScale,
   onZoomChange,
+  pathHighlightPersonIds,
+  highlightPersonIds,
+  ensurePersonIds,
+  seedGenerationsUp,
+  seedGenerationsDown,
 }: LocalFamilyTreeProps) {
   const theme = useAppTheme();
   const router = useRouter();
   const view = layout;
-  const [gensUp, setGensUp] = useState(1);
-  const [gensDown, setGensDown] = useState(2);
+  const [gensUp, setGensUp] = useState(() =>
+    Math.max(1, seedGenerationsUp ?? 1),
+  );
+  const [gensDown, setGensDown] = useState(() =>
+    Math.max(2, seedGenerationsDown ?? 2),
+  );
   const [siblingSteps, setSiblingSteps] = useState(0);
+
+  useEffect(() => {
+    if (seedGenerationsUp != null) {
+      setGensUp((g) => Math.max(g, seedGenerationsUp));
+    }
+    if (seedGenerationsDown != null) {
+      setGensDown((g) => Math.max(g, seedGenerationsDown));
+    }
+  }, [seedGenerationsUp, seedGenerationsDown]);
 
   const graphOptions: BuildLocalGraphOptions = useMemo(
     () => ({
       generationsUp: gensUp,
       generationsDown: gensDown,
       siblingSteps,
+      ensurePersonIds,
     }),
-    [gensUp, gensDown, siblingSteps],
+    [gensUp, gensDown, siblingSteps, ensurePersonIds],
   );
 
   const focal = useMemo(
@@ -147,6 +171,8 @@ export function LocalFamilyTree({
           graph={graph}
           testID="local-tree-graph-webview"
           onPersonPress={onPersonPress}
+          pathHighlightPersonIds={pathHighlightPersonIds}
+          highlightPersonIds={highlightPersonIds}
         />
       ) : (
         <ScrollView

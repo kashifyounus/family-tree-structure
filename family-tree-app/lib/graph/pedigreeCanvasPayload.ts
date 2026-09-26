@@ -13,6 +13,7 @@ import {
   PEDIGREE_CARD_W,
   PEDIGREE_CHEVRON_OFFSET,
 } from "../../../shared/pedigreeLayoutTokens";
+import { buildPedigreePathHighlightSegments } from "../../../shared/pedigreePathHighlight";
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 
@@ -59,14 +60,21 @@ export type PedigreeCanvasTheme = {
   surface: string;
 };
 
+export type PedigreeCanvasPayloadOptions = {
+  pathHighlightPersonIds?: string[];
+  highlightPersonIds?: string[];
+};
+
 export type PedigreeCanvasPayload = {
   focalPersonId: string;
   nodes: PedigreeCanvasNode[];
   segments: PedigreeSegment[];
+  highlightSegments?: PedigreeSegment[];
   marriageBand?: PedigreeMarriageBand | null;
   framingNodeIds?: string[];
   chevronOffset: number;
   theme: PedigreeCanvasTheme;
+  highlightPersonIds?: string[];
 };
 
 export const defaultPedigreeCanvasTheme: PedigreeCanvasTheme = {
@@ -107,7 +115,10 @@ function initialsFor(
   return (a + b).toUpperCase() || "?";
 }
 
-export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPayload {
+export function buildPedigreeCanvasPayload(
+  graph: FamilyGraph,
+  options: PedigreeCanvasPayloadOptions = {},
+): PedigreeCanvasPayload {
   const partnerIds = new Set(graph.focalPartnerIds ?? []);
   const nodes: PedigreeCanvasNode[] = graph.nodes.map((n) => {
     const p = n.data.person;
@@ -159,6 +170,12 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
   }));
 
   const segments = buildPedigreeConnectorSegments(boxes, pedigreeEdges);
+  const pathIds = options.pathHighlightPersonIds?.filter(Boolean) ?? [];
+  const highlightSegments =
+    pathIds.length >= 2
+      ? buildPedigreePathHighlightSegments(boxes, pathIds)
+      : [];
+  const highlightPersonIds = options.highlightPersonIds?.filter(Boolean);
 
   let marriageBand: PedigreeMarriageBand | null = null;
   const partnerId = graph.focalPartnerIds?.[0];
@@ -179,6 +196,8 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
 
   const framingNodeIds = new Set<string>([graph.focalPersonId]);
   if (partnerId) framingNodeIds.add(partnerId);
+  for (const id of pathIds) framingNodeIds.add(id);
+  for (const id of highlightPersonIds ?? []) framingNodeIds.add(id);
   for (const e of graph.edges) {
     if (e.type === "child" && e.source === graph.focalPersonId) {
       framingNodeIds.add(e.target);
@@ -198,10 +217,12 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
     focalPersonId: graph.focalPersonId,
     nodes,
     segments,
+    highlightSegments,
     marriageBand,
     framingNodeIds: [...framingNodeIds],
     chevronOffset: PEDIGREE_CHEVRON_OFFSET,
     theme: defaultPedigreeCanvasTheme,
+    highlightPersonIds,
   };
 }
 

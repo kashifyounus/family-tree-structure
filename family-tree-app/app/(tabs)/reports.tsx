@@ -1,14 +1,19 @@
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AppCard, AppCardContent } from "@/components/ui/AppCard";
-import { Button, ButtonText } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 
+import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { HouseholdOverviewCard } from "@/components/reports/HouseholdOverviewCard";
+import { ReportsKpiStrip } from "@/components/reports/ReportsKpiStrip";
 import { SimpleBarChart } from "@/components/SimpleBarChart";
 import { FormTextInput } from "@/components/ui/FormTextInput";
+import { OutlineChip } from "@/components/ui/OutlineChip";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen } from "@/components/ui/Screen";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { AppText } from "@/components/ui/AppText";
 import { copy } from "@/content/businessCopy";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { useLocalAccount } from "@/context/LocalAccountContext";
@@ -22,12 +27,12 @@ import {
   buildLocalHouseholdReport,
   type HouseholdReportView,
 } from "@/lib/reports/householdReport";
+import { REPORT_PRESETS } from "@/lib/reports/reportPresets";
 import {
   resolveCloudFocalFamilyCode,
   resolveLocalFocalFamilyCode,
 } from "@/lib/tree/focalFamilyCode";
 import { useAppTheme } from "@/theme/useAppTheme";
-import { AppText } from "@/components/ui/AppText";
 
 function onlineHouseholdView(
   household: NonNullable<OnlineReports["household"]>,
@@ -45,6 +50,7 @@ function onlineHouseholdView(
 
 export default function ReportsScreen() {
   const theme = useAppTheme();
+  const router = useRouter();
   const { mode, dataRevision } = useStorage();
   const localAccount = useLocalAccount();
   const { showError } = useAppFeedback();
@@ -55,6 +61,7 @@ export default function ReportsScreen() {
     null,
   );
   const [online, setOnline] = useState<OnlineReports | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -108,17 +115,17 @@ export default function ReportsScreen() {
   }, []);
 
   return (
-    <Screen testID="reports-screen" keyboardAvoiding>
+    <Screen testID="reports-screen" keyboardAvoiding scroll>
       <PageHeader
         title={copy.reports.screenTitle}
         subtitle={mode === "local" ? copy.reports.bannerPrivate : copy.reports.bannerCloud}
       />
 
       {mode === "online" && (
-        <View style={styles.row}>
+        <View className="flex-row gap-2 items-start mb-3">
           <FormTextInput
             testID="reports-reference-input"
-            style={styles.input}
+            style={{ flex: 1 }}
             label={copy.reports.focalReference}
             value={code}
             onChangeText={setCode}
@@ -127,7 +134,7 @@ export default function ReportsScreen() {
           <Button
             testID="reports-refresh"
             onPress={() => void load()}
-            style={styles.refreshBtn}
+            className="mt-1.5"
           >
             <ButtonText>{copy.reports.loadInsights}</ButtonText>
           </Button>
@@ -135,27 +142,52 @@ export default function ReportsScreen() {
       )}
 
       {loading ? (
-        <Spinner size="large" style={styles.loader} />
+        <Spinner size="large" className="mt-6" />
       ) : mode === "local" && local ? (
-        <View style={styles.section}>
-          <AppCard style={styles.statCard}>
-            <AppCardContent>
-              <AppText variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-                {copy.reports.membersLiving(local.memberCount, local.livingCount)}
-              </AppText>
-            </AppCardContent>
-          </AppCard>
+        <View>
+          <ReportsKpiStrip stats={local} />
+
+          <SectionCard title={copy.reports.presetsTitle} subtitle={copy.reports.presetsHint}>
+            <View className="flex-row flex-wrap gap-2">
+              {REPORT_PRESETS.map((preset) => (
+                <OutlineChip
+                  key={preset.id}
+                  label={preset.title}
+                  selected={activePreset === preset.id}
+                  onPress={() => {
+                    setActivePreset(preset.id);
+                    router.push({
+                      pathname: "/reports-custom",
+                      params: { preset: preset.id },
+                    });
+                  }}
+                />
+              ))}
+            </View>
+          </SectionCard>
+
+          <PrimaryPillButton
+            testID="reports-custom-cta"
+            label={copy.reports.customCta}
+            onPress={() => router.push("/reports-custom")}
+          />
+
           {localHousehold ? (
-            <HouseholdOverviewCard
-              household={localHousehold}
-              husbandLabel={householdHusbandLabel(localHousehold.husbandName)}
-            />
+            <View className="mt-4">
+              <HouseholdOverviewCard
+                household={localHousehold}
+                husbandLabel={householdHusbandLabel(localHousehold.husbandName)}
+              />
+            </View>
           ) : null}
-          <SimpleBarChart title={copy.reports.chartCity} data={local.cities} />
-          <SimpleBarChart title={copy.reports.chartAge} data={local.ages} />
+
+          <View className="mt-2">
+            <SimpleBarChart title={copy.reports.chartCity} data={local.cities} />
+            <SimpleBarChart title={copy.reports.chartAge} data={local.ages} />
+          </View>
         </View>
       ) : online ? (
-        <View style={styles.section}>
+        <View>
           {onlineHousehold ? (
             <HouseholdOverviewCard
               household={onlineHousehold}
@@ -188,12 +220,3 @@ export default function ReportsScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: 8, alignItems: "flex-start", marginBottom: 12 },
-  input: { flex: 1 },
-  refreshBtn: { marginTop: 6 },
-  loader: { marginTop: 24 },
-  section: { gap: 4 },
-  statCard: { borderRadius: 16, marginBottom: 8 },
-});

@@ -69,4 +69,57 @@ describe("graph webview payload", () => {
     expect(payload.theme.canvas).toBe("#F6F1E7");
     expect(payload.theme.primary).toBe("#1B4332");
   });
+
+  it("adds purple path highlight segments when path ids provided", () => {
+    const graph: FamilyGraph = {
+      focalPersonId: "p1",
+      nodes: [
+        {
+          id: "p1",
+          type: "person",
+          position: { x: 0, y: 0 },
+          data: {
+            isFocal: true,
+            person: {
+              id: "p1",
+              familyCode: "FAM-1",
+              firstName: "A",
+              lastName: "One",
+              gender: "MALE",
+              birthDate: null,
+              deathDate: null,
+              currentCity: null,
+              isLiving: true,
+            },
+          },
+        },
+        {
+          id: "p2",
+          type: "person",
+          position: { x: 200, y: 0 },
+          data: {
+            person: {
+              id: "p2",
+              familyCode: "FAM-2",
+              firstName: "B",
+              lastName: "Two",
+              gender: "FEMALE",
+              birthDate: null,
+              deathDate: null,
+              currentCity: null,
+              isLiving: true,
+            },
+          },
+        },
+      ],
+      edges: [],
+    };
+    const payload = buildPedigreeCanvasPayload(graph, {
+      pathHighlightPersonIds: ["p1", "p2"],
+      highlightPersonIds: ["p1", "p2"],
+    });
+    expect(payload.highlightSegments?.length).toBeGreaterThan(0);
+    expect(payload.highlightSegments?.[0]?.color).toBe("#7828A0");
+    expect(payload.highlightSegments?.[0]?.strokeWidth).toBe(6);
+  });
 });

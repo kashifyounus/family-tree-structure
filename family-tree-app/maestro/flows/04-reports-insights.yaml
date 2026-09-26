@@ -14,4 +14,4 @@ tags:
       id: reports-screen
     timeout: 10000
 - assertVisible:
-    text: "Family insights"
+    text: "Archive insights"

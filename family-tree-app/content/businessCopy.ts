@@ -128,7 +128,7 @@ export const copy = {
     openTree: "View family tree",
     yourBranch: "View your branch",
     directory: "Family directory",
-    insights: "Family insights",
+    insights: "Archive insights",
     statsPrivate: (members: number, living: number) =>
       `Private archive: ${members} member${members === 1 ? "" : "s"}, ${living} recorded as living`,
     statsCloud: (members: number, focalCode: string) =>
@@ -276,6 +276,18 @@ export const copy = {
     importConfirmBody: (count: number) =>
       `This will erase ${count} member${count === 1 ? "" : "s"} on this device and replace them with the backup. This cannot be undone.`,
     compareTitle: "Compare two members",
+    findRelationTitle: "Find relation",
+    findRelationIntro:
+      "Choose two people in your private archive. We list kinship paths between them and summarize how they relate (read-only).",
+    findRelationPerson1: "Person 1",
+    findRelationPerson2: "Person 2",
+    findRelationRun: "Show relation",
+    findRelationResult: "Result",
+    findRelationOpenTree: "View path on tree",
+    findRelationPathsTruncated:
+      "Large family — only the first 32 paths are shown. Choose closer relatives to see more.",
+    findRelationPathMeta: (paths: number, people: number) =>
+      `${paths} path${paths === 1 ? "" : "s"} · ${people} people on paths`,
     compareHint:
       "Enter member references or names from your private archive to see how they relate.",
     compareButton: "Compare",
@@ -288,25 +300,51 @@ export const copy = {
   },
 
   reports: {
-    screenTitle: "Family insights",
-    bannerPrivate: "Insights from your private archive on this device",
-    bannerCloud: "Insights from your family cloud",
-    focalReference: "Member reference for this branch",
+    screenTitle: "Archive insights",
+    bannerPrivate:
+      "Summary counts and charts from your private archive on this device.",
+    bannerCloud: "Summary counts and charts from your family cloud registry.",
+    focalReference: "Branch member reference",
     loadInsights: "Refresh",
+    kpiMembers: "Members",
+    kpiLiving: "Living",
+    kpiMarried: "Married",
+    kpiDivorces: "Divorces",
+    kpiMale: "Male",
+    kpiFemale: "Female",
+    presetsTitle: "Quick filters",
+    presetsHint: "Open a preset or build your own query below.",
+    customCta: "Build custom report",
+    customTitle: "Custom report",
+    customHint:
+      "Combine filters with AND logic. Results stay on this device and update as you edit your archive.",
+    customFiltersTitle: "Filters",
+    filterLiving: "Living only",
+    filterNickname: "Has nickname",
+    filterGender: "Gender (optional)",
+    filterCity: "Current city",
+    filterCityPlaceholder: "Exact city name",
+    runCustom: "Run report",
+    customResultsTitle: (count: number) =>
+      `${count} member${count === 1 ? "" : "s"} matched`,
+    customAndOnly: "All selected filters must match (AND).",
+    customEmpty: "No members match these filters. Try removing a filter.",
+    customTruncated: (total: number) =>
+      `Showing the first 80 of ${total} matches.`,
     membersLiving: (members: number, living: number) =>
-      `${members} members · ${living} recorded as living`,
-    chartCity: "Where members live today",
+      `${members} members · ${living} living`,
+    chartCity: "Current city",
     chartAge: "Age groups",
-    chartCityCloud: "Where members live (family cloud)",
+    chartCityCloud: "Current city (family cloud)",
     chartAgeCloud: "Age groups (family cloud)",
     householdTitle: "Household overview",
     householdSummary: (marriages: number, children: number) =>
-      `${marriages} marriage${marriages === 1 ? "" : "s"} recorded · ${children} child${children === 1 ? "" : "ren"}`,
+      `${marriages} marriage${marriages === 1 ? "" : "s"} · ${children} child${children === 1 ? "" : "ren"}`,
     householdLine: (name: string, count: number) =>
       `${name}: ${count} child${count === 1 ? "" : "ren"}`,
     householdForHusband: (name: string) => `Household for ${name}`,
     noDataCloud:
-      "No insights are available yet. Check your family website address, member reference, and sign-in in Account.",
+      "Insights are unavailable. Confirm your family website address, branch reference, and sign-in under Account.",
     searchMembers: "Search",
     cancel: "Cancel",
     delete: "Remove",

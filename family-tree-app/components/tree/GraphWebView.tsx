@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 
@@ -20,7 +20,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], focalId = '', marriageBand = null, framingNodeIds = null, chevronOffset = 8;
+let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBand = null, framingNodeIds = null, chevronOffset = 8;
 let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
@@ -110,6 +110,14 @@ function drawSegments(){
     ctx.lineTo(s.x2,s.y2);
     ctx.stroke();
   }
+  for(const s of highlightSegments){
+    ctx.strokeStyle = s.color || '#7828A0';
+    ctx.lineWidth = s.strokeWidth || 6;
+    ctx.beginPath();
+    ctx.moveTo(s.x1,s.y1);
+    ctx.lineTo(s.x2,s.y2);
+    ctx.stroke();
+  }
 }
 
 function wrapName(line, maxW){
@@ -148,7 +156,8 @@ function drawCard(n){
   ctx.textAlign = 'center';
   const line1 = wrapName(n.nameLine1 || (n.label||'').split(' ')[0] || '', w - pad * 2);
   const line2 = wrapName(n.nameLine2 || (n.label||'').split(' ').slice(1).join(' ') || '', w - pad * 2);
-  const nameY = y + (n.tier === 'big' ? 26 : 22);
+  const singleLine = !line2;
+  const nameY = y + (singleLine ? (n.tier === 'big' ? h * 0.46 : h * 0.44) : (n.tier === 'big' ? 26 : 22));
   ctx.fillText(line1, cx, nameY);
   if(line2) ctx.fillText(line2, cx, nameY + 14);
 
@@ -190,9 +199,10 @@ function drawCard(n){
     ctx.fillText('↓', cx, cyDn);
   }
 
-  if(n.isFocal){
-    ctx.strokeStyle = theme.primary;
-    ctx.lineWidth = 3;
+  const hi = highlightPersonIds && highlightPersonIds.indexOf(n.id) >= 0;
+  if(n.isFocal || hi){
+    ctx.strokeStyle = hi ? '#7828A0' : theme.primary;
+    ctx.lineWidth = hi ? 3 : 3;
     roundRect(x-2,y-2,w+4,h+4,14);
     ctx.stroke();
   }
@@ -231,6 +241,8 @@ function postPersonPress(n){
 function onGraph(g){
   nodes = g.nodes || [];
   segments = g.segments || [];
+  highlightSegments = g.highlightSegments || [];
+  highlightPersonIds = g.highlightPersonIds || null;
   focalId = g.focalPersonId || '';
   marriageBand = g.marriageBand || null;
   framingNodeIds = g.framingNodeIds || null;
@@ -298,18 +310,36 @@ resize();
 type GraphWebViewProps = {
   graph: FamilyGraph;
   testID?: string;
+  pathHighlightPersonIds?: string[];
+  highlightPersonIds?: string[];
   onPersonPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
 };
 
 /**
  * Offline-friendly pedigree renderer (canvas) — FamilySearch-style cards + connectors.
  */
-export function GraphWebView({ graph, testID, onPersonPress }: GraphWebViewProps) {
+export function GraphWebView({
+  graph,
+  testID,
+  pathHighlightPersonIds,
+  highlightPersonIds,
+  onPersonPress,
+}: GraphWebViewProps) {
   const webRef = useRef<WebView>(null);
   const payload = useMemo(
-    () => JSON.stringify(buildPedigreeCanvasPayload(graph)),
-    [graph],
+    () =>
+      JSON.stringify(
+        buildPedigreeCanvasPayload(graph, {
+          pathHighlightPersonIds,
+          highlightPersonIds,
+        }),
+      ),
+    [graph, pathHighlightPersonIds, highlightPersonIds],
   );
+
+  useEffect(() => {
+    webRef.current?.postMessage(payload);
+  }, [payload]);
 
   return (
     <View style={styles.wrap} testID={testID}>
@@ -318,6 +348,9 @@ export function GraphWebView({ graph, testID, onPersonPress }: GraphWebViewProps
         originWhitelist={["*"]}
         source={{ html: EMBED_HTML }}
         onLoadEnd={() => {
+          webRef.current?.postMessage(payload);
+        }}
+        onContentProcessDidTerminate={() => {
           webRef.current?.postMessage(payload);
         }}
         onMessage={(event) => {

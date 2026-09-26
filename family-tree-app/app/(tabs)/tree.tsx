@@ -13,6 +13,7 @@ import { TreeOverflowMenu } from "@/components/tree/TreeOverflowMenu";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { copy } from "@/content/businessCopy";
 import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
+import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
@@ -75,9 +76,35 @@ export default function TreeScreen() {
   const insets = useSafeAreaInsets();
   const { mode, apiUrl, dataRevision, setMode, localMemberCount } = useStorage();
   const localAccount = useLocalAccount();
-  const params = useLocalSearchParams<{ familyCode?: string }>();
+  const params = useLocalSearchParams<{
+    familyCode?: string;
+    highlightA?: string;
+    highlightB?: string;
+    pathNodes?: string;
+  }>();
   const paramCode =
     typeof params.familyCode === "string" ? params.familyCode.trim() : "";
+  const pathHighlightIds = useMemo(() => {
+    const raw = typeof params.pathNodes === "string" ? params.pathNodes : "";
+    return raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }, [params.pathNodes]);
+  const relationHighlightIds = useMemo(() => {
+    const ids: string[] = [];
+    if (typeof params.highlightA === "string" && params.highlightA.trim()) {
+      ids.push(params.highlightA.trim());
+    }
+    if (typeof params.highlightB === "string" && params.highlightB.trim()) {
+      ids.push(params.highlightB.trim());
+    }
+    return ids;
+  }, [params.highlightA, params.highlightB]);
+  const pathSeedGens = useMemo(
+    () => Math.min(8, Math.max(2, Math.ceil(pathHighlightIds.length))),
+    [pathHighlightIds.length],
+  );
   const [loadedCode, setLoadedCode] = useState(
     paramCode || DEFAULT_FAMILY_CODE,
   );
@@ -131,6 +158,13 @@ export default function TreeScreen() {
   }, [loadOnlineGraph, dataRevision, reloadKey]);
 
   useEffect(() => {
+    if (typeof params.highlightA === "string" && params.highlightA.trim()) {
+      const member = getLocalMemberById(params.highlightA.trim());
+      if (member?.familyCode) {
+        setLoadedCode(member.familyCode);
+        return;
+      }
+    }
     if (paramCode) {
       setLoadedCode(paramCode);
       return;
@@ -142,7 +176,7 @@ export default function TreeScreen() {
           : await resolveCloudFocalFamilyCode(localAccount.session?.focalFamilyCode);
       setLoadedCode(focal);
     })();
-  }, [paramCode, mode, localAccount.session?.focalFamilyCode]);
+  }, [paramCode, params.highlightA, mode, localAccount.session?.focalFamilyCode]);
 
   useEffect(() => {
     if (isLocal) return;
@@ -258,13 +292,22 @@ export default function TreeScreen() {
           <ShowcasePedigreeTree zoomScale={zoom} />
         ) : isLocal ? (
           <LocalFamilyTree
-            key={`${loadedCode}-${dataRevision}-${reloadKey}-${listLayout ? "list" : "graph"}`}
+            key={`${loadedCode}-${dataRevision}-${reloadKey}-${listLayout ? "list" : "graph"}-${pathHighlightIds.join("-")}`}
             familyCode={loadedCode.trim()}
             immersive
             layout={listLayout ? "list" : "graph"}
             onPersonPress={onPersonPress}
             zoomScale={zoom}
             onZoomChange={setZoom}
+            pathHighlightPersonIds={
+              pathHighlightIds.length >= 2 ? pathHighlightIds : undefined
+            }
+            highlightPersonIds={
+              relationHighlightIds.length ? relationHighlightIds : undefined
+            }
+            ensurePersonIds={pathHighlightIds.length ? pathHighlightIds : undefined}
+            seedGenerationsUp={pathHighlightIds.length ? pathSeedGens : undefined}
+            seedGenerationsDown={pathHighlightIds.length ? pathSeedGens : undefined}
           />
         ) : graphLoading ? (
           <View style={styles.loading}>
@@ -284,6 +327,12 @@ export default function TreeScreen() {
               graph={onlineGraph}
               onPersonPress={onPersonPress}
               testID="online-tree-graph-webview"
+              pathHighlightPersonIds={
+                pathHighlightIds.length >= 2 ? pathHighlightIds : undefined
+              }
+              highlightPersonIds={
+                relationHighlightIds.length ? relationHighlightIds : undefined
+              }
             />
           </>
         ) : (

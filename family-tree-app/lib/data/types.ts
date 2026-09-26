@@ -77,6 +77,10 @@ export type ReportBucket = { label: string; count: number };
 export type LocalReports = {
   memberCount: number;
   livingCount: number;
+  marriedCount: number;
+  divorceCount: number;
+  maleCount: number;
+  femaleCount: number;
   cities: ReportBucket[];
   ages: ReportBucket[];
 };
