@@ -161,7 +161,7 @@ export const copy = {
     menuCenterMarriage: "Center on my marriage",
     menuReload: "Reload tree",
     menuMoreTools: "More tools",
-    menuKinship: "Compare kinship",
+    menuKinship: "Find relation",
     menuShowList: "Browse as list",
     menuShowGraph: "Show graph view",
     sheetProfile: "Open profile",
