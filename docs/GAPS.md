@@ -12,20 +12,11 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 4. Run relevant tests (`shared` Jest, `family-tree-app` Jest) before opening the PR.
 5. When done, check off acceptance criteria in the issue comment and close if fully met.
 
-## P0 — mobile UX polish (open)
+## Open work
 
 | Issue | Title |
 |------:|-------|
-| [#19](https://github.com/kashifyounus/family-tree-structure/issues/19) | Hide family codes from primary UI labels |
-| [#20](https://github.com/kashifyounus/family-tree-structure/issues/20) | Person profile: one Tree CTA + Home-style action hierarchy |
-| [#21](https://github.com/kashifyounus/family-tree-structure/issues/21) | Align Tree list mode with Kuriosity graph cards |
-
-## P1 — product / UX (open)
-
-| Issue | Title |
-|------:|-------|
-| [#22](https://github.com/kashifyounus/family-tree-structure/issues/22) | Home: real archive vs showcase honesty + search labels |
-| [#23](https://github.com/kashifyounus/family-tree-structure/issues/23) | Refresh docs/GAPS.md (this file) |
+| [#18](https://github.com/kashifyounus/family-tree-structure/issues/18) | Split member screen + engineering health notes |
 
 ## Recently shipped (do not re-implement)
 
@@ -38,12 +29,11 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 | [#15](https://github.com/kashifyounus/family-tree-structure/issues/15) | Cream pedigree canvas + tokenized connectors |
 | [#16](https://github.com/kashifyounus/family-tree-structure/issues/16) | Human kinship labels + shared kinship module |
 | [#17](https://github.com/kashifyounus/family-tree-structure/issues/17) | Local-first vs cloud mutations — see `docs/ARCHITECTURE_SYNC.md` |
-
-## P2 — engineering health
-
-| Issue | Title |
-|------:|-------|
-| [#18](https://github.com/kashifyounus/family-tree-structure/issues/18) | Split member screen + engineering health notes |
+| [#19](https://github.com/kashifyounus/family-tree-structure/issues/19) | Hide family codes from primary UI labels |
+| [#20](https://github.com/kashifyounus/family-tree-structure/issues/20) | Person profile: one Tree CTA + Home-style action hierarchy |
+| [#21](https://github.com/kashifyounus/family-tree-structure/issues/21) | Tree list mode aligned with Kuriosity cards |
+| [#22](https://github.com/kashifyounus/family-tree-structure/issues/22) | Home: archive vs showcase honesty + search labels |
+| [#23](https://github.com/kashifyounus/family-tree-structure/issues/23) | Refresh docs/GAPS.md (this file) |
 
 ### Kinship labeling (remaining)
 
@@ -53,10 +43,11 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
 - **Parents:** A child may have one recorded parent, two parents, or an **Unknown** co-parent placeholder when only one side is known (`shared/unknownCoParent.ts`, `family-tree-app/lib/db/unknownCoParent.ts`). Do not require two parents or a union before attaching a child.
 - **Siblings:** `full|half|step` degrees and `BIOLOGICAL|ADOPTED|STEP` child types are modeled and surfaced on the mobile profile (siblings tables, marriage children).
-- **Family codes:** Internal `FAM-…` identifiers remain for search, graph routing, and **Account → Advanced → member reference**. They must not be the primary subtitle under a person’s name in Members, Home, Tree list, or Tree title (#19).
-- **Mobile online mode** is read-mostly; mutations are local SQLite — see `#17` / `docs/ARCHITECTURE_SYNC.md`.
+- **Family codes:** Internal `FAM-…` identifiers remain for search, graph routing, and **Account → Advanced → member reference** (and Tree overflow menu). They must not be the primary subtitle under a person’s name in Members, Home, Tree list, or Tree title.
+- **Mobile online mode** is read-mostly; mutations are local SQLite — see `docs/ARCHITECTURE_SYNC.md`.
 - **Tree layout:** Parent placement (husband left / wife right) lives in `shared/marriageTreeLayout.ts`. Pedigree canvas uses cream tokens from `shared/pedigreeTheme.ts`.
+- **Home tab** is the visual source of truth for cards, pills, and spacing (`PrimaryPillButton`, `PersonRow`, cream surfaces).
 
 ## Design system pointer
 
-Mobile tokens: `family-tree-app/theme/appTheme.ts`, `family-tree-app/lib/design/kuriosityDesignSystem.ts`. **Home tab** is the visual source of truth for cards, pills, and spacing.
+Mobile tokens: `family-tree-app/theme/appTheme.ts`, `family-tree-app/lib/design/kuriosityDesignSystem.ts`.

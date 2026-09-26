@@ -32,10 +32,11 @@ export default function HomeScreen() {
   const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
   const showDemoHome = shouldShowShowcaseHome(localMemberCount, mode);
 
-  const stats = useMemo(
-    () => mergeShowcaseStats(mode === "local" ? localMemberCount : 48),
-    [mode, localMemberCount],
-  );
+  const stats = useMemo(() => {
+    if (showDemoHome) return mergeShowcaseStats(0);
+    if (mode === "local") return mergeShowcaseStats(localMemberCount);
+    return null;
+  }, [showDemoHome, mode, localMemberCount]);
 
   const greeting = useMemo(() => {
     const name = localAccount.session?.displayName?.split(" ")[0];
@@ -104,11 +105,17 @@ export default function HomeScreen() {
         </AppText>
       </View>
 
-      <View className="flex-row gap-2 mb-5">
-        <StatCard value={stats.members} label="Members" />
-        <StatCard value={stats.generations} label="Generations" />
-        <StatCard value={stats.stories} label="Stories" />
-      </View>
+      {stats ? (
+        <View className="flex-row gap-2 mb-5">
+          <StatCard value={stats.members} label="Members" />
+          <StatCard value={stats.generations} label="Generations" />
+          <StatCard value={stats.stories} label="Stories" />
+        </View>
+      ) : (
+        <AppText variant="bodySmall" className="text-muted-foreground mb-5">
+          Stats reflect your private archive. Switch to private mode to see counts here.
+        </AppText>
+      )}
 
       <MembersSearchField
         testID="home-search"

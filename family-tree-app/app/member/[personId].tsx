@@ -4,7 +4,7 @@ import {
   SHOWCASE_MARGARET_ID,
   margaretKhanProfile,
 } from "@/lib/mock/kuriosityShowcase";
-import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
+import { ProfileMemberChrome } from "@/components/members/profile/ProfileMemberChrome";
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { Button, ButtonText } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
@@ -443,6 +443,37 @@ export default function MemberDetailScreen() {
       <Screen testID="member-profile-screen" keyboardAvoiding>
         <PageHeader title="Profile" />
         <MemberProfileHero member={m} statusLabel={lifeStatus} />
+        <ProfileMemberChrome
+          canEditLocal={canEditLocal}
+          editing={editing}
+          parentsRecorded={bundle.parents.length > 0}
+          cloudReadOnlyMessage={!canEditLocal ? copy.profile.cloudReadOnly : null}
+          onShowInTree={() =>
+            router.push({
+              pathname: "/(tabs)/tree",
+              params: { familyCode: m.familyCode },
+            })
+          }
+          onToggleEdit={() => {
+            if (editing) {
+              setFirstName(m.firstName);
+              setLastName(m.lastName);
+              setCity(m.currentCity ?? "");
+              setBirthDate(m.birthDate ?? "");
+              setBirthPlace(m.birthPlace ?? "");
+              setHomeTown(m.homeTown ?? "");
+              setOccupation(m.occupation ?? "");
+              setBio(m.bio ?? "");
+            }
+            setEditing((v) => !v);
+          }}
+          onAddSpouse={() => setSpouseOpen(true)}
+          onAddChild={() => {
+            setChUnionId(marriageOptions[0]?.id ?? "");
+            setChildOpen(true);
+          }}
+          onManageParents={openParentSheet}
+        />
         <View className="mb-4">
           <ParentPairCards
             father={fatherParent}
@@ -511,78 +542,6 @@ export default function MemberDetailScreen() {
             </AppText>
           </SectionCard>
         )}
-        {!canEditLocal && (
-          <AppText variant="bodyMedium" style={{ marginTop: 12, color: theme.colors.onSurfaceVariant }}>
-            {copy.profile.cloudReadOnly}
-          </AppText>
-        )}
-
-        <View className="mt-4 mb-2">
-          <PrimaryPillButton
-            testID="member-show-in-tree"
-            label={copy.profile.openInTree}
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/tree",
-                params: { familyCode: m.familyCode },
-              })
-            }
-          />
-        </View>
-
-        {canEditLocal && (
-          <View style={styles.actions}>
-            <Button
-              variant="outline"
-              className="rounded-full min-h-11"
-              onPress={() => {
-                if (editing) {
-                  setFirstName(m.firstName);
-                  setLastName(m.lastName);
-                  setCity(m.currentCity ?? "");
-                  setBirthDate(m.birthDate ?? "");
-                  setBirthPlace(m.birthPlace ?? "");
-                  setHomeTown(m.homeTown ?? "");
-                  setOccupation(m.occupation ?? "");
-                  setBio(m.bio ?? "");
-                }
-                setEditing((v) => !v);
-              }}
-            >
-              <ButtonText>{editing ? copy.profile.cancelEdit : copy.profile.editProfile}</ButtonText>
-            </Button>
-            <Button
-              testID="member-add-spouse"
-              variant="outline"
-              className="rounded-full min-h-11"
-              onPress={() => setSpouseOpen(true)}
-            >
-              <ButtonText>{copy.profile.addSpouse}</ButtonText>
-            </Button>
-            <Button
-              testID="member-add-child"
-              variant="outline"
-              className="rounded-full min-h-11"
-              onPress={() => {
-                setChUnionId(marriageOptions[0]?.id ?? "");
-                setChildOpen(true);
-              }}
-            >
-              <ButtonText>{copy.profile.addChild}</ButtonText>
-            </Button>
-            <Button
-              testID="member-add-parents"
-              variant="outline"
-              className="rounded-full min-h-11"
-              onPress={openParentSheet}
-            >
-              <ButtonText>
-                {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
-              </ButtonText>
-            </Button>
-          </View>
-        )}
-
         {editing && (
           <AppCard style={styles.block}>
             <AppCardContent style={styles.gap}>
@@ -777,7 +736,6 @@ export default function MemberDetailScreen() {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 16 },
   block: { marginTop: 12, borderRadius: 16 },
   gap: { gap: 10 },
   section: { marginTop: 20 },

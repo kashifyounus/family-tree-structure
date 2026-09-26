@@ -150,8 +150,11 @@ export function LocalFamilyTree({
         />
       ) : (
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
+          style={[styles.scroll, { backgroundColor: theme.colors.background }]}
+          contentContainerStyle={[
+            styles.content,
+            { backgroundColor: theme.colors.background },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <Pressable
@@ -216,7 +219,7 @@ export function LocalFamilyTree({
                       }
                     >
                       <AppText variant="bodyMedium" className="text-primary">
-                        {copy.tree.childLine(c.name, c.familyCode)}
+                        {c.name}
                       </AppText>
                     </Pressable>
                   ))
