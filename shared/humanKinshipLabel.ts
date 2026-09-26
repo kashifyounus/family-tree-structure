@@ -41,6 +41,12 @@ function grandchildLabel(gender: KinshipGender): string {
   return "Grandchild";
 }
 
+function nieceNephewLabel(gender: KinshipGender): string {
+  if (gender === "FEMALE") return "Niece";
+  if (gender === "MALE") return "Nephew";
+  return "Nibling";
+}
+
 function auntUncleLabel(
   side: "paternal" | "maternal",
   gender: KinshipGender,
@@ -54,6 +60,67 @@ function stepParentLabel(gender: KinshipGender): string {
   if (gender === "FEMALE") return "Stepmother";
   if (gender === "MALE") return "Stepfather";
   return "Step-parent";
+}
+
+function parentInLawLabel(gender: KinshipGender): string {
+  if (gender === "FEMALE") return "Mother-in-law";
+  if (gender === "MALE") return "Father-in-law";
+  return "Parent-in-law";
+}
+
+function childInLawLabel(gender: KinshipGender): string {
+  if (gender === "FEMALE") return "Daughter-in-law";
+  if (gender === "MALE") return "Son-in-law";
+  return "Child-in-law";
+}
+
+function siblingInLawLabel(gender: KinshipGender): string {
+  if (gender === "FEMALE") return "Sister-in-law";
+  if (gender === "MALE") return "Brother-in-law";
+  return "Sibling-in-law";
+}
+
+function lineageSideFromParentStep(step: KinshipLabelStep | undefined): "paternal" | "maternal" {
+  return step?.toGender === "FEMALE" ? "maternal" : "paternal";
+}
+
+function sidePrefix(side: "paternal" | "maternal"): string {
+  return side === "paternal" ? "Paternal " : "Maternal ";
+}
+
+function cousinOrdinal(degree: number): string {
+  switch (degree) {
+    case 1:
+      return "First cousin";
+    case 2:
+      return "Second cousin";
+    case 3:
+      return "Third cousin";
+    default:
+      return `${degree}th cousin`;
+  }
+}
+
+/** Up via `child` edges, then down via `parent` edges (BFS kinship graph). */
+function isUpDownPath(relations: string[], up: number, down: number): boolean {
+  if (relations.length !== up + down) return false;
+  for (let i = 0; i < up; i++) {
+    if (relations[i] !== "child") return false;
+  }
+  for (let i = up; i < relations.length; i++) {
+    if (relations[i] !== "parent") return false;
+  }
+  return true;
+}
+
+function labelCousinPath(steps: KinshipLabelStep[], up: number): string | null {
+  if (!isUpDownPath(steps.map((s) => s.relation), up, up) || up < 2) {
+    return null;
+  }
+  const degree = up - 1;
+  const side = lineageSideFromParentStep(steps[0]);
+  const base = cousinOrdinal(degree);
+  return `${sidePrefix(side)}${base}`;
 }
 
 /**
@@ -94,22 +161,39 @@ export function humanKinshipLabelFromSteps(
       if (targetGender === "MALE") return "Stepson";
       return "Stepchild";
     }
+    if (a === "parent" && b === "spouse") {
+      return childInLawLabel(targetGender);
+    }
+    if (a === "spouse" && b === "child") {
+      return parentInLawLabel(targetGender);
+    }
     return null;
   }
 
   if (relations.length === 3) {
     const [a, b, c] = relations;
     if (a === "child" && b === "child" && c === "parent") {
-      const parentGender = steps[0]?.toGender;
-      const side = parentGender === "FEMALE" ? "maternal" : "paternal";
+      const side = lineageSideFromParentStep(steps[0]);
       return auntUncleLabel(side, targetGender);
     }
+    if (a === "child" && b === "parent" && c === "parent") {
+      return nieceNephewLabel(targetGender);
+    }
+    if (a === "spouse" && b === "child" && c === "parent") {
+      return siblingInLawLabel(targetGender);
+    }
     return null;
+  }
+
+  if (relations.length >= 4 && relations.length % 2 === 0) {
+    const half = relations.length / 2;
+    const cousin = labelCousinPath(steps, half);
+    if (cousin) return cousin;
   }
 
   return null;
 }
 
-/** Shown when BFS finds a path but no simple English label is defined (e.g. cousins). */
+/** Shown when BFS finds a path but no simple English label is defined. */
 export const KINSHIP_LABEL_FALLBACK =
   "Relative (see family tree for the full connection)";

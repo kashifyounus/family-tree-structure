@@ -20,8 +20,8 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
 ### Engineering follow-ups (no issue yet)
 
-- Cousin / extended kinship labels beyond `KINSHIP_LABEL_FALLBACK`
-- Optional SQLite rename migration — see `docs/SQLITE_STORAGE.md` (do not rename casually)
+- Kinship “once removed” and other asymmetric paths may still use `KINSHIP_LABEL_FALLBACK`
+- SQLite file rename — plan in `docs/SQLITE_MIGRATION_PLAN.md` (not implemented)
 
 ## Recently shipped (do not re-implement)
 
@@ -43,7 +43,7 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
 ### Kinship labeling (remaining)
 
-- Cousin and in-law degrees beyond simple paths still use the generic fallback (`shared/humanKinshipLabel.ts` → `KINSHIP_LABEL_FALLBACK`) until labeled in a follow-up.
+- First/second/third cousins, niece/nephew, and common in-laws are labeled in `shared/humanKinshipLabel.ts`. Distant or asymmetric paths still use `KINSHIP_LABEL_FALLBACK`.
 
 ## Domain notes (for implementers)
 

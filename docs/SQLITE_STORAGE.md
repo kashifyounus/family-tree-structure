@@ -17,6 +17,8 @@ Renaming `DB_NAME` or moving the database path **without a copy/migrate step** w
 
 Until that migration exists, treat `mughals_family.db` as the stable production identifier.
 
+**Future rename:** step-by-step plan in [`SQLITE_MIGRATION_PLAN.md`](./SQLITE_MIGRATION_PLAN.md). Runtime hook stub: `family-tree-app/lib/db/databaseIdentity.ts`.
+
 ## Code layout
 
 - **Core CRUD:** `lib/db/localRepository.ts`
