@@ -1,6 +1,6 @@
 # Kuriosity Family Tree — Android (Expo)
 
-React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering**.
+React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering**. Some internal identifiers (SQLite `mughals_family.db`, Android `com.mughals.familytree`) are legacy; see [`docs/SQLITE_STORAGE.md`](../docs/SQLITE_STORAGE.md).
 
 Cursor agents: open `[GAP]` backlog at [`/docs/GAPS.md`](../docs/GAPS.md) (repo root).
 
@@ -16,6 +16,7 @@ Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs
 |------|------|
 | Home (Figma layout) | `app/(tabs)/index.tsx`, `components/home/*` |
 | Members (Figma) | `app/(tabs)/members.tsx`, `components/members/PersonRow.tsx` |
+| Person profile | `app/member/[personId].tsx`, `lib/members/useMemberProfileScreen.ts`, `components/members/profile/*` |
 | Person showcase | `components/members/ShowcasePersonDetail.tsx`, id `showcase-margaret-khan` |
 | Account (Figma) | `components/account/*`, `app/(tabs)/account.tsx` |
 | Add member sheet | `components/members/AddMemberBottomSheet.tsx`, route `app/add-member.tsx` |

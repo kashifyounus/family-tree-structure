@@ -16,7 +16,12 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
 | Issue | Title |
 |------:|-------|
-| [#18](https://github.com/kashifyounus/family-tree-structure/issues/18) | Split member screen + engineering health notes |
+| [#10](https://github.com/kashifyounus/family-tree-structure/issues/10) | Epic — close when backlog is empty |
+
+### Engineering follow-ups (no issue yet)
+
+- Cousin / extended kinship labels beyond `KINSHIP_LABEL_FALLBACK`
+- Optional SQLite rename migration — see `docs/SQLITE_STORAGE.md` (do not rename casually)
 
 ## Recently shipped (do not re-implement)
 
@@ -34,6 +39,7 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 | [#21](https://github.com/kashifyounus/family-tree-structure/issues/21) | Tree list mode aligned with Kuriosity cards |
 | [#22](https://github.com/kashifyounus/family-tree-structure/issues/22) | Home: archive vs showcase honesty + search labels |
 | [#23](https://github.com/kashifyounus/family-tree-structure/issues/23) | Refresh docs/GAPS.md (this file) |
+| [#18](https://github.com/kashifyounus/family-tree-structure/issues/18) | Split member screen + SQLite/branding notes (`docs/SQLITE_STORAGE.md`) |
 
 ### Kinship labeling (remaining)
 
