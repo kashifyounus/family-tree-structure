@@ -93,7 +93,7 @@ export default function HomeScreen() {
   }, [dataRevision, showDemoHome]);
 
   return (
-    <Screen testID="home-screen">
+    <Screen testID="home-screen" safeTop>
       <HomeTopBar notificationCount={2} />
 
       <View className="mb-5">

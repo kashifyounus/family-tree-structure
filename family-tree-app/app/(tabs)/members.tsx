@@ -191,78 +191,88 @@ export default function MembersScreen() {
   };
 
   return (
-    <Screen testID="members-screen" scroll={false} padded={false} animated={false}>
-      <View style={styles.header}>
-        <View className="mb-1">
-          <AppText variant="titleLarge" className="font-semibold text-foreground">
-            Members
-          </AppText>
-          <AppText variant="labelMedium" className="text-muted-foreground mt-0.5">
-            {peopleCountLabel}
-          </AppText>
+    <Screen
+      testID="members-screen"
+      scroll={false}
+      padded={false}
+      safeTop
+      animated={false}
+      style={styles.screen}
+    >
+      <View style={styles.body}>
+        <View style={styles.header}>
+          <View className="mb-1">
+            <AppText variant="titleLarge" className="font-semibold text-foreground">
+              Members
+            </AppText>
+            <AppText variant="labelMedium" className="text-muted-foreground mt-0.5">
+              {peopleCountLabel}
+            </AppText>
+          </View>
+          <MembersSearchField
+            value={query}
+            placeholder="Search members"
+            onChangeText={setQuery}
+            onSubmit={() => void load(query.trim())}
+          />
+          <MemberFilterChips value={chip} onChange={setChip} />
         </View>
-        <MembersSearchField
-          value={query}
-          placeholder="Search members"
-          onChangeText={setQuery}
-          onSubmit={() => void load(query.trim())}
-        />
-        <MemberFilterChips value={chip} onChange={setChip} />
-      </View>
 
-      {error ? (
-        <AppText variant="bodyMedium" style={{ color: theme.colors.error, padding: space.lg }}>
-          {error}
-        </AppText>
-      ) : (
-        <FlatList
-          testID="members-list"
-          data={listRows}
-          keyExtractor={(item) =>
-            item.kind === "showcase" ? item.id : item.member.id
-          }
-          contentContainerStyle={[styles.listContent, { paddingBottom: listBottom }]}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          automaticallyAdjustKeyboardInsets
-          refreshing={loading}
-          onRefresh={() => void load(query)}
-          renderItem={({ item, index }) => (
-            <PersonRow
-              testID={rowTestId(item, index)}
-              initials={
-                item.kind === "showcase"
-                  ? item.initials
-                  : `${item.member.firstName[0] ?? ""}${item.member.lastName[0] ?? ""}`
-              }
-              name={
-                item.kind === "showcase"
-                  ? item.name
-                  : formatBilingualName(item.member)
-              }
-              subtitle={
-                item.kind === "showcase"
-                  ? item.subtitle
-                  : memberRecordSubtitle(item.member)
-              }
-              onPress={() => openPerson(item)}
-              onLongPress={
-                item.kind === "member" && mode === "local"
-                  ? () => onDelete(item.member)
-                  : undefined
-              }
-            />
-          )}
-          ListEmptyComponent={
-            <EmptyState
-              icon="account-multiple-outline"
-              title={mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
-              actionLabel={canCreate ? copy.members.addMember : undefined}
-              onAction={canCreate ? () => router.push("/add-member") : undefined}
-            />
-          }
-        />
-      )}
+        {error ? (
+          <AppText variant="bodyMedium" style={{ color: theme.colors.error, padding: space.lg }}>
+            {error}
+          </AppText>
+        ) : (
+          <FlatList
+            style={styles.list}
+            testID="members-list"
+            data={listRows}
+            keyExtractor={(item) =>
+              item.kind === "showcase" ? item.id : item.member.id
+            }
+            contentContainerStyle={[styles.listContent, { paddingBottom: listBottom }]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            automaticallyAdjustKeyboardInsets
+            refreshing={loading}
+            onRefresh={() => void load(query)}
+            renderItem={({ item, index }) => (
+              <PersonRow
+                testID={rowTestId(item, index)}
+                initials={
+                  item.kind === "showcase"
+                    ? item.initials
+                    : `${item.member.firstName[0] ?? ""}${item.member.lastName[0] ?? ""}`
+                }
+                name={
+                  item.kind === "showcase"
+                    ? item.name
+                    : formatBilingualName(item.member)
+                }
+                subtitle={
+                  item.kind === "showcase"
+                    ? item.subtitle
+                    : memberRecordSubtitle(item.member)
+                }
+                onPress={() => openPerson(item)}
+                onLongPress={
+                  item.kind === "member" && mode === "local"
+                    ? () => onDelete(item.member)
+                    : undefined
+                }
+              />
+            )}
+            ListEmptyComponent={
+              <EmptyState
+                icon="account-multiple-outline"
+                title={mode === "local" ? copy.members.emptyPrivate : copy.members.emptyCloud}
+                actionLabel={canCreate ? copy.members.addMember : undefined}
+                onAction={canCreate ? () => router.push("/add-member") : undefined}
+              />
+            }
+          />
+        )}
+      </View>
 
       {canCreate && (
         <FloatingActionButton
@@ -279,7 +289,14 @@ export default function MembersScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { paddingHorizontal: layout.screenPaddingX, paddingTop: space.sm, gap: space.md },
+  screen: { flex: 1 },
+  body: { flex: 1 },
+  header: {
+    paddingHorizontal: layout.screenPaddingX,
+    paddingBottom: space.sm,
+    gap: space.md,
+  },
+  list: { flex: 1 },
   listContent: {
     paddingHorizontal: layout.screenPaddingX,
     paddingTop: space.xs,

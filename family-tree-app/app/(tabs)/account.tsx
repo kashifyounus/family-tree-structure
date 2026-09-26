@@ -134,7 +134,7 @@ export default function AccountScreen() {
   };
 
   return (
-    <Screen testID="account-screen">
+    <Screen testID="account-screen" safeTop>
       <AccountProfileHero
         displayName={localAccount.session?.displayName}
         email={localAccount.session?.email}

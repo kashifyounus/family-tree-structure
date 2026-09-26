@@ -19,6 +19,8 @@ type ScreenProps = {
   children: ReactNode;
   scroll?: boolean;
   padded?: boolean;
+  /** Inset content below the status bar (tab roots and full-screen flows). Off for stack screens with a native header. */
+  safeTop?: boolean;
   keyboardAvoiding?: boolean;
   animated?: boolean;
   style?: ViewStyle;
@@ -30,6 +32,7 @@ export function Screen({
   children,
   scroll = true,
   padded = true,
+  safeTop = false,
   keyboardAvoiding = true,
   style,
   testID,
@@ -42,6 +45,10 @@ export function Screen({
   const insets = useSafeAreaInsets();
   const contentStyle = [
     padded && styles.padded,
+    !scroll && styles.fill,
+    safeTop && {
+      paddingTop: insets.top + layout.screenPaddingTop,
+    },
     {
       paddingBottom: Math.max(insets.bottom, 16) + bottomInset,
       transform: textScale === 1 ? undefined : [{ scale: textScale }],
@@ -94,9 +101,9 @@ export function Screen({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  fill: { flex: 1 },
   scrollGrow: { flexGrow: 1 },
   padded: {
     paddingHorizontal: layout.screenPaddingX,
-    paddingTop: layout.screenPaddingTop,
   },
 });
