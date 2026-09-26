@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kuriosity Family Tree",
     "slug": "kuriosity-family-tree",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kuriosityfamilytree",
@@ -15,7 +15,7 @@
     },
     "android": {
       "package": "com.mughals.familytree",
-      "versionCode": 10,
+      "versionCode": 11,
       "label": "Kuriosity Family Tree",
       "softwareKeyboardLayoutMode": "resize",
       "usesCleartextTraffic": true,
