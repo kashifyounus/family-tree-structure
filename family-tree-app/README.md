@@ -2,6 +2,8 @@
 
 React Native **Expo SDK 57** app (`family-tree-app`) by **Kuriosity Engineering**.
 
+Cursor agents: open `[GAP]` backlog at [`/docs/GAPS.md`](../docs/GAPS.md) (repo root).
+
 ## UI
 
 **Gluestack UI v5** + **NativeWind v5** with heritage tokens (`theme/appTheme.ts`, `theme/tokens.ts`, `theme/motion.ts`). React Native Paper was removed in Phase C — see [`docs/GLUESTACK_MIGRATION.md`](../docs/GLUESTACK_MIGRATION.md).
