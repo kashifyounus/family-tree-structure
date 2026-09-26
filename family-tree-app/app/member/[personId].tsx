@@ -280,6 +280,7 @@ export default function MemberDetailScreen() {
     firstName: string;
     lastName: string;
     gender: Gender;
+    birthDate?: string;
     relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
   }) => {
     const marriages = unionOptions(mode, m.id);
@@ -304,6 +305,7 @@ export default function MemberDetailScreen() {
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
+        birthDate: payload.birthDate,
         relationshipType: payload.relationshipType,
       });
       setChildOpen(false);

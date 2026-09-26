@@ -261,9 +261,18 @@ export function addLocalChild(input: AddChildInput): MemberRecord {
   const now = new Date().toISOString();
 
   db.runSync(
-    `INSERT INTO persons (id, family_code, first_name, last_name, gender, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [childId, familyCode, input.firstName, input.lastName, input.gender, now, now],
+    `INSERT INTO persons (id, family_code, first_name, last_name, gender, birth_date, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      childId,
+      familyCode,
+      input.firstName,
+      input.lastName,
+      input.gender,
+      input.birthDate ?? null,
+      now,
+      now,
+    ],
   );
 
   db.runSync(

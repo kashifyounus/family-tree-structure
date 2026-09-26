@@ -198,6 +198,8 @@ export function PersonTreeSheet({
     firstName: string;
     lastName: string;
     gender: Gender;
+    birthDate?: string;
+    relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
   }) => {
     const unionId = chUnionId || marriageOptions[0]?.id;
     const errors: FieldErrors = {
@@ -220,6 +222,8 @@ export function PersonTreeSheet({
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
+        birthDate: payload.birthDate,
+        relationshipType: payload.relationshipType,
       });
       setChildOpen(false);
       bumpDataRevision();

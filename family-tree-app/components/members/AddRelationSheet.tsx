@@ -142,7 +142,10 @@ export function AddRelationSheet({
       lastName: lastName.trim(),
       gender: kind === "parent" ? slotGender : gender,
       marriageDate: kind === "spouse" ? marriageDate || undefined : undefined,
-      birthDate: kind === "parent" ? birthDate || undefined : undefined,
+      birthDate:
+        kind === "parent" || kind === "child"
+          ? birthDate || undefined
+          : undefined,
       parentSlot: kind === "parent" ? parentSlot : undefined,
       ...(kind === "child" ? { relationshipType: childRelationshipType } : {}),
     });
@@ -288,6 +291,12 @@ export function AddRelationSheet({
             errorText={fieldErrors.chLast}
           />
           <GenderField value={gender} onChange={setGender} label="Gender" />
+          <DatePickerField
+            label="Date of birth"
+            value={birthDate}
+            onChange={setBirthDate}
+            testID="member-child-birth-date"
+          />
         </>
       )}
       {kind === "parent" && onLinkParentCouple ? (

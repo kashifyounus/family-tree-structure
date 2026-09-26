@@ -111,6 +111,7 @@ export default function MarriageScreen() {
     firstName: string;
     lastName: string;
     gender: Gender;
+    birthDate?: string;
     relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
   }) => {
     try {
@@ -120,6 +121,7 @@ export default function MarriageScreen() {
         firstName: payload.firstName,
         lastName: payload.lastName,
         gender: payload.gender,
+        birthDate: payload.birthDate,
         relationshipType: payload.relationshipType,
       });
       setChildOpen(false);

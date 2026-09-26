@@ -59,6 +59,7 @@ export type AddChildInput = {
   firstName: string;
   lastName: string;
   gender: Gender;
+  birthDate?: string;
   relationshipType?: ChildRelationshipType;
 };
 
