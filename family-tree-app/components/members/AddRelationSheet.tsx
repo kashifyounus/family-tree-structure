@@ -14,19 +14,24 @@ import { AppText } from "@/components/ui/AppText";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { GenderField } from "@/components/ui/GenderField";
+import { OutlineChip } from "@/components/ui/OutlineChip";
 import { Button, ButtonText } from "@/components/ui/button";
 import { copy } from "@/content/businessCopy";
 import type { Gender } from "@/lib/data/types";
 import { type FieldErrors } from "@/lib/forms/fieldErrors";
+import type { ParentSlot } from "@/lib/rules/parentSlots";
+import { parentSlotGender } from "@/lib/rules/parentSlots";
 import { useAppTheme } from "@/theme/useAppTheme";
 
-export type AddRelationKind = "spouse" | "child";
+export type AddRelationKind = "spouse" | "child" | "parent";
 
 export type AddRelationCreatePayload = {
   firstName: string;
   lastName: string;
   gender: Gender;
   marriageDate?: string;
+  birthDate?: string;
+  parentSlot?: ParentSlot;
 };
 
 type MarriageOption = { id: string; label: string };
@@ -41,6 +46,10 @@ type AddRelationSheetProps = {
   selectedUnionId?: string;
   onUnionChange?: (unionId: string) => void;
   defaultGender?: Gender;
+  parentSlot?: ParentSlot;
+  onParentSlotChange?: (slot: ParentSlot) => void;
+  parentStepHint?: string | null;
+  onLinkParentCouple?: () => void;
   onDismiss: () => void;
   onSubmitCreate: (payload: AddRelationCreatePayload) => void;
   onSubmitLink: (memberId: string) => void;
@@ -58,6 +67,10 @@ export function AddRelationSheet({
   selectedUnionId,
   onUnionChange,
   defaultGender = "MALE",
+  parentSlot = "father",
+  onParentSlotChange,
+  parentStepHint,
+  onLinkParentCouple,
   onDismiss,
   onSubmitCreate,
   onSubmitLink,
@@ -71,6 +84,9 @@ export function AddRelationSheet({
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState<Gender>(defaultGender);
   const [marriageDate, setMarriageDate] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+
+  const slotGender = kind === "parent" ? parentSlotGender(parentSlot) : gender;
 
   useEffect(() => {
     if (!visible) return;
@@ -78,9 +94,10 @@ export function AddRelationSheet({
     setLinkId("");
     setFirstName("");
     setLastName("");
-    setGender(defaultGender);
+    setGender(kind === "parent" ? parentSlotGender(parentSlot) : defaultGender);
     setMarriageDate("");
-  }, [visible, defaultGender]);
+    setBirthDate("");
+  }, [visible, defaultGender, kind, parentSlot]);
 
   const handleSubmit = () => {
     if (mode === "link") {
@@ -90,8 +107,10 @@ export function AddRelationSheet({
     onSubmitCreate({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      gender,
+      gender: kind === "parent" ? slotGender : gender,
       marriageDate: kind === "spouse" ? marriageDate || undefined : undefined,
+      birthDate: kind === "parent" ? birthDate || undefined : undefined,
+      parentSlot: kind === "parent" ? parentSlot : undefined,
     });
   };
 
@@ -106,6 +125,27 @@ export function AddRelationSheet({
       cancelLabel={copy.reports.cancel}
     >
       <MemberFormModeToggle mode={mode} onChange={setMode} />
+      {kind === "parent" ? (
+        <View className="flex-row gap-2">
+          <OutlineChip
+            testID="parent-role-father"
+            label={copy.profile.parentRoleFather}
+            selected={parentSlot === "father"}
+            onPress={() => onParentSlotChange?.("father")}
+          />
+          <OutlineChip
+            testID="parent-role-mother"
+            label={copy.profile.parentRoleMother}
+            selected={parentSlot === "mother"}
+            onPress={() => onParentSlotChange?.("mother")}
+          />
+        </View>
+      ) : null}
+      {parentStepHint ? (
+        <AppText variant="bodySmall" className="text-muted-foreground">
+          {parentStepHint}
+        </AppText>
+      ) : null}
       {kind === "child" && marriageOptions.length > 0 ? (
         <View className="flex-row flex-wrap gap-2">
           {marriageOptions.map((marriage) => (
@@ -156,6 +196,29 @@ export function AddRelationSheet({
             testID="member-spouse-wedding-date"
           />
         </>
+      ) : kind === "parent" ? (
+        <>
+          <FormTextInput
+            testID="member-parent-first"
+            label="First name"
+            value={firstName}
+            onChangeText={setFirstName}
+            errorText={fieldErrors.paFirst}
+          />
+          <FormTextInput
+            testID="member-parent-last"
+            label="Last name"
+            value={lastName}
+            onChangeText={setLastName}
+            errorText={fieldErrors.paLast}
+          />
+          <DatePickerField
+            label="Date of birth"
+            value={birthDate}
+            onChange={setBirthDate}
+            testID="member-parent-birth-date"
+          />
+        </>
       ) : (
         <>
           <FormTextInput
@@ -175,6 +238,11 @@ export function AddRelationSheet({
           <GenderField value={gender} onChange={setGender} label="Gender" />
         </>
       )}
+      {kind === "parent" && onLinkParentCouple ? (
+        <Button variant="outline" className="rounded-full min-h-10 mt-1" onPress={onLinkParentCouple}>
+          <ButtonText>{copy.profile.linkParentCouple}</ButtonText>
+        </Button>
+      ) : null}
     </FormBottomSheet>
   );
 }

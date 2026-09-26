@@ -30,7 +30,9 @@ import { useStorage } from "@/context/StorageContext";
 import {
   addChild,
   addSpouse,
+  assignParentSlot,
   assignParentsToCouple,
+  createAndAssignParentSlot,
   linkChild,
   linkSpouse,
   loadPersonByCode,
@@ -47,6 +49,7 @@ import { formatBilingualName } from "@/lib/format/displayName";
 import { recordRecentVisit } from "@/lib/recentPeople";
 import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
 import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
+import { defaultParentSlotForOpen, type ParentSlot } from "@/lib/rules/parentSlots";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
@@ -78,6 +81,12 @@ export default function MemberDetailScreen() {
   const [childOpen, setChildOpen] = useState(false);
   const [chUnionId, setChUnionId] = useState("");
   const [parentsOpen, setParentsOpen] = useState(false);
+  const [coupleParentsOpen, setCoupleParentsOpen] = useState(false);
+  const [parentSlot, setParentSlot] = useState<ParentSlot>("father");
+  const [parentStaged, setParentStaged] = useState<{
+    parentId: string;
+    slot: ParentSlot;
+  } | null>(null);
   const [parentQuery, setParentQuery] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
@@ -301,14 +310,89 @@ export default function MemberDetailScreen() {
   };
 
   const parentCoupleRows =
-    canEditLocal && parentsOpen
+    canEditLocal && coupleParentsOpen
       ? parentCouplesForPicker(mode, m.id, parentQuery)
       : [];
+
+  const applyParentAssignResult = (
+    result: ReturnType<typeof assignParentSlot>,
+  ) => {
+    if (result.status === "needs_other_parent") {
+      setParentStaged({ parentId: result.stagedParentId, slot: result.stagedSlot });
+      setParentSlot(result.otherSlot);
+      showSuccess(
+        result.otherSlot === "mother"
+          ? copy.profile.parentSlotStagedFather
+          : copy.profile.parentSlotStagedMother,
+      );
+      return;
+    }
+    setParentStaged(null);
+    setParentsOpen(false);
+    bumpDataRevision();
+    void reload();
+    impactLight();
+    showSuccess(copy.profile.parentsSaved);
+  };
+
+  const linkParentMember = (parentPersonId: string) => {
+    if (!parentPersonId) {
+      showError(new Error(copy.profile.pickMemberRequired));
+      return;
+    }
+    try {
+      const result = assignParentSlot(mode, {
+        childId: m.id,
+        slot: parentSlot,
+        parentPersonId,
+        staged: parentStaged,
+      });
+      applyParentAssignResult(result);
+    } catch (e) {
+      showError(e);
+    }
+  };
+
+  const createParentMember = (payload: {
+    firstName: string;
+    lastName: string;
+    birthDate?: string;
+    parentSlot?: ParentSlot;
+  }) => {
+    const slot = payload.parentSlot ?? parentSlot;
+    const errors: FieldErrors = {
+      paFirst: required(payload.firstName, "First name"),
+      paLast: required(payload.lastName, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setFieldErrors({});
+    try {
+      const result = createAndAssignParentSlot(mode, {
+        childId: m.id,
+        slot,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        birthDate: payload.birthDate,
+        staged: parentStaged,
+      });
+      applyParentAssignResult(result);
+    } catch (e) {
+      showError(e);
+    }
+  };
 
   const onSelectParentCouple = (unionId: string) => {
     try {
       assignParentsToCouple(mode, m.id, unionId);
-      setParentsOpen(false);
+      setCoupleParentsOpen(false);
+      setParentStaged(null);
       setParentQuery("");
       bumpDataRevision();
       void reload();
@@ -318,6 +402,21 @@ export default function MemberDetailScreen() {
       showError(e);
     }
   };
+
+  const openParentSheet = () => {
+    setParentSlot(defaultParentSlotForOpen(bundle.parents, parentStaged));
+    setParentsOpen(true);
+  };
+
+  const parentStepHint = parentStaged
+    ? copy.profile.parentStepHint(
+        parentStaged.slot === "father"
+          ? copy.profile.parentRoleMother.toLowerCase()
+          : copy.profile.parentRoleFather.toLowerCase(),
+      )
+    : null;
+
+  const parentExcludeIds = [m.id, ...(parentStaged ? [parentStaged.parentId] : [])];
 
   const fatherParent = bundle.parents.find((p) => p.gender === "MALE");
   const motherParent = bundle.parents.find((p) => p.gender === "FEMALE");
@@ -467,7 +566,7 @@ export default function MemberDetailScreen() {
             >
               <ButtonText>{copy.profile.addChild}</ButtonText>
             </Button>
-            <Button variant="secondary" onPress={() => setParentsOpen(true)}>
+            <Button testID="member-add-parents" variant="secondary" onPress={openParentSheet}>
               <ButtonText>
                 {bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
               </ButtonText>
@@ -624,13 +723,35 @@ export default function MemberDetailScreen() {
         fieldErrors={fieldErrors}
       />
 
-      <CoupleParentPickerSheet
+      <AddRelationSheet
         visible={parentsOpen}
+        kind="parent"
+        title={
+          bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents
+        }
+        members={localPeople}
+        excludeIds={parentExcludeIds}
+        parentSlot={parentSlot}
+        onParentSlotChange={setParentSlot}
+        parentStepHint={parentStepHint}
+        onLinkParentCouple={() => {
+          setParentsOpen(false);
+          setCoupleParentsOpen(true);
+        }}
+        onDismiss={() => setParentsOpen(false)}
+        onSubmitCreate={createParentMember}
+        onSubmitLink={linkParentMember}
+        submitTestID="member-parent-save"
+        fieldErrors={fieldErrors}
+      />
+
+      <CoupleParentPickerSheet
+        visible={coupleParentsOpen}
         title={bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents}
         rows={parentCoupleRows}
         replacingExisting={bundle.parents.length > 0}
         onDismiss={() => {
-          setParentsOpen(false);
+          setCoupleParentsOpen(false);
           setParentQuery("");
         }}
         onSelectCouple={(row) => onSelectParentCouple(row.unionId)}

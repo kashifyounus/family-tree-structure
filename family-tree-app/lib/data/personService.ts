@@ -148,6 +148,12 @@ export function assignParents(mode: StorageMode, input: SetParentsInput): { unio
   return setLocalParents(input);
 }
 
+export {
+  assignParentSlot,
+  createAndAssignParentSlot,
+  type AssignParentSlotResult,
+} from "@/lib/data/parentAssignService";
+
 export function assignParentsToCouple(
   mode: StorageMode,
   personId: string,

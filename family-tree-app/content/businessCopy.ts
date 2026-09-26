@@ -226,6 +226,12 @@ export const copy = {
     spouseSaved: "Marriage saved. Both people are now linked.",
     childSaved: "Child saved on this marriage.",
     parentsSaved: "Parents saved.",
+    parentSlotStagedFather: "Father recorded. Add mother to finish linking parents.",
+    parentSlotStagedMother: "Mother recorded. Add father to finish linking parents.",
+    linkParentCouple: "Link parent couple",
+    parentRoleFather: "Father",
+    parentRoleMother: "Mother",
+    parentStepHint: (role: string) => `Next, add the ${role}.`,
     marriageSaved: "Marriage details saved.",
     confirmReplaceParents:
       "This replaces the current parents. Other children of that marriage stay where they are.",
