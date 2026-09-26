@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
+import { useRouter } from "expo-router";
 
-import { DatePickerField } from "@/components/forms/DatePickerField";
 import {
   ExistingMemberPicker,
   type BriefMember,
@@ -10,18 +10,21 @@ import {
   MemberFormModeToggle,
   type MemberFormMode,
 } from "@/components/members/MemberFormModeToggle";
+import {
+  PersonFields,
+  emptyPersonFieldsValue,
+  type PersonFieldsValue,
+} from "@/components/forms/PersonFields";
 import { AppText } from "@/components/ui/AppText";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
-import { FormTextInput } from "@/components/ui/FormTextInput";
-import { GenderField } from "@/components/ui/GenderField";
 import { OutlineChip } from "@/components/ui/OutlineChip";
 import { Button, ButtonText } from "@/components/ui/button";
+import { DatePickerField } from "@/components/forms/DatePickerField";
 import { copy } from "@/content/businessCopy";
 import type { ChildRelationshipType, Gender } from "@/lib/data/types";
 import { type FieldErrors } from "@/lib/forms/fieldErrors";
 import type { ParentSlot } from "@/lib/rules/parentSlots";
 import { parentSlotGender } from "@/lib/rules/parentSlots";
-import { useAppTheme } from "@/theme/useAppTheme";
 
 export type AddRelationKind = "spouse" | "child" | "parent";
 
@@ -31,6 +34,9 @@ export type AddRelationCreatePayload = {
   gender: Gender;
   marriageDate?: string;
   birthDate?: string;
+  nickname?: string;
+  birthPlace?: string;
+  deathDate?: string;
   parentSlot?: ParentSlot;
   relationshipType?: ChildRelationshipType;
 };
@@ -104,33 +110,36 @@ export function AddRelationSheet({
   submitTestID,
   fieldErrors = {},
 }: AddRelationSheetProps) {
-  const theme = useAppTheme();
-  const [mode, setMode] = useState<MemberFormMode>("create");
+  const router = useRouter();
+  const parentLinkOnly = kind === "parent";
+  const [mode, setMode] = useState<MemberFormMode>(parentLinkOnly ? "link" : "create");
   const [linkId, setLinkId] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [gender, setGender] = useState<Gender>(defaultGender);
+  const [person, setPerson] = useState<PersonFieldsValue>(() =>
+    emptyPersonFieldsValue(defaultGender),
+  );
   const [marriageDate, setMarriageDate] = useState("");
-  const [birthDate, setBirthDate] = useState("");
   const [childRelationshipType, setChildRelationshipType] =
     useState<ChildRelationshipType>("BIOLOGICAL");
 
-  const slotGender = kind === "parent" ? parentSlotGender(parentSlot) : gender;
+  const patchPerson = (patch: Partial<PersonFieldsValue>) => {
+    setPerson((prev) => ({ ...prev, ...patch }));
+  };
 
   useEffect(() => {
     if (!visible) return;
-    setMode("create");
+    setMode(parentLinkOnly ? "link" : "create");
     setLinkId("");
-    setFirstName("");
-    setLastName("");
-    setGender(kind === "parent" ? parentSlotGender(parentSlot) : defaultGender);
+    setPerson(
+      emptyPersonFieldsValue(
+        kind === "parent" ? parentSlotGender(parentSlot) : defaultGender,
+      ),
+    );
     setMarriageDate("");
-    setBirthDate("");
     setChildRelationshipType("BIOLOGICAL");
-  }, [visible, defaultGender, kind, parentSlot]);
+  }, [visible, defaultGender, kind, parentLinkOnly, parentSlot]);
 
   const handleSubmit = () => {
-    if (mode === "link") {
+    if (mode === "link" || parentLinkOnly) {
       onSubmitLink(
         linkId,
         kind === "child" ? { relationshipType: childRelationshipType } : undefined,
@@ -138,15 +147,14 @@ export function AddRelationSheet({
       return;
     }
     onSubmitCreate({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      gender: kind === "parent" ? slotGender : gender,
+      firstName: person.firstName.trim(),
+      lastName: person.lastName.trim(),
+      gender: person.gender,
+      nickname: person.nickname.trim() || undefined,
+      birthPlace: person.birthPlace.trim() || undefined,
+      birthDate: person.birthDate || undefined,
+      deathDate: !person.isLiving ? person.deathDate || undefined : undefined,
       marriageDate: kind === "spouse" ? marriageDate || undefined : undefined,
-      birthDate:
-        kind === "parent" || kind === "child"
-          ? birthDate || undefined
-          : undefined,
-      parentSlot: kind === "parent" ? parentSlot : undefined,
       ...(kind === "child" ? { relationshipType: childRelationshipType } : {}),
     });
   };
@@ -161,7 +169,13 @@ export function AddRelationSheet({
       submitTestID={submitTestID}
       cancelLabel={copy.reports.cancel}
     >
-      <MemberFormModeToggle mode={mode} onChange={setMode} />
+      {!parentLinkOnly ? (
+        <MemberFormModeToggle mode={mode} onChange={setMode} />
+      ) : (
+        <AppText variant="bodySmall" className="text-muted-foreground">
+          {copy.profile.parentLinkOnlyHint}
+        </AppText>
+      )}
       {kind === "parent" ? (
         <View className="flex-row gap-2">
           <OutlineChip
@@ -215,35 +229,33 @@ export function AddRelationSheet({
           </View>
         </View>
       ) : null}
-      {mode === "link" ? (
-        <ExistingMemberPicker
-          members={members}
-          excludeIds={excludeIds}
-          selectedId={linkId}
-          onSelect={setLinkId}
-        />
+      {mode === "link" || parentLinkOnly ? (
+        <>
+          <ExistingMemberPicker
+            members={members}
+            excludeIds={excludeIds}
+            selectedId={linkId}
+            onSelect={setLinkId}
+          />
+          {parentLinkOnly ? (
+            <Button
+              variant="outline"
+              className="rounded-full min-h-10"
+              onPress={() => router.push("/add-member")}
+            >
+              <ButtonText>{copy.profile.parentCreateMemberCta}</ButtonText>
+            </Button>
+          ) : null}
+        </>
       ) : kind === "spouse" ? (
         <>
-          <FormTextInput
-            testID="member-spouse-first"
-            label="First name"
-            value={firstName}
-            onChangeText={setFirstName}
-            errorText={fieldErrors.spFirst}
+          <PersonFields
+            value={person}
+            onChange={patchPerson}
+            fieldErrors={fieldErrors}
+            firstNameTestID="member-spouse-first"
+            lastNameTestID="member-spouse-last"
           />
-          <FormTextInput
-            testID="member-spouse-last"
-            label="Last name"
-            value={lastName}
-            onChangeText={setLastName}
-            errorText={fieldErrors.spLast}
-          />
-          <GenderField value={gender} onChange={setGender} label="Gender" />
-          {fieldErrors.spGender ? (
-            <AppText variant="bodySmall" style={{ color: theme.colors.error }}>
-              {fieldErrors.spGender}
-            </AppText>
-          ) : null}
           <DatePickerField
             label="Wedding date"
             value={marriageDate}
@@ -251,53 +263,14 @@ export function AddRelationSheet({
             testID="member-spouse-wedding-date"
           />
         </>
-      ) : kind === "parent" ? (
-        <>
-          <FormTextInput
-            testID="member-parent-first"
-            label="First name"
-            value={firstName}
-            onChangeText={setFirstName}
-            errorText={fieldErrors.paFirst}
-          />
-          <FormTextInput
-            testID="member-parent-last"
-            label="Last name"
-            value={lastName}
-            onChangeText={setLastName}
-            errorText={fieldErrors.paLast}
-          />
-          <DatePickerField
-            label="Date of birth"
-            value={birthDate}
-            onChange={setBirthDate}
-            testID="member-parent-birth-date"
-          />
-        </>
       ) : (
-        <>
-          <FormTextInput
-            testID="member-child-first"
-            label="Given name"
-            value={firstName}
-            onChangeText={setFirstName}
-            errorText={fieldErrors.chFirst}
-          />
-          <FormTextInput
-            testID="member-child-last"
-            label="Family name"
-            value={lastName}
-            onChangeText={setLastName}
-            errorText={fieldErrors.chLast}
-          />
-          <GenderField value={gender} onChange={setGender} label="Gender" />
-          <DatePickerField
-            label="Date of birth"
-            value={birthDate}
-            onChange={setBirthDate}
-            testID="member-child-birth-date"
-          />
-        </>
+        <PersonFields
+          value={person}
+          onChange={patchPerson}
+          fieldErrors={fieldErrors}
+          firstNameTestID="member-child-first"
+          lastNameTestID="member-child-last"
+        />
       )}
       {kind === "parent" && onLinkParentCouple ? (
         <Button variant="outline" className="rounded-full min-h-10 mt-1" onPress={onLinkParentCouple}>

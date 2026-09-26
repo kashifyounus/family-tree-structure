@@ -181,6 +181,10 @@ export function useMemberProfileScreen({
       lastName: string;
       gender: Gender;
       marriageDate?: string;
+      nickname?: string;
+      birthDate?: string;
+      birthPlace?: string;
+      deathDate?: string;
     }) => {
       if (!member) return;
       const errors: FieldErrors = {
@@ -203,6 +207,10 @@ export function useMemberProfileScreen({
           lastName: payload.lastName,
           gender: payload.gender,
           marriageDate: payload.marriageDate,
+          nickname: payload.nickname,
+          birthDate: payload.birthDate,
+          birthPlace: payload.birthPlace,
+          deathDate: payload.deathDate,
         });
         setSpouseOpen(false);
         bumpDataRevision();
@@ -256,6 +264,9 @@ export function useMemberProfileScreen({
       lastName: string;
       gender: Gender;
       birthDate?: string;
+      nickname?: string;
+      birthPlace?: string;
+      deathDate?: string;
       relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP";
     }) => {
       if (!member) return;
@@ -282,6 +293,9 @@ export function useMemberProfileScreen({
           lastName: payload.lastName,
           gender: payload.gender,
           birthDate: payload.birthDate,
+          nickname: payload.nickname,
+          birthPlace: payload.birthPlace,
+          deathDate: payload.deathDate,
           relationshipType: payload.relationshipType,
         });
         setChildOpen(false);

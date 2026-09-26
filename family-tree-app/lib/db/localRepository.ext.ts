@@ -199,14 +199,18 @@ export function addLocalSpouse(input: AddSpouseInput): MemberRecord {
   const now = new Date().toISOString();
 
   db.runSync(
-    `INSERT INTO persons (id, family_code, first_name, last_name, gender, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO persons (id, family_code, first_name, last_name, nickname, gender, birth_date, birth_place, death_date, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       spouseId,
       familyCode,
       input.firstName,
       input.lastName,
+      input.nickname?.trim() || null,
       input.gender,
+      input.birthDate ?? null,
+      input.birthPlace?.trim() || null,
+      input.deathDate ?? null,
       now,
       now,
     ],
@@ -261,15 +265,18 @@ export function addLocalChild(input: AddChildInput): MemberRecord {
   const now = new Date().toISOString();
 
   db.runSync(
-    `INSERT INTO persons (id, family_code, first_name, last_name, gender, birth_date, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO persons (id, family_code, first_name, last_name, nickname, gender, birth_date, birth_place, death_date, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       childId,
       familyCode,
       input.firstName,
       input.lastName,
+      input.nickname?.trim() || null,
       input.gender,
       input.birthDate ?? null,
+      input.birthPlace?.trim() || null,
+      input.deathDate ?? null,
       now,
       now,
     ],
@@ -565,6 +572,7 @@ export function getLocalMarriage(unionId: string) {
 export function listLocalPeopleBrief(): {
   id: string;
   name: string;
+  nickname: string | null;
   familyCode: string;
   birthDate: string | null;
   currentCity: string | null;
@@ -576,12 +584,13 @@ export function listLocalPeopleBrief(): {
       id: string;
       first_name: string;
       last_name: string;
+      nickname: string | null;
       family_code: string;
       birth_date: string | null;
       current_city: string | null;
       gender: string | null;
     }>(
-      "SELECT id, first_name, last_name, family_code, birth_date, current_city, gender FROM persons ORDER BY last_name, first_name",
+      "SELECT id, first_name, last_name, nickname, family_code, birth_date, current_city, gender FROM persons ORDER BY last_name, first_name",
     )
     .filter((person) => !isUnknownCoParentRow(person))
     .map((person) => ({
@@ -591,6 +600,7 @@ export function listLocalPeopleBrief(): {
         lastName: person.last_name,
         familyCode: person.family_code,
       }),
+      nickname: person.nickname,
       familyCode: person.family_code,
       birthDate: person.birth_date,
       currentCity: person.current_city,

@@ -60,10 +60,7 @@ export function TreeOverflowMenu({
           variant="outline"
           onPress={() => {
             onDismiss();
-            router.push({
-              pathname: "/(tabs)/tools",
-              params: focalFamilyCode ? { compareA: focalFamilyCode } : undefined,
-            });
+            router.push("/find-relation");
           }}
         >
           <ButtonText>{copy.tree.menuKinship}</ButtonText>

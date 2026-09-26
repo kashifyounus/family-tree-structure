@@ -26,6 +26,7 @@ function toGraphPerson(p: KinshipPerson): GraphPersonSummary {
     lastName: p.lastName,
     urduFirstName: p.urduFirstName ?? null,
     urduLastName: p.urduLastName ?? null,
+    nickname: p.nickname ?? null,
     gender: p.gender,
     birthDate: p.birthDate,
     deathDate: p.deathDate,

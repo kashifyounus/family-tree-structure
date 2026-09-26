@@ -37,10 +37,11 @@ export function ExistingMemberPicker({
       .filter((m) => {
         if (!q) return true;
         const subtitle = memberPickerSubtitle(m);
+        const nick = m.nickname?.trim().toLowerCase() ?? "";
         return (
           m.name.toLowerCase().includes(q) ||
-          subtitle.toLowerCase().includes(q) ||
-          m.familyCode.toLowerCase().includes(q)
+          nick.includes(q) ||
+          subtitle.toLowerCase().includes(q)
         );
       })
       .slice(0, 48);
@@ -63,9 +64,10 @@ export function ExistingMemberPicker({
           return (
             <PersonCardRow
               key={m.id}
-              testID={`member-picker-${m.familyCode}`}
+              testID={`member-picker-${m.id}`}
               initials={memberInitials(m.name)}
               name={m.name}
+              nickname={m.nickname}
               subtitle={memberPickerSubtitle(m)}
               selected={selected}
               onPress={() => onSelect(m.id)}

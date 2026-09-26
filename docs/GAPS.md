@@ -18,6 +18,12 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 |------:|-------|
 | [#10](https://github.com/kashifyounus/family-tree-structure/issues/10) | Epic — close when backlog is empty |
 
+### P0 wave (forms / tree / find-relation) — partial in `1.0.7`
+
+**Shipped in app 1.0.7:** Add parent link-only; gender chips; shared `PersonFields` on add child/spouse/member; nickname on create + picker search; tree v7 connector colors + name-only canvas; Reports tab visible; Find relation entry screen; `docs/APP_ID_MIGRATION.md`.
+
+**Still open (follow-up PRs):** Full v6 tree placement + marriage ghost labels; Find relation full subgraph + purple 6px multi-path; profile edit unified with `PersonFields`; `shared/archiveQuery.ts` + Reports KPI/custom AND query; Google Drive backup (U2); package id migration (U1 code).
+
 ### Engineering follow-ups (no issue yet)
 
 - Kinship “once removed” and other asymmetric paths may still use `KINSHIP_LABEL_FALLBACK`

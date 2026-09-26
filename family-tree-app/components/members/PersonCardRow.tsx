@@ -8,6 +8,7 @@ import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 type PersonCardRowProps = {
   initials: string;
   name: string;
+  nickname?: string | null;
   subtitle: string;
   selected?: boolean;
   onPress: () => void;
@@ -17,6 +18,7 @@ type PersonCardRowProps = {
 export function PersonCardRow({
   initials,
   name,
+  nickname,
   subtitle,
   selected,
   onPress,
@@ -45,9 +47,18 @@ export function PersonCardRow({
         </AvatarFallbackText>
       </Avatar>
       <View className="flex-1 min-w-0">
-        <AppText variant="bodyMedium" className="font-medium text-foreground" numberOfLines={1}>
-          {name}
-        </AppText>
+        <View className="flex-row items-center gap-1.5 flex-wrap">
+          <AppText variant="bodyMedium" className="font-medium text-foreground" numberOfLines={1}>
+            {name}
+          </AppText>
+          {nickname?.trim() ? (
+            <View className="rounded-full bg-primary/15 px-2 py-0.5">
+              <AppText variant="labelSmall" className="text-primary font-medium">
+                {nickname.trim()}
+              </AppText>
+            </View>
+          ) : null}
+        </View>
         <AppText variant="labelSmall" className="text-muted-foreground" numberOfLines={1}>
           {subtitle}
         </AppText>

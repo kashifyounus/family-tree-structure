@@ -101,9 +101,19 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reports"
         options={{
-          href: null,
           title: "Reports",
+          headerShown: false,
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabBarIcon
+              focused={focused}
+              color={color}
+              size={size}
+              outlineName="chart-bar"
+              filledName="chart-bar"
+            />
+          ),
         }}
+        listeners={{ tabPress: () => impactLight() }}
       />
       <Tabs.Screen
         name="tools"

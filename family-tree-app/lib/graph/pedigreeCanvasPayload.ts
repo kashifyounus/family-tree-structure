@@ -5,14 +5,23 @@ import {
   type PedigreeSegment,
 } from "../../../shared/pedigreeConnectors";
 import {
+  PEDIGREE_CARD_BIG_H,
+  PEDIGREE_CARD_BIG_W,
   PEDIGREE_CARD_H,
+  PEDIGREE_CARD_SMALL_H,
+  PEDIGREE_CARD_SMALL_W,
   PEDIGREE_CARD_W,
   PEDIGREE_CHEVRON_OFFSET,
 } from "../../../shared/pedigreeLayoutTokens";
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 
-export { PEDIGREE_CARD_W, PEDIGREE_CARD_H };
+export {
+  PEDIGREE_CARD_W,
+  PEDIGREE_CARD_H,
+  PEDIGREE_CARD_BIG_W,
+  PEDIGREE_CARD_BIG_H,
+} from "../../../shared/pedigreeLayoutTokens";
 
 export type PedigreeCanvasNode = {
   id: string;
@@ -32,6 +41,8 @@ export type PedigreeCanvasNode = {
   isPrivate: boolean;
   hasUnexpandedParents: boolean;
   hasUnexpandedChildren: boolean;
+  nickname: string | null;
+  tier: "big" | "small";
 };
 
 export type PedigreeMarriageBand = {
@@ -97,9 +108,11 @@ function initialsFor(
 }
 
 export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPayload {
+  const partnerIds = new Set(graph.focalPartnerIds ?? []);
   const nodes: PedigreeCanvasNode[] = graph.nodes.map((n) => {
     const p = n.data.person;
     const isPrivate = p.treeDisplayIsPrivate === true;
+    const isBig = n.id === graph.focalPersonId || partnerIds.has(n.id);
     const nameLine1 = isPrivate ? p.firstName : p.firstName.trim();
     const nameLine2 = isPrivate ? "" : p.lastName.trim();
     return {
@@ -115,10 +128,12 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
         ? ""
         : formatLifeYears(p.birthDate, p.deathDate, p.isLiving),
       gender: p.gender,
+      nickname: p.nickname ?? null,
       x: n.position.x,
       y: n.position.y,
-      w: PEDIGREE_CARD_W,
-      h: PEDIGREE_CARD_H,
+      w: isBig ? PEDIGREE_CARD_BIG_W : PEDIGREE_CARD_SMALL_W,
+      h: isBig ? PEDIGREE_CARD_BIG_H : PEDIGREE_CARD_SMALL_H,
+      tier: isBig ? "big" : "small",
       isFocal: Boolean(n.data.isFocal) || n.id === graph.focalPersonId,
       isDeceased: Boolean(n.data.isDeceased) || !p.isLiving,
       isPrivate,

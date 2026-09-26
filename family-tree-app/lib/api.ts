@@ -230,6 +230,8 @@ export async function createMemberOnline(input: {
   firstName: string;
   lastName: string;
   gender: string;
+  nickname?: string;
+  birthDate?: string;
   urduFirstName?: string;
   urduLastName?: string;
   currentCity?: string;

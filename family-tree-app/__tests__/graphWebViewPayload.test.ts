@@ -1,7 +1,7 @@
 import {
   buildPedigreeCanvasPayload,
-  PEDIGREE_CARD_H,
-  PEDIGREE_CARD_W,
+  PEDIGREE_CARD_BIG_H,
+  PEDIGREE_CARD_BIG_W,
 } from "@/lib/graph/pedigreeCanvasPayload";
 import type { FamilyGraph } from "@/lib/graph/types";
 
@@ -61,8 +61,8 @@ describe("graph webview payload", () => {
     const payload = buildPedigreeCanvasPayload(graph);
     expect(payload.nodes[0]?.familyCode).toBe("FAM-10001");
     expect(payload.nodes[0]?.x).toBe(120);
-    expect(payload.nodes[0]?.w).toBe(PEDIGREE_CARD_W);
-    expect(payload.nodes[0]?.h).toBe(PEDIGREE_CARD_H);
+    expect(payload.nodes[0]?.w).toBe(PEDIGREE_CARD_BIG_W);
+    expect(payload.nodes[0]?.h).toBe(PEDIGREE_CARD_BIG_H);
     expect(payload.nodes[0]?.years).toContain("1955");
     expect(payload.nodes[1]?.years).toContain("1960");
     expect(payload.segments.length).toBeGreaterThan(0);

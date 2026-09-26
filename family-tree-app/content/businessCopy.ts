@@ -229,6 +229,9 @@ export const copy = {
     parentSlotStagedFather: "Father recorded. Add mother to finish linking parents.",
     parentSlotStagedMother: "Mother recorded. Add father to finish linking parents.",
     linkParentCouple: "Link parent couple",
+    parentLinkOnlyHint:
+      "Parents must already be in your archive. Search and link an existing person — create new members from Members first.",
+    parentCreateMemberCta: "Create a new member in Members",
     parentRoleFather: "Father",
     parentRoleMother: "Mother",
     parentStepHint: (role: string) => `Next, add the ${role}.`,

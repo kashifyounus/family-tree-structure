@@ -19,7 +19,11 @@ function walkSourceFiles(dir: string, acc: string[] = []): string[] {
 
 function collectDeclaredTestIds(): Set<string> {
   const ids = new Set<string>();
-  const roots = [join(appRoot, "app"), join(appRoot, "components")];
+  const roots = [
+    join(appRoot, "app"),
+    join(appRoot, "components"),
+    join(appRoot, "lib"),
+  ];
   const jsxPattern =
     /testID=\{[^}]*["']([a-zA-Z0-9_-]+)["'][^}]*\}|testID=["']([a-zA-Z0-9_-]+)["']/g;
   const defaultParamPattern = /testID\s*=\s*["']([a-zA-Z0-9_-]+)["']/g;
@@ -27,6 +31,8 @@ function collectDeclaredTestIds(): Set<string> {
   const sheetTestIdPattern = /sheetTestID=["']([a-zA-Z0-9_-]+)["']/g;
   const cancelTestIdPattern = /cancelTestID=["']([a-zA-Z0-9_-]+)["']/g;
   const testIdPrefixPattern = /testIdPrefix=["']([a-zA-Z0-9_-]+)["']/g;
+  const firstNameTestIdPattern = /firstNameTestID=["']([a-zA-Z0-9_-]+)["']/g;
+  const lastNameTestIdPattern = /lastNameTestID=["']([a-zA-Z0-9_-]+)["']/g;
   const stringLiteralIdPattern = /["'](members-first-card|members-row-showcase-margaret-khan)["']/g;
 
   for (const root of roots) {
@@ -55,6 +61,12 @@ function collectDeclaredTestIds(): Set<string> {
         const prefix = match[1];
         ids.add(`${prefix}-create`);
         ids.add(`${prefix}-link`);
+      }
+      for (const match of content.matchAll(firstNameTestIdPattern)) {
+        ids.add(match[1]);
+      }
+      for (const match of content.matchAll(lastNameTestIdPattern)) {
+        ids.add(match[1]);
       }
     }
   }

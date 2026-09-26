@@ -7,6 +7,7 @@ export type GraphPersonSummary = {
   lastName: string;
   urduFirstName?: string | null;
   urduLastName?: string | null;
+  nickname?: string | null;
   gender: KinshipPerson["gender"];
   birthDate: string | null;
   deathDate: string | null;
@@ -33,7 +34,7 @@ export type FamilyGraphEdge = {
   id: string;
   source: string;
   target: string;
-  type: "spouse" | "parent" | "child";
+  type: "spouse" | "parent" | "child" | "sibling";
   label?: string;
 };
 

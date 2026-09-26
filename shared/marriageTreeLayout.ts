@@ -3,9 +3,12 @@
  */
 
 import {
-  PEDIGREE_CARD_W,
+  PEDIGREE_CARD_BIG_W,
+  PEDIGREE_CARD_SMALL_W,
   PEDIGREE_COUPLE_OFFSET,
   PEDIGREE_COLUMN_STEP,
+  PEDIGREE_PARENT_MID_GAP,
+  PEDIGREE_PARENT_OUTER_MARGIN,
   PEDIGREE_ROW_STEP,
 } from "./pedigreeLayoutTokens";
 
@@ -30,7 +33,7 @@ export type MarriageLayoutEdge = {
   id: string;
   source: string;
   target: string;
-  type: "spouse" | "parent" | "child";
+  type: "spouse" | "parent" | "child" | "sibling";
   label?: string;
 };
 
@@ -263,10 +266,21 @@ export function layoutMarriageCentricGraph(
       .map((id) => peopleById.get(id))
       .filter((p): p is MarriageLayoutPerson => !!p),
   );
+  const egoSiblingIds: string[] = [];
   egoSiblings.forEach((sib, index) => {
     const x = originX - (index + 1) * H;
     ensurePosition(positions, sib.id, x, originY);
+    egoSiblingIds.push(sib.id);
   });
+  for (let i = 0; i < egoSiblingIds.length; i++) {
+    const leftId = i === 0 ? focalId : egoSiblingIds[i - 1];
+    edges.push({
+      id: `sibling-ego-${leftId}-${egoSiblingIds[i]}`,
+      source: leftId,
+      target: egoSiblingIds[i],
+      type: "sibling",
+    });
+  }
 
   let rightMost = originX + spouseEntries.length * coupleStep;
   for (const entry of spouseEntries) {
@@ -276,12 +290,23 @@ export function layoutMarriageCentricGraph(
         .map((id) => peopleById.get(id))
         .filter((p): p is MarriageLayoutPerson => !!p),
     );
+    const spouseSiblingIds: string[] = [];
     spouseSiblings.forEach((sib, index) => {
       const base = positions.get(entry.spouseId)?.x ?? originX;
       const x = base + (index + 1) * H;
       rightMost = Math.max(rightMost, x);
       ensurePosition(positions, sib.id, x, originY);
+      spouseSiblingIds.push(sib.id);
     });
+    for (let i = 0; i < spouseSiblingIds.length; i++) {
+      const leftId = i === 0 ? entry.spouseId : spouseSiblingIds[i - 1];
+      edges.push({
+        id: `sibling-sp-${leftId}-${spouseSiblingIds[i]}`,
+        source: leftId,
+        target: spouseSiblingIds[i],
+        type: "sibling",
+      });
+    }
   }
 
   function parentsForPerson(personId: string): MarriageLayoutPerson[] {
@@ -309,9 +334,12 @@ export function layoutMarriageCentricGraph(
     parents.forEach((parent, index) => {
       let x = anchorX;
       if (side === "left") {
-        x = anchorX - (parents.length - index) * H;
+        x =
+          anchorX -
+          PEDIGREE_PARENT_OUTER_MARGIN -
+          (parents.length - index) * PEDIGREE_COLUMN_STEP;
       } else if (side === "right") {
-        x = anchorX + (index + 1) * H;
+        x = anchorX + PEDIGREE_CARD_BIG_W + PEDIGREE_PARENT_MID_GAP + index * PEDIGREE_COLUMN_STEP;
       } else {
         x = anchorX + (index - (parents.length - 1) / 2) * H;
       }
@@ -356,7 +384,7 @@ export function layoutMarriageCentricGraph(
   spouseEntries.forEach((entry, unionIndex) => {
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
     const egoX = positions.get(focalId)?.x ?? originX;
-    const coupleMidCenter = (egoX + spouseX + PEDIGREE_CARD_W) / 2;
+    const coupleMidCenter = (egoX + spouseX + PEDIGREE_CARD_BIG_W) / 2;
     const children = sortByBirthOldestFirst(
       entry.union.childships
         .map((c) => peopleById.get(c.childId))
@@ -368,7 +396,7 @@ export function layoutMarriageCentricGraph(
     children.forEach((child, index) => {
       const x =
         coupleMidCenter -
-        PEDIGREE_CARD_W / 2 +
+        PEDIGREE_CARD_SMALL_W / 2 +
         (index - (children.length - 1) / 2) * H +
         unionIndex * 24;
       ensurePosition(positions, child.id, x, originY + V);

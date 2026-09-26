@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
+import {
+  PersonFields,
+  emptyPersonFieldsValue,
+  type PersonFieldsValue,
+} from "@/components/forms/PersonFields";
 import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
@@ -10,8 +15,8 @@ import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
 import { createMember } from "@/lib/data/memberRepository";
-import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import type { StorageMode } from "@/lib/data/types";
+import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 
 type RelationshipOption = "parent" | "child" | "spouse" | "sibling";
 
@@ -39,18 +44,18 @@ export function AddMemberBottomSheet({
   const mode = modeProp ?? storage.mode;
   const { bumpDataRevision } = storage;
   const { showError, showSuccess } = useAppFeedback();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [birthYear, setBirthYear] = useState("");
+  const [person, setPerson] = useState<PersonFieldsValue>(() => emptyPersonFieldsValue());
   const [notes, setNotes] = useState("");
   const [relationship, setRelationship] = useState<RelationshipOption>("parent");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
 
+  const patchPerson = (patch: Partial<PersonFieldsValue>) => {
+    setPerson((prev) => ({ ...prev, ...patch }));
+  };
+
   const reset = () => {
-    setFirstName("");
-    setLastName("");
-    setBirthYear("");
+    setPerson(emptyPersonFieldsValue());
     setNotes("");
     setRelationship("parent");
     setFieldErrors({});
@@ -58,8 +63,8 @@ export function AddMemberBottomSheet({
 
   const save = async () => {
     const errors: FieldErrors = {
-      firstName: required(firstName, "First name"),
-      lastName: required(lastName, "Last name"),
+      firstName: required(person.firstName, "First name"),
+      lastName: required(person.lastName, "Last name"),
     };
     const filtered = Object.fromEntries(
       Object.entries(errors).filter(([, message]) => message),
@@ -72,15 +77,20 @@ export function AddMemberBottomSheet({
     setFieldErrors({});
     setSaving(true);
     try {
-      const year = birthYear.trim();
-      const birthDate = /^\d{4}$/.test(year) ? `${year}-01-01` : year || undefined;
       const relationNote = `Relationship: ${relationship}`;
-      const bio = [relationNote, notes.trim()].filter(Boolean).join("\n");
+      const extra = [person.maidenName.trim() ? `Maiden: ${person.maidenName.trim()}` : "", person.suffix.trim() ? `Suffix: ${person.suffix.trim()}` : ""]
+        .filter(Boolean)
+        .join("; ");
+      const bio = [relationNote, extra, notes.trim()].filter(Boolean).join("\n");
+      const deathDate = person.isLiving ? undefined : person.deathDate.trim() || undefined;
       await createMember(mode, {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        gender: "OTHER",
-        birthDate,
+        firstName: person.firstName.trim(),
+        lastName: person.lastName.trim(),
+        gender: person.gender,
+        nickname: person.nickname.trim() || undefined,
+        birthDate: person.birthDate.trim() || undefined,
+        birthPlace: person.birthPlace.trim() || undefined,
+        deathDate,
         bio: bio || undefined,
       });
       bumpDataRevision();
@@ -125,21 +135,12 @@ export function AddMemberBottomSheet({
         </AppText>
       </Pressable>
 
-      <FormTextInput
-        testID="add-member-first"
-        label="First name"
-        value={firstName}
-        onChangeText={setFirstName}
-        errorText={fieldErrors.firstName}
-        autoCapitalize="words"
-      />
-      <FormTextInput
-        testID="add-member-last"
-        label="Last name"
-        value={lastName}
-        onChangeText={setLastName}
-        errorText={fieldErrors.lastName}
-        autoCapitalize="words"
+      <PersonFields
+        value={person}
+        onChange={patchPerson}
+        fieldErrors={fieldErrors}
+        firstNameTestID="add-member-first"
+        lastNameTestID="add-member-last"
       />
       <View className="gap-2">
         <AppText variant="labelMedium" className="text-muted-foreground">
@@ -153,21 +154,12 @@ export function AddMemberBottomSheet({
         />
       </View>
       <FormTextInput
-        label="Birth year"
-        value={birthYear}
-        onChangeText={setBirthYear}
-        placeholder="e.g. 1962"
-        keyboardType="number-pad"
-        maxLength={10}
-      />
-      <FormTextInput
         label="Notes"
         value={notes}
         onChangeText={setNotes}
         multiline
         numberOfLines={3}
       />
-
       <PrimaryPillButton
         testID="add-member-save"
         label="Save member"

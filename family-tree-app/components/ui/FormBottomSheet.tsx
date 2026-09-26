@@ -105,12 +105,12 @@ export function FormBottomSheet({
             </Button>
           </View>
         ) : null}
-        <ActionsheetDragIndicatorWrapper>
+        <ActionsheetDragIndicatorWrapper className="pt-3 pb-2">
           <ActionsheetDragIndicator />
         </ActionsheetDragIndicatorWrapper>
 
         {!figmaNavBar ? (
-          <View className="w-full px-5 pb-1">
+          <View className="w-full px-5 pb-2 pt-1">
             <Text className="text-lg font-semibold text-foreground tracking-tight">{title}</Text>
           </View>
         ) : null}

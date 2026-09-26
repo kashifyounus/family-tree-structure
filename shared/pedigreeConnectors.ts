@@ -3,7 +3,13 @@
  */
 
 import {
+  PEDIGREE_COLOR_CHILD,
+  PEDIGREE_COLOR_PARENT,
+  PEDIGREE_COLOR_SIBLING,
+  PEDIGREE_COLOR_SPOUSE,
+  PEDIGREE_CONNECTOR_STROKE,
   PEDIGREE_MIN_L_JOG,
+  PEDIGREE_SPOUSE_BAR,
   PEDIGREE_STEM_CLEARANCE,
 } from "./pedigreeLayoutTokens";
 
@@ -29,8 +35,34 @@ export type PedigreeSegment = {
   y1: number;
   x2: number;
   y2: number;
-  kind: "spouse" | "parent" | "union-stem" | "union-branch";
+  kind: "spouse" | "parent" | "union-stem" | "union-branch" | "sibling";
+  color: string;
+  strokeWidth: number;
 };
+
+function styleForKind(
+  kind: PedigreeSegment["kind"],
+): { color: string; strokeWidth: number } {
+  switch (kind) {
+    case "spouse":
+      return { color: PEDIGREE_COLOR_SPOUSE, strokeWidth: PEDIGREE_SPOUSE_BAR };
+    case "parent":
+      return { color: PEDIGREE_COLOR_PARENT, strokeWidth: PEDIGREE_CONNECTOR_STROKE };
+    case "sibling":
+      return { color: PEDIGREE_COLOR_SIBLING, strokeWidth: PEDIGREE_CONNECTOR_STROKE };
+    case "union-stem":
+    case "union-branch":
+    default:
+      return { color: PEDIGREE_COLOR_CHILD, strokeWidth: PEDIGREE_CONNECTOR_STROKE };
+  }
+}
+
+function seg(
+  partial: Omit<PedigreeSegment, "color" | "strokeWidth">,
+): PedigreeSegment {
+  const style = styleForKind(partial.kind);
+  return { ...partial, ...style };
+}
 
 function bottomCenter(box: PedigreeNodeBox) {
   return { x: box.x + box.width / 2, y: box.y + box.height };
@@ -48,8 +80,10 @@ function rightMid(box: PedigreeNodeBox) {
   return { x: box.x + box.width, y: box.y + box.height / 2 };
 }
 
+type DraftSegment = Omit<PedigreeSegment, "color" | "strokeWidth">;
+
 function pushOrthogonalParentChild(
-  segments: PedigreeSegment[],
+  segments: DraftSegment[],
   id: string,
   parent: PedigreeNodeBox,
   child: PedigreeNodeBox,
@@ -130,7 +164,7 @@ export function buildPedigreeConnectorSegments(
   edges: PedigreeGraphEdge[],
 ): PedigreeSegment[] {
   const byId = new Map(nodes.map((n) => [n.id, n]));
-  const segments: PedigreeSegment[] = [];
+  const segments: DraftSegment[] = [];
 
   const spouseEdges = edges.filter((e) => e.type === "spouse");
   const parentEdges = edges.filter((e) => e.type === "parent");
@@ -145,14 +179,16 @@ export function buildPedigreeConnectorSegments(
     const p1 = rightMid(left);
     const p2 = leftMid(right);
     if (p2.x <= p1.x + 2) continue;
-    segments.push({
-      id: `spouse-line-${e.id}`,
-      x1: p1.x,
-      y1: p1.y,
-      x2: p2.x,
-      y2: p2.y,
-      kind: "spouse",
-    });
+    segments.push(
+      seg({
+        id: `spouse-line-${e.id}`,
+        x1: p1.x,
+        y1: p1.y,
+        x2: p2.x,
+        y2: p2.y,
+        kind: "spouse",
+      }),
+    );
   }
 
   for (const e of parentEdges) {
@@ -280,5 +316,21 @@ export function buildPedigreeConnectorSegments(
     }
   }
 
-  return segments;
+  for (const e of edges.filter((edge) => edge.type === "sibling")) {
+    const a = byId.get(e.source);
+    const b = byId.get(e.target);
+    if (!a || !b) continue;
+    const left = a.x <= b.x ? a : b;
+    const right = a.x <= b.x ? b : a;
+    segments.push({
+      id: `sibling-line-${e.id}`,
+      x1: rightMid(left).x,
+      y1: leftMid(left).y,
+      x2: leftMid(right).x,
+      y2: leftMid(right).y,
+      kind: "sibling",
+    });
+  }
+
+  return segments.map(seg);
 }

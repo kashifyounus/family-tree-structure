@@ -46,6 +46,10 @@ export default function RootLayout() {
             name="notifications"
             options={{ title: "Notifications", headerBackTitle: "Home" }}
           />
+          <Stack.Screen
+            name="find-relation"
+            options={{ title: "Find relation", headerBackTitle: "Tree" }}
+          />
           <Stack.Screen name="story/[storyId]" options={{ title: "Story" }} />
           <Stack.Screen
             name="add-member"

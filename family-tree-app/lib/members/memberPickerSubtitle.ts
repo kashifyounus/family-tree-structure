@@ -4,6 +4,7 @@ import type { MemberRecord } from "@/lib/data/types";
 export type BriefMemberRow = {
   id: string;
   name: string;
+  nickname?: string | null;
   familyCode: string;
   birthDate?: string | null;
   currentCity?: string | null;

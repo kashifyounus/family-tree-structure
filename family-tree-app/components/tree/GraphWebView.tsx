@@ -101,10 +101,10 @@ function drawMarriageBand(){
 }
 
 function drawSegments(){
-  ctx.strokeStyle = theme.connector;
-  ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   for(const s of segments){
+    ctx.strokeStyle = s.color || theme.connector;
+    ctx.lineWidth = s.strokeWidth || 4;
     ctx.beginPath();
     ctx.moveTo(s.x1,s.y1);
     ctx.lineTo(s.x2,s.y2);
@@ -142,32 +142,26 @@ function drawCard(n){
   ctx.fillRect(x,y+barH,w,2);
 
   const cx = x + w/2;
-  const cy = y + 34;
-  const r = 22;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI*2);
-  ctx.fillStyle = avatarFill(n.gender, n.isDeceased);
-  ctx.fill();
-  ctx.strokeStyle = genderAccent(n.gender);
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.fillStyle = n.isPrivate ? '#9ca3af' : '#1f2937';
-  ctx.font = '600 13px system-ui';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText((n.initials||'?').slice(0,2), cx, cy);
-
+  const pad = 8;
   ctx.fillStyle = '#111827';
-  ctx.font = '700 11px system-ui';
-  const line1 = wrapName(n.nameLine1 || (n.label||'').split(' ')[0] || '', w - 12);
-  const line2 = wrapName(n.nameLine2 || (n.label||'').split(' ').slice(1).join(' ') || '', w - 12);
-  ctx.fillText(line1, cx, y + 66);
-  if(line2) ctx.fillText(line2, cx, y + 80);
+  ctx.font = '700 ' + (n.tier === 'big' ? '12' : '10') + 'px system-ui';
+  ctx.textAlign = 'center';
+  const line1 = wrapName(n.nameLine1 || (n.label||'').split(' ')[0] || '', w - pad * 2);
+  const line2 = wrapName(n.nameLine2 || (n.label||'').split(' ').slice(1).join(' ') || '', w - pad * 2);
+  const nameY = y + (n.tier === 'big' ? 26 : 22);
+  ctx.fillText(line1, cx, nameY);
+  if(line2) ctx.fillText(line2, cx, nameY + 14);
+
+  if(n.nickname){
+    ctx.font = '600 9px system-ui';
+    ctx.fillStyle = theme.primary;
+    ctx.fillText(n.nickname.slice(0,18), cx, nameY + (line2 ? 28 : 16));
+  }
 
   if(n.years){
     ctx.fillStyle = '#6b7280';
-    ctx.font = '10px system-ui';
-    ctx.fillText(n.years, cx, y + 96);
+    ctx.font = '9px system-ui';
+    ctx.fillText(n.years, cx, y + h - 10);
   }
 
   const chev = chevronOffset || 8;

@@ -1,8 +1,16 @@
 import { buildPedigreeConnectorSegments } from "./pedigreeConnectors";
-import { PEDIGREE_CARD_H, PEDIGREE_CARD_W } from "./pedigreeLayoutTokens";
+import {
+  PEDIGREE_CARD_BIG_H,
+  PEDIGREE_CARD_BIG_W,
+  PEDIGREE_CARD_SMALL_H,
+  PEDIGREE_CARD_SMALL_W,
+  PEDIGREE_FOCAL_COUPLE_GAP,
+} from "./pedigreeLayoutTokens";
 
-const W = PEDIGREE_CARD_W;
-const H = PEDIGREE_CARD_H;
+const W = PEDIGREE_CARD_BIG_W;
+const H = PEDIGREE_CARD_BIG_H;
+const SW = PEDIGREE_CARD_SMALL_W;
+const SH = PEDIGREE_CARD_SMALL_H;
 
 function isOrthogonal(s: { x1: number; y1: number; x2: number; y2: number }) {
   return s.x1 === s.x2 || s.y1 === s.y2;
@@ -11,9 +19,9 @@ function isOrthogonal(s: { x1: number; y1: number; x2: number; y2: number }) {
 describe("pedigreeConnectors v4", () => {
   const coupleNodes = [
     { id: "ego", x: 0, y: 100, width: W, height: H },
-    { id: "spouse", x: W + 28, y: 100, width: W, height: H },
-    { id: "c1", x: 40, y: 100 + H + 72, width: W, height: H },
-    { id: "c2", x: 200, y: 100 + H + 72, width: W, height: H },
+    { id: "spouse", x: W + PEDIGREE_FOCAL_COUPLE_GAP, y: 100, width: W, height: H },
+    { id: "c1", x: 40, y: 100 + H + 72, width: SW, height: SH },
+    { id: "c2", x: 200, y: 100 + H + 72, width: SW, height: SH },
   ];
 
   it("draws spouse bar on side mids (horizontal)", () => {
@@ -24,7 +32,8 @@ describe("pedigreeConnectors v4", () => {
     expect(spouse).toBeDefined();
     expect(spouse!.y1).toBe(spouse!.y2);
     expect(spouse!.x1).toBe(W);
-    expect(spouse!.x2).toBe(W + 28);
+    expect(spouse!.x2).toBe(W + PEDIGREE_FOCAL_COUPLE_GAP);
+    expect(spouse!.color).toBe("#C83C3C");
   });
 
   it("draws orthogonal parent→child with L-jog when misaligned", () => {

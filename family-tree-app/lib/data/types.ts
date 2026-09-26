@@ -48,6 +48,10 @@ export type AddSpouseInput = {
   lastName: string;
   gender: Gender;
   marriageDate?: string;
+  nickname?: string;
+  birthDate?: string;
+  birthPlace?: string;
+  deathDate?: string;
 };
 
 export type ChildRelationshipType = "BIOLOGICAL" | "ADOPTED" | "STEP";
@@ -60,6 +64,9 @@ export type AddChildInput = {
   lastName: string;
   gender: Gender;
   birthDate?: string;
+  nickname?: string;
+  birthPlace?: string;
+  deathDate?: string;
   relationshipType?: ChildRelationshipType;
 };
 
