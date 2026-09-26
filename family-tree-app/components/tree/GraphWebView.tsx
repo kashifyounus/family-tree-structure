@@ -4,12 +4,13 @@ import { WebView } from "react-native-webview";
 
 import { buildPedigreeCanvasPayload } from "@/lib/graph/pedigreeCanvasPayload";
 import type { FamilyGraph } from "@/lib/graph/types";
+import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 
 const EMBED_HTML = `<!DOCTYPE html>
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=4"/>
 <style>
-  html,body{margin:0;height:100%;background:#f3f4f6;font-family:system-ui,-apple-system,sans-serif}
+  html,body{margin:0;height:100%;background:#F6F1E7;font-family:system-ui,-apple-system,sans-serif}
   #c{width:100%;height:100%;touch-action:none}
   .hint{position:fixed;bottom:10px;left:0;right:0;text-align:center;color:#6b7280;font-size:11px;pointer-events:none}
 </style>
@@ -20,6 +21,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let nodes = [], segments = [], focalId = '', marriageBand = null;
+let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
 
@@ -32,7 +34,7 @@ function avatarFill(g, deceased){
   if(deceased) return '#e5e7eb';
   if(g==='FEMALE') return '#fde8f0';
   if(g==='MALE') return '#e3f0fb';
-  return '#f3f4f6';
+  return theme.surface || '#FFFDF8';
 }
 
 function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; draw(); }
@@ -75,7 +77,7 @@ function drawMarriageBand(){
   const x1 = marriageBand.x1;
   const x2 = marriageBand.x2;
   if(x2 <= x1 + 8) return;
-  ctx.strokeStyle = '#1b4332';
+  ctx.strokeStyle = theme.primary;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(x1, midY);
@@ -92,17 +94,17 @@ function drawMarriageBand(){
   roundRect(px, py, pillW, pillH, 9);
   ctx.fillStyle = '#e8f0ea';
   ctx.fill();
-  ctx.strokeStyle = '#1b4332';
+  ctx.strokeStyle = theme.primary;
   ctx.lineWidth = 1;
   ctx.stroke();
-  ctx.fillStyle = '#1b4332';
+  ctx.fillStyle = theme.primary;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label.length>22?label.slice(0,21)+'…':label, cx, midY);
 }
 
 function drawSegments(){
-  ctx.strokeStyle = '#b8bcc4';
+  ctx.strokeStyle = theme.connector;
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   for(const s of segments){
@@ -123,7 +125,7 @@ function drawCard(n){
   ctx.fillStyle = '#ffffff';
   ctx.fill();
   ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = n.isFocal ? '#1b4332' : '#e5e7eb';
+  ctx.strokeStyle = n.isFocal ? theme.primary : '#e5e7eb';
   ctx.lineWidth = n.isFocal ? 2.5 : 1;
   roundRect(x,y,w,h,12);
   ctx.stroke();
@@ -196,7 +198,7 @@ function drawCard(n){
 function draw(){
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = '#f3f4f6';
+  ctx.fillStyle = theme.canvas;
   ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.save();
   ctx.translate(ox,oy);
@@ -227,6 +229,7 @@ function onGraph(g){
   segments = g.segments || [];
   focalId = g.focalPersonId || '';
   marriageBand = g.marriageBand || null;
+  if(g.theme) theme = Object.assign(theme, g.theme);
   fitView();
   resize();
 }
@@ -335,5 +338,5 @@ export function GraphWebView({ graph, testID, onPersonPress }: GraphWebViewProps
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, minHeight: 320, borderRadius: 12, overflow: "hidden" },
-  web: { flex: 1, backgroundColor: "#f3f4f6" },
+  web: { flex: 1, backgroundColor: kuriosityDesign.brand.pedigreeCanvas },
 });

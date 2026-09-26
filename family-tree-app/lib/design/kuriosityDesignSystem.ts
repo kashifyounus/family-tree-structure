@@ -1,5 +1,6 @@
 import { semantic } from "@/theme/appTheme";
 import { layout, radius, space } from "@/theme/tokens";
+import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 
 /**
  * Single source for Kuriosity mobile UI patterns (Gluestack + NativeWind).
@@ -10,13 +11,13 @@ export const kuriosityDesign = {
     name: "Kuriosity Family Tree",
     primary: semantic.primary,
     secondary: semantic.secondary,
-    pedigreeCanvas: "#f3f4f6",
+    pedigreeCanvas: kuriosityPedigreeTheme.canvasBackground,
   },
   pedigree: {
     maleAccent: "#7eb6e0",
     femaleAccent: "#f4a6c1",
     neutralAccent: "#c4c4c4",
-    connector: "#b8bcc4",
+    connector: kuriosityPedigreeTheme.connector,
     cardWidth: 112,
     cardMinHeight: 118,
   },

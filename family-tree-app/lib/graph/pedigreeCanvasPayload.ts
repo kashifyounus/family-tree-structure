@@ -5,6 +5,8 @@ import {
   type PedigreeGraphEdge,
   type PedigreeSegment,
 } from "../../../shared/pedigreeConnectors";
+import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
+import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 
 /** Match web `PedigreeConnectorsLayer` box size (FamilySearch-style card footprint). */
 export const PEDIGREE_CARD_W = 112;
@@ -35,11 +37,26 @@ export type PedigreeMarriageBand = {
   label: string;
 };
 
+export type PedigreeCanvasTheme = {
+  canvas: string;
+  connector: string;
+  primary: string;
+  surface: string;
+};
+
 export type PedigreeCanvasPayload = {
   focalPersonId: string;
   nodes: PedigreeCanvasNode[];
   segments: PedigreeSegment[];
   marriageBand?: PedigreeMarriageBand | null;
+  theme: PedigreeCanvasTheme;
+};
+
+export const defaultPedigreeCanvasTheme: PedigreeCanvasTheme = {
+  canvas: kuriosityDesign.brand.pedigreeCanvas,
+  connector: kuriosityDesign.pedigree.connector,
+  primary: kuriosityDesign.brand.primary,
+  surface: kuriosityPedigreeTheme.cardSurface,
 };
 
 function yearFrom(iso: string | null | undefined): string | null {
@@ -143,6 +160,7 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
     nodes,
     segments,
     marriageBand,
+    theme: defaultPedigreeCanvasTheme,
   };
 }
 
