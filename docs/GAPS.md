@@ -35,6 +35,10 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 |------:|-------|
 | [#18](https://github.com/kashifyounus/family-tree-structure/issues/18) | Split member screen + engineering health notes |
 
+### Kinship labeling (remaining)
+
+- Cousin and in-law degrees beyond simple paths still use the generic fallback (`shared/humanKinshipLabel.ts` → `KINSHIP_LABEL_FALLBACK`) until labeled in a follow-up.
+
 ## Domain notes (for implementers)
 
 - Child attach currently requires a **union**; parents require **two** people — see `#11`.

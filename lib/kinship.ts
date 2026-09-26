@@ -5,6 +5,10 @@ import type {
   RelationshipPathStep,
 } from "@/types/family";
 import { toPersonSummary } from "@/lib/personMapper";
+import {
+  humanKinshipLabelFromSteps,
+  KINSHIP_LABEL_FALLBACK,
+} from "../shared/humanKinshipLabel";
 
 export type PersonWithChildships = Person & {
   childships: {
@@ -302,11 +306,21 @@ export function computeRelationshipPath(
       };
       const newPath = [...current.path, step];
       if (edge.to === to.id) {
+        const labelSteps = newPath.map((s) => {
+          const target = peopleById.get(s.toId);
+          return { relation: s.relation, toGender: target?.gender ?? null };
+        });
+        const humanLabel = humanKinshipLabelFromSteps(labelSteps);
+        const summary =
+          humanLabel ??
+          (newPath.length > 0
+            ? KINSHIP_LABEL_FALLBACK
+            : describePath(newPath, peopleById));
         return {
           from: toPersonSummary(from),
           to: toPersonSummary(to),
           steps: newPath,
-          summary: describePath(newPath, peopleById),
+          summary,
         };
       }
       visited.add(edge.to);
