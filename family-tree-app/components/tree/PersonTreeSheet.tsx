@@ -9,17 +9,25 @@ import { useAppFeedback } from "@/context/ErrorContext";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
 import { AddRelationSheet } from "@/components/members/AddRelationSheet";
+import { CoupleParentPickerSheet } from "@/components/parents/CoupleParentPickerSheet";
 import {
   addChild,
   addSpouse,
+  assignParentSlot,
+  assignParentsToCouple,
+  createAndAssignParentSlot,
   linkChild,
   linkSpouse,
+  parentCouplesForPicker,
   peopleForPicker,
   unionOptions,
 } from "@/lib/data/personService";
+import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
+import { getParentsForPerson } from "@/lib/kinship/kinshipCore";
 import { formatGraphPersonName } from "@/lib/format/displayName";
 import type { GraphPersonSummary } from "@/lib/graph/types";
 import type { Gender } from "@/lib/data/types";
+import { defaultParentSlotForOpen, type ParentSlot } from "@/lib/rules/parentSlots";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 import { space } from "@/theme/tokens";
@@ -32,6 +40,11 @@ type PersonTreeSheetProps = {
   onCenterTree: () => void;
   onFamilyChanged?: () => void;
 };
+
+function parentsOnTree(personId: string) {
+  const { peopleById, unionsAsChildFor } = loadKinshipDataset();
+  return getParentsForPerson(personId, unionsAsChildFor(personId), peopleById);
+}
 
 export function PersonTreeSheet({
   visible,
@@ -48,6 +61,14 @@ export function PersonTreeSheet({
 
   const [spouseOpen, setSpouseOpen] = useState(false);
   const [childOpen, setChildOpen] = useState(false);
+  const [parentsOpen, setParentsOpen] = useState(false);
+  const [coupleParentsOpen, setCoupleParentsOpen] = useState(false);
+  const [parentSlot, setParentSlot] = useState<ParentSlot>("father");
+  const [parentStaged, setParentStaged] = useState<{
+    parentId: string;
+    slot: ParentSlot;
+  } | null>(null);
+  const [parentQuery, setParentQuery] = useState("");
   const [chUnionId, setChUnionId] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
@@ -58,6 +79,45 @@ export function PersonTreeSheet({
 
   const localPeople = canAddLocal ? peopleForPicker(mode) : [];
   const marriageOptions = canAddLocal ? unionOptions(mode, person.id) : [];
+  const existingParents = canAddLocal ? parentsOnTree(person.id) : [];
+  const parentCoupleRows =
+    canAddLocal && coupleParentsOpen
+      ? parentCouplesForPicker(mode, person.id, parentQuery)
+      : [];
+
+  const parentStepHint = parentStaged
+    ? copy.profile.parentStepHint(
+        parentStaged.slot === "father"
+          ? copy.profile.parentRoleMother.toLowerCase()
+          : copy.profile.parentRoleFather.toLowerCase(),
+      )
+    : null;
+
+  const parentExcludeIds = [
+    person.id,
+    ...(parentStaged ? [parentStaged.parentId] : []),
+  ];
+
+  const applyParentAssignResult = (
+    result: ReturnType<typeof assignParentSlot>,
+  ) => {
+    if (result.status === "needs_other_parent") {
+      setParentStaged({ parentId: result.stagedParentId, slot: result.stagedSlot });
+      setParentSlot(result.otherSlot);
+      showSuccess(
+        result.otherSlot === "mother"
+          ? copy.profile.parentSlotStagedFather
+          : copy.profile.parentSlotStagedMother,
+      );
+      return;
+    }
+    setParentStaged(null);
+    setParentsOpen(false);
+    bumpDataRevision();
+    onFamilyChanged?.();
+    impactLight();
+    showSuccess(copy.profile.parentsSaved);
+  };
 
   const linkSpouseMember = (spouseId: string) => {
     if (!spouseId) {
@@ -176,6 +236,79 @@ export function PersonTreeSheet({
     }
   };
 
+  const linkParentMember = (parentPersonId: string) => {
+    if (!parentPersonId) {
+      showError(new Error(copy.profile.pickMemberRequired));
+      return;
+    }
+    try {
+      const result = assignParentSlot(mode, {
+        childId: person.id,
+        slot: parentSlot,
+        parentPersonId,
+        staged: parentStaged,
+      });
+      applyParentAssignResult(result);
+    } catch (e) {
+      showError(e);
+    }
+  };
+
+  const createParentMember = (payload: {
+    firstName: string;
+    lastName: string;
+    birthDate?: string;
+    parentSlot?: ParentSlot;
+  }) => {
+    const slot = payload.parentSlot ?? parentSlot;
+    const errors: FieldErrors = {
+      paFirst: required(payload.firstName, "First name"),
+      paLast: required(payload.lastName, "Last name"),
+    };
+    const filtered = Object.fromEntries(
+      Object.entries(errors).filter(([, message]) => message),
+    ) as FieldErrors;
+    if (Object.keys(filtered).length > 0) {
+      setFieldErrors(filtered);
+      showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
+      return;
+    }
+    setFieldErrors({});
+    try {
+      const result = createAndAssignParentSlot(mode, {
+        childId: person.id,
+        slot,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        birthDate: payload.birthDate,
+        staged: parentStaged,
+      });
+      applyParentAssignResult(result);
+    } catch (e) {
+      showError(e);
+    }
+  };
+
+  const onSelectParentCouple = (unionId: string) => {
+    try {
+      assignParentsToCouple(mode, person.id, unionId);
+      setCoupleParentsOpen(false);
+      setParentStaged(null);
+      setParentQuery("");
+      bumpDataRevision();
+      onFamilyChanged?.();
+      impactLight();
+      showSuccess(copy.profile.parentsSaved);
+    } catch (e) {
+      showError(e);
+    }
+  };
+
+  const openParentSheet = () => {
+    setParentSlot(defaultParentSlotForOpen(existingParents, parentStaged));
+    setParentsOpen(true);
+  };
+
   return (
     <>
       <FormBottomSheet
@@ -223,6 +356,19 @@ export function PersonTreeSheet({
               <ButtonText>{copy.profile.addChild}</ButtonText>
             </Button>
           )}
+          {canAddLocal && (
+            <Button
+              testID="tree-sheet-add-parents"
+              variant="secondary"
+              onPress={openParentSheet}
+            >
+              <ButtonText>
+                {existingParents.length > 0
+                  ? copy.profile.changeParents
+                  : copy.profile.addParents}
+              </ButtonText>
+            </Button>
+          )}
           {!isPrivate && (
             <Button variant="outline" onPress={onCenterTree}>
               <ButtonText>{copy.tree.sheetCenter}</ButtonText>
@@ -259,6 +405,42 @@ export function PersonTreeSheet({
         onSubmitLink={linkChildMember}
         submitTestID="member-child-save"
         fieldErrors={fieldErrors}
+      />
+
+      <AddRelationSheet
+        visible={parentsOpen}
+        kind="parent"
+        title={
+          existingParents.length > 0 ? copy.profile.changeParents : copy.profile.addParents
+        }
+        members={localPeople}
+        excludeIds={parentExcludeIds}
+        parentSlot={parentSlot}
+        onParentSlotChange={setParentSlot}
+        parentStepHint={parentStepHint}
+        onLinkParentCouple={() => {
+          setParentsOpen(false);
+          setCoupleParentsOpen(true);
+        }}
+        onDismiss={() => setParentsOpen(false)}
+        onSubmitCreate={createParentMember}
+        onSubmitLink={linkParentMember}
+        submitTestID="member-parent-save"
+        fieldErrors={fieldErrors}
+      />
+
+      <CoupleParentPickerSheet
+        visible={coupleParentsOpen}
+        title={
+          existingParents.length > 0 ? copy.profile.changeParents : copy.profile.addParents
+        }
+        rows={parentCoupleRows}
+        replacingExisting={existingParents.length > 0}
+        onDismiss={() => {
+          setCoupleParentsOpen(false);
+          setParentQuery("");
+        }}
+        onSelectCouple={(row) => onSelectParentCouple(row.unionId)}
       />
     </>
   );
