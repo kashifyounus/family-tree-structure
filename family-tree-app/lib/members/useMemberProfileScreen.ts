@@ -33,6 +33,8 @@ import {
 } from "@/lib/members/memberProfileEditForm";
 import { recordRecentVisit } from "@/lib/recentPeople";
 import { defaultParentSlotForOpen, type ParentSlot } from "@/lib/rules/parentSlots";
+import { livingNameCollisionCount } from "@/lib/members/duplicateNameCue";
+import { listLocalMembers } from "@/lib/db/localRepository";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
 
 type UseMemberProfileScreenArgs = {
@@ -107,6 +109,12 @@ export function useMemberProfileScreen({
   const member = bundle?.member ?? null;
   const canEditLocal = mode === "local";
 
+  const suggestNickname = useMemo(() => {
+    if (!member || mode !== "local") return false;
+    const all = listLocalMembers();
+    return livingNameCollisionCount(member, all) > 0;
+  }, [member, mode]);
+
   const relationToMeText = useMemo(() => {
     if (!member) return null;
     const focalId =
@@ -137,12 +145,15 @@ export function useMemberProfileScreen({
         personId: member.id,
         firstName: editFields.firstName,
         lastName: editFields.lastName,
+        nickname: editFields.nickname.trim() || undefined,
+        gender: editFields.gender,
         currentCity: editFields.city || undefined,
         birthDate: editFields.birthDate || undefined,
         birthPlace: editFields.birthPlace || undefined,
         homeTown: editFields.homeTown || undefined,
         occupation: editFields.occupation || undefined,
         bio: editFields.bio || undefined,
+        deathDate: editFields.isLiving ? null : editFields.deathDate || null,
       });
       setEditing(false);
       bumpDataRevision();
@@ -500,6 +511,7 @@ export function useMemberProfileScreen({
     patchEditField,
     fieldErrors,
     relationToMeText,
+    suggestNickname,
     derived,
     spouseOpen,
     setSpouseOpen,

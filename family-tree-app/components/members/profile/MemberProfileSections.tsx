@@ -4,7 +4,7 @@ import { MarriageChildrenList } from "@/components/members/profile/MarriageChild
 import { ParentPairCards } from "@/components/members/profile/ParentPairCards";
 import { SiblingsTable } from "@/components/members/profile/SiblingsTable";
 import { SpousePill } from "@/components/members/profile/SpousePill";
-import { DatePickerField } from "@/components/forms/DatePickerField";
+import { PersonFields } from "@/components/forms/PersonFields";
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -119,30 +119,17 @@ export function MemberProfileSections({
       {editing && (
         <AppCard style={styles.block}>
           <AppCardContent style={styles.gap}>
-            <FormTextInput
-              label="First name"
-              value={editFields.firstName}
-              onChangeText={(v) => onPatchEditField("firstName", v)}
-              errorText={fieldErrors.firstName}
+            <PersonFields
+              value={editFields}
+              onChange={(patch) => {
+                for (const [key, value] of Object.entries(patch)) {
+                  onPatchEditField(key as keyof MemberProfileEditFields, value as never);
+                }
+              }}
+              fieldErrors={fieldErrors}
             />
             <FormTextInput
-              label="Last name"
-              value={editFields.lastName}
-              onChangeText={(v) => onPatchEditField("lastName", v)}
-              errorText={fieldErrors.lastName}
-            />
-            <DatePickerField
-              label="Date of birth"
-              value={editFields.birthDate}
-              onChange={(v) => onPatchEditField("birthDate", v)}
-            />
-            <FormTextInput
-              label="Birth place"
-              value={editFields.birthPlace}
-              onChangeText={(v) => onPatchEditField("birthPlace", v)}
-            />
-            <FormTextInput
-              label="City"
+              label="Current city"
               value={editFields.city}
               onChangeText={(v) => onPatchEditField("city", v)}
             />

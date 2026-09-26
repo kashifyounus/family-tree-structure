@@ -69,7 +69,11 @@ export default function MemberDetailScreen() {
     <>
       <Screen testID="member-profile-screen" keyboardAvoiding>
         <PageHeader title="Profile" />
-        <MemberProfileHero member={m} statusLabel={derived.lifeStatus} />
+        <MemberProfileHero
+          member={m}
+          statusLabel={derived.lifeStatus}
+          suggestNickname={profile.suggestNickname}
+        />
         <ProfileMemberChrome
           canEditLocal={profile.canEditLocal}
           editing={profile.editing}

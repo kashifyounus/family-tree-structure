@@ -38,8 +38,10 @@ export type CreateMemberInput = {
   homeTown?: string;
 };
 
-export type UpdateMemberInput = Partial<CreateMemberInput> & {
+export type UpdateMemberInput = Omit<Partial<CreateMemberInput>, "deathDate"> & {
   personId: string;
+  /** Pass `null` to clear death date when marking someone living. */
+  deathDate?: string | null;
 };
 
 export type AddSpouseInput = {

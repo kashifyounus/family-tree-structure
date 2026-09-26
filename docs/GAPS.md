@@ -22,7 +22,9 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
 **Shipped in app 1.0.7:** Add parent link-only; gender chips; shared `PersonFields` on add child/spouse/member; nickname on create + picker search; tree v7 connector colors + name-only canvas; Reports tab visible; Find relation entry screen; `docs/APP_ID_MIGRATION.md`.
 
-**Still open (follow-up PRs):** Full v6 tree placement + marriage ghost labels; Find relation full subgraph + purple 6px multi-path; profile edit unified with `PersonFields`; `shared/archiveQuery.ts` + Reports KPI/custom AND query; Google Drive backup (U2); package id migration (U1 code).
+**Still open (follow-up PRs):** Full v6 tree placement + marriage ghost labels; Find relation canvas subgraph + purple 6px multi-path on tree; `shared/archiveQuery.ts` + Reports KPI/custom AND query; Google Drive backup (U2); package id migration (U1 code).
+
+**1.0.8 slice:** Profile edit uses `PersonFields` (nickname, gender, death); Members + profile nickname chips; Find relation multi-path chips + path count; `relationPaths` enumerator.
 
 ### Engineering follow-ups (no issue yet)
 

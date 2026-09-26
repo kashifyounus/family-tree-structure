@@ -137,17 +137,23 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
   const existing = getLocalMemberById(input.personId);
   if (!existing) throw new Error(ruleMessages.notFound);
 
+  const deathDate =
+    input.deathDate !== undefined ? input.deathDate || null : existing.deathDate;
+  const nickname =
+    input.nickname !== undefined ? input.nickname.trim() || null : existing.nickname;
+
   assertPersonDatesAgainstMarriages(
     loadLocalRuleGraph(),
     input.personId,
     input.birthDate ?? existing.birthDate,
-    input.deathDate ?? existing.deathDate,
+    deathDate,
   );
 
   db.runSync(
     `UPDATE persons SET
       first_name = COALESCE(?, first_name),
       last_name = COALESCE(?, last_name),
+      nickname = ?,
       gender = COALESCE(?, gender),
       urdu_first_name = COALESCE(?, urdu_first_name),
       urdu_last_name = COALESCE(?, urdu_last_name),
@@ -155,7 +161,7 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
       occupation = COALESCE(?, occupation),
       bio = COALESCE(?, bio),
       birth_date = COALESCE(?, birth_date),
-      death_date = COALESCE(?, death_date),
+      death_date = ?,
       birth_place = COALESCE(?, birth_place),
       home_town = COALESCE(?, home_town),
       updated_at = ?
@@ -163,6 +169,7 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
     [
       input.firstName ?? null,
       input.lastName ?? null,
+      nickname,
       input.gender ?? null,
       input.urduFirstName ?? null,
       input.urduLastName ?? null,
@@ -170,7 +177,7 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
       input.occupation ?? null,
       input.bio ?? null,
       input.birthDate ?? null,
-      input.deathDate ?? null,
+      deathDate,
       input.birthPlace ?? null,
       input.homeTown ?? null,
       new Date().toISOString(),

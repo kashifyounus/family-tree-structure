@@ -249,6 +249,7 @@ export default function MembersScreen() {
                     ? item.name
                     : formatBilingualName(item.member)
                 }
+                nickname={item.kind === "member" ? item.member.nickname : undefined}
                 subtitle={
                   item.kind === "showcase"
                     ? item.subtitle

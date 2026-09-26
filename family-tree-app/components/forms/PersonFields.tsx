@@ -5,36 +5,14 @@ import { AppText } from "@/components/ui/AppText";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { GenderField } from "@/components/ui/GenderField";
 import { Switch } from "@/components/ui/switch";
-import type { Gender } from "@/lib/data/types";
 import type { FieldErrors } from "@/lib/forms/fieldErrors";
+import {
+  emptyPersonFieldsValue,
+  type PersonFieldsValue,
+} from "@/lib/forms/personFieldsValue";
 
-export type PersonFieldsValue = {
-  firstName: string;
-  lastName: string;
-  maidenName: string;
-  suffix: string;
-  nickname: string;
-  gender: Gender;
-  isLiving: boolean;
-  birthDate: string;
-  birthPlace: string;
-  deathDate: string;
-  deathPlace: string;
-};
-
-export const emptyPersonFieldsValue = (gender: Gender = "MALE"): PersonFieldsValue => ({
-  firstName: "",
-  lastName: "",
-  maidenName: "",
-  suffix: "",
-  nickname: "",
-  gender,
-  isLiving: true,
-  birthDate: "",
-  birthPlace: "",
-  deathDate: "",
-  deathPlace: "",
-});
+export type { PersonFieldsValue } from "@/lib/forms/personFieldsValue";
+export { emptyPersonFieldsValue } from "@/lib/forms/personFieldsValue";
 
 type PersonFieldsProps = {
   value: PersonFieldsValue;

@@ -1,23 +1,31 @@
 import type { MemberRecord } from "@/lib/data/types";
+import {
+  emptyPersonFieldsValue,
+  type PersonFieldsValue,
+} from "@/lib/forms/personFieldsValue";
 
-export type MemberProfileEditFields = {
-  firstName: string;
-  lastName: string;
+export type MemberProfileEditFields = PersonFieldsValue & {
   city: string;
-  birthDate: string;
-  birthPlace: string;
   homeTown: string;
   occupation: string;
   bio: string;
 };
 
 export function editFieldsFromMember(member: MemberRecord): MemberProfileEditFields {
+  const living = !member.deathDate;
   return {
     firstName: member.firstName,
     lastName: member.lastName,
-    city: member.currentCity ?? "",
+    maidenName: "",
+    suffix: "",
+    nickname: member.nickname ?? "",
+    gender: member.gender,
+    isLiving: living,
     birthDate: member.birthDate ?? "",
     birthPlace: member.birthPlace ?? "",
+    deathDate: member.deathDate ?? "",
+    deathPlace: "",
+    city: member.currentCity ?? "",
     homeTown: member.homeTown ?? "",
     occupation: member.occupation ?? "",
     bio: member.bio ?? "",
@@ -25,11 +33,8 @@ export function editFieldsFromMember(member: MemberRecord): MemberProfileEditFie
 }
 
 export const emptyMemberProfileEditFields: MemberProfileEditFields = {
-  firstName: "",
-  lastName: "",
+  ...emptyPersonFieldsValue(),
   city: "",
-  birthDate: "",
-  birthPlace: "",
   homeTown: "",
   occupation: "",
   bio: "",

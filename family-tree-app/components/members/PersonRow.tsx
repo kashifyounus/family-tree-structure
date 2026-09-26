@@ -8,6 +8,7 @@ import { useAppTheme } from "@/theme/useAppTheme";
 type PersonRowProps = {
   initials: string;
   name: string;
+  nickname?: string | null;
   subtitle: string;
   onPress: () => void;
   onLongPress?: () => void;
@@ -17,6 +18,7 @@ type PersonRowProps = {
 export function PersonRow({
   initials,
   name,
+  nickname,
   subtitle,
   onPress,
   onLongPress,
@@ -39,9 +41,20 @@ export function PersonRow({
         </AvatarFallbackText>
       </Avatar>
       <View className="flex-1 min-w-0 gap-0.5">
-        <AppText variant="bodyMedium" className="text-foreground font-medium" numberOfLines={1}>
-          {name}
-        </AppText>
+        <View className="flex-row items-center gap-2 min-w-0">
+          <AppText variant="bodyMedium" className="text-foreground font-medium shrink" numberOfLines={1}>
+            {name}
+          </AppText>
+          {nickname?.trim() ? (
+            <AppText
+              variant="labelSmall"
+              className="text-primary bg-primary/10 px-2 py-0.5 rounded-full"
+              numberOfLines={1}
+            >
+              {nickname.trim()}
+            </AppText>
+          ) : null}
+        </View>
         <AppText variant="labelSmall" className="text-muted-foreground" numberOfLines={1}>
           {subtitle}
         </AppText>

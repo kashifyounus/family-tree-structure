@@ -8,11 +8,16 @@ import {
 } from "@/components/members/ExistingMemberPicker";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
+import { OutlineChip } from "@/components/ui/OutlineChip";
 import { Screen } from "@/components/ui/Screen";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { copy } from "@/content/businessCopy";
 import { useStorage } from "@/context/StorageContext";
 import { peopleForPicker } from "@/lib/data/personService";
-import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
+import {
+  computeRelationFinderResult,
+  type RelationFinderResult,
+} from "@/lib/kinship/relationPaths";
 
 export default function FindRelationScreen() {
   const router = useRouter();
@@ -23,16 +28,46 @@ export default function FindRelationScreen() {
   );
   const [personA, setPersonA] = useState("");
   const [personB, setPersonB] = useState("");
-  const [summary, setSummary] = useState<string | null>(null);
+  const [result, setResult] = useState<RelationFinderResult | null>(null);
+  const [pathIndex, setPathIndex] = useState(0);
 
   const runSearch = () => {
     if (!personA || !personB) return;
     if (personA === personB) {
-      setSummary(copy.tools.compareSame);
+      setResult({
+        ok: true,
+        message: copy.tools.compareSame,
+        paths: [[]],
+        truncated: false,
+        summaries: [copy.tools.compareSame],
+        nodeIdsOnPaths: [personA],
+        edgeKeysOnPaths: [],
+      });
+      setPathIndex(0);
       return;
     }
-    const text = computeRelationSummary(personA, personB);
-    setSummary(text);
+    const next = computeRelationFinderResult(personA, personB);
+    setResult(next);
+    setPathIndex(0);
+  };
+
+  const activePath = result?.paths[pathIndex] ?? [];
+  const activeSummary = result?.summaries[pathIndex] ?? result?.message;
+
+  const openOnTree = () => {
+    if (!personA || !personB || !result?.ok) return;
+    const pathNodeIds = [
+      personA,
+      ...activePath.map((s) => s.toId),
+    ];
+    router.push({
+      pathname: "/(tabs)/tree",
+      params: {
+        highlightA: personA,
+        highlightB: personB,
+        pathNodes: pathNodeIds.join(","),
+      },
+    });
   };
 
   return (
@@ -43,7 +78,7 @@ export default function FindRelationScreen() {
           Find relation
         </AppText>
         <AppText variant="bodySmall" className="text-muted-foreground mb-4">
-          Choose two people in your archive. We show how they are related and highlight paths on the tree (read-only).
+          Choose two people in your archive. We list every kinship path we find (up to 32) and summarize how they relate.
         </AppText>
         <View className="gap-4">
           <View>
@@ -66,23 +101,41 @@ export default function FindRelationScreen() {
           <Button onPress={runSearch} disabled={!personA || !personB}>
             <ButtonText>Show relation</ButtonText>
           </Button>
-          {summary ? (
-            <AppText variant="bodyMedium" className="text-foreground">
-              {summary}
-            </AppText>
+
+          {result ? (
+            <SectionCard title="Result">
+              <AppText variant="bodyMedium" className="text-foreground mb-2">
+                {result.ok ? activeSummary : result.message}
+              </AppText>
+              {result.ok && result.paths.length > 1 ? (
+                <View className="flex-row flex-wrap gap-2 mb-3">
+                  {result.summaries.map((label, i) => (
+                    <OutlineChip
+                      key={`path-${i}`}
+                      label={`Path ${String.fromCharCode(65 + i)}`}
+                      selected={pathIndex === i}
+                      onPress={() => setPathIndex(i)}
+                    />
+                  ))}
+                </View>
+              ) : null}
+              {result.truncated ? (
+                <AppText variant="labelSmall" className="text-muted-foreground mb-2">
+                  Large family — only the first 32 paths are listed. Narrow the tree or pick closer relatives to see more.
+                </AppText>
+              ) : null}
+              {result.ok ? (
+                <>
+                  <AppText variant="labelMedium" className="text-muted-foreground mb-1">
+                    {result.paths.length} path{result.paths.length === 1 ? "" : "s"} · {result.nodeIdsOnPaths.length} people on paths
+                  </AppText>
+                  <Button variant="outline" onPress={openOnTree}>
+                    <ButtonText>Open tree (selected path)</ButtonText>
+                  </Button>
+                </>
+              ) : null}
+            </SectionCard>
           ) : null}
-          <Button
-            variant="outline"
-            onPress={() => {
-              if (!personA || !personB) return;
-              router.push({
-                pathname: "/(tabs)/tree",
-                params: { highlightA: personA, highlightB: personB },
-              });
-            }}
-          >
-            <ButtonText>Open tree with these people</ButtonText>
-          </Button>
         </View>
       </Screen>
     </>
