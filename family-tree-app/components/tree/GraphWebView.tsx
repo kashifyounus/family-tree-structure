@@ -80,24 +80,30 @@ function drawMarriageBand(){
   const x1 = marriageBand.x1;
   const x2 = marriageBand.x2;
   if(x2 <= x1 + 8) return;
-  ctx.strokeStyle = theme.primary;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(x1, midY);
-  ctx.lineTo(x2, midY);
-  ctx.stroke();
   const label = marriageBand.label || '';
   if(!label) return;
   const cx = (x1 + x2) / 2;
-  const labelY = midY + 14;
-  ctx.font = '500 10px system-ui';
+  const cream = theme.canvas || '#F6F1E7';
+  let display = label.length > 28 ? label.slice(0, 27) + '…' : label;
+  ctx.font = '500 11px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const tw = ctx.measureText(label).width;
-  ctx.fillStyle = theme.canvas;
-  ctx.fillRect(cx - tw/2 - 4, labelY - 7, tw + 8, 14);
+  const tw = ctx.measureText(display).width;
+  const padH = 8;
+  const padV = 6;
+  const pillW = tw + padH * 2;
+  const pillH = 16;
+  roundRect(cx - pillW / 2, midY - pillH / 2, pillW, pillH, 4);
+  ctx.fillStyle = cream;
+  ctx.fill();
+  ctx.strokeStyle = cream;
+  ctx.lineWidth = 5;
+  ctx.lineJoin = 'round';
+  ctx.strokeText(display, cx, midY);
+  ctx.lineWidth = 3;
+  ctx.strokeText(display, cx, midY);
   ctx.fillStyle = '#6b7280';
-  ctx.fillText(label.length>24?label.slice(0,23)+'…':label, cx, labelY);
+  ctx.fillText(display, cx, midY);
 }
 
 function drawSegments(){
@@ -130,6 +136,13 @@ function wrapName(line, maxW){
 
 function drawCard(n){
   const x=n.x, y=n.y, w=n.w, h=n.h;
+  const isBig = n.tier === 'big';
+  const pad = 9;
+  const barH = 5;
+  const namePx = isBig ? 14 : 13;
+  const nameLH = isBig ? 16 : 15;
+  const yearPx = 11;
+  const yearGap = 5;
   ctx.save();
   ctx.shadowColor = 'rgba(15,23,42,0.1)';
   ctx.shadowBlur = 6;
@@ -143,34 +156,41 @@ function drawCard(n){
   roundRect(x,y,w,h,12);
   ctx.stroke();
 
-  const barH = 5;
+  ctx.save();
+  roundRect(x,y,w,h,12);
+  ctx.clip();
   ctx.fillStyle = genderAccent(n.gender);
-  roundRect(x,y,w,barH+4,12);
-  ctx.fill();
-  ctx.fillRect(x,y+barH,w,2);
+  ctx.fillRect(x, y, w, barH);
+  ctx.restore();
 
   const cx = x + w/2;
-  const pad = 8;
+  const maxW = w - pad * 2;
+  const rawLine2 = (n.nameLine2 || '').trim();
+  const line2 = rawLine2 ? wrapName(rawLine2, maxW) : '';
+  const line1 = line2
+    ? wrapName((n.nameLine1 || '').trim(), maxW)
+    : wrapName(n.label || (n.nameLine1 || '').trim(), maxW);
+  const textTop = y + barH + pad;
   ctx.fillStyle = '#111827';
-  ctx.font = '700 ' + (n.tier === 'big' ? '12' : '10') + 'px system-ui';
+  ctx.font = '700 ' + namePx + 'px system-ui';
   ctx.textAlign = 'center';
-  const line1 = wrapName(n.nameLine1 || (n.label||'').split(' ')[0] || '', w - pad * 2);
-  const line2 = wrapName(n.nameLine2 || (n.label||'').split(' ').slice(1).join(' ') || '', w - pad * 2);
-  const singleLine = !line2;
-  const nameY = y + (singleLine ? (n.tier === 'big' ? h * 0.46 : h * 0.44) : (n.tier === 'big' ? 26 : 22));
-  ctx.fillText(line1, cx, nameY);
-  if(line2) ctx.fillText(line2, cx, nameY + 14);
-
-  if(n.nickname){
-    ctx.font = '600 9px system-ui';
-    ctx.fillStyle = theme.primary;
-    ctx.fillText(n.nickname.slice(0,18), cx, nameY + (line2 ? 28 : 16));
+  ctx.textBaseline = 'top';
+  ctx.fillText(line1, cx, textTop);
+  let yearsY = textTop + nameLH + yearGap;
+  if(line2){
+    ctx.fillText(line2, cx, textTop + nameLH);
+    yearsY = textTop + nameLH * 2 + yearGap;
   }
-
+  if(n.nickname){
+    ctx.font = '600 10px system-ui';
+    ctx.fillStyle = theme.primary;
+    ctx.fillText(n.nickname.slice(0,18), cx, yearsY);
+    yearsY += 13;
+  }
   if(n.years){
+    ctx.font = '500 ' + yearPx + 'px system-ui';
     ctx.fillStyle = '#6b7280';
-    ctx.font = '9px system-ui';
-    ctx.fillText(n.years, cx, y + h - 10);
+    ctx.fillText(n.years, cx, yearsY);
   }
 
   const chev = chevronOffset || 8;

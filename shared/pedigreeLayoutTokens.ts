@@ -1,8 +1,8 @@
-/** v6 display tiers (phone). */
-export const PEDIGREE_CARD_BIG_W = 96;
-export const PEDIGREE_CARD_BIG_H = 64;
-export const PEDIGREE_CARD_SMALL_W = 72;
-export const PEDIGREE_CARD_SMALL_H = 50;
+/** v6/v7 display tiers (phone) — focal couple largest; others readable at ~13–14px names. */
+export const PEDIGREE_CARD_BIG_W = 112;
+export const PEDIGREE_CARD_BIG_H = 74;
+export const PEDIGREE_CARD_SMALL_W = 88;
+export const PEDIGREE_CARD_SMALL_H = 62;
 
 /** Legacy default card (payload fallback). */
 export const PEDIGREE_CARD_W = PEDIGREE_CARD_SMALL_W;
