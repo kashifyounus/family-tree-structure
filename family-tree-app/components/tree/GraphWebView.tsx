@@ -19,7 +19,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], focalId = '';
+let nodes = [], segments = [], focalId = '', marriageBand = null;
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
 
@@ -67,6 +67,38 @@ function roundRect(x,y,w,h,r){
   ctx.arcTo(x,y+h,x,y,r);
   ctx.arcTo(x,y,x+w,y,r);
   ctx.closePath();
+}
+
+function drawMarriageBand(){
+  if(!marriageBand) return;
+  const midY = marriageBand.y;
+  const x1 = marriageBand.x1;
+  const x2 = marriageBand.x2;
+  if(x2 <= x1 + 8) return;
+  ctx.strokeStyle = '#1b4332';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, midY);
+  ctx.lineTo(x2, midY);
+  ctx.stroke();
+  const label = marriageBand.label || 'Married';
+  ctx.font = '600 10px system-ui';
+  const tw = ctx.measureText(label).width + 16;
+  const cx = (x1 + x2) / 2;
+  const pillW = Math.min(tw, x2 - x1 - 4);
+  const pillH = 18;
+  const px = cx - pillW/2;
+  const py = midY - pillH/2;
+  roundRect(px, py, pillW, pillH, 9);
+  ctx.fillStyle = '#e8f0ea';
+  ctx.fill();
+  ctx.strokeStyle = '#1b4332';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#1b4332';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label.length>22?label.slice(0,21)+'…':label, cx, midY);
 }
 
 function drawSegments(){
@@ -170,6 +202,7 @@ function draw(){
   ctx.translate(ox,oy);
   ctx.scale(scale,scale);
   drawSegments();
+  drawMarriageBand();
   for(const n of nodes) drawCard(n);
   ctx.restore();
 }
@@ -193,6 +226,7 @@ function onGraph(g){
   nodes = g.nodes || [];
   segments = g.segments || [];
   focalId = g.focalPersonId || '';
+  marriageBand = g.marriageBand || null;
   fitView();
   resize();
 }

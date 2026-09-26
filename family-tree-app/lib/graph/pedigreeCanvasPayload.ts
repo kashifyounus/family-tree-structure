@@ -28,10 +28,18 @@ export type PedigreeCanvasNode = {
   hasUnexpandedChildren: boolean;
 };
 
+export type PedigreeMarriageBand = {
+  x1: number;
+  y: number;
+  x2: number;
+  label: string;
+};
+
 export type PedigreeCanvasPayload = {
   focalPersonId: string;
   nodes: PedigreeCanvasNode[];
   segments: PedigreeSegment[];
+  marriageBand?: PedigreeMarriageBand | null;
 };
 
 function yearFrom(iso: string | null | undefined): string | null {
@@ -113,10 +121,28 @@ export function buildPedigreeCanvasPayload(graph: FamilyGraph): PedigreeCanvasPa
 
   const segments = buildPedigreeConnectorSegments(boxes, pedigreeEdges);
 
+  let marriageBand: PedigreeMarriageBand | null = null;
+  const partnerId = graph.focalPartnerIds?.[0];
+  if (partnerId && graph.focalMarriageLabel) {
+    const ego = nodes.find((n) => n.id === graph.focalPersonId);
+    const partner = nodes.find((n) => n.id === partnerId);
+    if (ego && partner && ego.y === partner.y) {
+      const left = ego.x <= partner.x ? ego : partner;
+      const right = ego.x <= partner.x ? partner : ego;
+      marriageBand = {
+        x1: left.x + left.w,
+        y: left.y + left.h / 2,
+        x2: right.x,
+        label: graph.focalMarriageLabel,
+      };
+    }
+  }
+
   return {
     focalPersonId: graph.focalPersonId,
     nodes,
     segments,
+    marriageBand,
   };
 }
 

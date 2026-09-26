@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kuriosity Family Tree",
     "slug": "kuriosity-family-tree",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kuriosityfamilytree",
@@ -15,7 +15,7 @@
     },
     "android": {
       "package": "com.mughals.familytree",
-      "versionCode": 7,
+      "versionCode": 8,
       "label": "Kuriosity Family Tree",
       "softwareKeyboardLayoutMode": "resize",
       "usesCleartextTraffic": true,
@@ -46,7 +46,8 @@
       "expo-secure-store",
       "expo-sqlite",
       "expo-sharing",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

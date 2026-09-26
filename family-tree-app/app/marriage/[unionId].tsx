@@ -2,8 +2,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
-import { FormTextInput } from "@/components/ui/FormTextInput";
+import { DatePickerField } from "@/components/forms/DatePickerField";
+import { AddRelationSheet } from "@/components/members/AddRelationSheet";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen } from "@/components/ui/Screen";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -11,11 +11,6 @@ import { copy } from "@/content/businessCopy";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
-import { ExistingMemberPicker } from "@/components/members/ExistingMemberPicker";
-import {
-  MemberFormModeToggle,
-  type MemberFormMode,
-} from "@/components/members/MemberFormModeToggle";
 import {
   addChild,
   linkChild,
@@ -28,7 +23,6 @@ import { space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
-import { GenderField } from "@/components/ui/GenderField";
 import { ListRow } from "@/components/ui/ListRow";
 
 export default function MarriageScreen() {
@@ -42,11 +36,6 @@ export default function MarriageScreen() {
   const [marriageDate, setMarriageDate] = useState(marriage?.marriageDate ?? "");
   const [divorceDate, setDivorceDate] = useState(marriage?.divorceDate ?? "");
   const [childOpen, setChildOpen] = useState(false);
-  const [chFirst, setChFirst] = useState("");
-  const [chLast, setChLast] = useState("");
-  const [chGender, setChGender] = useState<Gender>("MALE");
-  const [childFormMode, setChildFormMode] = useState<MemberFormMode>("create");
-  const [linkChildId, setLinkChildId] = useState("");
 
   if (mode !== "local") {
     return (
@@ -95,36 +84,36 @@ export default function MarriageScreen() {
     ...marriage.children.map((c) => c.id),
   ];
 
-  const submitChild = () => {
-    if (childFormMode === "link") {
-      if (!linkChildId) {
-        showError(new Error(copy.profile.pickMemberRequired));
-        return;
-      }
-      try {
-        linkChild(mode, { unionId: marriage.id, childId: linkChildId });
-        setChildOpen(false);
-        setLinkChildId("");
-        setChildFormMode("create");
-        bumpDataRevision();
-        impactLight();
-        showSuccess(copy.profile.childLinked);
-      } catch (e) {
-        showError(e);
-      }
+  const linkChildMember = (childId: string) => {
+    if (!childId) {
+      showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
+    try {
+      linkChild(mode, { unionId: marriage.id, childId });
+      setChildOpen(false);
+      bumpDataRevision();
+      impactLight();
+      showSuccess(copy.profile.childLinked);
+    } catch (e) {
+      showError(e);
+    }
+  };
 
+  const createChildMember = (payload: {
+    firstName: string;
+    lastName: string;
+    gender: Gender;
+  }) => {
     try {
       addChild(mode, {
         parentPersonId: partner1.id,
         unionId: marriage.id,
-        firstName: chFirst.trim(),
-        lastName: chLast.trim(),
-        gender: chGender,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        gender: payload.gender,
       });
       setChildOpen(false);
-      setChFirst("");
       bumpDataRevision();
       impactLight();
       showSuccess(copy.profile.childSaved);
@@ -158,18 +147,8 @@ export default function MarriageScreen() {
         </Button>
       </View>
       <SectionCard title="Marriage dates" delay={40}>
-        <FormTextInput
-          label="Marriage date"
-          value={marriageDate}
-          onChangeText={setMarriageDate}
-          placeholder="YYYY-MM-DD"
-        />
-        <FormTextInput
-          label="Divorce date"
-          value={divorceDate}
-          onChangeText={setDivorceDate}
-          placeholder="YYYY-MM-DD"
-        />
+        <DatePickerField label="Marriage date" value={marriageDate} onChange={setMarriageDate} />
+        <DatePickerField label="Divorce date" value={divorceDate} onChange={setDivorceDate} />
         <Button onPress={() => save(false)}>
           <ButtonText>Save marriage</ButtonText>
         </Button>
@@ -184,12 +163,7 @@ export default function MarriageScreen() {
         testID="marriage-add-child"
         variant="secondary"
         style={styles.addChildBtn}
-        onPress={() => {
-          setChildFormMode("create");
-          setLinkChildId("");
-          setChLast(partner1.lastName);
-          setChildOpen(true);
-        }}
+        onPress={() => setChildOpen(true)}
       >
         <ButtonText>{copy.profile.addChild}</ButtonText>
       </Button>
@@ -214,41 +188,17 @@ export default function MarriageScreen() {
         ))
       )}
 
-      <FormBottomSheet
+      <AddRelationSheet
         visible={childOpen}
+        kind="child"
         title={copy.profile.addChild}
+        members={localPeople}
+        excludeIds={childExcludeIds}
         onDismiss={() => setChildOpen(false)}
-        onSubmit={submitChild}
-        submitLabel={copy.profile.saveChanges}
+        onSubmitCreate={createChildMember}
+        onSubmitLink={linkChildMember}
         submitTestID="member-child-save"
-        cancelLabel={copy.reports.cancel}
-      >
-        <MemberFormModeToggle mode={childFormMode} onChange={setChildFormMode} />
-        {childFormMode === "link" ? (
-          <ExistingMemberPicker
-            members={localPeople}
-            excludeIds={childExcludeIds}
-            selectedId={linkChildId}
-            onSelect={setLinkChildId}
-          />
-        ) : (
-          <>
-            <FormTextInput
-              testID="member-child-first"
-              label="First name"
-              value={chFirst}
-              onChangeText={setChFirst}
-            />
-            <FormTextInput
-              testID="member-child-last"
-              label="Last name"
-              value={chLast}
-              onChangeText={setChLast}
-            />
-            <GenderField value={chGender} onChange={setChGender} />
-          </>
-        )}
-      </FormBottomSheet>
+      />
     </Screen>
   );
 }

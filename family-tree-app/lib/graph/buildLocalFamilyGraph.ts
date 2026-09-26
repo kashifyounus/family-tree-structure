@@ -1,4 +1,8 @@
-import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
+import { formatDisplayDate } from "@/lib/format/displayDate";
+import {
+  getLocalMemberByFamilyCode,
+  getLocalUnionsForPerson,
+} from "@/lib/db/localRepository";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import type { KinshipPerson, KinshipUnionRecord } from "@/lib/kinship/types";
 import {
@@ -73,7 +77,10 @@ export function buildLocalFamilyGraph(
     [...included]
       .map((id) => peopleById.get(id))
       .filter((p): p is KinshipPerson => !!p)
-      .map((p) => [p.id, { id: p.id, birthDate: p.birthDate }]),
+      .map((p) => [
+        p.id,
+        { id: p.id, birthDate: p.birthDate, gender: p.gender },
+      ]),
   );
 
   const {
@@ -123,10 +130,20 @@ export function buildLocalFamilyGraph(
     label: e.label,
   }));
 
+  let focalMarriageLabel: string | null = null;
+  if (focalUnionId) {
+    const unionViews = getLocalUnionsForPerson(focal.id);
+    const match = unionViews.find((u) => u.id === focalUnionId);
+    const wedding = formatDisplayDate(match?.marriageDate ?? undefined);
+    focalMarriageLabel = wedding ? `Married ${wedding}` : "Married";
+  }
+
   return {
     focalPersonId: focal.id,
     focalUnionId,
     focalUnionIds,
+    focalPartnerIds,
+    focalMarriageLabel,
     nodes,
     edges,
   };

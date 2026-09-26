@@ -41,6 +41,8 @@ export type FamilyGraph = {
   focalPersonId: string;
   focalUnionId?: string | null;
   focalUnionIds?: string[];
+  focalPartnerIds?: string[];
+  focalMarriageLabel?: string | null;
   nodes: FamilyGraphNode[];
   edges: FamilyGraphEdge[];
 };

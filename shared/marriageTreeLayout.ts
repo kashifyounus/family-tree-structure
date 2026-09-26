@@ -16,6 +16,7 @@ export type MarriageLayoutUnion = {
 export type MarriageLayoutPerson = {
   id: string;
   birthDate?: string | Date | null;
+  gender?: "MALE" | "FEMALE" | "OTHER" | string | null;
 };
 
 export type MarriageLayoutEdge = {
@@ -269,34 +270,72 @@ export function layoutMarriageCentricGraph(
     });
   }
 
-  const parentUnions = unions.filter((u) =>
-    u.childships.some((c) => c.childId === focalId),
-  );
-  const parentIds = new Set<string>();
-  parentUnions.forEach((u) => {
-    if (included.has(u.partner1Id)) parentIds.add(u.partner1Id);
-    if (included.has(u.partner2Id)) parentIds.add(u.partner2Id);
-  });
-  const parents = sortByBirthOldestFirst(
-    [...parentIds]
-      .map((id) => peopleById.get(id))
-      .filter((p): p is MarriageLayoutPerson => !!p),
-  );
-  const rowCenter =
-    spouseEntries.length > 0
-      ? (originX + (positions.get(spouseEntries[0].spouseId)?.x ?? originX)) / 2
-      : originX;
-  parents.forEach((parent, index) => {
-    const x =
-      rowCenter + (index - (parents.length - 1) / 2) * H;
-    ensurePosition(positions, parent.id, x, originY - V);
-    edges.push({
-      id: `parent-${parent.id}-${focalId}`,
-      source: parent.id,
-      target: focalId,
-      type: "parent",
+  function parentsForPerson(personId: string): MarriageLayoutPerson[] {
+    const parentUnions = unions.filter((u) =>
+      u.childships.some((c) => c.childId === personId),
+    );
+    const parentIds = new Set<string>();
+    parentUnions.forEach((u) => {
+      if (included.has(u.partner1Id)) parentIds.add(u.partner1Id);
+      if (included.has(u.partner2Id)) parentIds.add(u.partner2Id);
     });
-  });
+    return sortByBirthOldestFirst(
+      [...parentIds]
+        .map((id) => peopleById.get(id))
+        .filter((p): p is MarriageLayoutPerson => !!p),
+    );
+  }
+
+  function placeParentsAbove(
+    personId: string,
+    anchorX: number,
+    side: "left" | "right" | "center",
+  ): void {
+    const parents = parentsForPerson(personId);
+    parents.forEach((parent, index) => {
+      let x = anchorX;
+      if (side === "left") {
+        x = anchorX - (parents.length - index) * H;
+      } else if (side === "right") {
+        x = anchorX + (index + 1) * H;
+      } else {
+        x = anchorX + (index - (parents.length - 1) / 2) * H;
+      }
+      ensurePosition(positions, parent.id, x, originY - V);
+      edges.push({
+        id: `parent-${parent.id}-${personId}`,
+        source: parent.id,
+        target: personId,
+        type: "parent",
+      });
+    });
+  }
+
+  const focalPerson = peopleById.get(focalId);
+  const primarySpouse = spouseEntries[0];
+  if (primarySpouse) {
+    const spouseId = primarySpouse.spouseId;
+    const spousePerson = peopleById.get(spouseId);
+    const focalX = positions.get(focalId)?.x ?? originX;
+    const spouseX = positions.get(spouseId)?.x ?? originX;
+    const focalIsMale = focalPerson?.gender === "MALE";
+    const spouseIsMale = spousePerson?.gender === "MALE";
+    const husbandId =
+      focalIsMale && !spouseIsMale
+        ? focalId
+        : spouseIsMale && !focalIsMale
+          ? spouseId
+          : focalX <= spouseX
+            ? focalId
+            : spouseId;
+    const wifeId = husbandId === focalId ? spouseId : focalId;
+    const husbandX = positions.get(husbandId)?.x ?? focalX;
+    const wifeX = positions.get(wifeId)?.x ?? spouseX;
+    placeParentsAbove(husbandId, husbandX, "left");
+    placeParentsAbove(wifeId, wifeX, "right");
+  } else {
+    placeParentsAbove(focalId, originX, "center");
+  }
 
   spouseEntries.forEach((entry, unionIndex) => {
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;

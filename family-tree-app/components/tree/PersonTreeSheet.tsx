@@ -4,17 +4,11 @@ import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
-import { FormTextInput } from "@/components/ui/FormTextInput";
-import { GenderField } from "@/components/ui/GenderField";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
-import { ExistingMemberPicker } from "@/components/members/ExistingMemberPicker";
-import {
-  MemberFormModeToggle,
-  type MemberFormMode,
-} from "@/components/members/MemberFormModeToggle";
+import { AddRelationSheet } from "@/components/members/AddRelationSheet";
 import {
   addChild,
   addSpouse,
@@ -54,17 +48,7 @@ export function PersonTreeSheet({
 
   const [spouseOpen, setSpouseOpen] = useState(false);
   const [childOpen, setChildOpen] = useState(false);
-  const [spFirst, setSpFirst] = useState("");
-  const [spLast, setSpLast] = useState("");
-  const [spGender, setSpGender] = useState<Gender | "">("");
-  const [chFirst, setChFirst] = useState("");
-  const [chLast, setChLast] = useState("");
-  const [chGender, setChGender] = useState<Gender>("MALE");
   const [chUnionId, setChUnionId] = useState("");
-  const [spouseFormMode, setSpouseFormMode] = useState<MemberFormMode>("create");
-  const [linkSpouseId, setLinkSpouseId] = useState("");
-  const [childFormMode, setChildFormMode] = useState<MemberFormMode>("create");
-  const [linkChildId, setLinkChildId] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   if (!person) return null;
@@ -73,32 +57,34 @@ export function PersonTreeSheet({
   const canAddLocal = isLocal && !isPrivate && mode === "local";
 
   const localPeople = canAddLocal ? peopleForPicker(mode) : [];
+  const marriageOptions = canAddLocal ? unionOptions(mode, person.id) : [];
 
-  const submitSpouse = () => {
-    if (spouseFormMode === "link") {
-      if (!linkSpouseId) {
-        showError(new Error(copy.profile.pickMemberRequired));
-        return;
-      }
-      try {
-        linkSpouse(mode, { personId: person.id, spouseId: linkSpouseId });
-        setSpouseOpen(false);
-        setLinkSpouseId("");
-        setSpouseFormMode("create");
-        bumpDataRevision();
-        onFamilyChanged?.();
-        impactLight();
-        showSuccess(copy.profile.spouseLinked);
-      } catch (e) {
-        showError(e);
-      }
+  const linkSpouseMember = (spouseId: string) => {
+    if (!spouseId) {
+      showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
+    try {
+      linkSpouse(mode, { personId: person.id, spouseId });
+      setSpouseOpen(false);
+      bumpDataRevision();
+      onFamilyChanged?.();
+      impactLight();
+      showSuccess(copy.profile.spouseLinked);
+    } catch (e) {
+      showError(e);
+    }
+  };
 
+  const createSpouseMember = (payload: {
+    firstName: string;
+    lastName: string;
+    gender: Gender;
+    marriageDate?: string;
+  }) => {
     const errors: FieldErrors = {
-      spFirst: required(spFirst, "First name"),
-      spLast: required(spLast, "Last name"),
-      spGender: spGender ? undefined : "Select a gender for the spouse.",
+      spFirst: required(payload.firstName, "First name"),
+      spLast: required(payload.lastName, "Last name"),
     };
     const filtered = Object.fromEntries(
       Object.entries(errors).filter(([, message]) => message),
@@ -108,18 +94,16 @@ export function PersonTreeSheet({
       showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
       return;
     }
-    if (!spGender) return;
     setFieldErrors({});
     try {
       addSpouse(mode, {
         relatedPersonId: person.id,
-        firstName: spFirst.trim(),
-        lastName: spLast.trim(),
-        gender: spGender,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        gender: payload.gender,
+        marriageDate: payload.marriageDate,
       });
       setSpouseOpen(false);
-      setSpFirst("");
-      setSpLast("");
       bumpDataRevision();
       onFamilyChanged?.();
       impactLight();
@@ -129,37 +113,41 @@ export function PersonTreeSheet({
     }
   };
 
-  const submitChild = () => {
-    const marriages = unionOptions(mode, person.id);
-    const unionId = chUnionId || marriages[0]?.id;
+  const linkChildMember = (childId: string) => {
+    const unionId = chUnionId || marriageOptions[0]?.id;
     if (!unionId) {
       showError(copy.profile.needMarriageFirst);
       return;
     }
-
-    if (childFormMode === "link") {
-      if (!linkChildId) {
-        showError(new Error(copy.profile.pickMemberRequired));
-        return;
-      }
-      try {
-        linkChild(mode, { unionId, childId: linkChildId });
-        setChildOpen(false);
-        setLinkChildId("");
-        setChildFormMode("create");
-        bumpDataRevision();
-        onFamilyChanged?.();
-        impactLight();
-        showSuccess(copy.profile.childLinked);
-      } catch (e) {
-        showError(e);
-      }
+    if (!childId) {
+      showError(new Error(copy.profile.pickMemberRequired));
       return;
     }
+    try {
+      linkChild(mode, { unionId, childId });
+      setChildOpen(false);
+      bumpDataRevision();
+      onFamilyChanged?.();
+      impactLight();
+      showSuccess(copy.profile.childLinked);
+    } catch (e) {
+      showError(e);
+    }
+  };
 
+  const createChildMember = (payload: {
+    firstName: string;
+    lastName: string;
+    gender: Gender;
+  }) => {
+    const unionId = chUnionId || marriageOptions[0]?.id;
+    if (!unionId) {
+      showError(copy.profile.needMarriageFirst);
+      return;
+    }
     const errors: FieldErrors = {
-      chFirst: required(chFirst, "First name"),
-      chLast: required(chLast, "Last name"),
+      chFirst: required(payload.firstName, "First name"),
+      chLast: required(payload.lastName, "Last name"),
     };
     const filtered = Object.fromEntries(
       Object.entries(errors).filter(([, message]) => message),
@@ -174,12 +162,11 @@ export function PersonTreeSheet({
       addChild(mode, {
         parentPersonId: person.id,
         unionId,
-        firstName: chFirst.trim(),
-        lastName: chLast.trim(),
-        gender: chGender,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        gender: payload.gender,
       });
       setChildOpen(false);
-      setChFirst("");
       bumpDataRevision();
       onFamilyChanged?.();
       impactLight();
@@ -198,8 +185,8 @@ export function PersonTreeSheet({
         hideActions
         cancelLabel={copy.reports.cancel}
       >
-        <AppText variant="bodySmall" className="text-primary">
-          {person.familyCode}
+        <AppText variant="bodySmall" className="text-muted-foreground">
+          {person.currentCity ?? copy.tree.sheetProfile}
         </AppText>
         <View style={styles.actions}>
           {!isPrivate && (
@@ -219,13 +206,7 @@ export function PersonTreeSheet({
             <Button
               testID="tree-sheet-add-spouse"
               variant="secondary"
-              onPress={() => {
-                setSpouseFormMode("create");
-                setLinkSpouseId("");
-                setSpGender(defaultSpouseGender(person.gender) ?? "");
-                setSpLast(person.lastName);
-                setSpouseOpen(true);
-              }}
+              onPress={() => setSpouseOpen(true)}
             >
               <ButtonText>{copy.profile.addSpouse}</ButtonText>
             </Button>
@@ -235,11 +216,7 @@ export function PersonTreeSheet({
               testID="tree-sheet-add-child"
               variant="secondary"
               onPress={() => {
-                const marriages = unionOptions(mode, person.id);
-                setChildFormMode("create");
-                setLinkChildId("");
-                setChUnionId(marriages[0]?.id ?? "");
-                setChLast(person.lastName);
+                setChUnionId(marriageOptions[0]?.id ?? "");
                 setChildOpen(true);
               }}
             >
@@ -254,102 +231,39 @@ export function PersonTreeSheet({
         </View>
       </FormBottomSheet>
 
-      <FormBottomSheet
+      <AddRelationSheet
         visible={spouseOpen}
+        kind="spouse"
         title={copy.profile.addSpouse}
+        members={localPeople}
+        excludeIds={[person.id]}
+        defaultGender={defaultSpouseGender(person.gender) ?? "MALE"}
         onDismiss={() => setSpouseOpen(false)}
-        onSubmit={submitSpouse}
-        submitLabel={copy.profile.saveChanges}
+        onSubmitCreate={createSpouseMember}
+        onSubmitLink={linkSpouseMember}
         submitTestID="member-spouse-save"
-        cancelLabel={copy.reports.cancel}
-      >
-        <MemberFormModeToggle mode={spouseFormMode} onChange={setSpouseFormMode} />
-        {spouseFormMode === "link" ? (
-          <ExistingMemberPicker
-            members={localPeople}
-            excludeIds={[person.id]}
-            selectedId={linkSpouseId}
-            onSelect={setLinkSpouseId}
-          />
-        ) : (
-          <>
-            <FormTextInput
-              testID="member-spouse-first"
-              label="First name"
-              value={spFirst}
-              onChangeText={setSpFirst}
-              errorText={fieldErrors.spFirst}
-            />
-            <FormTextInput
-              testID="member-spouse-last"
-              label="Last name"
-              value={spLast}
-              onChangeText={setSpLast}
-              errorText={fieldErrors.spLast}
-            />
-            {fieldErrors.spGender ? (
-              <AppText variant="bodySmall" className="text-destructive">
-                {fieldErrors.spGender}
-              </AppText>
-            ) : null}
-            {spGender ? (
-              <GenderField
-                value={spGender}
-                onChange={(g) => setSpGender(g)}
-                label="Gender"
-              />
-            ) : (
-              <GenderField
-                value="MALE"
-                onChange={(g) => setSpGender(g)}
-                label="Gender"
-              />
-            )}
-          </>
-        )}
-      </FormBottomSheet>
+        fieldErrors={fieldErrors}
+      />
 
-      <FormBottomSheet
+      <AddRelationSheet
         visible={childOpen}
+        kind="child"
         title={copy.profile.addChild}
+        members={localPeople}
+        excludeIds={[person.id]}
+        marriageOptions={marriageOptions}
+        selectedUnionId={chUnionId || marriageOptions[0]?.id}
+        onUnionChange={setChUnionId}
         onDismiss={() => setChildOpen(false)}
-        onSubmit={submitChild}
-        submitLabel={copy.profile.saveChanges}
+        onSubmitCreate={createChildMember}
+        onSubmitLink={linkChildMember}
         submitTestID="member-child-save"
-        cancelLabel={copy.reports.cancel}
-      >
-        <MemberFormModeToggle mode={childFormMode} onChange={setChildFormMode} />
-        {childFormMode === "link" ? (
-          <ExistingMemberPicker
-            members={localPeople}
-            excludeIds={[person.id]}
-            selectedId={linkChildId}
-            onSelect={setLinkChildId}
-          />
-        ) : (
-          <>
-            <FormTextInput
-              testID="member-child-first"
-              label="First name"
-              value={chFirst}
-              onChangeText={setChFirst}
-              errorText={fieldErrors.chFirst}
-            />
-            <FormTextInput
-              testID="member-child-last"
-              label="Last name"
-              value={chLast}
-              onChangeText={setChLast}
-              errorText={fieldErrors.chLast}
-            />
-            <GenderField value={chGender} onChange={setChGender} label="Gender" />
-          </>
-        )}
-      </FormBottomSheet>
+        fieldErrors={fieldErrors}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  actions: { marginTop: space.sm, gap: space.sm },
+  actions: { gap: space.sm, marginTop: space.sm },
 });

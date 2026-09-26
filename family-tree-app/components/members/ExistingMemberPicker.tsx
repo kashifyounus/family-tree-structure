@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
+import { PersonCardRow } from "@/components/members/PersonCardRow";
 import { AppText } from "@/components/ui/AppText";
 import { FormTextInput } from "@/components/ui/FormTextInput";
 import { copy } from "@/content/businessCopy";
-import { useAppTheme } from "@/theme/useAppTheme";
+import {
+  memberInitials,
+  memberPickerSubtitle,
+  type BriefMemberRow,
+} from "@/lib/members/memberPickerSubtitle";
 
-export type BriefMember = {
-  id: string;
-  name: string;
-  familyCode: string;
-};
+export type BriefMember = BriefMemberRow;
 
 type ExistingMemberPickerProps = {
   members: BriefMember[];
@@ -25,7 +26,6 @@ export function ExistingMemberPicker({
   selectedId,
   onSelect,
 }: ExistingMemberPickerProps) {
-  const theme = useAppTheme();
   const [query, setQuery] = useState("");
 
   const excluded = useMemo(() => new Set(excludeIds), [excludeIds]);
@@ -36,8 +36,10 @@ export function ExistingMemberPicker({
       .filter((m) => !excluded.has(m.id))
       .filter((m) => {
         if (!q) return true;
+        const subtitle = memberPickerSubtitle(m);
         return (
           m.name.toLowerCase().includes(q) ||
+          subtitle.toLowerCase().includes(q) ||
           m.familyCode.toLowerCase().includes(q)
         );
       })
@@ -45,49 +47,33 @@ export function ExistingMemberPicker({
   }, [excluded, members, query]);
 
   return (
-    <View style={styles.wrap}>
+    <View className="gap-2">
       <FormTextInput
         label={copy.profile.pickMemberSearch}
         value={query}
         onChangeText={setQuery}
       />
       <ScrollView
-        style={styles.list}
+        style={{ maxHeight: 260 }}
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled
       >
         {filtered.map((m) => {
           const selected = m.id === selectedId;
           return (
-            <Pressable
+            <PersonCardRow
               key={m.id}
               testID={`member-picker-${m.familyCode}`}
-              accessibilityLabel={`${m.name}, ${m.familyCode}`}
+              initials={memberInitials(m.name)}
+              name={m.name}
+              subtitle={memberPickerSubtitle(m)}
+              selected={selected}
               onPress={() => onSelect(m.id)}
-              style={[
-                styles.row,
-                {
-                  backgroundColor: selected
-                    ? theme.colors.primaryContainer
-                    : theme.colors.surfaceVariant,
-                },
-              ]}
-            >
-              <AppText variant="bodyMedium">{m.name}</AppText>
-              <AppText
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                {m.familyCode}
-              </AppText>
-            </Pressable>
+            />
           );
         })}
         {filtered.length === 0 ? (
-          <AppText
-            variant="bodySmall"
-            style={{ color: theme.colors.onSurfaceVariant }}
-          >
+          <AppText variant="bodySmall" className="text-muted-foreground">
             {copy.profile.noPickerMatches}
           </AppText>
         ) : null}
@@ -95,14 +81,3 @@ export function ExistingMemberPicker({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  list: { maxHeight: 220 },
-  row: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginBottom: 6,
-  },
-});

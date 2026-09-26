@@ -456,15 +456,35 @@ export function getLocalMarriage(unionId: string) {
   };
 }
 
-export function listLocalPeopleBrief(): { id: string; name: string; familyCode: string }[] {
+export function listLocalPeopleBrief(): {
+  id: string;
+  name: string;
+  familyCode: string;
+  birthDate: string | null;
+  currentCity: string | null;
+  gender: string | null;
+}[] {
   const db = getDatabase();
-  return db.getAllSync<{ id: string; first_name: string; last_name: string; family_code: string }>(
-    "SELECT id, first_name, last_name, family_code FROM persons ORDER BY last_name, first_name",
-  ).map((person) => ({
-    id: person.id,
-    name: `${person.first_name} ${person.last_name}`,
-    familyCode: person.family_code,
-  }));
+  return db
+    .getAllSync<{
+      id: string;
+      first_name: string;
+      last_name: string;
+      family_code: string;
+      birth_date: string | null;
+      current_city: string | null;
+      gender: string | null;
+    }>(
+      "SELECT id, first_name, last_name, family_code, birth_date, current_city, gender FROM persons ORDER BY last_name, first_name",
+    )
+    .map((person) => ({
+      id: person.id,
+      name: `${person.first_name} ${person.last_name}`,
+      familyCode: person.family_code,
+      birthDate: person.birth_date,
+      currentCity: person.current_city,
+      gender: person.gender,
+    }));
 }
 
 export function exportLocalDatabaseJson(): string {

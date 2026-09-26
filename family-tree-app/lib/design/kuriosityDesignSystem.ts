@@ -28,10 +28,17 @@ export const kuriosityDesign = {
     fieldGap: space.md,
     footerBorder: "border-border",
   },
+  colors: {
+    selectedRowFill: "#E8F0EA",
+    cardPadding: 14,
+    sectionGap: space.md,
+  },
   form: {
     inputMinHeight: 48,
     inputRadius: radius.md,
     inputClass: "min-h-12 rounded-xl border-border bg-muted/40",
+    chipMinHeight: 36,
+    primaryCtaMinHeight: 48,
   },
   typography: {
     screenTitle: "headlineSmall" as const,
