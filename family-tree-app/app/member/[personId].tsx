@@ -13,6 +13,7 @@ import { StyleSheet, View } from "react-native";
 import { AddRelationSheet } from "@/components/members/AddRelationSheet";
 import { MemberProfileHero } from "@/components/members/profile/MemberProfileHero";
 import { ParentPairCards } from "@/components/members/profile/ParentPairCards";
+import { MarriageChildrenList } from "@/components/members/profile/MarriageChildrenList";
 import { SiblingsTable } from "@/components/members/profile/SiblingsTable";
 import { SpousePill } from "@/components/members/profile/SpousePill";
 import { CoupleParentPickerSheet } from "@/components/parents/CoupleParentPickerSheet";
@@ -646,22 +647,15 @@ export default function MemberDetailScreen() {
               >
                 <ButtonText>View marriage</ButtonText>
               </Button>
-              {u.children.map((c) => (
-                <Button
-                  key={c.id}
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/member/[personId]",
-                      params: { personId: c.id, code: c.familyCode },
-                    })
-                  }
-                >
-                  <ButtonText>{c.name} ({c.familyCode})</ButtonText>
-                </Button>
-              ))}
+              <MarriageChildrenList
+                unionChildren={u.children}
+                onPressChild={(childId, familyCode) =>
+                  router.push({
+                    pathname: "/member/[personId]",
+                    params: { personId: childId, code: familyCode },
+                  })
+                }
+              />
             </SectionCard>
           ))
         )}

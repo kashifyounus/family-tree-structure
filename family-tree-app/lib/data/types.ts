@@ -68,6 +68,14 @@ export type LocalReports = {
   ages: ReportBucket[];
 };
 
+export type UnionChildView = {
+  id: string;
+  name: string;
+  familyCode: string;
+  birthDate?: string | null;
+  deathDate?: string | null;
+};
+
 export type LocalUnionView = {
   id: string;
   partner1Id?: string;
@@ -77,7 +85,7 @@ export type LocalUnionView = {
   marriageDate?: string | null;
   divorceDate?: string | null;
   isActive?: boolean;
-  children: { id: string; name: string; familyCode: string }[];
+  children: UnionChildView[];
 };
 
 export type LinkSpouseInput = {
