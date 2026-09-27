@@ -2,6 +2,8 @@
 
 This guide maps **product behavior** from `docs/GAPS.md` and Kuriosity slices to **automated checks** so you can validate functional processes without manually tapping every screen.
 
+**Competitive context:** see [`docs/COMPETITIVE-GENEALOGY-UX.md`](./COMPETITIVE-GENEALOGY-UX.md) for Family Gem / MyHeritage parity, roadmap buckets, and shorthand requirement IDs (`F-*`, `T-*`, `R-*`) used in the test linkage table there.
+
 ## Test pyramid for this repo
 
 ```
@@ -38,23 +40,23 @@ This guide maps **product behavior** from `docs/GAPS.md` and Kuriosity slices to
 
 Statuses: **Covered** = existing test file locks behavior; **Gap** = critical path with no dedicated test (add when fixing bugs).
 
-| Priority | Kuriosity requirement | Primary code | Test(s) | Status |
-|----------|----------------------|--------------|---------|--------|
-| P0 | Add parent **link-only** (no inline create) | `lib/data/parentAssignService.ts`, profile/tree sheets | `family-tree-app/__tests__/parentAssignService.test.ts` (unknown co-parent pairing) | Partial — UI flow is Maestro |
-| P0 | **Gender** chips on create/edit | `PersonFields`, `memberProfileEditForm` | `memberProfileEditForm.test.ts`, `memberPickerSubtitle.test.ts` | Partial |
-| P0 | Shared **PersonFields** on add child/spouse/member | `components/forms/*` | `addChildBirthDate.test.ts`, `memberProfileEditForm.test.ts` | Partial |
-| P0 | **Nickname** on create + picker search | `onlinePersonMapper`, members list | `onlinePersonMapper.test.ts`, `normalizeMobilePersonDetails.test.ts` | Partial |
-| P0 | **Online** read/create mapping | `lib/data/onlinePersonMapper.ts` | `onlinePersonMapper.test.ts` | Covered |
-| P0 | Tree **wing layout** (husband left, wife right; sibs on partner wing) | `shared/marriageTreeLayout.ts` | `shared/marriageTreeLayout.test.ts` | Covered |
-| P0 | Tree **v7 connectors** (orthogonal spouse/parent lines) | `shared/pedigreeConnectors.ts` | `shared/pedigreeConnectors.test.ts` | Covered |
-| P0 | Pedigree **card layout tokens** | `shared/pedigreeLayoutTokens.ts` | `shared/pedigreeTheme.test.ts`, connector tests | Covered |
-| P0 | **Find relation** path enumeration | `lib/kinship/relationPaths.ts` | `relationPaths.test.ts`, `computeRelationFinderResult.test.ts` | Covered |
-| P0 | Find relation **truncation** + summary message | `enumeratePathsOnGraph`, `computeRelationFinderResult` | `relationPaths.test.ts`, `computeRelationFinderResult.test.ts` | Covered |
-| P0 | **Change parents** — couple picker assign | `assignParentsToCouple`, `parentCouples.ts` | `parentCouples.test.ts` (ordering/labels); **Gap:** `assignParentsToCouple` + SQLite write | Partial |
-| P0 | **Unknown co-parent** when one parent known | `shared/unknownCoParent.ts` | `shared/unknownCoParent.test.ts`, `parentAssignService.test.ts` | Covered |
-| P0 | Parent slots (father/mother merge) | `lib/rules/parentSlots.ts` | `parentSlots.test.ts` | Covered |
-| P1 | Reports **custom AND query** | `shared/archiveQuery.ts` | `shared/archiveQuery.test.ts` | Covered |
-| P1 | Reports **KPI strip** (Members, Living, Married, Divorces, Male, Female) | `lib/db/localReports.ts` | **Gap** — no `localReports.test.ts` yet | Gap |
+| Priority | ID | Kuriosity requirement | Primary code | Test(s) | Status |
+|----------|-----|----------------------|--------------|---------|--------|
+| P0 | F-01 | Add parent **link-only** (no inline create) | `lib/data/parentAssignService.ts`, profile/tree sheets | `family-tree-app/__tests__/parentAssignService.test.ts` (unknown co-parent pairing) | Partial — UI flow is Maestro |
+| P0 | F-02 | **Gender** chips on create/edit | `PersonFields`, `memberProfileEditForm` | `memberProfileEditForm.test.ts`, `memberPickerSubtitle.test.ts` | Partial |
+| P0 | F-03 | Shared **PersonFields** on add child/spouse/member | `components/forms/*` | `addChildBirthDate.test.ts`, `memberProfileEditForm.test.ts` | Partial |
+| P0 | F-04 | **Nickname** on create + picker search | `onlinePersonMapper`, members list | `onlinePersonMapper.test.ts`, `normalizeMobilePersonDetails.test.ts` | Partial |
+| P0 | F-05 | **Online** read/create mapping | `lib/data/onlinePersonMapper.ts` | `onlinePersonMapper.test.ts` | Covered |
+| P0 | T-01 | Tree **wing layout** (husband left, wife right; sibs on partner wing) | `shared/marriageTreeLayout.ts` | `shared/marriageTreeLayout.test.ts` | Covered |
+| P0 | T-02 | Tree **v7 connectors** (orthogonal spouse/parent lines) | `shared/pedigreeConnectors.ts` | `shared/pedigreeConnectors.test.ts` | Covered |
+| P0 | T-03 | Pedigree **card layout tokens** | `shared/pedigreeLayoutTokens.ts` | `shared/pedigreeTheme.test.ts`, connector tests | Covered |
+| P0 | T-04 | **Find relation** path enumeration | `lib/kinship/relationPaths.ts` | `relationPaths.test.ts`, `computeRelationFinderResult.test.ts` | Covered |
+| P0 | T-05 | Find relation **truncation** + summary message | `enumeratePathsOnGraph`, `computeRelationFinderResult` | `relationPaths.test.ts`, `computeRelationFinderResult.test.ts` | Covered |
+| P0 | F-10 | **Change parents** — couple picker assign | `assignParentsToCouple`, `parentCouples.ts` | `parentCouples.test.ts` (ordering/labels); **Gap:** `assignParentsToCouple` + SQLite write | Partial |
+| P0 | F-11 | **Unknown co-parent** when one parent known | `shared/unknownCoParent.ts` | `shared/unknownCoParent.test.ts`, `parentAssignService.test.ts` | Covered |
+| P0 | F-12 | Parent slots (father/mother merge) | `lib/rules/parentSlots.ts` | `parentSlots.test.ts` | Covered |
+| P1 | R-02 | Reports **custom AND query** | `shared/archiveQuery.ts` | `shared/archiveQuery.test.ts` | Covered |
+| P1 | R-01 | Reports **KPI strip** (Members, Living, Married, Divorces, Male, Female) | `lib/db/localReports.ts` | **Gap** — no `localReports.test.ts` yet | Gap |
 | P1 | Reports filter application on SQLite list | `lib/reports/archiveMembers.ts` | **Gap** — needs in-memory DB or extracted pure KPI builder | Gap |
 | — | **Data refresh** after mutations | `bumpDataRevision`, `LocalFamilyTree` `useMemo` deps | **Gap** — no React test; manual: edit person → tree key changes | Gap |
 | — | Mobile graph build from local DB | `lib/graph/buildLocalFamilyGraph.ts` | **Gap** — integration-only today | Gap |

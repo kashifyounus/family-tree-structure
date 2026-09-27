@@ -32,6 +32,7 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
 ### Engineering follow-ups (no issue yet)
 
+- **Competitive UX checklist** — keep [`docs/COMPETITIVE-GENEALOGY-UX.md`](./COMPETITIVE-GENEALOGY-UX.md) updated when matrix status or P0/P1 buckets change; link tests via [`docs/TESTING-REQUIREMENTS.md`](./TESTING-REQUIREMENTS.md).
 - Kinship “once removed” and other asymmetric paths may still use `KINSHIP_LABEL_FALLBACK`
 
 ## Recently shipped (do not re-implement)
