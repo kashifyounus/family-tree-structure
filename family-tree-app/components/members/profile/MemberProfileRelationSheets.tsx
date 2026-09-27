@@ -4,7 +4,6 @@ import { copy } from "@/content/businessCopy";
 import type { PersonBundle } from "@/lib/data/personService";
 import type { Gender, MemberRecord } from "@/lib/data/types";
 import type { FieldErrors } from "@/lib/forms/fieldErrors";
-import type { ParentSlot } from "@/lib/rules/parentSlots";
 import type { BriefMember } from "@/components/members/ExistingMemberPicker";
 import type { ParentCoupleRow } from "@/lib/db/parentCouples";
 
@@ -14,24 +13,17 @@ type MemberProfileRelationSheetsProps = {
   localPeople: BriefMember[];
   marriageOptions: { id: string; label: string }[];
   childExcludeIds: string[];
-  parentExcludeIds: string[];
   parentCoupleRows: ParentCoupleRow[];
   fieldErrors: FieldErrors;
   defaultSpouseGender: Gender;
   spouseOpen: boolean;
   childOpen: boolean;
-  parentsOpen: boolean;
   coupleParentsOpen: boolean;
   chUnionId: string;
-  parentSlot: ParentSlot;
-  parentStepHint: string | null;
   onDismissSpouse: () => void;
   onDismissChild: () => void;
-  onDismissParents: () => void;
   onDismissCoupleParents: () => void;
   onUnionChange: (unionId: string) => void;
-  onParentSlotChange: (slot: ParentSlot) => void;
-  onLinkParentCouple: () => void;
   onSubmitCreateSpouse: (payload: {
     firstName: string;
     lastName: string;
@@ -50,13 +42,6 @@ type MemberProfileRelationSheetsProps = {
     memberId: string,
     options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
   ) => void;
-  onSubmitCreateParent: (payload: {
-    firstName: string;
-    lastName: string;
-    birthDate?: string;
-    parentSlot?: ParentSlot;
-  }) => void;
-  onSubmitLinkParent: (memberId: string) => void;
   onSelectParentCouple: (row: ParentCoupleRow) => void;
 };
 
@@ -66,30 +51,21 @@ export function MemberProfileRelationSheets({
   localPeople,
   marriageOptions,
   childExcludeIds,
-  parentExcludeIds,
   parentCoupleRows,
   fieldErrors,
   defaultSpouseGender,
   spouseOpen,
   childOpen,
-  parentsOpen,
   coupleParentsOpen,
   chUnionId,
-  parentSlot,
-  parentStepHint,
   onDismissSpouse,
   onDismissChild,
-  onDismissParents,
   onDismissCoupleParents,
   onUnionChange,
-  onParentSlotChange,
-  onLinkParentCouple,
   onSubmitCreateSpouse,
   onSubmitLinkSpouse,
   onSubmitCreateChild,
   onSubmitLinkChild,
-  onSubmitCreateParent,
-  onSubmitLinkParent,
   onSelectParentCouple,
 }: MemberProfileRelationSheetsProps) {
   return (
@@ -121,25 +97,6 @@ export function MemberProfileRelationSheets({
         onSubmitCreate={onSubmitCreateChild}
         onSubmitLink={onSubmitLinkChild}
         submitTestID="member-child-save"
-        fieldErrors={fieldErrors}
-      />
-
-      <AddRelationSheet
-        visible={parentsOpen}
-        kind="parent"
-        title={
-          bundle.parents.length > 0 ? copy.profile.changeParents : copy.profile.addParents
-        }
-        members={localPeople}
-        excludeIds={parentExcludeIds}
-        parentSlot={parentSlot}
-        onParentSlotChange={onParentSlotChange}
-        parentStepHint={parentStepHint}
-        onLinkParentCouple={onLinkParentCouple}
-        onDismiss={onDismissParents}
-        onSubmitCreate={onSubmitCreateParent}
-        onSubmitLink={onSubmitLinkParent}
-        submitTestID="member-parent-save"
         fieldErrors={fieldErrors}
       />
 

@@ -26,6 +26,8 @@ Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
 **1.0.9 slice:** Reports KPI strip + presets + custom AND query (`shared/archiveQuery.ts`); Find relation purple 6px path highlight on tree; professional copy pass on reports / find-relation.
 
+**1.0.11 slice:** Pedigree husband/wife wings (siblings stay on partner side); change-parents couple-card picker only; `dataRevision` refreshes local tree graph.
+
 **1.0.8 slice:** Profile edit uses `PersonFields` (nickname, gender, death); Members + profile nickname chips; Find relation multi-path chips + path count; `relationPaths` enumerator.
 
 ### Engineering follow-ups (no issue yet)

@@ -325,7 +325,7 @@ export function useMemberProfileScreen({
     (result: ReturnType<typeof assignParentSlot>) => {
       if (result.status !== "complete") return;
       setParentStaged(null);
-      setParentsOpen(false);
+      setCoupleParentsOpen(false);
       bumpDataRevision();
       void reload();
       impactLight();
@@ -416,18 +416,14 @@ export function useMemberProfileScreen({
 
   const openParentSheet = useCallback(() => {
     if (!bundle) return;
-    setParentSlot(defaultParentSlotForOpen(bundle.parents, parentStaged));
-    setParentsOpen(true);
-  }, [bundle, parentStaged]);
+    setParentStaged(null);
+    setParentQuery("");
+    setCoupleParentsOpen(true);
+  }, [bundle]);
 
   const dismissCoupleParentsSheet = useCallback(() => {
     setCoupleParentsOpen(false);
     setParentQuery("");
-  }, []);
-
-  const openCoupleParentPicker = useCallback(() => {
-    setParentsOpen(false);
-    setCoupleParentsOpen(true);
   }, []);
 
   const cancelEdit = useCallback(() => {
@@ -538,6 +534,5 @@ export function useMemberProfileScreen({
     createParentMember,
     onSelectParentCouple,
     dismissCoupleParentsSheet,
-    openCoupleParentPicker,
   };
 }

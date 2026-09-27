@@ -1,4 +1,9 @@
 import { getDatabase } from "@/lib/db/database";
+import {
+  formatPersonDisplayName,
+  isUnknownCoParentFamilyCode,
+} from "../../../shared/unknownCoParent";
+
 export type ParentCoupleRow = {
   unionId: string;
   partner1Id: string;
@@ -7,10 +12,59 @@ export type ParentCoupleRow = {
   partner2Code: string;
   partner1Name: string;
   partner2Name: string;
+  partner1Gender: string | null;
+  partner2Gender: string | null;
   marriageDate: string | null;
   isActive: boolean;
   childCount: number;
 };
+
+export type OrderedCouplePartner = {
+  id: string;
+  name: string;
+  familyCode: string;
+};
+
+export function orderedCouplePartners(row: ParentCoupleRow): {
+  husband: OrderedCouplePartner;
+  wife: OrderedCouplePartner;
+} {
+  const p1 = {
+    id: row.partner1Id,
+    name: row.partner1Name,
+    familyCode: row.partner1Code,
+    gender: row.partner1Gender,
+  };
+  const p2 = {
+    id: row.partner2Id,
+    name: row.partner2Name,
+    familyCode: row.partner2Code,
+    gender: row.partner2Gender,
+  };
+  const p1Male = p1.gender === "MALE";
+  const p2Male = p2.gender === "MALE";
+  const p1Female = p1.gender === "FEMALE";
+  const p2Female = p2.gender === "FEMALE";
+  let husband = p1;
+  let wife = p2;
+  if (p1Male && !p2Male) {
+    husband = p1;
+    wife = p2;
+  } else if (p2Male && !p1Male) {
+    husband = p2;
+    wife = p1;
+  } else if (p1Female && !p2Female) {
+    husband = p2;
+    wife = p1;
+  } else if (p2Female && !p1Female) {
+    husband = p1;
+    wife = p2;
+  }
+  return {
+    husband: { id: husband.id, name: husband.name, familyCode: husband.familyCode },
+    wife: { id: wife.id, name: wife.name, familyCode: wife.familyCode },
+  };
+}
 
 export type ParentCoupleFilters = {
   livingOnly?: boolean;
@@ -34,6 +88,8 @@ export function listParentCoupleRows(
     p1_last: string;
     p2_first: string;
     p2_last: string;
+    p1_gender: string | null;
+    p2_gender: string | null;
     p1_death: string | null;
     p2_death: string | null;
     marriage_date: string | null;
@@ -50,6 +106,8 @@ export function listParentCoupleRows(
       p1.last_name AS p1_last,
       p2.first_name AS p2_first,
       p2.last_name AS p2_last,
+      p1.gender AS p1_gender,
+      p2.gender AS p2_gender,
       p1.death_date AS p1_death,
       p2.death_date AS p2_death,
       u.marriage_date,
@@ -75,6 +133,8 @@ export function listParentCoupleRows(
         partner2Code: r.p2_code,
         partner1Name,
         partner2Name,
+        partner1Gender: r.p1_gender,
+        partner2Gender: r.p2_gender,
         marriageDate: r.marriage_date,
         isActive: r.is_active === 1,
         childCount: r.child_count,
@@ -93,5 +153,22 @@ export function listParentCoupleRows(
 }
 
 export function formatCoupleLabel(row: ParentCoupleRow): string {
-  return `${row.partner1Name} × ${row.partner2Name}`;
+  const { husband, wife } = orderedCouplePartners(row);
+  const h = formatPersonDisplayName({
+    firstName: husband.name.split(" ")[0] ?? husband.name,
+    lastName: husband.name.split(" ").slice(1).join(" "),
+    familyCode: husband.familyCode,
+  });
+  const w = formatPersonDisplayName({
+    firstName: wife.name.split(" ")[0] ?? wife.name,
+    lastName: wife.name.split(" ").slice(1).join(" "),
+    familyCode: wife.familyCode,
+  });
+  if (isUnknownCoParentFamilyCode(wife.familyCode)) {
+    return `${h} · Unknown co-parent`;
+  }
+  if (isUnknownCoParentFamilyCode(husband.familyCode)) {
+    return `Unknown co-parent · ${w}`;
+  }
+  return `${h} · ${w}`;
 }

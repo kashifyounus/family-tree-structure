@@ -69,11 +69,95 @@ function birthTime(p: MarriageLayoutPerson): number {
   return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
 }
 
-/** Oldest first (left), unknown birth dates last. */
+/** Oldest first (left), unknown birth dates last; tie-break by id. */
 export function sortByBirthOldestFirst<T extends MarriageLayoutPerson>(
   people: T[],
 ): T[] {
-  return [...people].sort((a, b) => birthTime(a) - birthTime(b));
+  return [...people].sort((a, b) => {
+    const byBirth = birthTime(a) - birthTime(b);
+    if (byBirth !== 0) return byBirth;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+export function resolveMarriagePartners(
+  partnerAId: string,
+  partnerBId: string,
+  peopleById: Map<string, MarriageLayoutPerson>,
+): { husbandId: string; wifeId: string } {
+  const a = peopleById.get(partnerAId);
+  const b = peopleById.get(partnerBId);
+  const aMale = a?.gender === "MALE";
+  const bMale = b?.gender === "MALE";
+  const aFemale = a?.gender === "FEMALE";
+  const bFemale = b?.gender === "FEMALE";
+  if (aMale && !bMale) return { husbandId: partnerAId, wifeId: partnerBId };
+  if (bMale && !aMale) return { husbandId: partnerBId, wifeId: partnerAId };
+  if (aFemale && !bFemale) return { husbandId: partnerBId, wifeId: partnerAId };
+  if (bFemale && !aFemale) return { husbandId: partnerAId, wifeId: partnerBId };
+  return { husbandId: partnerAId, wifeId: partnerBId };
+}
+
+function placeSiblingWing(
+  positions: Map<string, { x: number; y: number }>,
+  edges: MarriageLayoutEdge[],
+  anchorPersonId: string,
+  wing: "left" | "right",
+  siblingIds: string[],
+  columnStep: number,
+  rowY: number,
+  cardWidth: number,
+): number {
+  if (siblingIds.length === 0) {
+    return positions.get(anchorPersonId)?.x ?? 0;
+  }
+  const anchorX = positions.get(anchorPersonId)?.x ?? 0;
+  const placed: string[] = [];
+  siblingIds.forEach((sibId, index) => {
+    let x: number;
+    if (wing === "left") {
+      x = anchorX - (siblingIds.length - index) * columnStep;
+    } else {
+      x = anchorX + cardWidth + (index + 1) * columnStep;
+    }
+    ensurePosition(positions, sibId, x, rowY);
+    placed.push(sibId);
+  });
+
+  if (wing === "left") {
+    for (let i = 0; i < placed.length - 1; i++) {
+      edges.push({
+        id: `sibling-wing-${placed[i]}-${placed[i + 1]}`,
+        source: placed[i],
+        target: placed[i + 1],
+        type: "sibling",
+      });
+    }
+    edges.push({
+      id: `sibling-wing-${placed[placed.length - 1]}-${anchorPersonId}`,
+      source: placed[placed.length - 1],
+      target: anchorPersonId,
+      type: "sibling",
+    });
+    return placed[0] ? (positions.get(placed[0])?.x ?? anchorX) : anchorX;
+  }
+
+  edges.push({
+    id: `sibling-wing-${anchorPersonId}-${placed[0]}`,
+    source: anchorPersonId,
+    target: placed[0],
+    type: "sibling",
+  });
+  for (let i = 0; i < placed.length - 1; i++) {
+    edges.push({
+      id: `sibling-wing-${placed[i]}-${placed[i + 1]}`,
+      source: placed[i],
+      target: placed[i + 1],
+      type: "sibling",
+    });
+  }
+  const last = placed[placed.length - 1];
+  return positions.get(last)?.x ?? anchorX;
 }
 
 export function collectIncludedPersonIds(
@@ -196,7 +280,7 @@ function siblingsOf(
 
 /**
  * Marriage-row center: ego and all spouses on one row; child columns per union;
- * parents above row center; ego siblings left, spouse siblings right.
+ * parents above wings; husband left / wife right; siblings on each partner's wing.
  */
 export function layoutMarriageCentricGraph(
   focalId: string,
@@ -225,8 +309,6 @@ export function layoutMarriageCentricGraph(
   const V = PEDIGREE_ROW_STEP;
   const coupleStep = PEDIGREE_COUPLE_OFFSET;
 
-  ensurePosition(positions, focalId, originX, originY);
-
   const focalUnions = unions
     .filter((u) => u.partner1Id === focalId || u.partner2Id === focalId)
     .sort((a, b) => a.id.localeCompare(b.id));
@@ -248,66 +330,86 @@ export function layoutMarriageCentricGraph(
     }
   }
 
-  spouseEntries.forEach((entry, index) => {
-    const spouseX = originX + (index + 1) * coupleStep;
-    ensurePosition(positions, entry.spouseId, spouseX, originY);
-    edges.push({
-      id: `spouse-${focalId}-${entry.spouseId}`,
-      source: focalId,
-      target: entry.spouseId,
-      type: "spouse",
-      label: entry.union.id,
-    });
-  });
+  let husbandId = focalId;
+  let wifeId: string | null = null;
+  let rightMost = originX + coupleStep;
 
-  const egoSiblings = sortByBirthOldestFirst(
-    siblingsOf(focalId, unions)
+  const primaryEntry = spouseEntries[0];
+  if (primaryEntry) {
+    const partners = resolveMarriagePartners(
+      focalId,
+      primaryEntry.spouseId,
+      peopleById,
+    );
+    husbandId = partners.husbandId;
+    wifeId = partners.wifeId;
+    ensurePosition(positions, husbandId, originX, originY);
+    ensurePosition(positions, wifeId, originX + coupleStep, originY);
+    edges.push({
+      id: `spouse-${husbandId}-${wifeId}`,
+      source: husbandId,
+      target: wifeId,
+      type: "spouse",
+      label: primaryEntry.union.id,
+    });
+    rightMost = originX + coupleStep;
+
+    let extraX = originX + coupleStep;
+    for (let i = 1; i < spouseEntries.length; i++) {
+      const entry = spouseEntries[i];
+      extraX += coupleStep;
+      ensurePosition(positions, entry.spouseId, extraX, originY);
+      rightMost = Math.max(rightMost, extraX);
+      edges.push({
+        id: `spouse-${focalId}-${entry.spouseId}`,
+        source: focalId,
+        target: entry.spouseId,
+        type: "spouse",
+        label: entry.union.id,
+      });
+    }
+  } else {
+    ensurePosition(positions, focalId, originX, originY);
+  }
+
+  let leftMost = originX;
+  const husbandSiblingIds = sortByBirthOldestFirst(
+    siblingsOf(husbandId, unions)
       .filter((id) => included.has(id))
       .map((id) => peopleById.get(id))
       .filter((p): p is MarriageLayoutPerson => !!p),
+  ).map((p) => p.id);
+  leftMost = placeSiblingWing(
+    positions,
+    edges,
+    husbandId,
+    "left",
+    husbandSiblingIds,
+    H,
+    originY,
+    PEDIGREE_CARD_BIG_W,
   );
-  const egoSiblingIds: string[] = [];
-  egoSiblings.forEach((sib, index) => {
-    const x = originX - (index + 1) * H;
-    ensurePosition(positions, sib.id, x, originY);
-    egoSiblingIds.push(sib.id);
-  });
-  for (let i = 0; i < egoSiblingIds.length; i++) {
-    const leftId = i === 0 ? focalId : egoSiblingIds[i - 1];
-    edges.push({
-      id: `sibling-ego-${leftId}-${egoSiblingIds[i]}`,
-      source: leftId,
-      target: egoSiblingIds[i],
-      type: "sibling",
-    });
-  }
 
-  let rightMost = originX + spouseEntries.length * coupleStep;
-  for (const entry of spouseEntries) {
-    const spouseSiblings = sortByBirthOldestFirst(
-      siblingsOf(entry.spouseId, unions)
+  if (wifeId) {
+    const wifeSiblingIds = sortByBirthOldestFirst(
+      siblingsOf(wifeId, unions)
         .filter((id) => included.has(id))
         .map((id) => peopleById.get(id))
         .filter((p): p is MarriageLayoutPerson => !!p),
+    ).map((p) => p.id);
+    const wifeRight = placeSiblingWing(
+      positions,
+      edges,
+      wifeId,
+      "right",
+      wifeSiblingIds,
+      H,
+      originY,
+      PEDIGREE_CARD_BIG_W,
     );
-    const spouseSiblingIds: string[] = [];
-    spouseSiblings.forEach((sib, index) => {
-      const base = positions.get(entry.spouseId)?.x ?? originX;
-      const x = base + (index + 1) * H;
-      rightMost = Math.max(rightMost, x);
-      ensurePosition(positions, sib.id, x, originY);
-      spouseSiblingIds.push(sib.id);
-    });
-    for (let i = 0; i < spouseSiblingIds.length; i++) {
-      const leftId = i === 0 ? entry.spouseId : spouseSiblingIds[i - 1];
-      edges.push({
-        id: `sibling-sp-${leftId}-${spouseSiblingIds[i]}`,
-        source: leftId,
-        target: spouseSiblingIds[i],
-        type: "sibling",
-      });
-    }
+    rightMost = Math.max(rightMost, wifeRight);
   }
+  rightMost = Math.max(rightMost, originX + coupleStep);
 
   function parentsForPerson(personId: string): MarriageLayoutPerson[] {
     const parentUnions = unions.filter((u) =>
@@ -353,26 +455,9 @@ export function layoutMarriageCentricGraph(
     });
   }
 
-  const focalPerson = peopleById.get(focalId);
-  const primarySpouse = spouseEntries[0];
-  if (primarySpouse) {
-    const spouseId = primarySpouse.spouseId;
-    const spousePerson = peopleById.get(spouseId);
-    const focalX = positions.get(focalId)?.x ?? originX;
-    const spouseX = positions.get(spouseId)?.x ?? originX;
-    const focalIsMale = focalPerson?.gender === "MALE";
-    const spouseIsMale = spousePerson?.gender === "MALE";
-    const husbandId =
-      focalIsMale && !spouseIsMale
-        ? focalId
-        : spouseIsMale && !focalIsMale
-          ? spouseId
-          : focalX <= spouseX
-            ? focalId
-            : spouseId;
-    const wifeId = husbandId === focalId ? spouseId : focalId;
-    const husbandX = positions.get(husbandId)?.x ?? focalX;
-    const wifeX = positions.get(wifeId)?.x ?? spouseX;
+  if (wifeId) {
+    const husbandX = positions.get(husbandId)?.x ?? originX;
+    const wifeX = positions.get(wifeId)?.x ?? originX + coupleStep;
     placeParentsAbove(husbandId, husbandX, "left");
     if (!options?.phoneSingleParentSide) {
       placeParentsAbove(wifeId, wifeX, "right");
@@ -383,8 +468,9 @@ export function layoutMarriageCentricGraph(
 
   spouseEntries.forEach((entry, unionIndex) => {
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
-    const egoX = positions.get(focalId)?.x ?? originX;
-    const coupleMidCenter = (egoX + spouseX + PEDIGREE_CARD_BIG_W) / 2;
+    const husbandX = positions.get(husbandId)?.x ?? originX;
+    const wifeX = wifeId ? (positions.get(wifeId)?.x ?? originX + coupleStep) : husbandX;
+    const coupleMidCenter = (husbandX + wifeX + PEDIGREE_CARD_BIG_W) / 2;
     const children = sortByBirthOldestFirst(
       entry.union.childships
         .map((c) => peopleById.get(c.childId))
@@ -414,7 +500,12 @@ export function layoutMarriageCentricGraph(
     if (positions.has(personId)) continue;
     const p = peopleById.get(personId);
     if (!p) continue;
-    ensurePosition(positions, personId, rightMost + H, originY + V);
+    ensurePosition(
+      positions,
+      personId,
+      Math.max(rightMost, leftMost) + H,
+      originY + V,
+    );
   }
 
   return {

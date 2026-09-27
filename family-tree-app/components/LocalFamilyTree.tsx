@@ -24,6 +24,8 @@ import { Button, ButtonText } from "@/components/ui/button";
 
 type LocalFamilyTreeProps = {
   familyCode: string;
+  /** Bumps when local SQLite data changes so the graph rebuilds. */
+  dataRevision?: number;
   immersive?: boolean;
   layout?: "graph" | "list";
   onPersonPress?: (person: GraphPersonSummary) => void;
@@ -38,6 +40,7 @@ type LocalFamilyTreeProps = {
 
 export function LocalFamilyTree({
   familyCode,
+  dataRevision = 0,
   immersive,
   layout = "graph",
   onPersonPress,
@@ -81,15 +84,15 @@ export function LocalFamilyTree({
 
   const focal = useMemo(
     () => getLocalMemberByFamilyCode(familyCode),
-    [familyCode],
+    [familyCode, dataRevision],
   );
   const marriages = useMemo(
     () => (focal ? getLocalUnionsForPerson(focal.id) : []),
-    [focal],
+    [focal, dataRevision],
   );
   const graph = useMemo(
     () => buildLocalFamilyGraph(familyCode.trim(), graphOptions),
-    [familyCode, graphOptions],
+    [familyCode, graphOptions, dataRevision],
   );
 
   const focalMetaLine = useMemo(() => {

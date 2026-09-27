@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { AppText } from "@/components/ui/AppText";
-import { Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel } from "@/components/ui/checkbox";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
+import { Button, ButtonText } from "@/components/ui/button";
 import { copy } from "@/content/businessCopy";
 import type { ParentCoupleRow } from "@/lib/db/parentCouples";
 import { formatCoupleLabel } from "@/lib/db/parentCouples";
+import { CoupleParentPickerRow } from "@/components/parents/CoupleParentPickerRow";
 
 type CoupleParentPickerSheetProps = {
   visible: boolean;
@@ -26,19 +28,17 @@ export function CoupleParentPickerSheet({
   onDismiss,
   onSelectCouple,
 }: CoupleParentPickerSheetProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
-  const [livingOnly, setLivingOnly] = useState(false);
-  const [activeOnly, setActiveOnly] = useState(true);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    if (!q) return rows;
     return rows.filter((row) => {
-      if (activeOnly && !row.isActive) return false;
-      if (!q) return true;
       const hay = `${formatCoupleLabel(row)} ${row.partner1Code} ${row.partner2Code}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [activeOnly, query, rows]);
+  }, [query, rows]);
 
   return (
     <FormBottomSheet
@@ -53,52 +53,38 @@ export function CoupleParentPickerSheet({
           {copy.profile.confirmReplaceParents}
         </AppText>
       ) : null}
-      <FormTextInput label="Search couples" value={query} onChangeText={setQuery} />
-      <View className="flex-row flex-wrap gap-2">
-        <Pressable onPress={() => setActiveOnly((v) => !v)} className="flex-row items-center gap-1">
-          <Checkbox isChecked={activeOnly} onChange={setActiveOnly} value="active">
-            <CheckboxIndicator>
-              <CheckboxIcon />
-            </CheckboxIndicator>
-            <CheckboxLabel>Active marriages</CheckboxLabel>
-          </Checkbox>
-        </Pressable>
-        <Pressable onPress={() => setLivingOnly((v) => !v)} className="flex-row items-center gap-1">
-          <Checkbox isChecked={livingOnly} onChange={setLivingOnly} value="living">
-            <CheckboxIndicator>
-              <CheckboxIcon />
-            </CheckboxIndicator>
-            <CheckboxLabel>Living parents only</CheckboxLabel>
-          </Checkbox>
-        </Pressable>
+      <FormTextInput
+        label={copy.profile.parentCoupleSearchLabel}
+        value={query}
+        onChangeText={setQuery}
+        testID="parent-couple-search"
+      />
+      <View className="mt-1">
+        {filtered.map((row) => (
+          <CoupleParentPickerRow
+            key={row.unionId}
+            row={row}
+            onPress={() => onSelectCouple(row)}
+          />
+        ))}
       </View>
-      <View className="flex-row border-b border-border py-1 mt-1">
-        <AppText variant="labelSmall" className="flex-[1.4]">Parents</AppText>
-        <AppText variant="labelSmall" className="flex-1">Codes</AppText>
-        <AppText variant="labelSmall" className="w-7 text-right">Kids</AppText>
-      </View>
-      {filtered.map((row) => (
-        <Pressable
-          key={row.unionId}
-          onPress={() => onSelectCouple(row)}
-          className="flex-row items-center py-1.5 border-b border-border min-h-8 active:bg-muted"
-        >
-          <AppText variant="bodySmall" numberOfLines={1} className="flex-[1.4] pr-1">
-            {formatCoupleLabel(row)}
-          </AppText>
-          <AppText variant="labelSmall" numberOfLines={1} className="flex-1 text-muted-foreground">
-            {row.partner1Code} · {row.partner2Code}
-          </AppText>
-          <AppText variant="labelSmall" className="w-7 text-right">{row.childCount}</AppText>
-        </Pressable>
-      ))}
       {filtered.length === 0 ? (
         <AppText variant="bodySmall" className="text-muted-foreground">
-          No matching couples. Try another search or add a marriage first.
+          {copy.profile.parentCoupleEmpty}
         </AppText>
       ) : null}
-      <AppText variant="labelSmall" className="text-muted-foreground mt-1">
-        Tap a row to link this person as their child.
+      <Button
+        variant="outline"
+        className="rounded-full min-h-10 mt-2"
+        onPress={() => {
+          onDismiss();
+          router.push("/add-member");
+        }}
+      >
+        <ButtonText>{copy.profile.parentCreateMemberCta}</ButtonText>
+      </Button>
+      <AppText variant="labelSmall" className="text-muted-foreground mt-2">
+        {copy.profile.parentCoupleTapHint}
       </AppText>
     </FormBottomSheet>
   );

@@ -16,6 +16,7 @@ import {
 import { buildPedigreePathHighlightSegments } from "../../../shared/pedigreePathHighlight";
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
+import { resolveMarriagePartners } from "../../../shared/marriageTreeLayout";
 
 export {
   PEDIGREE_CARD_W,
@@ -183,12 +184,30 @@ export function buildPedigreeCanvasPayload(
     const ego = nodes.find((n) => n.id === graph.focalPersonId);
     const partner = nodes.find((n) => n.id === partnerId);
     if (ego && partner && ego.y === partner.y) {
-      const left = ego.x <= partner.x ? ego : partner;
-      const right = ego.x <= partner.x ? partner : ego;
+      const peopleById = new Map([
+        [
+          ego.id,
+          { id: ego.id, gender: ego.gender as "MALE" | "FEMALE" | "OTHER" },
+        ],
+        [
+          partner.id,
+          {
+            id: partner.id,
+            gender: partner.gender as "MALE" | "FEMALE" | "OTHER",
+          },
+        ],
+      ]);
+      const { husbandId, wifeId } = resolveMarriagePartners(
+        ego.id,
+        partner.id,
+        peopleById,
+      );
+      const husband = nodes.find((n) => n.id === husbandId) ?? ego;
+      const wife = nodes.find((n) => n.id === wifeId) ?? partner;
       marriageBand = {
-        x1: left.x + left.w,
-        y: left.y + left.h / 2,
-        x2: right.x,
+        x1: husband.x + husband.w,
+        y: husband.y + husband.h / 2,
+        x2: wife.x,
         label: graph.focalMarriageLabel,
       };
     }

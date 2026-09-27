@@ -117,30 +117,21 @@ export default function MemberDetailScreen() {
         localPeople={derived.localPeople}
         marriageOptions={derived.marriageOptions}
         childExcludeIds={derived.childExcludeIds}
-        parentExcludeIds={derived.parentExcludeIds}
         parentCoupleRows={derived.parentCoupleRows}
         fieldErrors={profile.fieldErrors}
         defaultSpouseGender={derived.defaultSpouseGender}
         spouseOpen={profile.spouseOpen}
         childOpen={profile.childOpen}
-        parentsOpen={profile.parentsOpen}
         coupleParentsOpen={profile.coupleParentsOpen}
         chUnionId={profile.chUnionId}
-        parentSlot={profile.parentSlot}
-        parentStepHint={derived.parentStepHint}
         onDismissSpouse={() => profile.setSpouseOpen(false)}
         onDismissChild={() => profile.setChildOpen(false)}
-        onDismissParents={() => profile.setParentsOpen(false)}
         onDismissCoupleParents={profile.dismissCoupleParentsSheet}
         onUnionChange={profile.setChUnionId}
-        onParentSlotChange={profile.setParentSlot}
-        onLinkParentCouple={profile.openCoupleParentPicker}
         onSubmitCreateSpouse={profile.createSpouseMember}
         onSubmitLinkSpouse={profile.linkSpouseMember}
         onSubmitCreateChild={profile.createChildMember}
         onSubmitLinkChild={profile.linkChildMember}
-        onSubmitCreateParent={profile.createParentMember}
-        onSubmitLinkParent={profile.linkParentMember}
         onSelectParentCouple={(row) => profile.onSelectParentCouple(row.unionId)}
       />
     </>

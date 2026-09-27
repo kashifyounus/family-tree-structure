@@ -238,6 +238,9 @@ export const copy = {
     marriageSaved: "Marriage details saved.",
     confirmReplaceParents:
       "This replaces the current parents. Other children of that marriage stay where they are.",
+    parentCoupleSearchLabel: "Search couples in your archive",
+    parentCoupleEmpty: "No matching couples. Try another search or add a marriage first.",
+    parentCoupleTapHint: "Tap a couple to link as parents (replaces any current parents).",
     kinshipOnline: "Relatives (from family cloud)",
     relationToMe: "Relation to me",
     relationToMeSame: "This is you in your private archive.",

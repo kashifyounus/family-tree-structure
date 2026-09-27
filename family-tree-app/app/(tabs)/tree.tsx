@@ -294,6 +294,7 @@ export default function TreeScreen() {
           <LocalFamilyTree
             key={`${loadedCode}-${dataRevision}-${reloadKey}-${listLayout ? "list" : "graph"}-${pathHighlightIds.join("-")}`}
             familyCode={loadedCode.trim()}
+            dataRevision={dataRevision}
             immersive
             layout={listLayout ? "list" : "graph"}
             onPersonPress={onPersonPress}
@@ -360,7 +361,9 @@ export default function TreeScreen() {
         isLocal={isLocal}
         onDismiss={() => setSheetOpen(false)}
         onCenterTree={centerOnPerson}
-        onFamilyChanged={() => setReloadKey((k) => k + 1)}
+        onFamilyChanged={() => {
+          setReloadKey((k) => k + 1);
+        }}
       />
       <TreeOverflowMenu
         visible={menuOpen}
