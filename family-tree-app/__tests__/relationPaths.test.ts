@@ -55,4 +55,30 @@ describe("relationPaths", () => {
     const label = summarizeKinshipSteps(steps, byId);
     expect(label.length).toBeGreaterThan(0);
   });
+
+  it("sets truncated when maxPaths is exceeded", () => {
+    const child = person("child");
+    const father = person("dad", "MALE");
+    const mother = person("mom", "FEMALE");
+    const people = [child, father, mother];
+    const unions: KinshipUnionRecord[] = [
+      {
+        id: "u1",
+        partner1Id: father.id,
+        partner2Id: mother.id,
+        partner1: father,
+        partner2: mother,
+        childships: [
+          { childId: child.id, child, relationshipType: "BIOLOGICAL" },
+        ],
+      },
+    ];
+    const adj = buildKinshipAdjacency(people, unions);
+    const { paths, truncated } = enumeratePathsOnGraph(adj, child.id, father.id, {
+      maxPaths: 1,
+      maxDepth: 8,
+    });
+    expect(paths).toHaveLength(1);
+    expect(truncated).toBe(true);
+  });
 });

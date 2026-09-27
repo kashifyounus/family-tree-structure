@@ -41,4 +41,15 @@ describe("archiveQuery", () => {
     const q: ArchiveQuery = { and: [{ field: "living", value: "true" }] };
     expect(filterArchivePeople(sample, q)).toHaveLength(1);
   });
+
+  it("AND requires every clause including hasNickname", () => {
+    const q: ArchiveQuery = {
+      and: [
+        { field: "gender", value: "male" },
+        { field: "hasNickname", value: "true" },
+      ],
+    };
+    expect(matchesArchiveQuery(sample[0], q)).toBe(true);
+    expect(matchesArchiveQuery(sample[1], q)).toBe(false);
+  });
 });

@@ -94,4 +94,43 @@ describe("marriageTreeLayout", () => {
     expect(husbandX).toBeLessThan(wifeX);
     expect(husbSibX).toBeLessThan(husbandX);
   });
+
+  it("places wife siblings on the right wing when focal is the husband", () => {
+    const husbandLineUnions = [
+      ...unions,
+      {
+        id: "u-wife-parents",
+        partner1Id: "dad3",
+        partner2Id: "mom3",
+        childships: [{ childId: "spouse" }, { childId: "wifeSib" }],
+      },
+    ];
+    const genderedPeople = new Map(
+      [
+        { id: "ego", birthDate: "1980-01-01", gender: "MALE" },
+        { id: "spouse", birthDate: "1982-01-01", gender: "FEMALE" },
+        { id: "wifeSib", birthDate: "1985-01-01", gender: "FEMALE" },
+        { id: "c1", birthDate: "2010-01-01", gender: "MALE" },
+        { id: "c2", birthDate: "2005-01-01", gender: "FEMALE" },
+        { id: "dad", birthDate: "1950-01-01", gender: "MALE" },
+        { id: "mom", birthDate: "1952-01-01", gender: "FEMALE" },
+        { id: "dad3", birthDate: "1951-01-01", gender: "MALE" },
+        { id: "mom3", birthDate: "1953-01-01", gender: "FEMALE" },
+      ].map((p) => [p.id, p]),
+    );
+
+    const included = collectIncludedPersonIds("ego", husbandLineUnions, 2, 1, 1);
+    included.add("wifeSib");
+    const { positions } = layoutMarriageCentricGraph(
+      "ego",
+      genderedPeople,
+      husbandLineUnions,
+      included,
+    );
+    const husbandX = positions.get("ego")!.x;
+    const wifeX = positions.get("spouse")!.x;
+    const wifeSibX = positions.get("wifeSib")!.x;
+    expect(husbandX).toBeLessThan(wifeX);
+    expect(wifeSibX).toBeGreaterThan(wifeX);
+  });
 });
