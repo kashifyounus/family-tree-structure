@@ -1,4 +1,5 @@
 import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
+import type { KinshipPerson } from "@/lib/kinship/types";
 
 jest.mock("@/lib/db/kinshipLoader", () => {
   const father = {
@@ -52,7 +53,7 @@ jest.mock("@/lib/db/kinshipLoader", () => {
     occupation: null,
     bio: null,
   };
-  const peopleById = new Map([
+  const peopleById = new Map<string, KinshipPerson>([
     ["f", father],
     ["m", mother],
     ["c", child],
