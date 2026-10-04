@@ -146,8 +146,8 @@ export default function AccountScreen() {
         email={localAccount.session?.email}
       />
       <AccountFigmaSections
-        privateArchiveOn={storage.mode === "local"}
-        onPrivateArchiveChange={(on) => void setMode(on ? "local" : "online")}
+        privateArchiveOn={true}
+        onPrivateArchiveChange={() => {}}
         onSignOut={onSignOut}
       />
 

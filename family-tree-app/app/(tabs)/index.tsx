@@ -1,21 +1,24 @@
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { DemoArchiveBanner } from "@/components/archive/DemoArchiveBanner";
 import { HomeTopBar } from "@/components/home/HomeTopBar";
+import { LiveArchiveChecklistCard } from "@/components/home/LiveArchiveChecklistCard";
 import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { StatCard } from "@/components/home/StatCard";
 import { PersonRow } from "@/components/members/PersonRow";
 import { MembersSearchField } from "@/components/members/MembersSearchField";
 import { AppText } from "@/components/ui/AppText";
 import { Screen } from "@/components/ui/Screen";
+import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
+import { evaluateLiveArchiveProgress } from "@/lib/archive/liveArchiveProgress";
+import { isLiveTreeChecklistOpened } from "@/lib/archive/liveChecklistStorage";
 import { listMembers } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
 import { memberInitials, memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
-import { mergeShowcaseStats } from "@/lib/mock/kuriosityShowcase";
 import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
 
 export default function HomeScreen() {
@@ -25,11 +28,24 @@ export default function HomeScreen() {
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<MemberRecord[]>([]);
   const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
+  const [treeOpened, setTreeOpened] = useState(false);
+
+  const focalPersonId = localAccount.session?.focalPersonId;
+  const focalFamilyCode = localAccount.session?.focalFamilyCode;
+
+  const liveProgress = useMemo(() => {
+    if (mode !== "local" || archiveLane !== "live") return null;
+    return evaluateLiveArchiveProgress(focalPersonId, { treeMapOpened: treeOpened });
+  }, [mode, archiveLane, focalPersonId, treeOpened, dataRevision]);
 
   const stats = useMemo(() => {
-    if (mode !== "local") return null;
-    return mergeShowcaseStats(localMemberCount);
-  }, [mode, localMemberCount]);
+    if (mode !== "local" || !liveProgress) return null;
+    return {
+      members: localMemberCount,
+      generations: liveProgress.generationSpan,
+      marriages: liveProgress.marriageCount,
+    };
+  }, [mode, liveProgress, localMemberCount]);
 
   const greeting = useMemo(() => {
     const name = localAccount.session?.displayName?.split(" ")[0];
@@ -88,6 +104,30 @@ export default function HomeScreen() {
     void loadRecentPeople().then(setRecentPeople);
   }, [dataRevision, archiveLane]);
 
+  useEffect(() => {
+    if (archiveLane !== "live") {
+      setTreeOpened(false);
+      return;
+    }
+    void isLiveTreeChecklistOpened().then(setTreeOpened);
+  }, [archiveLane, dataRevision]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (archiveLane === "live") {
+        void isLiveTreeChecklistOpened().then(setTreeOpened);
+      }
+    }, [archiveLane]),
+  );
+
+  const showLiveChecklist =
+    mode === "local" &&
+    archiveLane === "live" &&
+    liveProgress &&
+    !liveProgress.checklistComplete &&
+    focalPersonId &&
+    focalFamilyCode;
+
   return (
     <Screen testID="home-screen" safeTop>
       {mode === "local" && archiveLane === "demo" && (
@@ -106,18 +146,26 @@ export default function HomeScreen() {
         </AppText>
       </View>
 
+      {showLiveChecklist ? (
+        <LiveArchiveChecklistCard
+          steps={liveProgress.steps}
+          focalPersonId={focalPersonId}
+          focalFamilyCode={focalFamilyCode}
+        />
+      ) : null}
+
       {stats ? (
         <View className="flex-row gap-2 mb-5">
           <StatCard value={stats.members} label="Members" />
-          <StatCard value={stats.generations} label="Generations" />
-          <StatCard value={stats.stories} label="Stories" />
+          <StatCard value={stats.generations} label={copy.home.statGenerations} />
+          <StatCard value={stats.marriages} label={copy.home.statMarriages} />
         </View>
       ) : null}
 
       <MembersSearchField
         testID="home-search"
         value={query}
-        placeholder="Search people"
+        placeholder={copy.home.searchPlaceholder}
         onChangeText={setQuery}
         onSubmit={() => void runSearch(query)}
       />

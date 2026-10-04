@@ -71,10 +71,8 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       setArchiveLaneState(lane);
       setActiveArchiveLane(lane);
       getDatabase();
-      const storedMode = await AsyncStorage.getItem(MODE_KEY);
-      if (storedMode === "local" || storedMode === "online") {
-        setModeState(storedMode);
-      }
+      await AsyncStorage.setItem(MODE_KEY, "local");
+      setModeState("local");
       const url = await loadApiUrlOverride();
       if (url) setApiUrlState(url);
       let onboardingDone = await isOnboardingComplete(lane);
@@ -92,7 +90,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       setReady(true);
       log.lifecycle("Local database opened", {
         members,
-        mode: storedMode ?? "local",
+        mode: "local",
         archiveLane: lane,
         hasApiOverride: Boolean(url),
       });

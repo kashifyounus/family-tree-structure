@@ -112,12 +112,11 @@ Per product: **no cloud implementation now.** Remaining online mode, WebView tre
 
 ## Recommended implementation order (next sprint)
 
-1. **P0-1 → P0-3:** Remove showcase rows from Members; counts from SQLite only; delete or gate mock profile route behind dev flag.
-2. **P0-4 → P0-5:** Lane-aware backup labels + confirm dialogs; partition `recentPeople` (and optionally cloud focal key) by `live` | `demo`.
-3. **P1-1 → P1-3:** Demo banner + reset tree `loadedCode` on lane change + optional first-run live checklist.
-4. **P1-4 → P1-6:** Hide cloud onboarding/mode; replace notification/story mocks with empty states or real features later.
-5. **P1-7:** Product call: block manual CRUD on demo vs allow with badge; optional `is_fixture` on manual demo rows.
-6. **P3:** Maestro: demo onboarding, lane switch, tree smoke, clear demo.
+| Wave | Status |
+|------|--------|
+| P0 showcase / dual DB / live-only backup | **Done** |
+| P1 live checklist, home stats, notifications/stories, force local | **Done** |
+| P3 Maestro dual-archive | **Open** |
 
 ---
 

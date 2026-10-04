@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DemoArchiveBanner } from "@/components/archive/DemoArchiveBanner";
+import { markLiveTreeChecklistOpened } from "@/lib/archive/liveChecklistStorage";
 import { GraphWebView } from "@/components/tree/GraphWebView";
 import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { PersonTreeSheet } from "@/components/tree/PersonTreeSheet";
@@ -182,6 +183,12 @@ export default function TreeScreen() {
     setLoadedCode(focal);
     setReloadKey((k) => k + 1);
   }, [archiveLane, isLocal, localAccount.session?.focalFamilyCode]);
+
+  useEffect(() => {
+    if (isLocal && archiveLane === "live") {
+      void markLiveTreeChecklistOpened();
+    }
+  }, [isLocal, archiveLane]);
 
   useEffect(() => {
     if (isLocal) return;

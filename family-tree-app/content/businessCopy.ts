@@ -158,9 +158,48 @@ export const copy = {
     statsCloud: (members: number, focalCode: string) =>
       `Family cloud: ${members} member${members === 1 ? "" : "s"} in your directory · branch ${focalCode}`,
     statsCloudLoading: "Loading family cloud summary…",
-    searchPlaceholder: "Search people or stories",
+    searchPlaceholder: "Search people",
     recentTitle: "Recently opened",
     openBackupTools: "Backup & tools",
+    statMarriages: "Marriages",
+    statGenerations: "Generations",
+    checklistTitle: "Build your live archive",
+    checklistBody:
+      "Add the core relationships around you, then open the tree map to see your marriage-row layout.",
+    checklistSteps: {
+      spouse: {
+        title: "Add a spouse or partner",
+        hint: "Open your profile and use Add spouse.",
+        action: "Profile",
+      },
+      parents: {
+        title: "Record your parents",
+        hint: "Link or create parents from your profile.",
+        action: "Profile",
+      },
+      children: {
+        title: "Add a child",
+        hint: "Add children to your marriage from your profile.",
+        action: "Profile",
+      },
+      tree: {
+        title: "Open your family tree map",
+        hint: "See your couple centered with relatives around you.",
+        action: "Tree",
+      },
+    },
+  },
+
+  notifications: {
+    emptyTitle: "No notifications yet",
+    emptyBody:
+      "Activity alerts are not part of this release. Your archive changes are saved on this device.",
+  },
+
+  stories: {
+    emptyTitle: "Stories coming later",
+    emptyBody:
+      "Family stories and photos will live in your archive in a future update.",
   },
 
   tree: {

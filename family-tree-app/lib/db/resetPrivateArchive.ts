@@ -7,6 +7,7 @@ import {
   type ArchiveLane,
 } from "@/lib/db/archiveLane";
 import { getDatabaseForLane, resetLocalDatabase } from "@/lib/db/database";
+import { resetLiveTreeChecklistOpened } from "@/lib/archive/liveChecklistStorage";
 import { resetOnboardingForLane } from "@/lib/onboarding/storage";
 
 /** Wipes the active lane database (live or demo). */
@@ -22,6 +23,7 @@ export async function resetPrivateArchiveAndSignOut(): Promise<void> {
   resetLocalDatabase();
   await SecureStore.deleteItemAsync(localAccountSessionKey(lane));
   await resetOnboardingForLane(lane);
+  await resetLiveTreeChecklistOpened();
 }
 
 /** Clears demo archive completely so you can load sample again from onboarding. */
