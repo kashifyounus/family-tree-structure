@@ -104,9 +104,10 @@ jobs:
     needs: build-debug-apk
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       MAESTRO_CI_FLOWS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.maestro_flow_set || 'maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml' }}
+      MAESTRO_DRIVER_STARTUP_TIMEOUT: 600000
     steps:
       - uses: actions/checkout@v4
 
