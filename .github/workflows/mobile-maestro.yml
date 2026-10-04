@@ -105,6 +105,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      MAESTRO_CI_FLOWS: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.maestro_flow_set || 'maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -129,16 +131,8 @@ jobs:
           cores: 2
           ram-size: 4096M
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: |
-            chmod +x family-tree-app/scripts/ci-maestro-smoke.sh
-            export ANDROID_HOME="$ANDROID_SDK_ROOT"
-            export APK="$GITHUB_WORKSPACE/family-tree-app/android/app/build/outputs/apk/debug/app-debug.apk"
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.maestro_flow_set }}" ]; then
-              export MAESTRO_CI_FLOWS="${{ github.event.inputs.maestro_flow_set }}"
-            else
-              export MAESTRO_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml"
-            fi
-            family-tree-app/scripts/ci-maestro-smoke.sh
+          # android-emulator-runner runs each script line in a separate shell — no multi-line if/fi here.
+          script: family-tree-app/scripts/ci-maestro-smoke.sh
 
       - name: Upload Maestro debug output
         uses: actions/upload-artifact@v4

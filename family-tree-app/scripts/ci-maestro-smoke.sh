@@ -5,7 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-APK="${APK:-$ROOT/android/app/build/outputs/apk/debug/app-debug.apk}"
+APK="${APK:-${GITHUB_WORKSPACE:-$ROOT}/family-tree-app/android/app/build/outputs/apk/debug/app-debug.apk}"
+if [[ ! -f "$APK" ]]; then
+  APK="$ROOT/android/app/build/outputs/apk/debug/app-debug.apk"
+fi
+
+DEFAULT_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml"
+export MAESTRO_CI_FLOWS="${MAESTRO_CI_FLOWS:-$DEFAULT_CI_FLOWS}"
 DEFAULT_FLOW="maestro/flows/01-onboarding-private-archive.yaml"
 FLOW="${MAESTRO_CI_FLOW:-$DEFAULT_FLOW}"
 
