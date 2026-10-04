@@ -1,4 +1,5 @@
-import { getDatabase } from "@/lib/db/database";
+import { assertDemoArchiveLane } from "@/lib/db/archiveLane";
+import { getDatabase, getDatabaseForLane } from "@/lib/db/database";
 import { deleteLocalMember } from "@/lib/db/localRepository";
 import { importDemoDatasetToSqlite } from "@/lib/db/importDemoDataset";
 import { buildCuratedPedigreeDemo } from "../../../shared/demoDataset/buildCuratedPedigreeDemo";
@@ -7,7 +8,7 @@ import { buildHugeDemoDataset } from "../../../shared/demoDataset/buildHugeDemoD
 export const DEFAULT_FIXTURE_TARGET_PERSONS = 2500;
 
 export function countFixturePeople(): number {
-  const db = getDatabase();
+  const db = getDatabaseForLane("demo");
   const row = db.getFirstSync<{ count: number }>(
     "SELECT COUNT(*) AS count FROM persons WHERE is_fixture = 1",
   );
@@ -16,6 +17,7 @@ export function countFixturePeople(): number {
 
 /** Removes fixture rows only; manually created (non-fixture) people and accounts stay. */
 export function wipeFixtureDataset(): { removed: number } {
+  assertDemoArchiveLane();
   const db = getDatabase();
   const fixtureIds = db.getAllSync<{ id: string }>(
     "SELECT id FROM persons WHERE is_fixture = 1",
@@ -66,6 +68,7 @@ export function seedCuratedPedigreeFixture(
 ): ReturnType<typeof importDemoDatasetToSqlite> & {
   stats: ReturnType<typeof buildCuratedPedigreeDemo>["stats"];
 } {
+  assertDemoArchiveLane();
   wipeFixtureDataset();
   onProgress?.({ phase: "Preparing sample family", percent: 5 });
   const dataset = buildCuratedPedigreeDemo();
@@ -84,6 +87,7 @@ export function seedComprehensiveFixture(
   focalFamilyCode: string;
   stats: ReturnType<typeof buildHugeDemoDataset>["stats"];
 } {
+  assertDemoArchiveLane();
   wipeFixtureDataset();
   onProgress?.({ phase: "Generating", percent: 2 });
 

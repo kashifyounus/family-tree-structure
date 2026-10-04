@@ -12,12 +12,12 @@ Captured from product owner (Oct 2026). Use this with [`GAPS.md`](./GAPS.md) for
 | 4 | Spouse’s siblings on the spouse’s right wing | `placeSiblingWing(..., "right")` on wife/spouse side |
 | 5 | Person’s parents above person’s side; spouse’s parents above spouse’s side | `placeParentsAbove` left/right; spouse parents included in graph via `collectIncludedPersonIds` |
 | 6 | Load more relations (expand graph) | Tree tab → parents / siblings / children buttons (`LocalFamilyTree`) |
-| 7 | Fresh empty database to start | SQLite starts empty; **Account → Erase all private archive data** |
+| 7 | Fresh empty database to start | **Live:** `kuriosity_live.db` starts empty; **Demo:** `kuriosity_demo.db` for samples only |
 | 8 | Onboarding with full user info, no hardcoded defaults | Private archive registration form; no pre-filled Kay/demo identity |
 | 9 | Sample data must be genealogically complete (all relations) | Curated Hassan–Khan fixture (`buildCuratedPedigreeDemo`) |
-| 10 | Settings option to remove sample data only | **Account → Remove sample data only** → `wipeFixtureDataset()` |
-| 11 | Manually added people are not deleted when clearing sample | `persons.is_fixture = 0` retained; only `is_fixture = 1` removed |
-| 12 | Sample rows identifiable | `persons.is_fixture` column (SQLite migration `20260924_person_is_fixture`) |
+| 10 | Settings option to clear demo / start again | **Account → Demo lane → Clear demo & start again** |
+| 11 | Live data never mixed with demo | Separate SQLite files; sample import only on demo lane |
+| 12 | Sample rows identifiable | `persons.is_fixture = 1` in demo DB |
 | 13 | End-to-end verification | Jest (`shared`, `family-tree-app`) + Maestro smoke where available |
 
 ## Genealogy / business rules
@@ -27,8 +27,9 @@ Captured from product owner (Oct 2026). Use this with [`GAPS.md`](./GAPS.md) for
 - **Half/step siblings** follow union childships and relationship type in SQLite (see domain notes in `GAPS.md`).
 - **Unknown co-parent** placeholder supported for single-parent lines (not required for curated sample).
 
-## Open questions for product owner
+## Resolved product decisions
 
-1. Should **online / family cloud** tree use the same marriage-centric layout as local SQLite, or keep web React Flow parity only?
-2. When clearing sample data, if the signed-in focal person was part of the sample, should we auto-pick another member or force re-onboarding? (Current: re-point account to oldest non-fixture person, or sign out if none.)
-3. Is the **2,500-person huge demo** still needed in Account, or should only the curated pedigree remain?
+- **No cloud work** for this phase — local SQLite only.
+- **Two databases:** live vs demo (see [`SQLITE_STORAGE.md`](./SQLITE_STORAGE.md)).
+- **Huge ~2,500 demo** stays on the demo lane; generator only adds people via clan forests (union + child links), same relational rules as curated pedigree.
+- **Clear demo** wipes the demo database and returns to onboarding for a fresh sample run.

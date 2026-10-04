@@ -1,21 +1,42 @@
 import * as SecureStore from "expo-secure-store";
 
-import { getDatabase } from "@/lib/db/database";
+import {
+  getActiveArchiveLane,
+  localAccountSessionKey,
+  setActiveArchiveLane,
+  type ArchiveLane,
+} from "@/lib/db/archiveLane";
+import { getDatabaseForLane, resetLocalDatabase } from "@/lib/db/database";
+import { resetOnboardingForLane } from "@/lib/onboarding/storage";
 
-const SESSION_KEY = "mughals_local_account_id";
-
-/** Wipes all private-archive SQLite rows for a fresh start (manual + sample). */
-export function resetPrivateArchiveDatabase(): void {
-  const db = getDatabase();
-  db.execSync("PRAGMA foreign_keys = OFF");
-  db.execSync("DELETE FROM children");
-  db.execSync("DELETE FROM unions");
-  db.execSync("DELETE FROM local_accounts");
-  db.execSync("DELETE FROM persons");
-  db.execSync("PRAGMA foreign_keys = ON");
+/** Wipes the active lane database (live or demo). */
+export function resetArchiveDatabaseForLane(lane: ArchiveLane): void {
+  setActiveArchiveLane(lane);
+  resetLocalDatabase();
 }
 
+/** Wipes live archive SQLite + sign-out + onboarding for live lane. */
 export async function resetPrivateArchiveAndSignOut(): Promise<void> {
-  resetPrivateArchiveDatabase();
-  await SecureStore.deleteItemAsync(SESSION_KEY);
+  const lane: ArchiveLane = "live";
+  setActiveArchiveLane(lane);
+  resetLocalDatabase();
+  await SecureStore.deleteItemAsync(localAccountSessionKey(lane));
+  await resetOnboardingForLane(lane);
+}
+
+/** Clears demo archive completely so you can load sample again from onboarding. */
+export async function resetDemoArchiveAndRestart(): Promise<void> {
+  const lane: ArchiveLane = "demo";
+  setActiveArchiveLane(lane);
+  resetLocalDatabase();
+  await SecureStore.deleteItemAsync(localAccountSessionKey(lane));
+  await resetOnboardingForLane(lane);
+}
+
+export async function resetActiveArchiveAndSignOut(): Promise<void> {
+  const lane = getActiveArchiveLane();
+  setActiveArchiveLane(lane);
+  resetLocalDatabase();
+  await SecureStore.deleteItemAsync(localAccountSessionKey(lane));
+  await resetOnboardingForLane(lane);
 }

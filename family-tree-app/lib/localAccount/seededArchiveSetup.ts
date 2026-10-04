@@ -1,12 +1,14 @@
 import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 
+import {
+  localAccountSessionKey,
+  setActiveArchiveLane,
+} from "@/lib/db/archiveLane";
 import { seedCuratedPedigreeFixture } from "@/lib/db/comprehensiveSeed";
 import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
 import { getDatabase } from "@/lib/db/database";
 import type { LocalAccountSession } from "@/lib/localAccount/service";
-
-const SESSION_KEY = "mughals_local_account_id";
 
 async function hashPassword(email: string, password: string): Promise<string> {
   return Crypto.digestStringAsync(
@@ -25,6 +27,7 @@ export type SeededArchiveOptions = {
 export async function setupSeededCuratedArchive(
   options: SeededArchiveOptions,
 ): Promise<LocalAccountSession> {
+  setActiveArchiveLane("demo");
   const seeded = seedCuratedPedigreeFixture();
   const focal = getLocalMemberByFamilyCode(seeded.focalFamilyCode);
   if (!focal) {
@@ -60,6 +63,6 @@ export async function setupSeededCuratedArchive(
     focalPersonId: focal.id,
     focalFamilyCode: focal.familyCode,
   };
-  await SecureStore.setItemAsync(SESSION_KEY, session.id);
+  await SecureStore.setItemAsync(localAccountSessionKey("demo"), session.id);
   return session;
 }

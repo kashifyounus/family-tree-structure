@@ -73,6 +73,16 @@ export const copy = {
       "Deletes every person and relationship on this device, then signs you out. Use this for a completely fresh database.",
     resetPrivateArchiveSuccess:
       "Private archive erased. Complete onboarding to start again.",
+    archiveLaneTitle: "On-device archive",
+    archiveLaneLive: "Live data",
+    archiveLaneDemo: "Demo & testing",
+    archiveLaneHelp:
+      "Live and demo use separate SQLite files. Sample families never mix into your live records.",
+    demoRestartTitle: "Clear demo & start again",
+    demoRestartHelp:
+      "Erases the demo database only. Your live archive is untouched.",
+    demoRestartSuccess:
+      "Demo archive cleared. Choose a sample or register again from onboarding.",
     appearanceTitle: "Appearance",
     themeLight: "Light",
     themeDark: "Dark",

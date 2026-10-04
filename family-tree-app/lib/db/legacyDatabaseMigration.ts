@@ -8,7 +8,10 @@ import {
 } from "expo-sqlite";
 
 export const LEGACY_DATABASE_NAME = "mughals_family.db";
+/** Single-file DB from builds before live/demo split — migrated into live. */
 export const KURIOSITY_DATABASE_NAME = "kuriosity_family.db";
+
+const LIVE_DATABASE_NAME = "kuriosity_live.db";
 
 export type LegacyMigrationAction =
   | "none"
@@ -38,6 +41,36 @@ function countPersons(db: SQLiteDatabase): number {
 /**
  * One-time move from `mughals_family.db` → `kuriosity_family.db` (file copy when data exists).
  */
+/**
+ * Copies `kuriosity_family.db` → `kuriosity_live.db` when upgrading from single-file storage.
+ */
+export async function migrateSingleFamilyDatabaseToLiveIfNeeded(): Promise<void> {
+  const familyPath = `${defaultDatabaseDirectory}/${KURIOSITY_DATABASE_NAME}`;
+  const livePath = `${defaultDatabaseDirectory}/${LIVE_DATABASE_NAME}`;
+  const [familyInfo, liveInfo] = await Promise.all([
+    getInfoAsync(familyPath),
+    getInfoAsync(livePath),
+  ]);
+  if (!familyInfo.exists || liveInfo.exists) return;
+
+  const familyDb = openDatabaseSync(KURIOSITY_DATABASE_NAME);
+  try {
+    const liveDb = openDatabaseSync(LIVE_DATABASE_NAME);
+    backupDatabaseSync({
+      sourceDatabase: familyDb,
+      destDatabase: liveDb,
+    });
+    liveDb.closeSync();
+  } finally {
+    familyDb.closeSync();
+    try {
+      deleteDatabaseSync(KURIOSITY_DATABASE_NAME);
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export async function migrateLegacyDatabaseIfNeeded(): Promise<void> {
   const legacyPath = `${defaultDatabaseDirectory}/${LEGACY_DATABASE_NAME}`;
   const kuriosityPath = `${defaultDatabaseDirectory}/${KURIOSITY_DATABASE_NAME}`;
@@ -69,6 +102,7 @@ export async function migrateLegacyDatabaseIfNeeded(): Promise<void> {
     } catch {
       // ignore missing legacy file
     }
+    await migrateSingleFamilyDatabaseToLiveIfNeeded();
     return;
   }
 
@@ -88,4 +122,6 @@ export async function migrateLegacyDatabaseIfNeeded(): Promise<void> {
       // ignore
     }
   }
+
+  await migrateSingleFamilyDatabaseToLiveIfNeeded();
 }

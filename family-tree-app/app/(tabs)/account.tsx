@@ -31,10 +31,12 @@ import {
   countFixturePeople,
   seedComprehensiveFixture,
   seedCuratedPedigreeFixture,
-  wipeFixtureDataset,
 } from "@/lib/db/comprehensiveSeed";
-import { resetPrivateArchiveAndSignOut } from "@/lib/db/resetPrivateArchive";
-import { resetOnboardingForDev } from "@/lib/onboarding/storage";
+import type { ArchiveLane } from "@/lib/db/archiveLane";
+import {
+  resetDemoArchiveAndRestart,
+  resetPrivateArchiveAndSignOut,
+} from "@/lib/db/resetPrivateArchive";
 import type { StorageMode } from "@/lib/data/types";
 import { normalizeApiBaseUrl, probeMobileApiHealth } from "@/lib/apiUrl";
 import { useAppTheme } from "@/theme/useAppTheme";
@@ -306,8 +308,26 @@ export default function AccountScreen() {
               { value: "online", label: copy.storage.familyCloudShort },
             ]}
           />
-          <AppText variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</AppText>
           {storage.mode === "local" && (
+            <>
+              <AppText variant="titleSmall">{copy.account.archiveLaneTitle}</AppText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+                {copy.account.archiveLaneHelp}
+              </AppText>
+              <SegmentedControl
+                value={storage.archiveLane}
+                onChange={(v) =>
+                  void storage.setArchiveLane(v as ArchiveLane).then(() => localAccount.refresh())
+                }
+                options={[
+                  { value: "live", label: copy.account.archiveLaneLive },
+                  { value: "demo", label: copy.account.archiveLaneDemo },
+                ]}
+              />
+            </>
+          )}
+          <AppText variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</AppText>
+          {storage.mode === "local" && storage.archiveLane === "demo" && (
             <>
               <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.account.sampleFixtureCount(countFixturePeople())}
@@ -350,25 +370,37 @@ export default function AccountScreen() {
                 {fixtureBusy ? <ButtonSpinner /> : null}
                 <ButtonText>{copy.account.loadHugeSampleFamily}</ButtonText>
               </GsButton>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+                {copy.account.demoRestartHelp}
+              </AppText>
               <GsButton
                 variant="outline"
-                disabled={fixtureBusy || countFixturePeople() === 0}
+                disabled={fixtureBusy}
                 onPress={() => {
                   setFixtureBusy(true);
-                  try {
-                    const { removed } = wipeFixtureDataset();
-                    storage.bumpDataRevision();
-                    showSuccess(copy.account.clearSampleSuccess(removed));
-                  } catch (e) {
-                    showError(e);
-                  } finally {
-                    setFixtureBusy(false);
-                  }
+                  void (async () => {
+                    try {
+                      await resetDemoArchiveAndRestart();
+                      await storage.setArchiveLane("demo");
+                      await localAccount.refresh();
+                      storage.bumpDataRevision();
+                      showSuccess(copy.account.demoRestartSuccess);
+                      router.replace("/onboarding");
+                    } catch (e) {
+                      showError(e);
+                    } finally {
+                      setFixtureBusy(false);
+                    }
+                  })();
                 }}
                 className="self-start"
               >
-                <ButtonText>{copy.account.clearSampleFamily}</ButtonText>
+                <ButtonText>{copy.account.demoRestartTitle}</ButtonText>
               </GsButton>
+            </>
+          )}
+          {storage.mode === "local" && storage.archiveLane === "live" && (
+            <>
               <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
                 {copy.account.resetPrivateArchiveHelp}
               </AppText>
@@ -380,8 +412,8 @@ export default function AccountScreen() {
                   void (async () => {
                     try {
                       await resetPrivateArchiveAndSignOut();
+                      await storage.setArchiveLane("live");
                       await localAccount.refresh();
-                      await resetOnboardingForDev();
                       storage.bumpDataRevision();
                       showSuccess(copy.account.resetPrivateArchiveSuccess);
                       router.replace("/onboarding");

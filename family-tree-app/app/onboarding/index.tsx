@@ -63,6 +63,7 @@ export default function OnboardingScreen() {
 
   const startPrivate = async () => {
     await storage.setMode("local");
+    await storage.setArchiveLane("live");
     setDisplayName("");
     setEmail("");
     setPassword("");
@@ -104,6 +105,7 @@ export default function OnboardingScreen() {
     setBusy(true);
     try {
       await storage.setMode("local");
+      await storage.setArchiveLane("demo");
       const session = await setupKayShowcaseArchive();
       await localAccount.refresh();
       storage.bumpDataRevision();
@@ -120,6 +122,7 @@ export default function OnboardingScreen() {
     setBusy(true);
     try {
       await storage.setMode("local");
+      await storage.setArchiveLane("demo");
       const session = await setupDemoArchive();
       await localAccount.refresh();
       storage.bumpDataRevision();

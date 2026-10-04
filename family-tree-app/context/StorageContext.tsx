@@ -10,6 +10,13 @@ import {
 } from "react";
 
 import type { StorageMode } from "@/lib/data/types";
+import {
+  getActiveArchiveLane,
+  loadArchiveLane,
+  saveArchiveLane,
+  setActiveArchiveLane,
+  type ArchiveLane,
+} from "@/lib/db/archiveLane";
 import { getDatabase } from "@/lib/db/database";
 import { migrateLegacyDatabaseIfNeeded } from "@/lib/db/legacyDatabaseMigration";
 import { countLocalMembers } from "@/lib/db/localRepository";
@@ -34,9 +41,11 @@ type StorageState = {
   ready: boolean;
   onboardingComplete: boolean;
   mode: StorageMode;
+  archiveLane: ArchiveLane;
   apiUrl: string;
   localMemberCount: number;
   setMode: (mode: StorageMode) => Promise<void>;
+  setArchiveLane: (lane: ArchiveLane) => Promise<void>;
   setApiUrl: (url: string) => Promise<void>;
   completeOnboarding: () => Promise<void>;
   refreshLocalStats: () => void;
@@ -50,6 +59,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const [mode, setModeState] = useState<StorageMode>("local");
+  const [archiveLane, setArchiveLaneState] = useState<ArchiveLane>("live");
   const [apiUrl, setApiUrlState] = useState(getApiBaseUrl());
   const [localMemberCount, setLocalMemberCount] = useState(0);
   const [dataRevision, setDataRevision] = useState(0);
@@ -57,6 +67,9 @@ export function StorageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void (async () => {
       await migrateLegacyDatabaseIfNeeded();
+      const lane = await loadArchiveLane();
+      setArchiveLaneState(lane);
+      setActiveArchiveLane(lane);
       getDatabase();
       const storedMode = await AsyncStorage.getItem(MODE_KEY);
       if (storedMode === "local" || storedMode === "online") {
@@ -64,11 +77,14 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       }
       const url = await loadApiUrlOverride();
       if (url) setApiUrlState(url);
-      let onboardingDone = await isOnboardingComplete();
+      let onboardingDone = await isOnboardingComplete(lane);
       const members = countLocalMembers();
       const token = await getAuthToken();
-      if (!onboardingDone && (members > 0 || token || getLocalAccountCount() > 0)) {
-        await setOnboardingComplete();
+      if (
+        !onboardingDone &&
+        (members > 0 || token || getLocalAccountCount() > 0)
+      ) {
+        await setOnboardingComplete(lane);
         onboardingDone = true;
       }
       setOnboardingCompleteState(onboardingDone);
@@ -77,6 +93,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       log.lifecycle("Local database opened", {
         members,
         mode: storedMode ?? "local",
+        archiveLane: lane,
         hasApiOverride: Boolean(url),
       });
     })();
@@ -96,6 +113,20 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.setItem(MODE_KEY, next);
   }, []);
 
+  const setArchiveLane = useCallback(
+    async (lane: ArchiveLane) => {
+      setActiveArchiveLane(lane);
+      await saveArchiveLane(lane);
+      setArchiveLaneState(lane);
+      getDatabase();
+      const onboardingDone = await isOnboardingComplete(lane);
+      setOnboardingCompleteState(onboardingDone);
+      refreshLocalStats();
+      setDataRevision((n) => n + 1);
+    },
+    [refreshLocalStats],
+  );
+
   const setApiUrl = useCallback(async (url: string) => {
     const normalized = normalizeApiBaseUrl(url);
     const validationMessage = validateApiBaseUrl(normalized);
@@ -107,7 +138,8 @@ export function StorageProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const completeOnboarding = useCallback(async () => {
-    await setOnboardingComplete();
+    const lane = getActiveArchiveLane();
+    await setOnboardingComplete(lane);
     setOnboardingCompleteState(true);
   }, []);
 
@@ -116,9 +148,11 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       ready,
       onboardingComplete,
       mode,
+      archiveLane,
       apiUrl,
       localMemberCount,
       setMode,
+      setArchiveLane,
       setApiUrl,
       completeOnboarding,
       refreshLocalStats,
@@ -129,9 +163,11 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       ready,
       onboardingComplete,
       mode,
+      archiveLane,
       apiUrl,
       localMemberCount,
       setMode,
+      setArchiveLane,
       setApiUrl,
       completeOnboarding,
       refreshLocalStats,
