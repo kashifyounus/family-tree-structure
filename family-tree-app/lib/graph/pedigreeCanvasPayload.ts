@@ -16,7 +16,6 @@ import {
 import { buildPedigreePathHighlightSegments } from "../../../shared/pedigreePathHighlight";
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
-import { resolveMarriagePartners } from "../../../shared/marriageTreeLayout";
 import {
   formatPersonDisplayName,
   isUnknownCoParentFamilyCode,
@@ -71,12 +70,30 @@ export type PedigreeCanvasPayloadOptions = {
   highlightPersonIds?: string[];
 };
 
+function marriageBandBetween(
+  a: PedigreeCanvasNode,
+  b: PedigreeCanvasNode,
+  label: string,
+): PedigreeMarriageBand | null {
+  if (a.y !== b.y) return null;
+  const left = a.x <= b.x ? a : b;
+  const right = a.x <= b.x ? b : a;
+  if (right.x <= left.x + left.w + 4) return null;
+  return {
+    x1: left.x + left.w,
+    y: left.y + left.h / 2,
+    x2: right.x,
+    label,
+  };
+}
+
 export type PedigreeCanvasPayload = {
   focalPersonId: string;
   nodes: PedigreeCanvasNode[];
   segments: PedigreeSegment[];
   highlightSegments?: PedigreeSegment[];
   marriageBand?: PedigreeMarriageBand | null;
+  marriageBands?: PedigreeMarriageBand[];
   framingNodeIds?: string[];
   chevronOffset: number;
   theme: PedigreeCanvasTheme;
@@ -197,43 +214,32 @@ export function buildPedigreeCanvasPayload(
       : [];
   const highlightPersonIds = options.highlightPersonIds?.filter(Boolean);
 
-  let marriageBand: PedigreeMarriageBand | null = null;
-  const partnerId = graph.focalPartnerIds?.[0];
-  if (partnerId && graph.focalMarriageLabel) {
-    const ego = nodes.find((n) => n.id === graph.focalPersonId);
-    const partner = nodes.find((n) => n.id === partnerId);
-    if (ego && partner && ego.y === partner.y) {
-      const peopleById = new Map([
-        [
-          ego.id,
-          { id: ego.id, gender: ego.gender as "MALE" | "FEMALE" | "OTHER" },
-        ],
-        [
-          partner.id,
+  const egoNode = nodes.find((n) => n.id === graph.focalPersonId);
+  const marriageBands: PedigreeMarriageBand[] = [];
+  const bandSpecs =
+    graph.focalMarriageBands ??
+    (graph.focalPartnerIds?.[0] && graph.focalMarriageLabel
+      ? [
           {
-            id: partner.id,
-            gender: partner.gender as "MALE" | "FEMALE" | "OTHER",
+            partnerId: graph.focalPartnerIds[0],
+            label: graph.focalMarriageLabel,
           },
-        ],
-      ]);
-      const { husbandId, wifeId } = resolveMarriagePartners(
-        ego.id,
-        partner.id,
-        peopleById,
-      );
-      const husband = nodes.find((n) => n.id === husbandId) ?? ego;
-      const wife = nodes.find((n) => n.id === wifeId) ?? partner;
-      marriageBand = {
-        x1: husband.x + husband.w,
-        y: husband.y + husband.h / 2,
-        x2: wife.x,
-        label: graph.focalMarriageLabel,
-      };
+        ]
+      : []);
+
+  if (egoNode) {
+    for (const spec of bandSpecs) {
+      const partner = nodes.find((n) => n.id === spec.partnerId);
+      if (!partner) continue;
+      const band = marriageBandBetween(egoNode, partner, spec.label);
+      if (band) marriageBands.push(band);
     }
   }
 
+  const marriageBand = marriageBands[0] ?? null;
+
   const framingNodeIds = new Set<string>([graph.focalPersonId]);
-  if (partnerId) framingNodeIds.add(partnerId);
+  for (const id of graph.focalPartnerIds ?? []) framingNodeIds.add(id);
   for (const id of pathIds) framingNodeIds.add(id);
   for (const id of highlightPersonIds ?? []) framingNodeIds.add(id);
   for (const e of graph.edges) {
@@ -256,6 +262,7 @@ export function buildPedigreeCanvasPayload(
     segments,
     highlightSegments,
     marriageBand,
+    marriageBands,
     framingNodeIds: [...framingNodeIds],
     chevronOffset: PEDIGREE_CHEVRON_OFFSET,
     theme: defaultPedigreeCanvasTheme,

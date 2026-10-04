@@ -31,3 +31,19 @@ tags:
     timeout: 15000
 - tapOn:
     id: tree-load-parents
+- extendedWaitUntil:
+    visible:
+      id: local-tree-graph-webview
+    timeout: 15000
+- tapOn:
+    id: tree-load-children
+- extendedWaitUntil:
+    visible:
+      id: local-tree-graph-webview
+    timeout: 15000
+- assertVisible:
+    id: tree-load-parents
+- assertVisible:
+    id: tree-load-siblings
+- assertVisible:
+    id: tree-load-children

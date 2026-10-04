@@ -104,7 +104,7 @@ flowchart TD
 
 | # | Topic | Notes |
 |---|--------|--------|
-| P3-2 | E2E tree layout | Positions in `shared` Jest; no WebView position assertions. |
+| P3-2 | E2E tree layout | `treeLayoutContract.test.ts` + `marriageTreeLayout` Jest; Maestro `12` exercises all load-more buttons (no canvas pixel asserts). |
 | P3-3 | `wipeFixtureDataset` | Unused in UI; full demo reset is the product path. |
 | P3-4 | Maestro CI runtime | Emulator bundle: `01`, `09`, `10`, `11`, `12`, `06`, `07` (see `mobile-maestro.yml`). Longer CI time on main emulator job. |
 
