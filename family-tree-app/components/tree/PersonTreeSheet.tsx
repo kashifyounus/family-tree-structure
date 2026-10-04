@@ -15,6 +15,7 @@ import {
   addSpouse,
   assignParentsToCouple,
   linkChild,
+  linkChildren,
   linkChildToParent,
   linkSpouse,
   parentCouplesForPicker,
@@ -126,6 +127,39 @@ export function PersonTreeSheet({
       onFamilyChanged?.();
       impactLight();
       showSuccess(copy.profile.spouseSaved);
+    } catch (e) {
+      showError(e);
+    }
+  };
+
+  const linkChildMembers = (
+    childIds: string[],
+    options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
+  ) => {
+    const unionId = chUnionId || marriageOptions[0]?.id;
+    const ids = childIds.filter(Boolean);
+    if (ids.length === 0) {
+      showError(new Error(copy.profile.pickMemberRequired));
+      return;
+    }
+    try {
+      if (unionId) {
+        linkChildren(mode, {
+          unionId,
+          childIds: ids,
+          relationshipType: options?.relationshipType,
+        });
+      } else if (ids.length === 1) {
+        linkChildToParent(mode, person.id, ids[0]!);
+      } else {
+        showError(new Error(copy.profile.needMarriageFirst));
+        return;
+      }
+      setChildOpen(false);
+      bumpDataRevision();
+      onFamilyChanged?.();
+      impactLight();
+      showSuccess(copy.profile.childrenLinked(ids.length));
     } catch (e) {
       showError(e);
     }
@@ -314,6 +348,7 @@ export function PersonTreeSheet({
         onDismiss={() => setChildOpen(false)}
         onSubmitCreate={createChildMember}
         onSubmitLink={linkChildMember}
+        onSubmitLinkMany={linkChildMembers}
         submitTestID="member-child-save"
         fieldErrors={fieldErrors}
       />

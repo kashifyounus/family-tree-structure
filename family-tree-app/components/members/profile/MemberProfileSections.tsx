@@ -37,6 +37,10 @@ type MemberProfileSectionsProps = {
   onSaveEdit: () => void;
   onOpenMember: (personId: string, familyCode: string) => void;
   onOpenMarriage: (unionId: string) => void;
+  canEditLocal?: boolean;
+  onUnlinkParents?: () => void;
+  onUnlinkMarriage?: (unionId: string) => void;
+  onUnlinkChild?: (unionId: string, childId: string) => void;
 };
 
 export function MemberProfileSections({
@@ -54,6 +58,10 @@ export function MemberProfileSections({
   onSaveEdit,
   onOpenMember,
   onOpenMarriage,
+  canEditLocal = false,
+  onUnlinkParents,
+  onUnlinkMarriage,
+  onUnlinkChild,
 }: MemberProfileSectionsProps) {
   const theme = useAppTheme();
   const activeUnion = bundle.unions.find((u) => u.id === activeUnionId);
@@ -66,6 +74,11 @@ export function MemberProfileSections({
           mother={motherParent}
           onPressParent={onOpenMember}
         />
+        {canEditLocal && bundle.parents.length > 0 && onUnlinkParents ? (
+          <Button variant="outline" size="sm" className="mt-2 self-start rounded-full" onPress={onUnlinkParents}>
+            <ButtonText>{copy.profile.unlinkParents}</ButtonText>
+          </Button>
+        ) : null}
       </View>
       {spouseNameFromUnion && activeUnion ? (
         <View className="mb-4">
@@ -174,15 +187,35 @@ export function MemberProfileSections({
               u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage
             }
           >
-            <Button
-              variant="outline"
-              size="sm"
-              className="self-start rounded-full"
-              onPress={() => onOpenMarriage(u.id)}
-            >
-              <ButtonText>View marriage</ButtonText>
-            </Button>
-            <MarriageChildrenList unionChildren={u.children} onPressChild={onOpenMember} />
+            <View className="flex-row flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onPress={() => onOpenMarriage(u.id)}
+              >
+                <ButtonText>View marriage</ButtonText>
+              </Button>
+              {canEditLocal && onUnlinkMarriage ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
+                  onPress={() => onUnlinkMarriage(u.id)}
+                >
+                  <ButtonText>{copy.profile.unlinkSpouse}</ButtonText>
+                </Button>
+              ) : null}
+            </View>
+            <MarriageChildrenList
+              unionChildren={u.children}
+              onPressChild={onOpenMember}
+              onUnlinkChild={
+                canEditLocal && onUnlinkChild
+                  ? (childId) => onUnlinkChild(u.id, childId)
+                  : undefined
+              }
+            />
           </SectionCard>
         ))
       )}

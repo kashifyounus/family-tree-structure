@@ -1,12 +1,15 @@
 import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/ui/AppText";
+import { Button, ButtonText } from "@/components/ui/button";
+import { copy } from "@/content/businessCopy";
 import type { UnionChildView } from "@/lib/data/types";
 import { formatDisplayDate } from "@/lib/format/displayDate";
 
 type MarriageChildrenListProps = {
   unionChildren: UnionChildView[];
   onPressChild?: (personId: string, familyCode: string) => void;
+  onUnlinkChild?: (personId: string) => void;
 };
 
 function statusLabel(child: UnionChildView): string {
@@ -14,7 +17,11 @@ function statusLabel(child: UnionChildView): string {
   return "Living";
 }
 
-export function MarriageChildrenList({ unionChildren, onPressChild }: MarriageChildrenListProps) {
+export function MarriageChildrenList({
+  unionChildren,
+  onPressChild,
+  onUnlinkChild,
+}: MarriageChildrenListProps) {
   if (unionChildren.length === 0) {
     return null;
   }
@@ -50,6 +57,16 @@ export function MarriageChildrenList({ unionChildren, onPressChild }: MarriageCh
             <AppText variant="labelSmall" className="w-16 text-right text-muted-foreground">
               {statusLabel(child)}
             </AppText>
+            {onUnlinkChild ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-1 min-h-8 px-2"
+                onPress={() => onUnlinkChild(child.id)}
+              >
+                <ButtonText className="text-xs">{copy.profile.unlinkChild}</ButtonText>
+              </Button>
+            ) : null}
           </Pressable>
         );
       })}

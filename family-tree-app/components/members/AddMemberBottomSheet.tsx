@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
 import {
@@ -6,21 +6,24 @@ import {
   emptyPersonFieldsValue,
   type PersonFieldsValue,
 } from "@/components/forms/PersonFields";
+import { ExistingMemberPicker } from "@/components/members/ExistingMemberPicker";
 import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { FormBottomSheet } from "@/components/ui/FormBottomSheet";
 import { FormTextInput } from "@/components/ui/FormTextInput";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { AppText } from "@/components/ui/AppText";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
 import { createMember } from "@/lib/data/memberRepository";
+import {
+  linkNewMemberToAnchor,
+  type NewMemberRelationKind,
+} from "@/lib/data/linkNewMemberToAnchor";
+import { peopleForPicker } from "@/lib/data/personService";
 import type { StorageMode } from "@/lib/data/types";
 import { type FieldErrors, firstFieldError, required } from "@/lib/forms/fieldErrors";
 
-type RelationshipOption = "parent" | "child" | "spouse" | "sibling";
-
-const RELATIONSHIP_OPTIONS: { value: RelationshipOption; label: string }[] = [
+const RELATIONSHIP_OPTIONS: { value: NewMemberRelationKind; label: string }[] = [
   { value: "parent", label: "Parent" },
   { value: "child", label: "Child" },
   { value: "spouse", label: "Spouse" },
@@ -46,9 +49,20 @@ export function AddMemberBottomSheet({
   const { showError, showSuccess } = useAppFeedback();
   const [person, setPerson] = useState<PersonFieldsValue>(() => emptyPersonFieldsValue());
   const [notes, setNotes] = useState("");
-  const [relationship, setRelationship] = useState<RelationshipOption>("parent");
+  const [relationship, setRelationship] = useState<NewMemberRelationKind>("child");
+  const [anchorId, setAnchorId] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
+
+  const members = useMemo(
+    () => (visible && mode === "local" ? peopleForPicker(mode) : []),
+    [visible, mode],
+  );
+
+  useEffect(() => {
+    if (!visible) return;
+    setAnchorId("");
+  }, [visible, relationship]);
 
   const patchPerson = (patch: Partial<PersonFieldsValue>) => {
     setPerson((prev) => ({ ...prev, ...patch }));
@@ -57,7 +71,8 @@ export function AddMemberBottomSheet({
   const reset = () => {
     setPerson(emptyPersonFieldsValue());
     setNotes("");
-    setRelationship("parent");
+    setRelationship("child");
+    setAnchorId("");
     setFieldErrors({});
   };
 
@@ -74,16 +89,22 @@ export function AddMemberBottomSheet({
       showError(new Error(firstFieldError(filtered) ?? copy.errors.validation));
       return;
     }
+    if (mode === "local" && !anchorId) {
+      showError(new Error(copy.profile.pickMemberRequired));
+      return;
+    }
     setFieldErrors({});
     setSaving(true);
     try {
-      const relationNote = `Relationship: ${relationship}`;
-      const extra = [person.maidenName.trim() ? `Maiden: ${person.maidenName.trim()}` : "", person.suffix.trim() ? `Suffix: ${person.suffix.trim()}` : ""]
+      const extra = [
+        person.maidenName.trim() ? `Maiden: ${person.maidenName.trim()}` : "",
+        person.suffix.trim() ? `Suffix: ${person.suffix.trim()}` : "",
+      ]
         .filter(Boolean)
         .join("; ");
-      const bio = [relationNote, extra, notes.trim()].filter(Boolean).join("\n");
+      const bio = [extra, notes.trim()].filter(Boolean).join("\n");
       const deathDate = person.isLiving ? undefined : person.deathDate.trim() || undefined;
-      await createMember(mode, {
+      const created = await createMember(mode, {
         firstName: person.firstName.trim(),
         lastName: person.lastName.trim(),
         gender: person.gender,
@@ -93,6 +114,9 @@ export function AddMemberBottomSheet({
         deathDate,
         bio: bio || undefined,
       });
+      if (mode === "local" && anchorId) {
+        linkNewMemberToAnchor(mode, created.id, anchorId, relationship);
+      }
       bumpDataRevision();
       showSuccess(copy.members.saveMember);
       reset();
@@ -142,17 +166,61 @@ export function AddMemberBottomSheet({
         firstNameTestID="add-member-first"
         lastNameTestID="add-member-last"
       />
+
       <View className="gap-2">
         <AppText variant="labelMedium" className="text-muted-foreground">
           Relationship
         </AppText>
-        <SegmentedControl
-          value={relationship}
-          options={RELATIONSHIP_OPTIONS}
-          onChange={setRelationship}
-          testIdPrefix="add-member-relationship"
+        <AppText variant="bodySmall" className="text-muted-foreground">
+          {copy.profile.relationshipCardsHint}
+        </AppText>
+        <View className="flex-row flex-wrap gap-2">
+          {RELATIONSHIP_OPTIONS.map((opt) => {
+            const selected = relationship === opt.value;
+            return (
+              <Pressable
+                key={opt.value}
+                testID={`add-member-relationship-${opt.value}`}
+                onPress={() => setRelationship(opt.value)}
+                className={`flex-1 min-w-[44%] rounded-2xl border px-3 py-4 ${
+                  selected ? "border-primary bg-primary/10" : "border-border bg-card"
+                }`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+              >
+                <AppText
+                  variant="titleSmall"
+                  className={selected ? "text-primary font-semibold" : "text-foreground"}
+                >
+                  {opt.label}
+                </AppText>
+                <AppText variant="labelSmall" className="text-muted-foreground mt-1">
+                  {opt.value === "parent"
+                    ? "New person is a parent of…"
+                    : opt.value === "child"
+                      ? "New person is a child of…"
+                      : opt.value === "spouse"
+                        ? "New person is spouse of…"
+                        : "Shares parents with…"}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View className="gap-2">
+        <AppText variant="labelMedium" className="text-muted-foreground">
+          {copy.profile.relateToMember}
+        </AppText>
+        <ExistingMemberPicker
+          members={members}
+          excludeIds={[]}
+          selectedId={anchorId}
+          onSelect={setAnchorId}
         />
       </View>
+
       <FormTextInput
         label="Notes"
         value={notes}
