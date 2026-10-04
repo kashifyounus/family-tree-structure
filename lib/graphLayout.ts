@@ -98,13 +98,12 @@ function layoutFocalCentric(
     const p = peopleById.get(personId);
     if (!pos || !p) continue;
     const isEgo = personId === focal.id;
-    const isPartner = focalPartnerIds.includes(personId);
     nodes.push(
       personNode(
         toPersonSummary(p),
         pos.x,
         pos.y,
-        isFocal && (isEgo || isPartner),
+        isFocal && isEgo,
         hintsFor(personId),
       ),
     );

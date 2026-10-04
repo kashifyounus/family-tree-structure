@@ -115,14 +115,13 @@ export function buildLocalFamilyGraph(
     if (!pos || !p) continue;
     const hints = getExplorationHints(personId, included, allUnions);
     const isEgo = personId === focal.id;
-    const isPartner = focalPartnerIds.includes(personId);
     nodes.push({
       id: personId,
       type: "person",
       position: { x: pos.x, y: pos.y },
       data: {
         person: toGraphPerson(p),
-        isFocal: isEgo || isPartner,
+        isFocal: isEgo,
         isDeceased: !!p.deathDate,
         hasUnexpandedParents: hints.hasUnexpandedParents,
         hasUnexpandedChildren: hints.hasUnexpandedChildren,

@@ -4,6 +4,7 @@ import {
   PEDIGREE_CARD_BIG_W,
 } from "@/lib/graph/pedigreeCanvasPayload";
 import type { FamilyGraph } from "@/lib/graph/types";
+import { UNKNOWN_COPARENT_FAMILY_CODE } from "../../shared/unknownCoParent";
 
 describe("graph webview payload", () => {
   it("includes familyCode and layout positions for node tap routing", () => {
@@ -68,6 +69,78 @@ describe("graph webview payload", () => {
     expect(payload.segments.length).toBeGreaterThan(0);
     expect(payload.theme.canvas).toBe("#F6F1E7");
     expect(payload.theme.primary).toBe("#1B4332");
+  });
+
+  it("labels unknown co-parent placeholders on the canvas", () => {
+    const graph: FamilyGraph = {
+      focalPersonId: "child",
+      nodes: [
+        {
+          id: "child",
+          type: "person",
+          position: { x: 0, y: 100 },
+          data: {
+            isFocal: true,
+            person: {
+              id: "child",
+              familyCode: "FAM-CH",
+              firstName: "Kid",
+              lastName: "One",
+              gender: "MALE",
+              birthDate: null,
+              deathDate: null,
+              currentCity: null,
+              isLiving: true,
+            },
+          },
+        },
+        {
+          id: "mom",
+          type: "person",
+          position: { x: 0, y: 0 },
+          data: {
+            person: {
+              id: "mom",
+              familyCode: "FAM-M",
+              firstName: "Real",
+              lastName: "Mom",
+              gender: "FEMALE",
+              birthDate: null,
+              deathDate: null,
+              currentCity: null,
+              isLiving: true,
+            },
+          },
+        },
+        {
+          id: "unk",
+          type: "person",
+          position: { x: 120, y: 0 },
+          data: {
+            person: {
+              id: "unk",
+              familyCode: UNKNOWN_COPARENT_FAMILY_CODE.MALE,
+              firstName: "__",
+              lastName: "__",
+              gender: "MALE",
+              birthDate: null,
+              deathDate: null,
+              currentCity: null,
+              isLiving: true,
+            },
+          },
+        },
+      ],
+      edges: [
+        { id: "p1", source: "mom", target: "child", type: "parent" },
+        { id: "p2", source: "unk", target: "child", type: "parent" },
+      ],
+    };
+    const payload = buildPedigreeCanvasPayload(graph);
+    const unknownNode = payload.nodes.find((n) => n.id === "unk");
+    expect(unknownNode?.label).toBe("Unknown");
+    expect(unknownNode?.nameLine2).toBe("Parent");
+    expect(unknownNode?.initials).toBe("?");
   });
 
   it("adds purple path highlight segments when path ids provided", () => {

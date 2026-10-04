@@ -17,6 +17,11 @@ import { buildPedigreePathHighlightSegments } from "../../../shared/pedigreePath
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 import { resolveMarriagePartners } from "../../../shared/marriageTreeLayout";
+import {
+  formatPersonDisplayName,
+  isUnknownCoParentFamilyCode,
+  UNKNOWN_COPARENT_DISPLAY,
+} from "../../../shared/unknownCoParent";
 
 export {
   PEDIGREE_CARD_W,
@@ -124,18 +129,32 @@ export function buildPedigreeCanvasPayload(
   const nodes: PedigreeCanvasNode[] = graph.nodes.map((n) => {
     const p = n.data.person;
     const isPrivate = p.treeDisplayIsPrivate === true;
+    const isUnknownCoParent = isUnknownCoParentFamilyCode(p.familyCode);
     const isBig = n.id === graph.focalPersonId || partnerIds.has(n.id);
-    const nameLine1 = isPrivate ? p.firstName : p.firstName.trim();
-    const nameLine2 = isPrivate ? "" : p.lastName.trim();
+    const displayName = formatPersonDisplayName({
+      firstName: p.firstName,
+      lastName: p.lastName,
+      familyCode: p.familyCode,
+    });
+    const nameLine1 = isPrivate
+      ? p.firstName
+      : isUnknownCoParent
+        ? UNKNOWN_COPARENT_DISPLAY.firstName
+        : p.firstName.trim();
+    const nameLine2 = isPrivate
+      ? ""
+      : isUnknownCoParent
+        ? UNKNOWN_COPARENT_DISPLAY.lastName
+        : p.lastName.trim();
     return {
       id: n.id,
       familyCode: p.familyCode,
-      label: isPrivate
-        ? p.firstName
-        : `${nameLine1} ${nameLine2}`.trim(),
+      label: isPrivate ? p.firstName : displayName,
       nameLine1,
       nameLine2,
-      initials: initialsFor(p.firstName, p.lastName, isPrivate),
+      initials: isUnknownCoParent
+        ? "?"
+        : initialsFor(p.firstName, p.lastName, isPrivate),
       years: isPrivate
         ? ""
         : formatLifeYears(p.birthDate, p.deathDate, p.isLiving),
@@ -225,8 +244,7 @@ export function buildPedigreeCanvasPayload(
   const focalNode = nodes.find((n) => n.id === graph.focalPersonId);
   if (focalNode) {
     for (const n of nodes) {
-      if (n.y >= focalNode.y) continue;
-      if (n.x <= focalNode.x + focalNode.w / 2) {
+      if (n.y < focalNode.y - 1) {
         framingNodeIds.add(n.id);
       }
     }

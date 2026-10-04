@@ -94,11 +94,11 @@ flowchart TD
 
 | # | Topic | Notes |
 |---|--------|--------|
-| P2-1 | Focal = wife | Husband-left / wife-right layout; confirm “ego centered” when focal is wife. |
-| P2-2 | Multiple spouses | Marriage row + per-union children—exercise 2+ unions. |
-| P2-3 | Sibling load-more | `siblingSteps`; spouse wing may need gens + steps together. |
-| P2-4 | Unknown co-parent on canvas | Data layer OK; confirm placeholder parent card on tree. |
-| P2-5 | `ShowcasePedigreeTree` | Showcase flag always false; remove or keep for design gallery only. |
+| P2-1 | Focal = wife | Canvas `fitView` anchors on `focalPersonId`; parent framing includes both wings; focal ring only on ego. |
+| P2-2 | Multiple spouses | Child columns centered under each focal+spouse pair (`marriageTreeLayout`). |
+| P2-3 | Sibling load-more | `siblingSteps` expands hop depth (ego + spouse seeds). |
+| P2-4 | Unknown co-parent on canvas | `pedigreeCanvasPayload` shows “Unknown” / “Parent” labels. |
+| P2-5 | `ShowcasePedigreeTree` | **Removed** (showcase data remains in `kuriosityShowcase` for design tests). |
 
 ### P3 — QA & automation
 
