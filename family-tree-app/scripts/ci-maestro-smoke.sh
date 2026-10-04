@@ -76,6 +76,15 @@ if [[ "$install_ok" != true ]]; then
   exit 1
 fi
 
+echo "Preparing device UI for Maestro (wake + keyguard)..."
+adb shell input keyevent 224 >/dev/null 2>&1 || true
+adb shell input keyevent 82 >/dev/null 2>&1 || true
+adb shell wm dismiss-keyguard >/dev/null 2>&1 || true
+sleep 15
+
+export MAESTRO_DRIVER_STARTUP_TIMEOUT="${MAESTRO_DRIVER_STARTUP_TIMEOUT:-600000}"
+echo "MAESTRO_DRIVER_STARTUP_TIMEOUT=${MAESTRO_DRIVER_STARTUP_TIMEOUT}ms"
+
 if ! command -v maestro >/dev/null; then
   echo "Installing Maestro CLI..."
   curl -Ls "https://get.maestro.mobile.dev" | bash
