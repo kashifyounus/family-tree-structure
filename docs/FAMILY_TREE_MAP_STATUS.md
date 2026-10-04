@@ -77,7 +77,7 @@ Status values: `done` | `in_work` | `pending`
 |----|------|--------|-------|
 | S1 | All CI green on PR | done | Web + mobile + Maestro contracts |
 | S2 | PR ready for review | done | Draft cleared when CI green |
-| S3 | Merge to `main` | in_work | Squash merge when CI green |
+| S3 | Merge to `main` | done | `5362339` squash merge PR #24 |
 | S4 | PO device smoke | pending | Human |
 
 ---
