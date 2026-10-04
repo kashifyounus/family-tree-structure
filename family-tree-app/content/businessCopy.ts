@@ -17,6 +17,13 @@ export const copy = {
       "Kuriosity Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
   },
 
+  archive: {
+    demoBanner:
+      "Demo archive — sample data plus any edits you make here. Switch to Live data in Account for your real family.",
+    localOnlyPhase:
+      "This release uses your on-device archive only. Family cloud is not enabled yet.",
+  },
+
   storage: {
     privateArchive: "Private archive (this device)",
     privateArchiveShort: "On this device",
@@ -287,7 +294,9 @@ export const copy = {
     driveSuccess: (name: string) => `A copy was saved to Google Drive as ${name}.`,
     fileBackupTitle: "Export or restore backup file",
     fileBackupBody: (count: number) =>
-      `Download a portable backup of ${count} family member${count === 1 ? "" : "s"}, or restore from a backup you saved earlier. Restoring replaces your private archive on this device.`,
+      `Download a portable backup of ${count} family member${count === 1 ? "" : "s"}, or restore from a backup you saved earlier. Restoring replaces your live archive on this device.`,
+    liveBackupOnly:
+      "Backup and restore are available only for your live archive. Switch to Live data in Account, or use Clear demo & start again for the demo database.",
     exportFile: "Export backup file",
     importFile: "Restore from backup file",
     importPlaceholder: "Paste backup file contents here…",

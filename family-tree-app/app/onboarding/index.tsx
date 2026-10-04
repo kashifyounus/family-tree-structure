@@ -15,24 +15,21 @@ import { Screen } from "@/components/ui/Screen";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
-import { useAuth } from "@/context/AuthContext";
-import { DEFAULT_LOGIN_EMAIL, DEFAULT_LOGIN_PASSWORD } from "@/context/AuthContext";
 import { setupDemoArchive } from "@/lib/localAccount/demoSetup";
 import { setupKayShowcaseArchive } from "@/lib/localAccount/kayShowcaseSetup";
 import type { Gender } from "@/lib/data/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 
-type Step = "start" | "local" | "online";
+type Step = "start" | "local";
 
-const STEPS: Step[] = ["start", "local", "online"];
+const STEPS: Step[] = ["start", "local"];
 
 export default function OnboardingScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const storage = useStorage();
   const localAccount = useLocalAccount();
-  const auth = useAuth();
   const { showError, showSuccess } = useAppFeedback();
 
   const [step, setStep] = useState<Step>("start");
@@ -44,10 +41,6 @@ export default function OnboardingScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState<Gender>("MALE");
-
-  const [apiUrl, setApiUrl] = useState(storage.apiUrl);
-  const [serverEmail, setServerEmail] = useState(DEFAULT_LOGIN_EMAIL);
-  const [serverPassword, setServerPassword] = useState(DEFAULT_LOGIN_PASSWORD);
 
   const progress = (STEPS.indexOf(step) + 1) / STEPS.length;
 
@@ -71,11 +64,6 @@ export default function OnboardingScreen() {
     setLastName("");
     setGender("MALE");
     go("local");
-  };
-
-  const startCloud = async () => {
-    await storage.setMode("online");
-    go("online");
   };
 
   const onRegisterLocal = async () => {
@@ -135,30 +123,6 @@ export default function OnboardingScreen() {
     }
   };
 
-  const onOnlineSetup = async () => {
-    setBusy(true);
-    try {
-      await storage.setApiUrl(apiUrl);
-      const err = await auth.signIn(serverEmail.trim(), serverPassword);
-      if (err) {
-        showError(err);
-        return;
-      }
-      showSuccess(copy.onboarding.cloudConnected);
-      await finish();
-    } catch (e) {
-      showError(e);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const onSkipOnlineAuth = async () => {
-    await storage.setApiUrl(apiUrl);
-    showSuccess(copy.onboarding.addressSaved);
-    await finish();
-  };
-
   return (
     <Screen scroll safeTop testID="onboarding-screen">
       <ProgressBar progress={progress} style={styles.progress} />
@@ -166,14 +130,8 @@ export default function OnboardingScreen() {
         <OnboardingHero title={copy.onboarding.welcomeTitle} subtitle={copy.onboarding.welcomeBody} />
       ) : (
         <OnboardingHero
-          title={
-            step === "local"
-              ? copy.onboarding.registerTitle
-              : copy.onboarding.cloudTitle
-          }
-          subtitle={
-            step === "local" ? copy.onboarding.registerBody : copy.onboarding.cloudBody
-          }
+          title={copy.onboarding.registerTitle}
+          subtitle={copy.onboarding.registerBody}
         />
       )}
 
@@ -208,13 +166,6 @@ export default function OnboardingScreen() {
                 className="w-full rounded-full min-h-12"
               >
                 <ButtonText>{copy.onboarding.privateChoice}</ButtonText>
-              </GsButton>
-              <GsButton
-                variant="outline"
-                onPress={() => void startCloud()}
-                className="w-full rounded-full min-h-12"
-              >
-                <ButtonText>{copy.onboarding.cloudChoice}</ButtonText>
               </GsButton>
               <GsButton
                 testID="onboarding-load-demo"
@@ -287,54 +238,6 @@ export default function OnboardingScreen() {
           </AppCard>
         )}
 
-        {step === "online" && (
-          <AppCard className="rounded-2xl border-border">
-            <AppCardContent style={styles.cardContent}>
-              <FormTextInput
-                testID="onboarding-api-url"
-                label={copy.account.connectionAddress}
-                value={apiUrl}
-                onChangeText={setApiUrl}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                https://your-family-site.com
-              </AppText>
-              <FormTextInput
-                label="Email"
-                value={serverEmail}
-                onChangeText={setServerEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-              <FormTextInput
-                label="Password"
-                value={serverPassword}
-                onChangeText={setServerPassword}
-                secureTextEntry
-              />
-              <GsButton
-                onPress={() => void onOnlineSetup()}
-                disabled={busy}
-                className="w-full rounded-full min-h-12"
-              >
-                {busy ? <ButtonSpinner /> : null}
-                <ButtonText>{copy.onboarding.signInContinue}</ButtonText>
-              </GsButton>
-              <GsButton
-                variant="outline"
-                onPress={() => void onSkipOnlineAuth()}
-                className="w-full rounded-full min-h-12"
-              >
-                <ButtonText>{copy.onboarding.saveAddressOnly}</ButtonText>
-              </GsButton>
-              <GsButton variant="ghost" onPress={() => go("start")} className="w-full">
-                <ButtonText>Back</ButtonText>
-              </GsButton>
-            </AppCardContent>
-          </AppCard>
-        )}
       </Animated.View>
     </Screen>
   );

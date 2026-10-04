@@ -29,7 +29,7 @@ tags:
       id: members-screen
     timeout: 10000
 - tapOn:
-    id: members-row-showcase-margaret-khan
+    id: members-first-card
 - extendedWaitUntil:
     visible:
       id: member-profile-screen

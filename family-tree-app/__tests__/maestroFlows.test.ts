@@ -33,7 +33,7 @@ function collectDeclaredTestIds(): Set<string> {
   const testIdPrefixPattern = /testIdPrefix=["']([a-zA-Z0-9_-]+)["']/g;
   const firstNameTestIdPattern = /firstNameTestID=["']([a-zA-Z0-9_-]+)["']/g;
   const lastNameTestIdPattern = /lastNameTestID=["']([a-zA-Z0-9_-]+)["']/g;
-  const stringLiteralIdPattern = /["'](members-first-card|members-row-showcase-margaret-khan)["']/g;
+  const stringLiteralIdPattern = /["'](members-first-card)["']/g;
 
   for (const root of roots) {
     for (const file of walkSourceFiles(root)) {

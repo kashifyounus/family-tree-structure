@@ -5,14 +5,17 @@ import { useRouter } from "expo-router";
 import { BrandLogo } from "@/components/BrandLogo";
 import { AppText } from "@/components/ui/AppText";
 import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
-import { showcaseUser } from "@/lib/mock/kuriosityShowcase";
 import { useAppTheme } from "@/theme/useAppTheme";
 
 type HomeTopBarProps = {
   notificationCount?: number;
+  avatarInitials?: string;
 };
 
-export function HomeTopBar({ notificationCount = 2 }: HomeTopBarProps) {
+export function HomeTopBar({
+  notificationCount = 0,
+  avatarInitials = "?",
+}: HomeTopBarProps) {
   const theme = useAppTheme();
   const router = useRouter();
 
@@ -54,7 +57,7 @@ export function HomeTopBar({ notificationCount = 2 }: HomeTopBarProps) {
       </Pressable>
       <Avatar className="h-10 w-10 bg-primary/15">
         <AvatarFallbackText className="text-primary font-semibold">
-          {showcaseUser.initials}
+          {avatarInitials}
         </AvatarFallbackText>
       </Avatar>
     </View>

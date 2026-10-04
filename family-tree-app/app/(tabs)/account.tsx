@@ -300,14 +300,9 @@ export default function AccountScreen() {
           <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
             {copy.storage.privateHelp}
           </AppText>
-          <SegmentedControl
-            value={storage.mode}
-            onChange={(v) => void setMode(v)}
-            options={[
-              { value: "local", label: copy.storage.privateArchiveShort },
-              { value: "online", label: copy.storage.familyCloudShort },
-            ]}
-          />
+          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+            {copy.archive.localOnlyPhase}
+          </AppText>
           {storage.mode === "local" && (
             <>
               <AppText variant="titleSmall">{copy.account.archiveLaneTitle}</AppText>

@@ -121,12 +121,12 @@ Per product: **no cloud implementation now.** Remaining online mode, WebView tre
 
 ---
 
-## Open product questions
+## Product decisions (locked)
 
-1. Should **demo lane** allow adding/editing people, or be **read-only sample** only?
-2. Should **import backup** be **live-only** (hard block on demo)?
-3. Keep **huge 2,500** button, or only curated + “regenerate huge” in developer menu?
-4. When switching to demo with **empty demo DB**, always force onboarding—or in-account “Load sample” without onboarding?
+1. **Demo lane** — sample data **plus add/edit** (sandbox).
+2. **Backup / import** — **live archive only** (hard guard in UI + `importLocalDatabaseJson`).
+3. **Demo Account** — keep **curated** and **huge ~2,500** loaders (relational).
+4. **Clear demo** — full wipe → **onboarding** (not in-account-only).
 
 ---
 
