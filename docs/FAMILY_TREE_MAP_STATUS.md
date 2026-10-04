@@ -24,7 +24,7 @@ Status values: `done` | `in_work` | `pending`
 | R10 | Clear demo / start again | done | Full wipe → onboarding |
 | R11 | Live/demo never mixed | done | Lane guards + separate files |
 | R12 | Sample `is_fixture=1` | done | Manual demo adds `is_fixture=0` (accepted) |
-| R13 | Verification | in_work | Jest/Maestro done; PO device sign-off pending |
+| R13 | Verification | in_work | Automated tests green; PO device sign-off pending |
 
 ---
 
@@ -65,7 +65,7 @@ Status values: `done` | `in_work` | `pending`
 | Q1 | `marriageTreeLayout` + app Jest | done | 61+ tests |
 | Q2 | `treeLayoutContract.test.ts` | done | |
 | Q3 | Maestro flows 01, 09–12, 06, 07 | done | Contracts in CI |
-| Q4 | Mobile `tsc --noEmit` in CI | in_work | Fix gender types in contract test |
+| Q4 | Mobile `tsc --noEmit` in CI | done | `npm run typecheck` + contract test Gender fix |
 | Q5 | Emulator Maestro on PR | pending | Runs on `main` job only |
 | Q6 | `wipeFixtureDataset` UI | pending | Not product path |
 
@@ -75,8 +75,8 @@ Status values: `done` | `in_work` | `pending`
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| S1 | All CI green on PR | in_work | |
-| S2 | PR ready for review | pending | After S1 |
+| S1 | All CI green on PR | done | Web + mobile + Maestro contracts |
+| S2 | PR ready for review | done | Draft cleared when CI green |
 | S3 | Merge to `main` | pending | After review |
 | S4 | PO device smoke | pending | Human |
 

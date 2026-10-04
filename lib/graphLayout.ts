@@ -76,7 +76,6 @@ function layoutFocalCentric(
   const {
     positions,
     edges: layoutEdges,
-    focalPartnerIds,
     focalUnionId,
     focalUnionIds,
   } = layoutMarriageCentricGraph(
