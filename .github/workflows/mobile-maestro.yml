@@ -102,7 +102,7 @@ jobs:
           script: |
             chmod +x family-tree-app/scripts/ci-maestro-smoke.sh
             export ANDROID_HOME="$ANDROID_SDK_ROOT"
-            export MAESTRO_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/12-tree-load-more.yaml,maestro/flows/06-link-existing-spouse.yaml,maestro/flows/07-link-existing-child.yaml"
+            export MAESTRO_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml,maestro/flows/06-link-existing-spouse.yaml,maestro/flows/07-link-existing-child.yaml"
             family-tree-app/scripts/ci-maestro-smoke.sh
 
       - name: Upload Maestro debug output

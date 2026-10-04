@@ -106,7 +106,7 @@ flowchart TD
 |---|--------|--------|
 | P3-2 | E2E tree layout | Positions in `shared` Jest; no WebView position assertions. |
 | P3-3 | `wipeFixtureDataset` | Unused in UI; full demo reset is the product path. |
-| P3-4 | Maestro CI coverage | Emulator bundle: `01`, `09`, `12`, `06`, `07`. Flows `10` (lane switch) and `11` (clear demo) exist locally but are not in CI yet. |
+| P3-4 | Maestro CI runtime | Emulator bundle: `01`, `09`, `10`, `11`, `12`, `06`, `07` (see `mobile-maestro.yml`). Longer CI time on main emulator job. |
 
 ### Engineering / out of scope (this phase)
 
