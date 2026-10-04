@@ -74,7 +74,7 @@ export function NavigationGate({ children, fallback }: NavigationGateProps) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   onboardingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 10,
   },
 });
