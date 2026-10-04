@@ -1,7 +1,7 @@
 # Family tree map program — status tracker
 
 **Program:** merged to `main` via [#24](https://github.com/kashifyounus/family-tree-structure/pull/24)  
-**Follow-up PR:** [#25](https://github.com/kashifyounus/family-tree-structure/pull/25) (T8 + smoke doc)  
+**Follow-up:** [#26](https://github.com/kashifyounus/family-tree-structure/pull/26) merged (`caf3bfc`) — T8 tests + smoke doc  
 **Last updated:** 2026-10-04  
 **Device smoke:** [`DEVICE_SMOKE_FAMILY_TREE.md`](./DEVICE_SMOKE_FAMILY_TREE.md)
 
@@ -79,7 +79,8 @@ Status values: `done` | `in_work` | `pending`
 | S1 | All CI green on PR | done | Web + mobile + Maestro contracts |
 | S2 | PR ready for review | done | Draft cleared when CI green |
 | S3 | Merge to `main` | done | `5362339` squash merge PR #24 |
-| S4 | PO device smoke | in_work | Checklist: [`DEVICE_SMOKE_FAMILY_TREE.md`](./DEVICE_SMOKE_FAMILY_TREE.md) |
+| S4a | Automated smoke (`npm run test:smoke` + CI) | done | See [`DEVICE_SMOKE_FAMILY_TREE.md`](./DEVICE_SMOKE_FAMILY_TREE.md) |
+| S4 | PO device smoke (manual checklist) | pending | Human sign-off table in smoke doc |
 
 ---
 

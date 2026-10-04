@@ -3,7 +3,20 @@
 Use after releases touching `family-tree-app/` or `shared/marriageTreeLayout.ts`.  
 Automated overlap: Maestro flows on **`main`** (see `.github/workflows/mobile-maestro.yml`).
 
-**Status property:** track in [`FAMILY_TREE_MAP_STATUS.md`](./FAMILY_TREE_MAP_STATUS.md) → **S4**.
+**Status property:** track in [`FAMILY_TREE_MAP_STATUS.md`](./FAMILY_TREE_MAP_STATUS.md) → **S4** (human), **S4a** (automated).
+
+---
+
+## Automated gate (CI / local)
+
+Runs on every PR and `main` push (mobile job + Maestro flow contracts). Locally:
+
+```bash
+cd family-tree-app
+npm run test:smoke
+```
+
+When this passes, **S4a** is satisfied. **S4** still requires the manual steps below on a device or emulator.
 
 ---
 
