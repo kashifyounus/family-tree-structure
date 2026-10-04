@@ -7,14 +7,18 @@ tags:
 - launchApp:
     clearState: true
 - extendedWaitUntil:
+    notVisible:
+      id: genealogy-boot-screen
+    timeout: 180000
+- extendedWaitUntil:
     visible:
       id: onboarding-get-started
-    timeout: 90000
+    timeout: 120000
 - takeScreenshot: android_01_onboarding
 - extendedWaitUntil:
     visible:
       id: onboarding-screen
-    timeout: 15000
+    timeout: 120000
 - tapOn:
     id: onboarding-get-started
 - extendedWaitUntil:

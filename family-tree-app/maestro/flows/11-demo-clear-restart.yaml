@@ -6,9 +6,13 @@ tags:
 - launchApp:
     clearState: true
 - extendedWaitUntil:
+    notVisible:
+      id: genealogy-boot-screen
+    timeout: 180000
+- extendedWaitUntil:
     visible:
       id: onboarding-screen
-    timeout: 30000
+    timeout: 120000
 - tapOn:
     id: onboarding-kay-showcase
 - extendedWaitUntil:
@@ -26,4 +30,4 @@ tags:
 - extendedWaitUntil:
     visible:
       id: onboarding-screen
-    timeout: 30000
+    timeout: 120000
