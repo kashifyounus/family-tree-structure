@@ -2,6 +2,7 @@ appId: com.mughals.familytree
 tags:
   - smoke
 ---
+- stopApp: com.mughals.familytree
 - launchApp:
     clearState: true
 - extendedWaitUntil:

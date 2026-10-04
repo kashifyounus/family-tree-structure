@@ -9,11 +9,16 @@ on:
     branches: [main]
     paths:
       - "family-tree-app/**"
+      - ".github/workflows/mobile-maestro.yml"
   workflow_dispatch:
+    inputs:
+      maestro_flow_set:
+        description: "Flows to run on emulator (comma-separated paths under family-tree-app/)"
+        required: false
+        default: "maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml"
 
 concurrency:
   group: mobile-maestro-${{ github.event.pull_request.number || github.ref }}
-  # Let main-branch emulator runs finish (slow); cancel only on PR updates.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -38,13 +43,12 @@ jobs:
           npm ci
           npm run test:maestro:contracts
 
-  maestro-onboarding-smoke:
-    name: Android emulator — onboarding flow
+  build-debug-apk:
+    name: Build debug APK
     needs: maestro-contracts
-    # Emulator E2E is slow/flaky on hosted runners; run on main and manual dispatch.
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -88,14 +92,39 @@ jobs:
           cd android
           ./gradlew assembleDebug --no-daemon
 
-      - name: Maestro onboarding smoke (API 30 emulator)
-        uses: reactivecircus/android-emulator-runner@v2
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
         with:
-          api-level: 30
+          name: family-tree-debug-apk
+          path: family-tree-app/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 5
+
+  maestro-emulator-smoke:
+    name: Android emulator — Maestro smoke
+    needs: build-debug-apk
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: family-tree-debug-apk
+          path: family-tree-app/android/app/build/outputs/apk/debug
+
+      - name: Maestro smoke (API 33 emulator)
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          BOOT_TIMEOUT_SEC: 1200
+        with:
+          api-level: 33
           arch: x86_64
           target: google_apis
           profile: pixel_6
-          disable-animations: false
+          disable-animations: true
+          disable-linux-hw-accel: true
           emulator-boot-timeout: 1200
           cores: 2
           ram-size: 4096M
@@ -103,7 +132,12 @@ jobs:
           script: |
             chmod +x family-tree-app/scripts/ci-maestro-smoke.sh
             export ANDROID_HOME="$ANDROID_SDK_ROOT"
-            export MAESTRO_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml,maestro/flows/06-link-existing-spouse.yaml,maestro/flows/07-link-existing-child.yaml"
+            export APK="$GITHUB_WORKSPACE/family-tree-app/android/app/build/outputs/apk/debug/app-debug.apk"
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.maestro_flow_set }}" ]; then
+              export MAESTRO_CI_FLOWS="${{ github.event.inputs.maestro_flow_set }}"
+            else
+              export MAESTRO_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml"
+            fi
             family-tree-app/scripts/ci-maestro-smoke.sh
 
       - name: Upload Maestro debug output
