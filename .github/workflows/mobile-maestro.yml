@@ -13,7 +13,8 @@ on:
 
 concurrency:
   group: mobile-maestro-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Let main-branch emulator runs finish (slow); cancel only on PR updates.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   maestro-contracts:
@@ -95,7 +96,7 @@ jobs:
           target: google_apis
           profile: pixel_6
           disable-animations: false
-          emulator-boot-timeout-in-minutes: 20
+          emulator-boot-timeout: 1200
           cores: 2
           ram-size: 4096M
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim

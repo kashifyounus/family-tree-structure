@@ -16,6 +16,7 @@ export function GenealogyBootScreen({ message = "Loading…" }: GenealogyBootScr
 
   return (
     <View
+      testID="genealogy-boot-screen"
       className="flex-1 items-center justify-center px-8"
       style={{ backgroundColor: theme.colors.background }}
     >
