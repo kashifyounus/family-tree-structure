@@ -1,6 +1,7 @@
 # Family tree map — product requirements (stakeholder)
 
-Captured from product owner (Oct 2026). Use this with [`GAPS.md`](./GAPS.md) for implementation tracking.
+Captured from product owner (Oct 2026). Use this with [`GAPS.md`](./GAPS.md) for implementation tracking.  
+**Live status table:** [`FAMILY_TREE_MAP_STATUS.md`](./FAMILY_TREE_MAP_STATUS.md) (`done` | `in_work` | `pending`).
 
 ## Tree map layout (when a person is focal)
 

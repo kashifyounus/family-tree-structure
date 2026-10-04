@@ -3,7 +3,8 @@ import {
   layoutMarriageCentricGraph,
 } from "../../shared/marriageTreeLayout";
 import { buildPedigreeCanvasPayload } from "@/lib/graph/pedigreeCanvasPayload";
-import type { FamilyGraph } from "@/lib/graph/types";
+import type { Gender } from "@/lib/data/types";
+import type { FamilyGraph, FamilyGraphNode } from "@/lib/graph/types";
 import { PEDIGREE_CARD_BIG_W } from "@/lib/graph/pedigreeCanvasPayload";
 
 /** Layout contract: marriage row + child columns (no SQLite). */
@@ -92,11 +93,14 @@ describe("tree layout contract", () => {
       included,
     );
 
-    const toNode = (id: string, isFocal: boolean) => {
+    const toNode = (id: string, isFocal: boolean): FamilyGraphNode => {
       const pos = positions.get(id)!;
+      const rawGender = people.get(id)?.gender ?? "MALE";
+      const gender: Gender =
+        rawGender === "FEMALE" || rawGender === "OTHER" ? rawGender : "MALE";
       return {
         id,
-        type: "person" as const,
+        type: "person",
         position: pos,
         data: {
           isFocal,
@@ -105,7 +109,7 @@ describe("tree layout contract", () => {
             familyCode: `FAM-${id}`,
             firstName: id,
             lastName: "Test",
-            gender: people.get(id)?.gender ?? "MALE",
+            gender,
             birthDate: null,
             deathDate: null,
             currentCity: null,
