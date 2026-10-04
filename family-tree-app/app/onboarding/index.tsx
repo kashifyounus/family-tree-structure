@@ -124,7 +124,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <Screen scroll safeTop testID="onboarding-screen">
+    <Screen scroll safeTop animated={false} testID="onboarding-screen">
       <ProgressBar progress={progress} style={styles.progress} />
       {step === "start" ? (
         <OnboardingHero title={copy.onboarding.welcomeTitle} subtitle={copy.onboarding.welcomeBody} />

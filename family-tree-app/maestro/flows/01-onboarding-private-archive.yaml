@@ -11,8 +11,15 @@ tags:
     timeout: 180000
 - extendedWaitUntil:
     visible:
-      id: onboarding-get-started
+      id: onboarding-screen
     timeout: 300000
+- scrollUntilVisible:
+    element:
+      id: onboarding-get-started
+- extendedWaitUntil:
+    visible:
+      id: onboarding-get-started
+    timeout: 120000
 - tapOn:
     id: onboarding-get-started
 - extendedWaitUntil:
