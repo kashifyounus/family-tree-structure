@@ -1,11 +1,11 @@
-# Business flow audit — local archive (pre-implementation)
+# Business flow audit — local archive
 
 **Scope:** Local SQLite only (no cloud). Aligns with [`REQUIREMENTS_FAMILY_TREE_MAP.md`](./REQUIREMENTS_FAMILY_TREE_MAP.md) and dual DB [`SQLITE_STORAGE.md`](./SQLITE_STORAGE.md).  
-**Branch reviewed:** `cursor/family-tree-map-requirements-c2cc` (PR #24).
+**Last updated:** post PR #24 (`cursor/family-tree-map-requirements-c2cc`).
 
 ---
 
-## Intended journeys (target state)
+## Intended journeys
 
 ```mermaid
 flowchart TD
@@ -39,10 +39,10 @@ flowchart TD
 
 ---
 
-## What already works (✅)
+## Shipped flows
 
-| Flow | Status |
-|------|--------|
+| Flow | Implementation |
+|------|----------------|
 | Live registration (no prefill) | Onboarding → private → `registerLocalAccount` (live lane only) |
 | Demo seed (curated / huge) | Demo lane + `is_fixture` import |
 | Tree marriage-row layout + load more | `marriageTreeLayout` + `LocalFamilyTree` |
@@ -52,71 +52,67 @@ flowchart TD
 | Erase live archive | Wipes live DB → onboarding |
 | Sample guard | Seeds throw if not on demo lane |
 | Huge demo relational integrity | Clan-forest only (unit test) |
+| Members tab honesty | SQLite-only list; no showcase merge |
+| Member profile route | SQLite only (`useMemberProfileScreen`) |
+| Lane-scoped recents | `@mughals/recent-people/v1/{live\|demo}` |
+| Live-only backup/import | Tools UI + `assertLiveArchiveLane` on import |
+| Demo lane chrome | `DemoArchiveBanner` on Home, Members, Tree, Tools |
+| Live empty-archive guidance | `LiveArchiveChecklistCard` + tree visit flag |
+| Tree focal on lane switch | `tree.tsx` resets `loadedCode` when `archiveLane` changes |
+| Local-only phase | Boot forces local mode; cloud onboarding step removed |
+| Honest home stats | Members / generations / marriages (no fictional stories) |
+| Notifications & stories routes | Empty states (no showcase feed) |
 
 ---
 
-## P0 — Breaks product honesty or data trust
+## Resolved gaps (P0 / P1 / P3 wave)
 
-| # | Gap | Where | Impact |
-|---|-----|--------|--------|
-| **P0-1** | **Fake Members always listed** | `app/(tabs)/members.tsx` merges `showcaseMemberRows` with SQLite rows on every load | User sees Kay, Margaret, etc. that are **not** in the DB; taps open mock profile or Account. Violates “no dummy mixed with real.” |
-| **P0-2** | **Mock Margaret profile route** | `app/member/[personId].tsx` + `ShowcasePersonDetail` | `showcase-margaret-khan` bypasses SQLite entirely. |
-| **P0-3** | **Members count inflated** | `showcaseMembersCount()` in members header | Count can reflect showcase defaults, not DB. |
-| **P0-4** | **Backup/import ignores lane semantics** | `app/(tabs)/tools.tsx` | Export/import always uses **active** DB with no “Live vs Demo” warning; easy to import demo JSON into live while on wrong lane. |
-| **P0-5** | **Recent people shared across lanes** | `lib/recentPeople.ts` single AsyncStorage key | Home “Recently viewed” can link to person IDs that do not exist in the current lane’s DB. |
+| ID | Was | Resolution |
+|----|-----|------------|
+| P0-1–3 | Showcase members / mock Margaret / inflated counts | Removed from archive tabs and member route |
+| P0-4 | Backup/import lane semantics | Live-only import; demo banner on Tools |
+| P0-5 | Shared recents | Per-lane AsyncStorage key |
+| P1-1 | No demo indicator | `DemoArchiveBanner` |
+| P1-2 | Empty live tree | Live archive checklist on Home |
+| P1-3 | Stale tree focal after lane switch | `useEffect` on `archiveLane` |
+| P1-4 | Cloud onboarding | Removed / disabled for local-only phase |
+| P1-5–6 | Fake notifications & story stats | Empty routes; real archive stats |
+| P3-1 | Maestro single-DB only | Flows `09`–`12` (see automation notes below) |
 
----
+**Accepted / not blocking**
 
-## P1 — Core genealogy flows incomplete or confusing
-
-| # | Gap | Notes |
-|---|-----|--------|
-| **P1-1** | **No global “you are on Demo” banner** | Lane switch only under Account; Tree/Home/Members look identical. Risk of editing demo thinking it is live. |
-| **P1-2** | **Empty live tree guidance** | After register, tree shows one person only; no guided checklist (add spouse → parents → children) tied to tree map req. |
-| **P1-3** | **Lane switch + tree focal** | `loadedCode` may stay on previous lane’s family code until user taps “center on my marriage”; needs reset on `setArchiveLane`. |
-| **P1-4** | **Onboarding still offers cloud path** | Step `online` + Account “Family cloud” conflict with “no cloud work”; confuses testers. |
-| **P1-5** | **Home notifications / stories** | `HomeTopBar` default badge `2`; `/notifications` + `/story/*` use showcase copy, not archive data. |
-| **P1-6** | **Stats “Stories” on Home** | `mergeShowcaseStats` derives fictional story count from member count; no stories model in SQLite. |
-| **P1-7** | **Manual adds on demo lane** | `createLocalMember` does not set `is_fixture`; user-added demo people are **not** distinguished from sample (`is_fixture=0`). Clear demo wipes **all** rows anyway, but req #12 implied marking sample only. |
-| **P1-8** | **Register vs demo account** | Demo uses `seededArchiveSetup` (not `registerLocalAccount`); no in-app “sign in to demo” story—only Kay/demo onboarding paths. |
+| ID | Notes |
+|----|--------|
+| P1-7 | Manual demo adds stay `is_fixture=0`; **clear demo** wipes entire demo DB (locked decision). |
+| P1-8 | Demo via Kay/onboarding seed paths only (no separate “demo sign-in”). |
 
 ---
 
-## P2 — Tree map & genealogy depth
+## Open follow-ups
 
-| # | Gap | Notes |
-|---|-----|--------|
-| **P2-1** | **Focal = wife** | Layout uses husband-left / wife-right; ego on wife side is correct but “person always visually center” may feel off—confirm with PO. |
-| **P2-2** | **Multiple spouses** | Extra spouses extend marriage row; children column grouping per union—verify UX with 2+ active unions. |
-| **P2-3** | **Sibling load-more** | `siblingSteps` expands ring; spouse siblings need both gens + siblingSteps—document in UI or auto-include spouse wing. |
-| **P2-4** | **Unknown co-parent on canvas** | Supported in data layer; confirm tree card displays placeholder parent. |
-| **P2-5** | **Dead code: ShowcasePedigreeTree** | `shouldShowShowcasePedigree` always false; tree branch still present. |
+### P2 — Tree map & genealogy depth (verify with PO / manual QA)
 
----
+| # | Topic | Notes |
+|---|--------|--------|
+| P2-1 | Focal = wife | Husband-left / wife-right layout; confirm “ego centered” when focal is wife. |
+| P2-2 | Multiple spouses | Marriage row + per-union children—exercise 2+ unions. |
+| P2-3 | Sibling load-more | `siblingSteps`; spouse wing may need gens + steps together. |
+| P2-4 | Unknown co-parent on canvas | Data layer OK; confirm placeholder parent card on tree. |
+| P2-5 | `ShowcasePedigreeTree` | Showcase flag always false; remove or keep for design gallery only. |
 
-## P3 — QA & automation
+### P3 — QA & automation
 
-| # | Gap | Notes |
-|---|-----|--------|
-| **P3-1** | **Maestro** | `01-onboarding-private-archive` assumes single DB; no flows for demo lane, lane switch, clear demo, tree load-more. |
-| **P3-2** | **No E2E tree layout assertion** | Marriage positions covered in `shared` Jest only, not WebView canvas. |
-| **P3-3** | **`wipeFixtureDataset` unused in UI** | Replaced by full demo reset; dead export or repurpose for “remove fixtures keep manual demo edits” (product decision). |
+| # | Topic | Notes |
+|---|--------|--------|
+| P3-2 | E2E tree layout | Positions in `shared` Jest; no WebView position assertions. |
+| P3-3 | `wipeFixtureDataset` | Unused in UI; full demo reset is the product path. |
+| P3-4 | Maestro CI coverage | Emulator bundle: `01`, `09`, `12`, `06`, `07`. Flows `10` (lane switch) and `11` (clear demo) exist locally but are not in CI yet. |
 
----
+### Engineering / out of scope (this phase)
 
-## Cloud / web (explicitly out of scope)
-
-Per product: **no cloud implementation now.** Remaining online mode, WebView tree, and items in [`MOBILE_AUDIT_GAPS.md`](./MOBILE_AUDIT_GAPS.md) should be **hidden or read-only disabled** in mobile UI to avoid split-brain testing—not fixed in this phase unless PO asks.
-
----
-
-## Recommended implementation order (next sprint)
-
-| Wave | Status |
-|------|--------|
-| P0 showcase / dual DB / live-only backup | **Done** |
-| P1 live checklist, home stats, notifications/stories, force local | **Done** |
-| P3 Maestro dual-archive | **Done** (flows 09–12 + CI smoke 09/12) |
+- **Cloud / online mode** — code paths remain in tree/reports/account but mode is forced **local** at boot; see [`MOBILE_AUDIT_GAPS.md`](./MOBILE_AUDIT_GAPS.md).
+- **Showcase modules** — `kuriosityShowcase.ts` retained for design parity tests, not archive UI.
+- **Epic backlog** — see [`GAPS.md`](./GAPS.md) (v6 tree, Drive backup, package id, etc.).
 
 ---
 
@@ -124,15 +120,16 @@ Per product: **no cloud implementation now.** Remaining online mode, WebView tre
 
 1. **Demo lane** — sample data **plus add/edit** (sandbox).
 2. **Backup / import** — **live archive only** (hard guard in UI + `importLocalDatabaseJson`).
-3. **Demo Account** — keep **curated** and **huge ~2,500** loaders (relational).
-4. **Clear demo** — full wipe → **onboarding** (not in-account-only).
+3. **Demo Account** — **curated** and **huge ~2,500** loaders (relational).
+4. **Clear demo** — full wipe → **onboarding**.
 
 ---
 
-## Suggested GitHub issues (when implementation starts)
+## Implementation waves (complete)
 
-- `[GAP][P0] Remove showcase members/mock profile from local archive UI`
-- `[GAP][P0] Lane-aware backup, import, and recent people`
-- `[GAP][P1] Demo lane chrome + tree focal reset on lane switch`
-- `[GAP][P1] Hide family cloud paths (local-only phase)`
-- `[GAP][P3] Maestro: dual archive + tree map smoke`
+| Wave | Status |
+|------|--------|
+| P0 showcase / dual DB / live-only backup | **Done** |
+| P1 live checklist, home stats, notifications/stories, force local | **Done** |
+| P3 Maestro dual-archive (flows + contract CI) | **Done** |
+| Web graph types (`sibling` edges) | **Done** (`types/family.ts`) |
