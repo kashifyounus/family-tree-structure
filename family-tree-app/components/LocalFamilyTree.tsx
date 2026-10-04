@@ -56,7 +56,7 @@ export function LocalFamilyTree({
   const router = useRouter();
   const view = layout;
   const [gensUp, setGensUp] = useState(() =>
-    Math.max(1, seedGenerationsUp ?? 1),
+    Math.max(1, seedGenerationsUp ?? 2),
   );
   const [gensDown, setGensDown] = useState(() =>
     Math.max(2, seedGenerationsDown ?? 2),
@@ -144,6 +144,7 @@ export function LocalFamilyTree({
       {view === "graph" && (
         <View style={styles.expandRow}>
           <Button
+            testID="tree-load-parents"
             size="sm"
             variant="outline"
             disabled={!more.parents}
@@ -152,6 +153,7 @@ export function LocalFamilyTree({
             <ButtonText>{copy.tree.loadParents}</ButtonText>
           </Button>
           <Button
+            testID="tree-load-siblings"
             size="sm"
             variant="outline"
             disabled={!more.siblings}
@@ -160,6 +162,7 @@ export function LocalFamilyTree({
             <ButtonText>{copy.tree.loadSiblings}</ButtonText>
           </Button>
           <Button
+            testID="tree-load-children"
             size="sm"
             variant="outline"
             disabled={!more.children}

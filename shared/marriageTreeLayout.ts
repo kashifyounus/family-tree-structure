@@ -225,14 +225,22 @@ export function collectIncludedPersonIds(
     const focalUnions = unions.filter(
       (u) => u.partner1Id === focalId || u.partner2Id === focalId,
     );
-    const ring = new Set<string>();
-    for (const id of siblingsOf(focalId)) ring.add(id);
+    let seeds = new Set<string>([focalId]);
     for (const u of focalUnions) {
       const spouseId =
         u.partner1Id === focalId ? u.partner2Id : u.partner1Id;
-      for (const id of siblingsOf(spouseId)) ring.add(id);
+      seeds.add(spouseId);
     }
-    for (const id of ring) included.add(id);
+    for (let step = 0; step < steps; step++) {
+      const nextSeeds = new Set<string>();
+      for (const personId of seeds) {
+        for (const sibId of siblingsOf(personId)) {
+          included.add(sibId);
+          nextSeeds.add(sibId);
+        }
+      }
+      seeds = nextSeeds;
+    }
   }
 
   collectAncestors(focalId, 0, new Set());
@@ -244,6 +252,21 @@ export function collectIncludedPersonIds(
   for (const u of focalUnions) {
     included.add(u.partner1Id);
     included.add(u.partner2Id);
+  }
+
+  /** Spouse parent generation (in-laws above the marriage row) at the same depth as ego parents. */
+  if (generationsUp >= 1) {
+    for (const u of focalUnions) {
+      const spouseId =
+        u.partner1Id === focalId ? u.partner2Id : u.partner1Id;
+      const spouseParentUnions = unions.filter((pu) =>
+        pu.childships.some((c) => c.childId === spouseId),
+      );
+      for (const pu of spouseParentUnions) {
+        included.add(pu.partner1Id);
+        included.add(pu.partner2Id);
+      }
+    }
   }
 
   collectSiblingRing(siblingSteps);
@@ -467,10 +490,11 @@ export function layoutMarriageCentricGraph(
   }
 
   spouseEntries.forEach((entry, unionIndex) => {
+    const focalX = positions.get(focalId)?.x ?? originX;
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
-    const husbandX = positions.get(husbandId)?.x ?? originX;
-    const wifeX = wifeId ? (positions.get(wifeId)?.x ?? originX + coupleStep) : husbandX;
-    const coupleMidCenter = (husbandX + wifeX + PEDIGREE_CARD_BIG_W) / 2;
+    const leftX = Math.min(focalX, spouseX);
+    const rightX = Math.max(focalX, spouseX);
+    const coupleMidCenter = (leftX + rightX + PEDIGREE_CARD_BIG_W) / 2;
     const children = sortByBirthOldestFirst(
       entry.union.childships
         .map((c) => peopleById.get(c.childId))

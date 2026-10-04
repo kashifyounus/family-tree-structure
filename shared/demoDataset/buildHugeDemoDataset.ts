@@ -177,11 +177,8 @@ export function buildHugeDemoDataset(
     return "OTHER";
   }
 
-  // —— Clan forests until we approach target ——
-  let clan = 0;
-  while (persons.length < targetPersons * 0.92) {
-    const clanSurname = SURNAMES[clan % SURNAMES.length]!;
-    clan += 1;
+  function growClanForest(clanIndex: number, stopAt: number): void {
+    const clanSurname = SURNAMES[clanIndex % SURNAMES.length]!;
     const founderBirth = pickInt(rng, 1938, 1962);
     const founderGender: DemoGender = rng() < 0.52 ? "MALE" : "FEMALE";
     const spouseGender: DemoGender =
@@ -199,13 +196,13 @@ export function buildHugeDemoDataset(
     type Frontier = { unionId: string; generation: number };
     const frontier: Frontier[] = [{ unionId: rootUnion, generation: 0 }];
 
-    while (frontier.length > 0 && persons.length < targetPersons * 0.92) {
+    while (frontier.length > 0 && persons.length < stopAt) {
       const { unionId, generation } = frontier.shift()!;
       const numChildren = pickInt(rng, 2, generation < 2 ? 6 : 4);
       const childIds: string[] = [];
 
       for (let c = 0; c < numChildren; c++) {
-        if (persons.length >= targetPersons * 0.92) break;
+        if (persons.length >= stopAt) break;
         const childGender = pickGender();
         const childBirth =
           generation === 0
@@ -219,7 +216,7 @@ export function buildHugeDemoDataset(
       }
 
       for (const childId of childIds) {
-        if (persons.length >= targetPersons * 0.92) break;
+        if (persons.length >= stopAt) break;
         const age = personAge(childId);
         if (age < 20 || age > 55 || !isLiving(childId)) continue;
         if (rng() > 0.62) continue;
@@ -243,6 +240,13 @@ export function buildHugeDemoDataset(
         frontier.push({ unionId: u, generation: generation + 1 });
       }
     }
+  }
+
+  let clan = 0;
+  const phaseOneTarget = Math.floor(targetPersons * 0.92);
+  while (persons.length < phaseOneTarget) {
+    growClanForest(clan, phaseOneTarget);
+    clan += 1;
   }
 
   // —— Remarriage / step-family (inactive union + new partner) ——
@@ -310,18 +314,9 @@ export function buildHugeDemoDataset(
     addUnion(a.id, b.id, Math.max(a.birthYear, b.birthYear) + pickInt(rng, 22, 28), true);
   }
 
-  // —— Top up with additional leaf people (distant relatives) ——
   while (persons.length < targetPersons) {
-    const anchor = pick(rng, persons);
-    const childGender = pickGender();
-    const birthYear = anchor.birthYear + pickInt(rng, 18, 35);
-    const childId = addPerson(childGender, birthYear, anchor.lastName);
-    const parentUnion = unions.find(
-      (u) => u.partner1Id === anchor.id || u.partner2Id === anchor.id,
-    );
-    if (parentUnion) {
-      linkChild(parentUnion.id, childId, "BIOLOGICAL");
-    }
+    growClanForest(clan, targetPersons);
+    clan += 1;
   }
 
   const uniqueFullNames = new Set(

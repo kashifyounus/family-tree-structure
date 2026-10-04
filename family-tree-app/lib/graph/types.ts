@@ -44,6 +44,8 @@ export type FamilyGraph = {
   focalUnionIds?: string[];
   focalPartnerIds?: string[];
   focalMarriageLabel?: string | null;
+  /** One label per spouse on the focal marriage row (same order as focalPartnerIds). */
+  focalMarriageBands?: { partnerId: string; label: string }[];
   nodes: FamilyGraphNode[];
   edges: FamilyGraphEdge[];
 };

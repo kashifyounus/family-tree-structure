@@ -21,7 +21,7 @@ Agent prompts: [`docs/prompts/KURIOSITY_FIGMA_IMPLEMENTATION_PROMPT.md`](../docs
 | Account (Figma) | `components/account/*`, `app/(tabs)/account.tsx` |
 | Add member sheet | `components/members/AddMemberBottomSheet.tsx`, route `app/add-member.tsx` |
 | Archive settings | `app/archive-settings.tsx` |
-| Tree showcase | `components/tree/ShowcasePedigreeTree.tsx` (empty local DB) |
+| Tree (local) | `components/LocalFamilyTree.tsx` + `GraphWebView` canvas |
 | Notifications / Story | `app/notifications.tsx`, `app/story/[storyId].tsx` |
 | Design tokens | `global.css`, `theme/appTheme.ts`, `lib/design/kuriosityDesignSystem.ts` |
 

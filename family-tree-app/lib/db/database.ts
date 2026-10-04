@@ -1,11 +1,15 @@
 import * as SQLite from "expo-sqlite";
 
+import { getActiveArchiveLane, type ArchiveLane } from "@/lib/db/archiveLane";
 import { runSqliteMigrations } from "@/lib/db/migrations";
-import { KURIOSITY_DATABASE_NAME } from "@/lib/db/legacyDatabaseMigration";
 
-export const DB_NAME = KURIOSITY_DATABASE_NAME;
+export const LIVE_DATABASE_NAME = "kuriosity_live.db";
+export const DEMO_DATABASE_NAME = "kuriosity_demo.db";
 
-let database: SQLite.SQLiteDatabase | null = null;
+/** @deprecated Use LIVE_DATABASE_NAME — kept for migration from single-file builds. */
+export const LEGACY_SINGLE_DATABASE_NAME = "kuriosity_family.db";
+
+export const DB_NAME = LIVE_DATABASE_NAME;
 
 const SCHEMA_SQL = `
 PRAGMA foreign_keys = ON;
@@ -72,13 +76,32 @@ CREATE TABLE IF NOT EXISTS local_accounts (
 );
 `;
 
+const databases: Partial<Record<ArchiveLane, SQLite.SQLiteDatabase>> = {};
+
+function openLaneDatabase(lane: ArchiveLane): SQLite.SQLiteDatabase {
+  const existing = databases[lane];
+  if (existing) return existing;
+
+  const fileName = lane === "demo" ? DEMO_DATABASE_NAME : LIVE_DATABASE_NAME;
+  const db = SQLite.openDatabaseSync(fileName);
+  db.execSync(SCHEMA_SQL);
+  runSqliteMigrations(db);
+  databases[lane] = db;
+  return db;
+}
+
+export function getDatabaseForLane(lane: ArchiveLane): SQLite.SQLiteDatabase {
+  return openLaneDatabase(lane);
+}
+
 export function getDatabase(): SQLite.SQLiteDatabase {
-  if (!database) {
-    database = SQLite.openDatabaseSync(DB_NAME);
-    database.execSync(SCHEMA_SQL);
-    runSqliteMigrations(database);
-  }
-  return database;
+  return openLaneDatabase(getActiveArchiveLane());
+}
+
+export function getActiveDatabaseFileName(): string {
+  return getActiveArchiveLane() === "demo"
+    ? DEMO_DATABASE_NAME
+    : LIVE_DATABASE_NAME;
 }
 
 export function resetLocalDatabase(): void {
@@ -86,6 +109,7 @@ export function resetLocalDatabase(): void {
   db.execSync(`
     DELETE FROM children;
     DELETE FROM unions;
+    DELETE FROM local_accounts;
     DELETE FROM persons;
   `);
 }

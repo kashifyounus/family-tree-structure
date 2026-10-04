@@ -20,7 +20,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBand = null, framingNodeIds = null, chevronOffset = 8;
+let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8;
 let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
@@ -74,13 +74,13 @@ function roundRect(x,y,w,h,r){
   ctx.closePath();
 }
 
-function drawMarriageBand(){
-  if(!marriageBand) return;
-  const midY = marriageBand.y;
-  const x1 = marriageBand.x1;
-  const x2 = marriageBand.x2;
+function drawMarriageBand(band){
+  if(!band) return;
+  const midY = band.y;
+  const x1 = band.x1;
+  const x2 = band.x2;
   if(x2 <= x1 + 8) return;
-  const label = marriageBand.label || '';
+  const label = band.label || '';
   if(!label) return;
   const cx = (x1 + x2) / 2;
   const cream = theme.canvas || '#F6F1E7';
@@ -90,9 +90,8 @@ function drawMarriageBand(){
   ctx.textBaseline = 'middle';
   const tw = ctx.measureText(display).width;
   const padH = 8;
-  const padV = 6;
-  const pillW = tw + padH * 2;
   const pillH = 16;
+  const pillW = tw + padH * 2;
   roundRect(cx - pillW / 2, midY - pillH / 2, pillW, pillH, 4);
   ctx.fillStyle = cream;
   ctx.fill();
@@ -104,6 +103,10 @@ function drawMarriageBand(){
   ctx.strokeText(display, cx, midY);
   ctx.fillStyle = '#6b7280';
   ctx.fillText(display, cx, midY);
+}
+
+function drawMarriageBands(){
+  for(const band of marriageBands) drawMarriageBand(band);
 }
 
 function drawSegments(){
@@ -238,7 +241,7 @@ function draw(){
   ctx.translate(ox,oy);
   ctx.scale(scale,scale);
   drawSegments();
-  drawMarriageBand();
+  drawMarriageBands();
   for(const n of nodes) drawCard(n);
   ctx.restore();
 }
@@ -264,7 +267,9 @@ function onGraph(g){
   highlightSegments = g.highlightSegments || [];
   highlightPersonIds = g.highlightPersonIds || null;
   focalId = g.focalPersonId || '';
-  marriageBand = g.marriageBand || null;
+  marriageBands = g.marriageBands && g.marriageBands.length
+    ? g.marriageBands
+    : (g.marriageBand ? [g.marriageBand] : []);
   framingNodeIds = g.framingNodeIds || null;
   chevronOffset = g.chevronOffset || 8;
   if(g.theme) theme = Object.assign(theme, g.theme);

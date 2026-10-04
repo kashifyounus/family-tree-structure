@@ -21,17 +21,16 @@ describe("filterShowcaseMembers", () => {
 });
 
 describe("shouldShowShowcasePedigree", () => {
-  it("shows for empty or Kay-only local archive", () => {
-    expect(shouldShowShowcasePedigree(0, "local")).toBe(true);
-    expect(shouldShowShowcasePedigree(1, "local")).toBe(true);
-    expect(shouldShowShowcasePedigree(3, "local")).toBe(false);
+  it("never replaces the real SQLite tree map", () => {
+    expect(shouldShowShowcasePedigree(0, "local")).toBe(false);
+    expect(shouldShowShowcasePedigree(1, "local")).toBe(false);
     expect(shouldShowShowcasePedigree(0, "online")).toBe(false);
   });
 });
 
 describe("shouldShowShowcaseHome", () => {
-  it("matches pedigree showcase gate", () => {
-    expect(shouldShowShowcaseHome(0, "local")).toBe(shouldShowShowcasePedigree(0, "local"));
+  it("never replaces the real home archive", () => {
+    expect(shouldShowShowcaseHome(0, "local")).toBe(false);
     expect(shouldShowShowcaseHome(4, "local")).toBe(false);
   });
 });

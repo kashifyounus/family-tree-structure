@@ -30,8 +30,13 @@ import { useStorage } from "@/context/StorageContext";
 import {
   countFixturePeople,
   seedComprehensiveFixture,
-  wipeFixtureDataset,
+  seedCuratedPedigreeFixture,
 } from "@/lib/db/comprehensiveSeed";
+import type { ArchiveLane } from "@/lib/db/archiveLane";
+import {
+  resetDemoArchiveAndRestart,
+  resetPrivateArchiveAndSignOut,
+} from "@/lib/db/resetPrivateArchive";
 import type { StorageMode } from "@/lib/data/types";
 import { normalizeApiBaseUrl, probeMobileApiHealth } from "@/lib/apiUrl";
 import { useAppTheme } from "@/theme/useAppTheme";
@@ -56,6 +61,7 @@ export default function AccountScreen() {
   const [pinFieldError, setPinFieldError] = useState<string | undefined>();
   const [pinConfirmError, setPinConfirmError] = useState<string | undefined>();
   const [fixtureBusy, setFixtureBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
 
   useEffect(() => {
     setApiDraft(storage.apiUrl);
@@ -140,8 +146,8 @@ export default function AccountScreen() {
         email={localAccount.session?.email}
       />
       <AccountFigmaSections
-        privateArchiveOn={storage.mode === "local"}
-        onPrivateArchiveChange={(on) => void setMode(on ? "local" : "online")}
+        privateArchiveOn={true}
+        onPrivateArchiveChange={() => {}}
         onSignOut={onSignOut}
       />
 
@@ -294,21 +300,56 @@ export default function AccountScreen() {
           <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
             {copy.storage.privateHelp}
           </AppText>
-          <SegmentedControl
-            value={storage.mode}
-            onChange={(v) => void setMode(v)}
-            options={[
-              { value: "local", label: copy.storage.privateArchiveShort },
-              { value: "online", label: copy.storage.familyCloudShort },
-            ]}
-          />
-          <AppText variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</AppText>
+          <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+            {copy.archive.localOnlyPhase}
+          </AppText>
           {storage.mode === "local" && (
+            <>
+              <AppText variant="titleSmall">{copy.account.archiveLaneTitle}</AppText>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+                {copy.account.archiveLaneHelp}
+              </AppText>
+              <SegmentedControl
+                testIdPrefix="account-archive-lane"
+                value={storage.archiveLane}
+                onChange={(v) =>
+                  void storage.setArchiveLane(v as ArchiveLane).then(() => localAccount.refresh())
+                }
+                options={[
+                  { value: "live", label: copy.account.archiveLaneLive },
+                  { value: "demo", label: copy.account.archiveLaneDemo },
+                ]}
+              />
+            </>
+          )}
+          <AppText variant="bodySmall">{copy.storage.memberCountLabel(storage.localMemberCount)}</AppText>
+          {storage.mode === "local" && storage.archiveLane === "demo" && (
             <>
               <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {copy.account.sampleFixtureCount(countFixturePeople())}
               </AppText>
               <GsButton
+                testID="account-load-curated-sample"
+                variant="outline"
+                disabled={fixtureBusy}
+                onPress={() => {
+                  setFixtureBusy(true);
+                  try {
+                    const result = seedCuratedPedigreeFixture();
+                    storage.bumpDataRevision();
+                    showSuccess(copy.account.loadSampleSuccess(result.focalFamilyCode));
+                  } catch (e) {
+                    showError(e);
+                  } finally {
+                    setFixtureBusy(false);
+                  }
+                }}
+              >
+                {fixtureBusy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.account.loadCuratedSampleFamily}</ButtonText>
+              </GsButton>
+              <GsButton
+                testID="account-load-huge-sample"
                 variant="outline"
                 disabled={fixtureBusy}
                 onPress={() => {
@@ -325,26 +366,67 @@ export default function AccountScreen() {
                 }}
               >
                 {fixtureBusy ? <ButtonSpinner /> : null}
-                <ButtonText>{copy.account.loadSampleFamily}</ButtonText>
+                <ButtonText>{copy.account.loadHugeSampleFamily}</ButtonText>
               </GsButton>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+                {copy.account.demoRestartHelp}
+              </AppText>
               <GsButton
+                testID="account-clear-demo-restart"
                 variant="outline"
-                disabled={fixtureBusy || countFixturePeople() === 0}
+                disabled={fixtureBusy}
                 onPress={() => {
                   setFixtureBusy(true);
-                  try {
-                    const { removed } = wipeFixtureDataset();
-                    storage.bumpDataRevision();
-                    showSuccess(copy.account.clearSampleSuccess(removed));
-                  } catch (e) {
-                    showError(e);
-                  } finally {
-                    setFixtureBusy(false);
-                  }
+                  void (async () => {
+                    try {
+                      await resetDemoArchiveAndRestart();
+                      await storage.setArchiveLane("demo");
+                      await localAccount.refresh();
+                      storage.bumpDataRevision();
+                      showSuccess(copy.account.demoRestartSuccess);
+                      router.replace("/onboarding");
+                    } catch (e) {
+                      showError(e);
+                    } finally {
+                      setFixtureBusy(false);
+                    }
+                  })();
                 }}
                 className="self-start"
               >
-                <ButtonText>{copy.account.clearSampleFamily}</ButtonText>
+                <ButtonText>{copy.account.demoRestartTitle}</ButtonText>
+              </GsButton>
+            </>
+          )}
+          {storage.mode === "local" && storage.archiveLane === "live" && (
+            <>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+                {copy.account.resetPrivateArchiveHelp}
+              </AppText>
+              <GsButton
+                variant="outline"
+                disabled={resetBusy}
+                onPress={() => {
+                  setResetBusy(true);
+                  void (async () => {
+                    try {
+                      await resetPrivateArchiveAndSignOut();
+                      await storage.setArchiveLane("live");
+                      await localAccount.refresh();
+                      storage.bumpDataRevision();
+                      showSuccess(copy.account.resetPrivateArchiveSuccess);
+                      router.replace("/onboarding");
+                    } catch (e) {
+                      showError(e);
+                    } finally {
+                      setResetBusy(false);
+                    }
+                  })();
+                }}
+                className="self-start"
+              >
+                {resetBusy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.account.resetPrivateArchive}</ButtonText>
               </GsButton>
             </>
           )}

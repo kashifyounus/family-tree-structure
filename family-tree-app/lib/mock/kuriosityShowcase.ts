@@ -352,13 +352,13 @@ export const showcasePedigree: {
   ],
 };
 
-export function shouldShowShowcasePedigree(localMemberCount: number, mode: string): boolean {
-  return mode === "local" && localMemberCount <= 1;
+export function shouldShowShowcasePedigree(_localMemberCount: number, _mode: string): boolean {
+  return false;
 }
 
-/** Demo Home activity/stats chrome only when the private archive is still empty or focal-only. */
-export function shouldShowShowcaseHome(localMemberCount: number, mode: string): boolean {
-  return shouldShowShowcasePedigree(localMemberCount, mode);
+/** Demo Home activity/stats chrome — disabled; use real archive data only. */
+export function shouldShowShowcaseHome(_localMemberCount: number, _mode: string): boolean {
+  return false;
 }
 
 export const showcaseStoryLahore = {

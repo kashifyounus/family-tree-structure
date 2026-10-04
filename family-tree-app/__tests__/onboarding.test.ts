@@ -11,8 +11,8 @@ describe("onboarding storage", () => {
   });
 
   it("starts incomplete and completes after flag", async () => {
-    expect(await isOnboardingComplete()).toBe(false);
-    await setOnboardingComplete();
-    expect(await isOnboardingComplete()).toBe(true);
+    expect(await isOnboardingComplete("live")).toBe(false);
+    await setOnboardingComplete("live");
+    expect(await isOnboardingComplete("live")).toBe(true);
   });
 });

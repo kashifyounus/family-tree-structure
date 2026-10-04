@@ -104,7 +104,7 @@ export function buildLocalFamilyGraph(
     0,
     {
       preferredFocalUnionId: options.focalUnionId,
-      phoneSingleParentSide: generationsUp <= 1,
+      phoneSingleParentSide: false,
     },
   );
 
@@ -115,14 +115,13 @@ export function buildLocalFamilyGraph(
     if (!pos || !p) continue;
     const hints = getExplorationHints(personId, included, allUnions);
     const isEgo = personId === focal.id;
-    const isPartner = focalPartnerIds.includes(personId);
     nodes.push({
       id: personId,
       type: "person",
       position: { x: pos.x, y: pos.y },
       data: {
         person: toGraphPerson(p),
-        isFocal: isEgo || isPartner,
+        isFocal: isEgo,
         isDeceased: !!p.deathDate,
         hasUnexpandedParents: hints.hasUnexpandedParents,
         hasUnexpandedChildren: hints.hasUnexpandedChildren,
@@ -139,13 +138,26 @@ export function buildLocalFamilyGraph(
     label: e.label,
   }));
 
-  let focalMarriageLabel: string | null = null;
-  if (focalUnionId) {
-    const unionViews = getLocalUnionsForPerson(focal.id);
-    const match = unionViews.find((u) => u.id === focalUnionId);
+  const unionViews = getLocalUnionsForPerson(focal.id);
+  const marriageLabelForUnion = (unionId: string): string => {
+    const match = unionViews.find((u) => u.id === unionId);
     const wedding = formatDisplayDate(match?.marriageDate ?? undefined);
-    focalMarriageLabel = wedding ? `Married ${wedding}` : "Married";
+    return wedding ? `Married ${wedding}` : "Married";
+  };
+
+  const focalMarriageBands: { partnerId: string; label: string }[] = [];
+  for (let i = 0; i < (focalUnionIds?.length ?? 0); i++) {
+    const unionId = focalUnionIds[i];
+    const partnerId = focalPartnerIds[i];
+    if (!unionId || !partnerId) continue;
+    focalMarriageBands.push({
+      partnerId,
+      label: marriageLabelForUnion(unionId),
+    });
   }
+
+  const focalMarriageLabel =
+    focalUnionId ? marriageLabelForUnion(focalUnionId) : null;
 
   return {
     focalPersonId: focal.id,
@@ -153,6 +165,7 @@ export function buildLocalFamilyGraph(
     focalUnionIds,
     focalPartnerIds,
     focalMarriageLabel,
+    focalMarriageBands,
     nodes,
     edges,
   };

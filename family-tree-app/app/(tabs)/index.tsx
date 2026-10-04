@@ -1,42 +1,51 @@
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
-import { ActivityRow } from "@/components/home/ActivityRow";
+import { DemoArchiveBanner } from "@/components/archive/DemoArchiveBanner";
 import { HomeTopBar } from "@/components/home/HomeTopBar";
+import { LiveArchiveChecklistCard } from "@/components/home/LiveArchiveChecklistCard";
 import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { StatCard } from "@/components/home/StatCard";
 import { PersonRow } from "@/components/members/PersonRow";
 import { MembersSearchField } from "@/components/members/MembersSearchField";
 import { AppText } from "@/components/ui/AppText";
 import { Screen } from "@/components/ui/Screen";
+import { copy } from "@/content/businessCopy";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
+import { evaluateLiveArchiveProgress } from "@/lib/archive/liveArchiveProgress";
+import { isLiveTreeChecklistOpened } from "@/lib/archive/liveChecklistStorage";
 import { listMembers } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
 import { memberInitials, memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
-import {
-  greetingForKay,
-  mergeShowcaseStats,
-  shouldShowShowcaseHome,
-  showcaseActivities,
-  showcaseUser,
-} from "@/lib/mock/kuriosityShowcase";
 import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
+
 export default function HomeScreen() {
   const router = useRouter();
-  const { mode, localMemberCount, dataRevision } = useStorage();
+  const { mode, archiveLane, localMemberCount, dataRevision } = useStorage();
   const localAccount = useLocalAccount();
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<MemberRecord[]>([]);
   const [recentPeople, setRecentPeople] = useState<RecentPerson[]>([]);
-  const showDemoHome = shouldShowShowcaseHome(localMemberCount, mode);
+  const [treeOpened, setTreeOpened] = useState(false);
+
+  const focalPersonId = localAccount.session?.focalPersonId;
+  const focalFamilyCode = localAccount.session?.focalFamilyCode;
+
+  const liveProgress = useMemo(() => {
+    if (mode !== "local" || archiveLane !== "live") return null;
+    return evaluateLiveArchiveProgress(focalPersonId, { treeMapOpened: treeOpened });
+  }, [mode, archiveLane, focalPersonId, treeOpened, dataRevision]);
 
   const stats = useMemo(() => {
-    if (showDemoHome) return mergeShowcaseStats(0);
-    if (mode === "local") return mergeShowcaseStats(localMemberCount);
-    return null;
-  }, [showDemoHome, mode, localMemberCount]);
+    if (mode !== "local" || !liveProgress) return null;
+    return {
+      members: localMemberCount,
+      generations: liveProgress.generationSpan,
+      marriages: liveProgress.marriageCount,
+    };
+  }, [mode, liveProgress, localMemberCount]);
 
   const greeting = useMemo(() => {
     const name = localAccount.session?.displayName?.split(" ")[0];
@@ -46,7 +55,14 @@ export default function HomeScreen() {
         hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
       return `${period}, ${name}`;
     }
-    return greetingForKay();
+    return "Welcome";
+  }, [localAccount.session?.displayName]);
+
+  const avatarInitials = useMemo(() => {
+    const name = localAccount.session?.displayName?.trim();
+    if (!name) return "?";
+    const parts = name.split(/\s+/);
+    return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase() || "?";
   }, [localAccount.session?.displayName]);
 
   const runSearch = useCallback(
@@ -85,42 +101,71 @@ export default function HomeScreen() {
   }, [query, runSearch]);
 
   useEffect(() => {
-    if (showDemoHome) {
-      setRecentPeople([]);
+    void loadRecentPeople().then(setRecentPeople);
+  }, [dataRevision, archiveLane]);
+
+  useEffect(() => {
+    if (archiveLane !== "live") {
+      setTreeOpened(false);
       return;
     }
-    void loadRecentPeople().then(setRecentPeople);
-  }, [dataRevision, showDemoHome]);
+    void isLiveTreeChecklistOpened().then(setTreeOpened);
+  }, [archiveLane, dataRevision]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (archiveLane === "live") {
+        void isLiveTreeChecklistOpened().then(setTreeOpened);
+      }
+    }, [archiveLane]),
+  );
+
+  const showLiveChecklist =
+    mode === "local" &&
+    archiveLane === "live" &&
+    liveProgress &&
+    !liveProgress.checklistComplete &&
+    focalPersonId &&
+    focalFamilyCode;
 
   return (
     <Screen testID="home-screen" safeTop>
-      <HomeTopBar notificationCount={2} />
+      {mode === "local" && archiveLane === "demo" && (
+        <DemoArchiveBanner testID="home-demo-banner" />
+      )}
+      <HomeTopBar notificationCount={0} avatarInitials={avatarInitials} />
 
       <View className="mb-5">
         <AppText variant="titleLarge" className="text-foreground font-semibold">
           {greeting}
         </AppText>
         <AppText variant="bodyMedium" className="text-muted-foreground mt-1">
-          Your private family archive
+          {archiveLane === "demo"
+            ? "Demo archive on this device"
+            : "Your live family archive"}
         </AppText>
       </View>
+
+      {showLiveChecklist ? (
+        <LiveArchiveChecklistCard
+          steps={liveProgress.steps}
+          focalPersonId={focalPersonId}
+          focalFamilyCode={focalFamilyCode}
+        />
+      ) : null}
 
       {stats ? (
         <View className="flex-row gap-2 mb-5">
           <StatCard value={stats.members} label="Members" />
-          <StatCard value={stats.generations} label="Generations" />
-          <StatCard value={stats.stories} label="Stories" />
+          <StatCard value={stats.generations} label={copy.home.statGenerations} />
+          <StatCard value={stats.marriages} label={copy.home.statMarriages} />
         </View>
-      ) : (
-        <AppText variant="bodySmall" className="text-muted-foreground mb-5">
-          Stats reflect your private archive. Switch to private mode to see counts here.
-        </AppText>
-      )}
+      ) : null}
 
       <MembersSearchField
         testID="home-search"
         value={query}
-        placeholder="Search people or stories"
+        placeholder={copy.home.searchPlaceholder}
         onChangeText={setQuery}
         onSubmit={() => void runSearch(query)}
       />
@@ -144,44 +189,14 @@ export default function HomeScreen() {
         </View>
       )}
 
-      <View className="mt-6 mb-2 flex-row items-center justify-between">
-        <View>
-          <AppText variant="titleMedium" className="font-semibold">
-            {showDemoHome ? "Recent activity" : "Recently viewed"}
-          </AppText>
-          {showDemoHome ? (
-            <AppText variant="labelSmall" className="text-muted-foreground mt-0.5">
-              Demo archive preview
-            </AppText>
-          ) : null}
-        </View>
-        {showDemoHome ? (
-          <Pressable onPress={() => router.push("/notifications")} accessibilityRole="button">
-            <AppText variant="labelMedium" className="text-primary">
-              See all
-            </AppText>
-          </Pressable>
-        ) : null}
+      <View className="mt-6 mb-2">
+        <AppText variant="titleMedium" className="font-semibold">
+          Recently viewed
+        </AppText>
       </View>
 
       <View className="rounded-xl border border-border bg-card px-4 mb-6">
-        {showDemoHome ? (
-          showcaseActivities.map((item) => (
-            <ActivityRow
-              key={item.id}
-              item={item}
-              onPress={
-                item.id === "a3"
-                  ? () =>
-                      router.push({
-                        pathname: "/story/[storyId]",
-                        params: { storyId: "lahore-wedding" },
-                      })
-                  : undefined
-              }
-            />
-          ))
-        ) : recentPeople.length === 0 ? (
+        {recentPeople.length === 0 ? (
           <AppText variant="bodyMedium" className="text-muted-foreground py-4">
             Open a profile from Members or search to see people here.
           </AppText>
@@ -212,11 +227,9 @@ export default function HomeScreen() {
       <AppText
         variant="labelSmall"
         className="text-muted-foreground text-center mt-4"
-        accessibilityLabel={`Signed in as ${
-          localAccount.session?.displayName ?? showcaseUser.displayName
-        }`}
+        accessibilityLabel={`Signed in as ${localAccount.session?.displayName ?? "Guest"}`}
       >
-        {localAccount.session?.displayName ?? showcaseUser.displayName} · archive owner
+        {localAccount.session?.displayName ?? "Not signed in"} · archive owner
       </AppText>
 
       <View className="h-px w-px overflow-hidden opacity-0">

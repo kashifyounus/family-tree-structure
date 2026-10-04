@@ -43,6 +43,27 @@ describe("marriageTreeLayout", () => {
     expect(included.has("sib")).toBe(true);
   });
 
+  it("includes spouse parents when generationsUp >= 1", () => {
+    const withSpouseParents = [
+      ...unions,
+      {
+        id: "u-sp-inlaw",
+        partner1Id: "fil",
+        partner2Id: "mil",
+        childships: [{ childId: "spouse" }],
+      },
+    ];
+    const included = collectIncludedPersonIds(
+      "ego",
+      withSpouseParents,
+      1,
+      1,
+      0,
+    );
+    expect(included.has("fil")).toBe(true);
+    expect(included.has("mil")).toBe(true);
+  });
+
   it("places spouse on marriage row and children below", () => {
     const included = collectIncludedPersonIds("ego", unions, 1, 1, 1);
     const { positions, edges, focalUnionId, focalUnionIds } =
@@ -93,6 +114,75 @@ describe("marriageTreeLayout", () => {
     const husbSibX = positions.get("husbSib")!.x;
     expect(husbandX).toBeLessThan(wifeX);
     expect(husbSibX).toBeLessThan(husbandX);
+  });
+
+  it("centers each union child column under that spouse pair", () => {
+    const twoSpouseUnions = [
+      {
+        id: "u1",
+        partner1Id: "ego",
+        partner2Id: "spouse1",
+        childships: [{ childId: "c1" }],
+      },
+      {
+        id: "u2",
+        partner1Id: "ego",
+        partner2Id: "spouse2",
+        childships: [{ childId: "c2" }],
+      },
+      {
+        id: "u-parent",
+        partner1Id: "dad",
+        partner2Id: "mom",
+        childships: [{ childId: "ego" }],
+      },
+    ];
+    const included = collectIncludedPersonIds("ego", twoSpouseUnions, 1, 1, 0);
+    const { positions } = layoutMarriageCentricGraph(
+      "ego",
+      people,
+      twoSpouseUnions,
+      included,
+    );
+    const egoX = positions.get("ego")!.x;
+    const s1X = positions.get("spouse1")!.x;
+    const s2X = positions.get("spouse2")!.x;
+    const c1X = positions.get("c1")!.x;
+    const c2X = positions.get("c2")!.x;
+    const mid1 = (Math.min(egoX, s1X) + Math.max(egoX, s1X) + 112) / 2;
+    const mid2 = (Math.min(egoX, s2X) + Math.max(egoX, s2X) + 112) / 2;
+    expect(Math.abs(c1X + 44 - mid1)).toBeLessThan(40);
+    expect(Math.abs(c2X + 44 - mid2)).toBeLessThan(40);
+    expect(Math.abs(c1X - c2X)).toBeGreaterThan(20);
+  });
+
+  it("includes spouse siblings when siblingSteps >= 1", () => {
+    const withSpouseSib = [
+      ...unions,
+      {
+        id: "u-sp-inlaw",
+        partner1Id: "fil",
+        partner2Id: "mil",
+        childships: [{ childId: "spouse" }, { childId: "spouseSib" }],
+      },
+    ];
+    const peopleWithInlaw = new Map([
+      ...people,
+      ["spouseSib", { id: "spouseSib", birthDate: "1984-01-01" }],
+      ["fil", { id: "fil", birthDate: "1950-01-01" }],
+      ["mil", { id: "mil", birthDate: "1952-01-01" }],
+    ] as [string, { id: string; birthDate: string }][]);
+    const zero = collectIncludedPersonIds("ego", withSpouseSib, 1, 1, 0);
+    const one = collectIncludedPersonIds("ego", withSpouseSib, 1, 1, 1);
+    expect(zero.has("spouseSib")).toBe(false);
+    expect(one.has("spouseSib")).toBe(true);
+    const laid = layoutMarriageCentricGraph(
+      "ego",
+      peopleWithInlaw,
+      withSpouseSib,
+      one,
+    );
+    expect(laid.positions.has("spouseSib")).toBe(true);
   });
 
   it("places wife siblings on the right wing when focal is the husband", () => {

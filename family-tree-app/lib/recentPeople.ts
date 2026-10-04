@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const STORAGE_KEY = "@mughals/recent-people/v1";
+import { getActiveArchiveLane } from "@/lib/db/archiveLane";
+
 const MAX = 8;
 
 export type RecentPerson = {
@@ -10,9 +11,13 @@ export type RecentPerson = {
   visitedAt: number;
 };
 
+function storageKey(): string {
+  return `@mughals/recent-people/v1/${getActiveArchiveLane()}`;
+}
+
 export async function loadRecentPeople(): Promise<RecentPerson[]> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const raw = await AsyncStorage.getItem(storageKey());
     if (!raw) return [];
     const parsed = JSON.parse(raw) as RecentPerson[];
     return Array.isArray(parsed) ? parsed : [];
@@ -28,5 +33,5 @@ export async function recordRecentVisit(entry: Omit<RecentPerson, "visitedAt">) 
     { ...entry, visitedAt: Date.now() },
     ...filtered,
   ].slice(0, MAX);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  await AsyncStorage.setItem(storageKey(), JSON.stringify(next));
 }

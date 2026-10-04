@@ -1,0 +1,29 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+  - demo
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: onboarding-screen
+    timeout: 30000
+- tapOn:
+    id: onboarding-kay-showcase
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 120000
+- tapOn:
+    text: "Account"
+- extendedWaitUntil:
+    visible:
+      id: account-screen
+    timeout: 15000
+- tapOn:
+    id: account-clear-demo-restart
+- extendedWaitUntil:
+    visible:
+      id: onboarding-screen
+    timeout: 30000

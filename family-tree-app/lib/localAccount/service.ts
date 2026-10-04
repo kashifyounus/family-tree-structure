@@ -4,11 +4,10 @@ import { z } from "zod";
 
 import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
+import { assertLiveArchiveLane, localAccountSessionKey } from "@/lib/db/archiveLane";
 import { createLocalMember } from "@/lib/db/localRepository";
 import { getDatabase } from "@/lib/db/database";
 import type { Gender } from "@/lib/data/types";
-
-const SESSION_KEY = "mughals_local_account_id";
 
 const registerSchema = z.object({
   displayName: z.string().min(2, "Enter your display name"),
@@ -64,6 +63,7 @@ export function getLocalAccountCount(): number {
 export async function registerLocalAccount(
   input: z.infer<typeof registerSchema>,
 ): Promise<LocalAccountSession> {
+  assertLiveArchiveLane();
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) {
     throw new AppError(
@@ -115,7 +115,7 @@ export async function registerLocalAccount(
     throw new AppError("STORAGE", copy.errors.storage);
   }
   const session = mapRow(inserted);
-  await SecureStore.setItemAsync(SESSION_KEY, session.id);
+  await SecureStore.setItemAsync(localAccountSessionKey(), session.id);
   return session;
 }
 
@@ -136,24 +136,24 @@ export async function signInLocalAccount(
     throw new AppError("AUTH", copy.errors.wrongPassword);
   }
   const session = mapRow(row);
-  await SecureStore.setItemAsync(SESSION_KEY, session.id);
+  await SecureStore.setItemAsync(localAccountSessionKey(), session.id);
   return session;
 }
 
 export async function loadLocalAccountSession(): Promise<LocalAccountSession | null> {
-  const id = await SecureStore.getItemAsync(SESSION_KEY);
+  const id = await SecureStore.getItemAsync(localAccountSessionKey());
   if (!id) return null;
   const db = getDatabase();
   const row = db.getFirstSync<AccountRow>("SELECT * FROM local_accounts WHERE id = ?", [
     id,
   ]);
   if (!row) {
-    await SecureStore.deleteItemAsync(SESSION_KEY);
+    await SecureStore.deleteItemAsync(localAccountSessionKey());
     return null;
   }
   return mapRow(row);
 }
 
 export async function signOutLocalAccount(): Promise<void> {
-  await SecureStore.deleteItemAsync(SESSION_KEY);
+  await SecureStore.deleteItemAsync(localAccountSessionKey());
 }

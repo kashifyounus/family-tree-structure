@@ -3,9 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ShowcasePedigreeTree } from "@/components/tree/ShowcasePedigreeTree";
+import { DemoArchiveBanner } from "@/components/archive/DemoArchiveBanner";
+import { markLiveTreeChecklistOpened } from "@/lib/archive/liveChecklistStorage";
 import { GraphWebView } from "@/components/tree/GraphWebView";
-import { shouldShowShowcasePedigree } from "@/lib/mock/kuriosityShowcase";
 import { LocalFamilyTree } from "@/components/LocalFamilyTree";
 import { PersonTreeSheet } from "@/components/tree/PersonTreeSheet";
 import { TreeGraphExpandBar } from "@/components/tree/TreeGraphExpandBar";
@@ -74,7 +74,7 @@ function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
 export default function TreeScreen() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
-  const { mode, apiUrl, dataRevision, setMode, localMemberCount } = useStorage();
+  const { mode, apiUrl, dataRevision, setMode, archiveLane } = useStorage();
   const localAccount = useLocalAccount();
   const params = useLocalSearchParams<{
     familyCode?: string;
@@ -128,7 +128,6 @@ export default function TreeScreen() {
   }, [apiUrl, loadedCode]);
 
   const isLocal = mode === "local";
-  const showcaseTree = shouldShowShowcasePedigree(localMemberCount, mode);
 
   const loadOnlineGraph = useCallback(() => {
     if (isLocal) return;
@@ -179,6 +178,19 @@ export default function TreeScreen() {
   }, [paramCode, params.highlightA, mode, localAccount.session?.focalFamilyCode]);
 
   useEffect(() => {
+    if (!isLocal) return;
+    const focal = resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode);
+    setLoadedCode(focal);
+    setReloadKey((k) => k + 1);
+  }, [archiveLane, isLocal, localAccount.session?.focalFamilyCode]);
+
+  useEffect(() => {
+    if (isLocal && archiveLane === "live") {
+      void markLiveTreeChecklistOpened();
+    }
+  }, [isLocal, archiveLane]);
+
+  useEffect(() => {
     if (isLocal) return;
     const trimmed = loadedCode.trim();
     if (!trimmed) return;
@@ -202,7 +214,6 @@ export default function TreeScreen() {
   )?.data;
 
   const treeHeaderTitle = useMemo(() => {
-    if (showcaseTree) return copy.tree.title;
     const trimmed = loadedCode.trim();
     if (isLocal) {
       const member = getLocalMemberByFamilyCode(trimmed);
@@ -213,7 +224,7 @@ export default function TreeScreen() {
       if (person) return `${person.firstName} ${person.lastName}`;
     }
     return copy.tree.title;
-  }, [showcaseTree, loadedCode, isLocal, onlineGraph]);
+  }, [loadedCode, isLocal, onlineGraph]);
 
   const centerOnMyMarriage = () => {
     void (async () => {
@@ -287,10 +298,12 @@ export default function TreeScreen() {
         </View>
       )}
 
+      {isLocal && archiveLane === "demo" && (
+        <DemoArchiveBanner testID="tree-demo-banner" />
+      )}
+
       <View style={styles.canvas}>
-        {showcaseTree ? (
-          <ShowcasePedigreeTree zoomScale={zoom} />
-        ) : isLocal ? (
+        {isLocal ? (
           <LocalFamilyTree
             key={`${loadedCode}-${dataRevision}-${reloadKey}-${listLayout ? "list" : "graph"}-${pathHighlightIds.join("-")}`}
             familyCode={loadedCode.trim()}

@@ -20,6 +20,19 @@ describe("buildHugeDemoDataset", () => {
     ).toBe(true);
   });
 
+  it("links every person through a union or child record", () => {
+    const dataset = buildHugeDemoDataset({ targetPersons: 600, seed: 11 });
+    const partners = new Set<string>();
+    for (const u of dataset.unions) {
+      partners.add(u.partner1Id);
+      partners.add(u.partner2Id);
+    }
+    const children = new Set(dataset.children.map((c) => c.childId));
+    for (const person of dataset.persons) {
+      expect(partners.has(person.id) || children.has(person.id)).toBe(true);
+    }
+  });
+
   it("is reproducible for the same seed", () => {
     const a = buildHugeDemoDataset({ targetPersons: 400, seed: 7 });
     const b = buildHugeDemoDataset({ targetPersons: 400, seed: 7 });

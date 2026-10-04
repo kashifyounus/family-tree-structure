@@ -3,6 +3,7 @@ import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { DemoArchiveBanner } from "@/components/archive/DemoArchiveBanner";
 import {
   MemberFilterChips,
   type MemberFilterChip,
@@ -22,28 +23,19 @@ import { listMembers, removeMember } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
 import { formatBilingualName } from "@/lib/format/displayName";
 import { memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
-import {
-  SHOWCASE_MARGARET_ID,
-  filterShowcaseMembers,
-  showcaseMemberRows,
-  showcaseMembersCount,
-} from "@/lib/mock/kuriosityShowcase";
 import { motion } from "@/theme/motion";
 import { layout, space } from "@/theme/tokens";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 
-type ListRow =
-  | { kind: "showcase"; id: string; initials: string; name: string; subtitle: string }
-  | { kind: "member"; member: MemberRecord };
-
 export default function MembersScreen() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const tabBarHeight = 56 + insets.bottom;
   const router = useRouter();
-  const { mode, dataRevision, bumpDataRevision, localMemberCount } = useStorage();
+  const { mode, archiveLane, dataRevision, bumpDataRevision, localMemberCount } =
+    useStorage();
   const auth = useAuth();
   const { showError } = useAppFeedback();
   const { impactLight } = useAppPreferences();
@@ -75,11 +67,11 @@ export default function MembersScreen() {
 
   useEffect(() => {
     setQuery("");
-  }, [mode]);
+  }, [mode, archiveLane]);
 
   useEffect(() => {
     void load(query.trim());
-  }, [dataRevision, load]);
+  }, [dataRevision, load, archiveLane]);
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -89,21 +81,11 @@ export default function MembersScreen() {
   }, [query, load]);
 
   const peopleCountLabel = useMemo(() => {
-    const count = showcaseMembersCount(
-      mode === "local" ? localMemberCount : members.length,
-    );
+    const count = mode === "local" ? localMemberCount : members.length;
     return `${count} people`;
   }, [localMemberCount, members.length, mode]);
 
-  const listRows = useMemo((): ListRow[] => {
-    const showcase = filterShowcaseMembers(showcaseMemberRows, query, chip).map((r) => ({
-      kind: "showcase" as const,
-      id: r.id,
-      initials: r.initials,
-      name: r.name,
-      subtitle: r.subtitle,
-    }));
-
+  const listRows = useMemo((): MemberRecord[] => {
     const q = query.trim().toLowerCase();
     let db = members;
     if (chip === "living") {
@@ -120,13 +102,7 @@ export default function MembersScreen() {
           m.lastName.toLowerCase().includes(q),
       );
     }
-
-    const dbRows: ListRow[] = db.map((member) => ({
-      kind: "member",
-      member,
-    }));
-
-    return [...showcase, ...dbRows];
+    return db;
   }, [chip, members, query]);
 
   const onDelete = (member: MemberRecord) => {
@@ -160,36 +136,6 @@ export default function MembersScreen() {
     return <LoadingView message={copy.members.searchPlaceholder} />;
   }
 
-  const openPerson = (row: ListRow) => {
-    if (row.kind === "showcase") {
-      if (row.id === SHOWCASE_MARGARET_ID) {
-        router.push({
-          pathname: "/member/[personId]",
-          params: { personId: SHOWCASE_MARGARET_ID },
-        });
-        return;
-      }
-      if (row.id === "showcase-kay-hassan") {
-        router.push("/(tabs)/account");
-        return;
-      }
-      return;
-    }
-    router.push({
-      pathname: "/member/[personId]",
-      params: { personId: row.member.id, code: row.member.familyCode },
-    });
-  };
-
-  const rowTestId = (row: ListRow, index: number): string | undefined => {
-    if (index === 0) return "members-first-card";
-    if (row.kind === "showcase" && row.id === SHOWCASE_MARGARET_ID) {
-      return "members-row-showcase-margaret-khan";
-    }
-    if (row.kind === "showcase") return `members-row-${row.id}`;
-    return undefined;
-  };
-
   return (
     <Screen
       testID="members-screen"
@@ -199,6 +145,9 @@ export default function MembersScreen() {
       animated={false}
       style={styles.screen}
     >
+      {mode === "local" && archiveLane === "demo" && (
+        <DemoArchiveBanner testID="members-demo-banner" />
+      )}
       <View style={styles.body}>
         <View style={styles.header}>
           <View className="mb-1">
@@ -227,9 +176,7 @@ export default function MembersScreen() {
             style={styles.list}
             testID="members-list"
             data={listRows}
-            keyExtractor={(item) =>
-              item.kind === "showcase" ? item.id : item.member.id
-            }
+            keyExtractor={(item) => item.id}
             contentContainerStyle={[styles.listContent, { paddingBottom: listBottom }]}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
@@ -238,28 +185,19 @@ export default function MembersScreen() {
             onRefresh={() => void load(query)}
             renderItem={({ item, index }) => (
               <PersonRow
-                testID={rowTestId(item, index)}
-                initials={
-                  item.kind === "showcase"
-                    ? item.initials
-                    : `${item.member.firstName[0] ?? ""}${item.member.lastName[0] ?? ""}`
+                testID={index === 0 ? "members-first-card" : undefined}
+                initials={`${item.firstName[0] ?? ""}${item.lastName[0] ?? ""}`}
+                name={formatBilingualName(item)}
+                nickname={item.nickname}
+                subtitle={memberRecordSubtitle(item)}
+                onPress={() =>
+                  router.push({
+                    pathname: "/member/[personId]",
+                    params: { personId: item.id, code: item.familyCode },
+                  })
                 }
-                name={
-                  item.kind === "showcase"
-                    ? item.name
-                    : formatBilingualName(item.member)
-                }
-                nickname={item.kind === "member" ? item.member.nickname : undefined}
-                subtitle={
-                  item.kind === "showcase"
-                    ? item.subtitle
-                    : memberRecordSubtitle(item.member)
-                }
-                onPress={() => openPerson(item)}
                 onLongPress={
-                  item.kind === "member" && mode === "local"
-                    ? () => onDelete(item.member)
-                    : undefined
+                  mode === "local" ? () => onDelete(item) : undefined
                 }
               />
             )}

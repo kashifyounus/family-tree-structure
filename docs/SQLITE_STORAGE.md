@@ -1,27 +1,37 @@
 # Mobile SQLite storage (Kuriosity Family Tree)
 
-## Database file name
+## Database files (live / demo split)
 
-The Expo app opens a single on-device database via `expo-sqlite`:
+The Expo app uses **two** on-device SQLite files (`family-tree-app/lib/db/database.ts`):
 
-- **Active file:** `kuriosity_family.db` (`family-tree-app/lib/db/database.ts` → `DB_NAME`)
-- **Legacy file:** `mughals_family.db` — removed on first launch after upgrade when empty or copied into the new file (`lib/db/legacyDatabaseMigration.ts`, runs in `StorageProvider` before `getDatabase()`).
+| Lane | File | Purpose |
+|------|------|---------|
+| **Live** | `kuriosity_live.db` | Your real family records (`is_fixture = 0` only in normal use) |
+| **Demo** | `kuriosity_demo.db` | Sample / testing trees (`is_fixture = 1` imports) |
 
-## Legacy naming elsewhere
+The active lane is stored in AsyncStorage (`kuriosity_archive_lane`) and switched from **Account → On-device archive**.
 
-Android package id `com.mughals.familytree` and some AsyncStorage keys still use the `mughals_` prefix. User-facing brand is **Kuriosity**; those identifiers are unchanged to avoid store / install breakage.
+Device sign-in sessions are **per lane** (`mughals_local_account_id_live` vs `mughals_local_account_id_demo` in SecureStore).
 
-## If you had real data on an old build
+## Legacy migration
 
-On upgrade, the app copies `mughals_family.db` → `kuriosity_family.db` when the old file has people, then deletes the legacy file. If both files existed, the legacy file is dropped (Kuriosity file wins).
+- **Oldest:** `mughals_family.db` → copied to `kuriosity_family.db` on upgrade.
+- **Single-file → live:** `kuriosity_family.db` is copied to `kuriosity_live.db` when live does not exist yet, then the single-file DB is removed (`lib/db/legacyDatabaseMigration.ts`).
+
+## Clearing data
+
+- **Live:** Account (while on Live lane) → *Erase all private archive data*.
+- **Demo:** Account (while on Demo lane) → *Clear demo & start again* (wipes demo file + demo onboarding).
 
 ## Code layout
 
+- **Lane selection:** `lib/db/archiveLane.ts`
 - **Core CRUD:** `lib/db/localRepository.ts`
 - **Genealogy mutations:** `lib/db/localRepository.ext.ts`
 - **Kinship reads:** `lib/db/kinshipLoader.ts`
 
 ## Related docs
 
+- Product requirements: [`REQUIREMENTS_FAMILY_TREE_MAP.md`](./REQUIREMENTS_FAMILY_TREE_MAP.md)
 - Migration history: [`SQLITE_MIGRATION_PLAN.md`](./SQLITE_MIGRATION_PLAN.md)
 - Local-first product rules: [`ARCHITECTURE_SYNC.md`](./ARCHITECTURE_SYNC.md)

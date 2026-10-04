@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
-import { ShowcasePersonDetail } from "@/components/members/ShowcasePersonDetail";
 import { MemberProfileHero } from "@/components/members/profile/MemberProfileHero";
 import { MemberProfileRelationSheets } from "@/components/members/profile/MemberProfileRelationSheets";
 import { MemberProfileSections } from "@/components/members/profile/MemberProfileSections";
@@ -11,10 +10,6 @@ import { LoadingView } from "@/components/ui/LoadingView";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
-import {
-  SHOWCASE_MARGARET_ID,
-  margaretKhanProfile,
-} from "@/lib/mock/kuriosityShowcase";
 import { useMemberProfileScreen } from "@/lib/members/useMemberProfileScreen";
 import { useAppTheme } from "@/theme/useAppTheme";
 
@@ -25,12 +20,9 @@ export default function MemberDetailScreen() {
     personId: string;
     code?: string;
   }>();
-  const isShowcaseMargaret = personId === SHOWCASE_MARGARET_ID;
-
   const profile = useMemberProfileScreen({
     personId: String(personId),
     code: code ? String(code) : undefined,
-    skipLoad: isShowcaseMargaret,
   });
 
   const openMember = (memberPersonId: string, familyCode: string) => {
@@ -46,10 +38,6 @@ export default function MemberDetailScreen() {
       params: { unionId },
     });
   };
-
-  if (isShowcaseMargaret) {
-    return <ShowcasePersonDetail profile={margaretKhanProfile} />;
-  }
 
   if (profile.loading) {
     return <LoadingView />;

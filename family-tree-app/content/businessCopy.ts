@@ -17,6 +17,13 @@ export const copy = {
       "Kuriosity Family Tree helps families document relatives, marriages, and children in one place — privately on your phone or together through your family's online registry.",
   },
 
+  archive: {
+    demoBanner:
+      "Demo archive — sample data plus any edits you make here. Switch to Live data in Account for your real family.",
+    localOnlyPhase:
+      "This release uses your on-device archive only. Family cloud is not enabled yet.",
+  },
+
   storage: {
     privateArchive: "Private archive (this device)",
     privateArchiveShort: "On this device",
@@ -56,16 +63,33 @@ export const copy = {
     familyCloudSignIn: "Family cloud sign-in",
     signedIn: "You are signed in",
     signOut: "Sign out",
-    loadSampleFamily: "Load huge demo family (2,500+ members)",
+    loadCuratedSampleFamily:
+      "Load curated sample family (full tree map relations)",
+    loadHugeSampleFamily: "Load huge demo family (2,500+ members)",
     clearSampleFamily: "Remove sample data only",
     sampleFixtureCount: (count: number) =>
       count > 0
-        ? `${count} sample members loaded (your sign-in and personal records stay).`
+        ? `${count} sample members loaded (marked is_fixture; your personal records stay).`
         : "No sample data loaded yet.",
     clearSampleSuccess: (removed: number) =>
       removed > 0
-        ? `Removed ${removed} sample members. Your device sign-in is unchanged.`
+        ? `Removed ${removed} sample members. Your manually added records are unchanged.`
         : "No sample members to remove.",
+    resetPrivateArchive: "Erase all private archive data",
+    resetPrivateArchiveHelp:
+      "Deletes every person and relationship on this device, then signs you out. Use this for a completely fresh database.",
+    resetPrivateArchiveSuccess:
+      "Private archive erased. Complete onboarding to start again.",
+    archiveLaneTitle: "On-device archive",
+    archiveLaneLive: "Live data",
+    archiveLaneDemo: "Demo & testing",
+    archiveLaneHelp:
+      "Live and demo use separate SQLite files. Sample families never mix into your live records.",
+    demoRestartTitle: "Clear demo & start again",
+    demoRestartHelp:
+      "Erases the demo database only. Your live archive is untouched.",
+    demoRestartSuccess:
+      "Demo archive cleared. Choose a sample or register again from onboarding.",
     appearanceTitle: "Appearance",
     themeLight: "Light",
     themeDark: "Dark",
@@ -134,9 +158,48 @@ export const copy = {
     statsCloud: (members: number, focalCode: string) =>
       `Family cloud: ${members} member${members === 1 ? "" : "s"} in your directory · branch ${focalCode}`,
     statsCloudLoading: "Loading family cloud summary…",
-    searchPlaceholder: "Search people or stories",
+    searchPlaceholder: "Search people",
     recentTitle: "Recently opened",
     openBackupTools: "Backup & tools",
+    statMarriages: "Marriages",
+    statGenerations: "Generations",
+    checklistTitle: "Build your live archive",
+    checklistBody:
+      "Add the core relationships around you, then open the tree map to see your marriage-row layout.",
+    checklistSteps: {
+      spouse: {
+        title: "Add a spouse or partner",
+        hint: "Open your profile and use Add spouse.",
+        action: "Profile",
+      },
+      parents: {
+        title: "Record your parents",
+        hint: "Link or create parents from your profile.",
+        action: "Profile",
+      },
+      children: {
+        title: "Add a child",
+        hint: "Add children to your marriage from your profile.",
+        action: "Profile",
+      },
+      tree: {
+        title: "Open your family tree map",
+        hint: "See your couple centered with relatives around you.",
+        action: "Tree",
+      },
+    },
+  },
+
+  notifications: {
+    emptyTitle: "No notifications yet",
+    emptyBody:
+      "Activity alerts are not part of this release. Your archive changes are saved on this device.",
+  },
+
+  stories: {
+    emptyTitle: "Stories coming later",
+    emptyBody:
+      "Family stories and photos will live in your archive in a future update.",
   },
 
   tree: {
@@ -270,7 +333,9 @@ export const copy = {
     driveSuccess: (name: string) => `A copy was saved to Google Drive as ${name}.`,
     fileBackupTitle: "Export or restore backup file",
     fileBackupBody: (count: number) =>
-      `Download a portable backup of ${count} family member${count === 1 ? "" : "s"}, or restore from a backup you saved earlier. Restoring replaces your private archive on this device.`,
+      `Download a portable backup of ${count} family member${count === 1 ? "" : "s"}, or restore from a backup you saved earlier. Restoring replaces your live archive on this device.`,
+    liveBackupOnly:
+      "Backup and restore are available only for your live archive. Switch to Live data in Account, or use Clear demo & start again for the demo database.",
     exportFile: "Export backup file",
     importFile: "Restore from backup file",
     importPlaceholder: "Paste backup file contents here…",

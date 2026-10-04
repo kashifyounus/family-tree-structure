@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
 
 import { FormTextInput } from "@/components/ui/FormTextInput";
+import { DemoArchiveBanner } from "@/components/archive/DemoArchiveBanner";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
@@ -27,7 +28,8 @@ import { AppText } from "@/components/ui/AppText";
 
 export default function ToolsScreen() {
   const theme = useAppTheme();
-  const { mode, bumpDataRevision, localMemberCount } = useStorage();
+  const { mode, archiveLane, bumpDataRevision, localMemberCount } = useStorage();
+  const liveBackupEnabled = mode === "local" && archiveLane === "live";
   const { showError, showSuccess } = useAppFeedback();
   const { compareA } = useLocalSearchParams<{ compareA?: string }>();
   const [importText, setImportText] = useState("");
@@ -158,44 +160,58 @@ export default function ToolsScreen() {
     <Screen testID="tools-screen">
       <PageHeader title={copy.tools.title} />
 
+      {archiveLane === "demo" && <DemoArchiveBanner testID="tools-demo-banner" />}
+
       {mode === "local" ? (
         <>
-          <AppCard style={styles.card}>
-            <AppCardContent style={styles.cardInner}>
-              <AppText variant="titleMedium">{copy.tools.driveTitle}</AppText>
-              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.driveBody}</AppText>
-              <Button
-                testID="tools-drive-backup"
-                disabled={driveBusy}
-                onPress={backupToDrive}
-              >
-                {driveBusy ? <ButtonSpinner /> : null}
-                <ButtonText>{copy.tools.driveButton}</ButtonText>
-              </Button>
-            </AppCardContent>
-          </AppCard>
+          {liveBackupEnabled ? (
+            <>
+              <AppCard style={styles.card}>
+                <AppCardContent style={styles.cardInner}>
+                  <AppText variant="titleMedium">{copy.tools.driveTitle}</AppText>
+                  <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>{copy.tools.driveBody}</AppText>
+                  <Button
+                    testID="tools-drive-backup"
+                    disabled={driveBusy}
+                    onPress={backupToDrive}
+                  >
+                    {driveBusy ? <ButtonSpinner /> : null}
+                    <ButtonText>{copy.tools.driveButton}</ButtonText>
+                  </Button>
+                </AppCardContent>
+              </AppCard>
 
-          <AppCard style={styles.card}>
-            <AppCardContent style={styles.cardInner}>
-              <AppText variant="titleMedium">{copy.tools.fileBackupTitle}</AppText>
-              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.tools.fileBackupBody(localMemberCount)}
-              </AppText>
-              <Button testID="tools-export-file" onPress={exportDb}>
-                <ButtonText>{copy.tools.exportFile}</ButtonText>
-              </Button>
-              <FormTextInput
-                multiline
-                numberOfLines={6}
-                label={copy.tools.importPlaceholder}
-                value={importText}
-                onChangeText={setImportText}
-              />
-              <Button variant="outline" onPress={importDb}>
-                <ButtonText>{copy.tools.importFile}</ButtonText>
-              </Button>
-            </AppCardContent>
-          </AppCard>
+              <AppCard style={styles.card}>
+                <AppCardContent style={styles.cardInner}>
+                  <AppText variant="titleMedium">{copy.tools.fileBackupTitle}</AppText>
+                  <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                    {copy.tools.fileBackupBody(localMemberCount)}
+                  </AppText>
+                  <Button testID="tools-export-file" onPress={exportDb}>
+                    <ButtonText>{copy.tools.exportFile}</ButtonText>
+                  </Button>
+                  <FormTextInput
+                    multiline
+                    numberOfLines={6}
+                    label={copy.tools.importPlaceholder}
+                    value={importText}
+                    onChangeText={setImportText}
+                  />
+                  <Button variant="outline" onPress={importDb}>
+                    <ButtonText>{copy.tools.importFile}</ButtonText>
+                  </Button>
+                </AppCardContent>
+              </AppCard>
+            </>
+          ) : (
+            <AppCard style={styles.card}>
+              <AppCardContent style={styles.cardInner}>
+                <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 22 }}>
+                  {copy.tools.liveBackupOnly}
+                </AppText>
+              </AppCardContent>
+            </AppCard>
+          )}
 
           <AppCard style={styles.card}>
             <AppCardContent style={styles.cardInner}>

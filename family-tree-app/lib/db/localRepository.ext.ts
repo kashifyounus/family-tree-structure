@@ -1,4 +1,5 @@
 import { copy } from "@/content/businessCopy";
+import { assertLiveArchiveLane } from "@/lib/db/archiveLane";
 import { getDatabase } from "@/lib/db/database";
 import { uniqueFamilyCode } from "@/lib/db/familyCode";
 import type {
@@ -628,6 +629,7 @@ export function exportLocalDatabaseJson(): string {
 }
 
 export function importLocalDatabaseJson(json: string): void {
+  assertLiveArchiveLane();
   const payload = JSON.parse(json) as {
     persons: Record<string, unknown>[];
     unions: Record<string, unknown>[];
