@@ -11,8 +11,11 @@ tags:
     timeout: 180000
 - extendedWaitUntil:
     visible:
-      id: onboarding-kay-showcase
+      id: onboarding-screen
     timeout: 300000
+- scrollUntilVisible:
+    element:
+      id: onboarding-kay-showcase
 - tapOn:
     id: onboarding-kay-showcase
 - extendedWaitUntil:
@@ -29,5 +32,8 @@ tags:
     id: account-clear-demo-restart
 - extendedWaitUntil:
     visible:
-      id: onboarding-get-started
+      id: onboarding-screen
     timeout: 300000
+- scrollUntilVisible:
+    element:
+      id: onboarding-get-started
