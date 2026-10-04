@@ -1,17 +1,13 @@
-import { registerLocalAccount } from "@/lib/localAccount/service";
-import { showcaseUser } from "@/lib/mock/kuriosityShowcase";
+import { setupSeededCuratedArchive } from "@/lib/localAccount/seededArchiveSetup";
 import type { LocalAccountSession } from "@/lib/localAccount/service";
 
 const KAY_SHOWCASE_PASSWORD = "kuriosity";
 
-/** Registers Kay Hassan as archive owner with a single focal member (Figma preview). */
+/** Hassan–Khan curated sample (fixture) with Kay Hassan as tree focal. */
 export async function setupKayShowcaseArchive(): Promise<LocalAccountSession> {
-  return registerLocalAccount({
-    displayName: showcaseUser.displayName,
-    email: showcaseUser.email,
+  return setupSeededCuratedArchive({
+    displayName: "Kay Hassan",
+    email: "kay.hassan@kuriosity.local",
     password: KAY_SHOWCASE_PASSWORD,
-    firstName: showcaseUser.firstName,
-    lastName: "Hassan",
-    gender: "MALE",
   });
 }

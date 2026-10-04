@@ -56,7 +56,7 @@ export function LocalFamilyTree({
   const router = useRouter();
   const view = layout;
   const [gensUp, setGensUp] = useState(() =>
-    Math.max(1, seedGenerationsUp ?? 1),
+    Math.max(1, seedGenerationsUp ?? 2),
   );
   const [gensDown, setGensDown] = useState(() =>
     Math.max(2, seedGenerationsDown ?? 2),

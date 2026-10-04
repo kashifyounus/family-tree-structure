@@ -56,16 +56,23 @@ export const copy = {
     familyCloudSignIn: "Family cloud sign-in",
     signedIn: "You are signed in",
     signOut: "Sign out",
-    loadSampleFamily: "Load huge demo family (2,500+ members)",
+    loadCuratedSampleFamily:
+      "Load curated sample family (full tree map relations)",
+    loadHugeSampleFamily: "Load huge demo family (2,500+ members)",
     clearSampleFamily: "Remove sample data only",
     sampleFixtureCount: (count: number) =>
       count > 0
-        ? `${count} sample members loaded (your sign-in and personal records stay).`
+        ? `${count} sample members loaded (marked is_fixture; your personal records stay).`
         : "No sample data loaded yet.",
     clearSampleSuccess: (removed: number) =>
       removed > 0
-        ? `Removed ${removed} sample members. Your device sign-in is unchanged.`
+        ? `Removed ${removed} sample members. Your manually added records are unchanged.`
         : "No sample members to remove.",
+    resetPrivateArchive: "Erase all private archive data",
+    resetPrivateArchiveHelp:
+      "Deletes every person and relationship on this device, then signs you out. Use this for a completely fresh database.",
+    resetPrivateArchiveSuccess:
+      "Private archive erased. Complete onboarding to start again.",
     appearanceTitle: "Appearance",
     themeLight: "Light",
     themeDark: "Dark",

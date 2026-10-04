@@ -19,7 +19,6 @@ import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_LOGIN_EMAIL, DEFAULT_LOGIN_PASSWORD } from "@/context/AuthContext";
 import { setupDemoArchive } from "@/lib/localAccount/demoSetup";
 import { setupKayShowcaseArchive } from "@/lib/localAccount/kayShowcaseSetup";
-import { showcaseUser } from "@/lib/mock/kuriosityShowcase";
 import type { Gender } from "@/lib/data/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
@@ -64,10 +63,12 @@ export default function OnboardingScreen() {
 
   const startPrivate = async () => {
     await storage.setMode("local");
-    setDisplayName(showcaseUser.displayName);
-    setEmail(showcaseUser.email);
-    setFirstName(showcaseUser.firstName);
-    setLastName("Hassan");
+    setDisplayName("");
+    setEmail("");
+    setPassword("");
+    setFirstName("");
+    setLastName("");
+    setGender("MALE");
     go("local");
   };
 

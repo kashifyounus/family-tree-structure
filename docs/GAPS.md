@@ -4,6 +4,8 @@
 
 Epic: https://github.com/kashifyounus/family-tree-structure/issues/10
 
+Stakeholder tree-map requirements: [`docs/REQUIREMENTS_FAMILY_TREE_MAP.md`](./REQUIREMENTS_FAMILY_TREE_MAP.md).
+
 ## How to work
 
 1. Read this file and the target issue acceptance criteria.

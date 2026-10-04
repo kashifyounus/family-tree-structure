@@ -104,7 +104,7 @@ export function buildLocalFamilyGraph(
     0,
     {
       preferredFocalUnionId: options.focalUnionId,
-      phoneSingleParentSide: generationsUp <= 1,
+      phoneSingleParentSide: false,
     },
   );
 

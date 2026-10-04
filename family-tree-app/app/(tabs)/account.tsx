@@ -30,8 +30,11 @@ import { useStorage } from "@/context/StorageContext";
 import {
   countFixturePeople,
   seedComprehensiveFixture,
+  seedCuratedPedigreeFixture,
   wipeFixtureDataset,
 } from "@/lib/db/comprehensiveSeed";
+import { resetPrivateArchiveAndSignOut } from "@/lib/db/resetPrivateArchive";
+import { resetOnboardingForDev } from "@/lib/onboarding/storage";
 import type { StorageMode } from "@/lib/data/types";
 import { normalizeApiBaseUrl, probeMobileApiHealth } from "@/lib/apiUrl";
 import { useAppTheme } from "@/theme/useAppTheme";
@@ -56,6 +59,7 @@ export default function AccountScreen() {
   const [pinFieldError, setPinFieldError] = useState<string | undefined>();
   const [pinConfirmError, setPinConfirmError] = useState<string | undefined>();
   const [fixtureBusy, setFixtureBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
 
   useEffect(() => {
     setApiDraft(storage.apiUrl);
@@ -314,6 +318,25 @@ export default function AccountScreen() {
                 onPress={() => {
                   setFixtureBusy(true);
                   try {
+                    const result = seedCuratedPedigreeFixture();
+                    storage.bumpDataRevision();
+                    showSuccess(copy.account.loadSampleSuccess(result.focalFamilyCode));
+                  } catch (e) {
+                    showError(e);
+                  } finally {
+                    setFixtureBusy(false);
+                  }
+                }}
+              >
+                {fixtureBusy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.account.loadCuratedSampleFamily}</ButtonText>
+              </GsButton>
+              <GsButton
+                variant="outline"
+                disabled={fixtureBusy}
+                onPress={() => {
+                  setFixtureBusy(true);
+                  try {
                     const result = seedComprehensiveFixture();
                     storage.bumpDataRevision();
                     showSuccess(copy.account.loadSampleSuccess(result.focalFamilyCode));
@@ -325,7 +348,7 @@ export default function AccountScreen() {
                 }}
               >
                 {fixtureBusy ? <ButtonSpinner /> : null}
-                <ButtonText>{copy.account.loadSampleFamily}</ButtonText>
+                <ButtonText>{copy.account.loadHugeSampleFamily}</ButtonText>
               </GsButton>
               <GsButton
                 variant="outline"
@@ -345,6 +368,34 @@ export default function AccountScreen() {
                 className="self-start"
               >
                 <ButtonText>{copy.account.clearSampleFamily}</ButtonText>
+              </GsButton>
+              <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, lineHeight: 20 }}>
+                {copy.account.resetPrivateArchiveHelp}
+              </AppText>
+              <GsButton
+                variant="outline"
+                disabled={resetBusy}
+                onPress={() => {
+                  setResetBusy(true);
+                  void (async () => {
+                    try {
+                      await resetPrivateArchiveAndSignOut();
+                      await localAccount.refresh();
+                      await resetOnboardingForDev();
+                      storage.bumpDataRevision();
+                      showSuccess(copy.account.resetPrivateArchiveSuccess);
+                      router.replace("/onboarding");
+                    } catch (e) {
+                      showError(e);
+                    } finally {
+                      setResetBusy(false);
+                    }
+                  })();
+                }}
+                className="self-start"
+              >
+                {resetBusy ? <ButtonSpinner /> : null}
+                <ButtonText>{copy.account.resetPrivateArchive}</ButtonText>
               </GsButton>
             </>
           )}

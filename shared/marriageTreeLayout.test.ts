@@ -43,6 +43,27 @@ describe("marriageTreeLayout", () => {
     expect(included.has("sib")).toBe(true);
   });
 
+  it("includes spouse parents when generationsUp >= 1", () => {
+    const withSpouseParents = [
+      ...unions,
+      {
+        id: "u-sp-inlaw",
+        partner1Id: "fil",
+        partner2Id: "mil",
+        childships: [{ childId: "spouse" }],
+      },
+    ];
+    const included = collectIncludedPersonIds(
+      "ego",
+      withSpouseParents,
+      1,
+      1,
+      0,
+    );
+    expect(included.has("fil")).toBe(true);
+    expect(included.has("mil")).toBe(true);
+  });
+
   it("places spouse on marriage row and children below", () => {
     const included = collectIncludedPersonIds("ego", unions, 1, 1, 1);
     const { positions, edges, focalUnionId, focalUnionIds } =

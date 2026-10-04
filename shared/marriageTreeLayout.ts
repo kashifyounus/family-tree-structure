@@ -246,6 +246,21 @@ export function collectIncludedPersonIds(
     included.add(u.partner2Id);
   }
 
+  /** Spouse parent generation (in-laws above the marriage row) at the same depth as ego parents. */
+  if (generationsUp >= 1) {
+    for (const u of focalUnions) {
+      const spouseId =
+        u.partner1Id === focalId ? u.partner2Id : u.partner1Id;
+      const spouseParentUnions = unions.filter((pu) =>
+        pu.childships.some((c) => c.childId === spouseId),
+      );
+      for (const pu of spouseParentUnions) {
+        included.add(pu.partner1Id);
+        included.add(pu.partner2Id);
+      }
+    }
+  }
+
   collectSiblingRing(siblingSteps);
 
   return included;
