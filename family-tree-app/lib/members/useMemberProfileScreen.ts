@@ -12,8 +12,12 @@ import {
   assignParentsToCouple,
   createAndAssignParentSlot,
   linkChild,
+  linkChildren,
   linkChildToParent,
   linkSpouse,
+  unlinkChildFromUnion,
+  unlinkParents,
+  unlinkSpouseMarriage,
   loadPersonByCode,
   loadPersonById,
   parentCouplesForPicker,
@@ -268,6 +272,89 @@ export function useMemberProfileScreen({
     },
     [bumpDataRevision, chUnionId, impactLight, member, mode, reload, showError, showSuccess],
   );
+
+  const linkChildMembers = useCallback(
+    (
+      childIds: string[],
+      options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
+    ) => {
+      if (!member) return;
+      const marriages = unionOptions(mode, member.id);
+      const unionId = chUnionId || marriages[0]?.id;
+      const ids = childIds.filter(Boolean);
+      if (ids.length === 0) {
+        showError(new Error(copy.profile.pickMemberRequired));
+        return;
+      }
+      try {
+        if (unionId) {
+          linkChildren(mode, {
+            unionId,
+            childIds: ids,
+            relationshipType: options?.relationshipType,
+          });
+        } else if (ids.length === 1) {
+          linkChildToParent(mode, member.id, ids[0]!);
+        } else {
+          showError(new Error(copy.profile.needMarriageFirst));
+          return;
+        }
+        setChildOpen(false);
+        bumpDataRevision();
+        void reload();
+        impactLight();
+        showSuccess(copy.profile.childrenLinked(ids.length));
+      } catch (e) {
+        showError(e);
+      }
+    },
+    [bumpDataRevision, chUnionId, impactLight, member, mode, reload, showError, showSuccess],
+  );
+
+  const unlinkChildFromMarriage = useCallback(
+    (unionId: string, childId: string) => {
+      if (!member) return;
+      try {
+        unlinkChildFromUnion(mode, unionId, childId);
+        bumpDataRevision();
+        void reload();
+        impactLight();
+        showSuccess(copy.profile.unlinkChildDone);
+      } catch (e) {
+        showError(e);
+      }
+    },
+    [bumpDataRevision, impactLight, member, mode, reload, showError, showSuccess],
+  );
+
+  const unlinkMarriage = useCallback(
+    (unionId: string) => {
+      if (!member) return;
+      try {
+        unlinkSpouseMarriage(mode, unionId);
+        bumpDataRevision();
+        void reload();
+        impactLight();
+        showSuccess(copy.profile.unlinkSpouseDone);
+      } catch (e) {
+        showError(e);
+      }
+    },
+    [bumpDataRevision, impactLight, member, mode, reload, showError, showSuccess],
+  );
+
+  const unlinkParentLinks = useCallback(() => {
+    if (!member) return;
+    try {
+      unlinkParents(mode, member.id);
+      bumpDataRevision();
+      void reload();
+      impactLight();
+      showSuccess(copy.profile.unlinkParentsDone);
+    } catch (e) {
+      showError(e);
+    }
+  }, [bumpDataRevision, impactLight, member, mode, reload, showError, showSuccess]);
 
   const createChildMember = useCallback(
     (payload: {
@@ -529,6 +616,10 @@ export function useMemberProfileScreen({
     linkSpouseMember,
     createSpouseMember,
     linkChildMember,
+    linkChildMembers,
+    unlinkChildFromMarriage,
+    unlinkMarriage,
+    unlinkParentLinks,
     createChildMember,
     linkParentMember,
     createParentMember,

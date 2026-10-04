@@ -33,8 +33,12 @@ import {
   getLocalMarriage,
   getLocalMemberById,
   linkLocalChild,
+  linkLocalChildrenBatch,
   linkLocalChildToParent,
   linkLocalSpouse,
+  unlinkLocalChildFromUnion,
+  unlinkLocalPersonFromParents,
+  dissolveLocalUnion,
   listLocalPeopleBrief,
   listLocalUnionOptions,
   assignLocalPersonToCouple,
@@ -142,6 +146,37 @@ export function linkSpouse(mode: StorageMode, input: LinkSpouseInput): { unionId
 export function linkChild(mode: StorageMode, input: LinkChildInput): void {
   requireLocal(mode);
   linkLocalChild(input);
+}
+
+export function linkChildren(
+  mode: StorageMode,
+  input: {
+    unionId: string;
+    childIds: string[];
+    relationshipType?: LinkChildInput["relationshipType"];
+  },
+): void {
+  requireLocal(mode);
+  linkLocalChildrenBatch(input);
+}
+
+export function unlinkChildFromUnion(
+  mode: StorageMode,
+  unionId: string,
+  childId: string,
+): void {
+  requireLocal(mode);
+  unlinkLocalChildFromUnion({ unionId, childId });
+}
+
+export function unlinkSpouseMarriage(mode: StorageMode, unionId: string): void {
+  requireLocal(mode);
+  dissolveLocalUnion(unionId);
+}
+
+export function unlinkParents(mode: StorageMode, personId: string): void {
+  requireLocal(mode);
+  unlinkLocalPersonFromParents(personId);
 }
 
 export function linkChildToParent(

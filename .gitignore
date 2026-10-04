@@ -57,3 +57,5 @@ next-env.d.ts
 .windsurf/
 skills-lock.json
 README.md.bak
+.android-sdk/
+family-tree-app/dist/

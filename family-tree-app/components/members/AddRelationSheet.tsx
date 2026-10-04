@@ -86,6 +86,7 @@ type AddRelationSheetProps = {
   onDismiss: () => void;
   onSubmitCreate: (payload: AddRelationCreatePayload) => void;
   onSubmitLink: (memberId: string, options?: AddRelationLinkOptions) => void;
+  onSubmitLinkMany?: (memberIds: string[], options?: AddRelationLinkOptions) => void;
   submitTestID?: string;
   fieldErrors?: FieldErrors;
 };
@@ -107,6 +108,7 @@ export function AddRelationSheet({
   onDismiss,
   onSubmitCreate,
   onSubmitLink,
+  onSubmitLinkMany,
   submitTestID,
   fieldErrors = {},
 }: AddRelationSheetProps) {
@@ -114,6 +116,8 @@ export function AddRelationSheet({
   const parentLinkOnly = kind === "parent";
   const [mode, setMode] = useState<MemberFormMode>(parentLinkOnly ? "link" : "create");
   const [linkId, setLinkId] = useState("");
+  const [linkIds, setLinkIds] = useState<string[]>([]);
+  const childLinkMulti = kind === "child";
   const [person, setPerson] = useState<PersonFieldsValue>(() =>
     emptyPersonFieldsValue(defaultGender),
   );
@@ -129,6 +133,7 @@ export function AddRelationSheet({
     if (!visible) return;
     setMode(parentLinkOnly ? "link" : "create");
     setLinkId("");
+    setLinkIds([]);
     setPerson(
       emptyPersonFieldsValue(
         kind === "parent" ? parentSlotGender(parentSlot) : defaultGender,
@@ -138,12 +143,21 @@ export function AddRelationSheet({
     setChildRelationshipType("BIOLOGICAL");
   }, [visible, defaultGender, kind, parentLinkOnly, parentSlot]);
 
+  const toggleLinkId = (id: string) => {
+    setLinkIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
   const handleSubmit = () => {
     if (mode === "link" || parentLinkOnly) {
-      onSubmitLink(
-        linkId,
-        kind === "child" ? { relationshipType: childRelationshipType } : undefined,
-      );
+      const opts =
+        kind === "child" ? { relationshipType: childRelationshipType } : undefined;
+      if (childLinkMulti && linkIds.length > 0 && onSubmitLinkMany) {
+        onSubmitLinkMany(linkIds, opts);
+        return;
+      }
+      onSubmitLink(linkId, opts);
       return;
     }
     onSubmitCreate({
@@ -236,6 +250,9 @@ export function AddRelationSheet({
             excludeIds={excludeIds}
             selectedId={linkId}
             onSelect={setLinkId}
+            multiSelect={childLinkMulti}
+            selectedIds={linkIds}
+            onToggleSelect={toggleLinkId}
           />
           {parentLinkOnly ? (
             <Button
@@ -249,6 +266,21 @@ export function AddRelationSheet({
         </>
       ) : kind === "spouse" ? (
         <>
+          <AppText variant="labelSmall" className="text-muted-foreground">
+            {copy.profile.pickMemberSearch}
+          </AppText>
+          <ExistingMemberPicker
+            members={members}
+            excludeIds={excludeIds}
+            selectedId={linkId}
+            onSelect={(id) => {
+              setLinkId(id);
+              setMode("link");
+            }}
+          />
+          <AppText variant="labelSmall" className="text-muted-foreground mt-2">
+            Or create a new spouse
+          </AppText>
           <PersonFields
             value={person}
             onChange={patchPerson}

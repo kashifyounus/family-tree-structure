@@ -96,6 +96,10 @@ export default function MemberDetailScreen() {
           onSaveEdit={profile.saveEdit}
           onOpenMember={openMember}
           onOpenMarriage={openMarriage}
+          canEditLocal={profile.canEditLocal}
+          onUnlinkParents={profile.unlinkParentLinks}
+          onUnlinkMarriage={profile.unlinkMarriage}
+          onUnlinkChild={profile.unlinkChildFromMarriage}
         />
       </Screen>
 
@@ -120,6 +124,7 @@ export default function MemberDetailScreen() {
         onSubmitLinkSpouse={profile.linkSpouseMember}
         onSubmitCreateChild={profile.createChildMember}
         onSubmitLinkChild={profile.linkChildMember}
+        onSubmitLinkChildren={profile.linkChildMembers}
         onSelectParentCouple={(row) => profile.onSelectParentCouple(row.unionId)}
       />
     </>

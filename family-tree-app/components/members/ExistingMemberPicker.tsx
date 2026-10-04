@@ -17,7 +17,10 @@ type ExistingMemberPickerProps = {
   members: BriefMember[];
   excludeIds?: string[];
   selectedId?: string;
-  onSelect: (id: string) => void;
+  onSelect?: (id: string) => void;
+  multiSelect?: boolean;
+  selectedIds?: string[];
+  onToggleSelect?: (id: string) => void;
 };
 
 export function ExistingMemberPicker({
@@ -25,10 +28,14 @@ export function ExistingMemberPicker({
   excludeIds = [],
   selectedId,
   onSelect,
+  multiSelect = false,
+  selectedIds = [],
+  onToggleSelect,
 }: ExistingMemberPickerProps) {
   const [query, setQuery] = useState("");
 
   const excluded = useMemo(() => new Set(excludeIds), [excludeIds]);
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -47,6 +54,14 @@ export function ExistingMemberPicker({
       .slice(0, 48);
   }, [excluded, members, query]);
 
+  const handlePress = (id: string) => {
+    if (multiSelect) {
+      onToggleSelect?.(id);
+    } else {
+      onSelect?.(id);
+    }
+  };
+
   return (
     <View className="gap-2">
       <FormTextInput
@@ -54,13 +69,18 @@ export function ExistingMemberPicker({
         value={query}
         onChangeText={setQuery}
       />
+      {multiSelect ? (
+        <AppText variant="labelSmall" className="text-muted-foreground">
+          {copy.profile.multiPickerHint(selectedIds.length)}
+        </AppText>
+      ) : null}
       <ScrollView
         style={{ maxHeight: 260 }}
         keyboardShouldPersistTaps="handled"
         nestedScrollEnabled
       >
         {filtered.map((m) => {
-          const selected = m.id === selectedId;
+          const selected = multiSelect ? selectedSet.has(m.id) : m.id === selectedId;
           return (
             <PersonCardRow
               key={m.id}
@@ -70,7 +90,7 @@ export function ExistingMemberPicker({
               nickname={m.nickname}
               subtitle={memberPickerSubtitle(m)}
               selected={selected}
-              onPress={() => onSelect(m.id)}
+              onPress={() => handlePress(m.id)}
             />
           );
         })}

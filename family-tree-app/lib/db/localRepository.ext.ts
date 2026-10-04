@@ -662,3 +662,56 @@ export function importLocalDatabaseJson(json: string): void {
     );
   }
 }
+
+export function unlinkLocalChildFromUnion(input: {
+  unionId: string;
+  childId: string;
+}): void {
+  const db = getDatabase();
+  db.runSync("DELETE FROM children WHERE union_id = ? AND child_id = ?", [
+    input.unionId,
+    input.childId,
+  ]);
+}
+
+/** End marriage or remove union when it has no children. */
+export function dissolveLocalUnion(unionId: string): void {
+  const db = getDatabase();
+  const row = db.getFirstSync<{ n: number }>(
+    "SELECT COUNT(*) as n FROM children WHERE union_id = ?",
+    [unionId],
+  );
+  if ((row?.n ?? 0) > 0) {
+    db.runSync("UPDATE unions SET is_active = 0, divorce_date = COALESCE(divorce_date, date('now')) WHERE id = ?", [
+      unionId,
+    ]);
+  } else {
+    db.runSync("DELETE FROM unions WHERE id = ?", [unionId]);
+  }
+}
+
+export function unlinkLocalPersonFromParents(personId: string): void {
+  const db = getDatabase();
+  db.runSync("DELETE FROM children WHERE child_id = ?", [personId]);
+}
+
+export function linkLocalChildrenBatch(input: {
+  unionId: string;
+  childIds: string[];
+  relationshipType?: LinkChildInput["relationshipType"];
+}): void {
+  const unique = [...new Set(input.childIds.filter(Boolean))];
+  const db = getDatabase();
+  for (const childId of unique) {
+    const exists = db.getFirstSync<{ id: string }>(
+      "SELECT id FROM children WHERE union_id = ? AND child_id = ?",
+      [input.unionId, childId],
+    );
+    if (exists) continue;
+    linkLocalChild({
+      unionId: input.unionId,
+      childId,
+      relationshipType: input.relationshipType,
+    });
+  }
+}

@@ -269,9 +269,23 @@ export const copy = {
     memberFormLink: "Link existing",
     pickMemberSearch: "Search family members",
     pickMemberRequired: "Choose an existing family member to link.",
+    multiPickerHint: (count: number) =>
+      count === 0
+        ? "Tap members to select one or more."
+        : `${count} selected — tap again to deselect.`,
     noPickerMatches: "No matching members in your archive.",
+    relateToMember: "Related to (search)",
+    relationshipCardsHint: "Choose how this person connects, then pick who they relate to.",
+    unlinkChild: "Unlink child",
+    unlinkSpouse: "Unlink spouse",
+    unlinkParents: "Remove parent link",
+    unlinkChildDone: "Child removed from this marriage.",
+    unlinkSpouseDone: "Marriage unlinked.",
+    unlinkParentsDone: "Parent links removed.",
     spouseLinked: "Marriage linked to an existing member.",
     childLinked: "Existing member linked as a child on this marriage.",
+    childrenLinked: (n: number) =>
+      n === 1 ? "Child linked on this marriage." : `${n} children linked on this marriage.`,
     editProfile: "Edit profile",
     cancelEdit: "Cancel",
     saveChanges: "Save changes",

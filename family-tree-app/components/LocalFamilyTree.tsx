@@ -72,6 +72,12 @@ export function LocalFamilyTree({
     }
   }, [seedGenerationsUp, seedGenerationsDown]);
 
+  useEffect(() => {
+    setGensUp(Math.max(1, seedGenerationsUp ?? 2));
+    setGensDown(Math.max(2, seedGenerationsDown ?? 2));
+    setSiblingSteps(0);
+  }, [familyCode, dataRevision, seedGenerationsUp, seedGenerationsDown]);
+
   const graphOptions: BuildLocalGraphOptions = useMemo(
     () => ({
       generationsUp: gensUp,
@@ -174,6 +180,7 @@ export function LocalFamilyTree({
       )}
       {view === "graph" && graph ? (
         <GraphWebView
+          key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${gensUp}-${gensDown}-${siblingSteps}`}
           graph={graph}
           testID="local-tree-graph-webview"
           onPersonPress={onPersonPress}
