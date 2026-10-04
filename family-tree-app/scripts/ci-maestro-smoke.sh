@@ -34,6 +34,10 @@ while true; do
 done
 while ! adb shell pm path android >/dev/null 2>&1; do sleep 2; done
 
+adb shell settings put global window_animation_scale 0 >/dev/null 2>&1 || true
+adb shell settings put global transition_animation_scale 0 >/dev/null 2>&1 || true
+adb shell settings put global animator_duration_scale 0 >/dev/null 2>&1 || true
+
 echo "Installing $APK (push + pm install — reliable on slow emulators)"
 adb push "$APK" /data/local/tmp/family-tree-debug.apk
 adb shell pm install -r -g /data/local/tmp/family-tree-debug.apk
@@ -41,8 +45,8 @@ adb shell pm install -r -g /data/local/tmp/family-tree-debug.apk
 if ! command -v maestro >/dev/null; then
   echo "Installing Maestro CLI..."
   curl -Ls "https://get.maestro.mobile.dev" | bash
-  export PATH="$PATH:$HOME/.maestro/bin"
 fi
+export PATH="$PATH:$HOME/.maestro/bin"
 
 run_flow() {
   local path="$1"

@@ -16,7 +16,11 @@ cd family-tree-app
 npm run test:smoke
 ```
 
-When this passes, **S4a** is satisfied. **S4** still requires the manual steps below on a device or emulator.
+When this passes, **S4a** is satisfied.
+
+**S4 (CI path):** When the `Android emulator — Maestro smoke` job on `main` is green, it runs flows **01, 09–12** (same as the quick checklist). You may sign **S4** in the table below with that Actions run URL instead of a physical device.
+
+**S4 (manual path):** Optional on-device pass using the steps below.
 
 ---
 
