@@ -1,6 +1,6 @@
 import { useRouter, useSegments } from "expo-router";
 import { useEffect, type ReactNode } from "react";
-import { AppState, View } from "react-native";
+import { AppState, StyleSheet, View } from "react-native";
 
 import { GenealogyBootScreen } from "@/components/GenealogyBootScreen";
 import { AppLockScreen } from "@/components/security/AppLockScreen";
@@ -51,19 +51,30 @@ export function NavigationGate({ children, fallback }: NavigationGateProps) {
     return fallback ?? <GenealogyBootScreen message="Loading family records…" />;
   }
 
-  const inOnboarding = segments[0] === "onboarding";
-  if (!onboardingComplete && !inOnboarding) {
-    return fallback ?? <GenealogyBootScreen message="Opening onboarding…" />;
-  }
-
   if (prefs.pinEnabled && prefs.locked && onboardingComplete) {
     return <AppLockScreen onUnlocked={prefs.unlock} />;
   }
 
+  const awaitingOnboarding =
+    !onboardingComplete && segments[0] !== "onboarding";
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.root}>
       {children}
+      {awaitingOnboarding ? (
+        <View style={styles.onboardingOverlay} pointerEvents="auto">
+          {fallback ?? <GenealogyBootScreen message="Opening onboarding…" />}
+        </View>
+      ) : null}
       <AppPrivacyOverlay />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+  onboardingOverlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 10,
+  },
+});
