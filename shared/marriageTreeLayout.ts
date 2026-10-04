@@ -482,7 +482,6 @@ export function layoutMarriageCentricGraph(
   }
 
   spouseEntries.forEach((entry, unionIndex) => {
-    const spouseX = positions.get(entry.spouseId)?.x ?? originX;
     const husbandX = positions.get(husbandId)?.x ?? originX;
     const wifeX = wifeId ? (positions.get(wifeId)?.x ?? originX + coupleStep) : husbandX;
     const coupleMidCenter = (husbandX + wifeX + PEDIGREE_CARD_BIG_W) / 2;

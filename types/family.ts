@@ -116,7 +116,7 @@ export type FamilyGraphEdge = {
   id: string;
   source: string;
   target: string;
-  type?: "spouse" | "parent" | "child";
+  type?: "spouse" | "parent" | "child" | "sibling";
   label?: string;
   animated?: boolean;
 };
