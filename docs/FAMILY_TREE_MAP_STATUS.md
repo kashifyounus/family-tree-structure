@@ -53,7 +53,7 @@ Status values: `done` | `in_work` | `pending`
 | T4 | Sibling load-more depth | done | `siblingSteps` hops |
 | T5 | Unknown co-parent on canvas | done | Unknown / Parent labels |
 | T6 | Remove `ShowcasePedigreeTree` | done | |
-| T7 | Adjacent-only marriage bands (no span across spouse) | pending | UX polish |
+| T7 | Adjacent-only marriage bands (no span across spouse) | done | `marriageBandForPartnerOnRow` |
 | T8 | WebView pixel layout E2E | pending | |
 
 ---
@@ -77,7 +77,7 @@ Status values: `done` | `in_work` | `pending`
 |----|------|--------|-------|
 | S1 | All CI green on PR | done | Web + mobile + Maestro contracts |
 | S2 | PR ready for review | done | Draft cleared when CI green |
-| S3 | Merge to `main` | pending | After review |
+| S3 | Merge to `main` | in_work | Squash merge when CI green |
 | S4 | PO device smoke | pending | Human |
 
 ---

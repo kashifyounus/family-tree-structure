@@ -142,6 +142,11 @@ describe("graph webview payload", () => {
     expect(payload.marriageBands?.length).toBe(2);
     expect(payload.marriageBands?.[0]?.label).toBe("Married 2000");
     expect(payload.marriageBands?.[1]?.label).toBe("Married 2010");
+    const second = payload.marriageBands?.[1];
+    expect(second).toBeDefined();
+    expect(second!.x1).toBeGreaterThanOrEqual(160 + PEDIGREE_CARD_BIG_W - 2);
+    expect(second!.x2).toBeLessThanOrEqual(320 + 2);
+    expect(second!.x1).toBeLessThan(second!.x2);
   });
 
   it("labels unknown co-parent placeholders on the canvas", () => {

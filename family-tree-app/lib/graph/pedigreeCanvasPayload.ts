@@ -87,6 +87,32 @@ function marriageBandBetween(
   };
 }
 
+/** Marriage-row band: adjacent pair only (avoids drawing across intervening spouse cards). */
+export function marriageBandForPartnerOnRow(
+  ego: PedigreeCanvasNode,
+  partner: PedigreeCanvasNode,
+  label: string,
+  rowPeers: PedigreeCanvasNode[],
+): PedigreeMarriageBand | null {
+  const byX = [...rowPeers].sort((a, b) => a.x - b.x);
+  const egoIdx = byX.findIndex((n) => n.id === ego.id);
+  const partnerIdx = byX.findIndex((n) => n.id === partner.id);
+  if (egoIdx < 0 || partnerIdx < 0) {
+    return marriageBandBetween(ego, partner, label);
+  }
+  if (Math.abs(egoIdx - partnerIdx) === 1) {
+    return marriageBandBetween(ego, partner, label);
+  }
+  const leftIdx = Math.min(egoIdx, partnerIdx);
+  const rightIdx = Math.max(egoIdx, partnerIdx);
+  const leftNode = byX[rightIdx - 1];
+  const rightNode = byX[rightIdx];
+  if (!leftNode || !rightNode) {
+    return marriageBandBetween(ego, partner, label);
+  }
+  return marriageBandBetween(leftNode, rightNode, label);
+}
+
 export type PedigreeCanvasPayload = {
   focalPersonId: string;
   nodes: PedigreeCanvasNode[];
@@ -228,10 +254,20 @@ export function buildPedigreeCanvasPayload(
       : []);
 
   if (egoNode) {
+    const rowPeers = nodes.filter(
+      (n) =>
+        n.id === egoNode.id ||
+        (partnerIds.has(n.id) && Math.abs(n.y - egoNode.y) < 2),
+    );
     for (const spec of bandSpecs) {
       const partner = nodes.find((n) => n.id === spec.partnerId);
       if (!partner) continue;
-      const band = marriageBandBetween(egoNode, partner, spec.label);
+      const band = marriageBandForPartnerOnRow(
+        egoNode,
+        partner,
+        spec.label,
+        rowPeers,
+      );
       if (band) marriageBands.push(band);
     }
   }
