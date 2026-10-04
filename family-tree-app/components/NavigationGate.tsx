@@ -51,6 +51,11 @@ export function NavigationGate({ children, fallback }: NavigationGateProps) {
     return fallback ?? <GenealogyBootScreen message="Loading family records…" />;
   }
 
+  const inOnboarding = segments[0] === "onboarding";
+  if (!onboardingComplete && !inOnboarding) {
+    return fallback ?? <GenealogyBootScreen message="Opening onboarding…" />;
+  }
+
   if (prefs.pinEnabled && prefs.locked && onboardingComplete) {
     return <AppLockScreen onUnlocked={prefs.unlock} />;
   }

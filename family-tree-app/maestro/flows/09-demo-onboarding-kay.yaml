@@ -11,8 +11,8 @@ tags:
     timeout: 180000
 - extendedWaitUntil:
     visible:
-      id: onboarding-screen
-    timeout: 120000
+      id: onboarding-get-started
+    timeout: 300000
 - tapOn:
     id: onboarding-kay-showcase
 - extendedWaitUntil:

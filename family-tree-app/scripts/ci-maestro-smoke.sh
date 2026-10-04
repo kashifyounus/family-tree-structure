@@ -85,6 +85,10 @@ sleep 15
 export MAESTRO_DRIVER_STARTUP_TIMEOUT="${MAESTRO_DRIVER_STARTUP_TIMEOUT:-600000}"
 echo "MAESTRO_DRIVER_STARTUP_TIMEOUT=${MAESTRO_DRIVER_STARTUP_TIMEOUT}ms"
 
+APP_ID="${MAESTRO_APP_ID:-com.mughals.familytree}"
+echo "Clearing app data for $APP_ID before Maestro..."
+adb shell pm clear "$APP_ID" >/dev/null 2>&1 || true
+
 if ! command -v maestro >/dev/null; then
   echo "Installing Maestro CLI..."
   curl -Ls "https://get.maestro.mobile.dev" | bash
