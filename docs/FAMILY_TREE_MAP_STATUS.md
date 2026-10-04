@@ -1,8 +1,9 @@
 # Family tree map program — status tracker
 
-**Branch:** `cursor/family-tree-map-requirements-c2cc`  
-**PR:** [#24](https://github.com/kashifyounus/family-tree-structure/pull/24)  
-**Last updated:** 2026-10-04
+**Program:** merged to `main` via [#24](https://github.com/kashifyounus/family-tree-structure/pull/24)  
+**Follow-up PR:** [#25](https://github.com/kashifyounus/family-tree-structure/pull/25) (T8 + smoke doc)  
+**Last updated:** 2026-10-04  
+**Device smoke:** [`DEVICE_SMOKE_FAMILY_TREE.md`](./DEVICE_SMOKE_FAMILY_TREE.md)
 
 Status values: `done` | `in_work` | `pending`
 
