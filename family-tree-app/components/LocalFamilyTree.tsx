@@ -144,6 +144,7 @@ export function LocalFamilyTree({
       {view === "graph" && (
         <View style={styles.expandRow}>
           <Button
+            testID="tree-load-parents"
             size="sm"
             variant="outline"
             disabled={!more.parents}
@@ -152,6 +153,7 @@ export function LocalFamilyTree({
             <ButtonText>{copy.tree.loadParents}</ButtonText>
           </Button>
           <Button
+            testID="tree-load-siblings"
             size="sm"
             variant="outline"
             disabled={!more.siblings}
@@ -160,6 +162,7 @@ export function LocalFamilyTree({
             <ButtonText>{copy.tree.loadSiblings}</ButtonText>
           </Button>
           <Button
+            testID="tree-load-children"
             size="sm"
             variant="outline"
             disabled={!more.children}

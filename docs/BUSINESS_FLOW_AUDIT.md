@@ -116,7 +116,7 @@ Per product: **no cloud implementation now.** Remaining online mode, WebView tre
 |------|--------|
 | P0 showcase / dual DB / live-only backup | **Done** |
 | P1 live checklist, home stats, notifications/stories, force local | **Done** |
-| P3 Maestro dual-archive | **Open** |
+| P3 Maestro dual-archive | **Done** (flows 09–12 + CI smoke 09/12) |
 
 ---
 

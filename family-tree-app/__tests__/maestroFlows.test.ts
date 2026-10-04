@@ -61,6 +61,8 @@ function collectDeclaredTestIds(): Set<string> {
         const prefix = match[1];
         ids.add(`${prefix}-create`);
         ids.add(`${prefix}-link`);
+        ids.add(`${prefix}-live`);
+        ids.add(`${prefix}-demo`);
       }
       for (const match of content.matchAll(firstNameTestIdPattern)) {
         ids.add(match[1]);
@@ -96,6 +98,10 @@ describe("Maestro flow files", () => {
     expect(files).toContain("06-link-existing-spouse.yaml");
     expect(files).toContain("07-link-existing-child.yaml");
     expect(files).toContain("08-figma-kuriosity-smoke.yaml");
+    expect(files).toContain("09-demo-onboarding-kay.yaml");
+    expect(files).toContain("10-archive-lane-switch.yaml");
+    expect(files).toContain("11-demo-clear-restart.yaml");
+    expect(files).toContain("12-tree-load-more.yaml");
     for (const file of files) {
       const body = readFileSync(join(flowsDir, file), "utf8");
       expect(body).toContain("appId: com.mughals.familytree");

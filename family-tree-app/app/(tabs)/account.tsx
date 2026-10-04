@@ -310,6 +310,7 @@ export default function AccountScreen() {
                 {copy.account.archiveLaneHelp}
               </AppText>
               <SegmentedControl
+                testIdPrefix="account-archive-lane"
                 value={storage.archiveLane}
                 onChange={(v) =>
                   void storage.setArchiveLane(v as ArchiveLane).then(() => localAccount.refresh())
@@ -328,6 +329,7 @@ export default function AccountScreen() {
                 {copy.account.sampleFixtureCount(countFixturePeople())}
               </AppText>
               <GsButton
+                testID="account-load-curated-sample"
                 variant="outline"
                 disabled={fixtureBusy}
                 onPress={() => {
@@ -347,6 +349,7 @@ export default function AccountScreen() {
                 <ButtonText>{copy.account.loadCuratedSampleFamily}</ButtonText>
               </GsButton>
               <GsButton
+                testID="account-load-huge-sample"
                 variant="outline"
                 disabled={fixtureBusy}
                 onPress={() => {
@@ -369,6 +372,7 @@ export default function AccountScreen() {
                 {copy.account.demoRestartHelp}
               </AppText>
               <GsButton
+                testID="account-clear-demo-restart"
                 variant="outline"
                 disabled={fixtureBusy}
                 onPress={() => {
