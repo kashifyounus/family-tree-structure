@@ -370,6 +370,12 @@ export const copy = {
       "Large family — only the first 32 paths are shown. Choose closer relatives to see more.",
     findRelationPathMeta: (paths: number, people: number) =>
       `${paths} path${paths === 1 ? "" : "s"} · ${people} people on paths`,
+    findRelationMutualTitle: "Mutual relationship",
+    findRelationMutualLine: (fromName: string, label: string, toName: string) =>
+      `${fromName} is ${label} of ${toName}`,
+    findRelationLinkChainTitle: "Connection links",
+    findRelationLinkRow: (fromName: string, phrase: string, toName: string) =>
+      `${fromName} ${phrase} ${toName}`,
     compareHint:
       "Enter member references or names from your private archive to see how they relate.",
     compareButton: "Compare",

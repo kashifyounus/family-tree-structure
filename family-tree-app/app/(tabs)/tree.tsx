@@ -20,7 +20,9 @@ import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
 import {
   resolveCloudFocalFamilyCode,
   resolveLocalFocalFamilyCode,
+  resolveLocalTreeViewFamilyCode,
   saveCloudFocalFamilyCode,
+  saveLocalTreeViewFamilyCode,
 } from "@/lib/tree/focalFamilyCode";
 import type { FamilyGraph } from "@/lib/graph/types";
 import type { GraphPersonSummary } from "@/lib/graph/types";
@@ -157,32 +159,58 @@ export default function TreeScreen() {
   }, [loadOnlineGraph, dataRevision, reloadKey]);
 
   useEffect(() => {
-    if (typeof params.highlightA === "string" && params.highlightA.trim()) {
-      const member = getLocalMemberById(params.highlightA.trim());
-      if (member?.familyCode) {
-        setLoadedCode(member.familyCode);
+    let cancelled = false;
+    void (async () => {
+      if (paramCode) {
+        if (!cancelled) {
+          setLoadedCode(paramCode);
+          if (isLocal) await saveLocalTreeViewFamilyCode(archiveLane, paramCode);
+        }
         return;
       }
-    }
-    if (paramCode) {
-      setLoadedCode(paramCode);
-      return;
-    }
-    void (async () => {
+      if (typeof params.highlightA === "string" && params.highlightA.trim()) {
+        const member = getLocalMemberById(params.highlightA.trim());
+        if (member?.familyCode) {
+          if (!cancelled) {
+            setLoadedCode(member.familyCode);
+            if (isLocal) {
+              await saveLocalTreeViewFamilyCode(archiveLane, member.familyCode);
+            }
+          }
+          return;
+        }
+      }
       const focal =
         mode === "local"
-          ? resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode)
+          ? await resolveLocalTreeViewFamilyCode(
+              archiveLane,
+              localAccount.session?.focalFamilyCode,
+            )
           : await resolveCloudFocalFamilyCode(localAccount.session?.focalFamilyCode);
-      setLoadedCode(focal);
+      if (!cancelled) setLoadedCode(focal);
     })();
-  }, [paramCode, params.highlightA, mode, localAccount.session?.focalFamilyCode]);
+    return () => {
+      cancelled = true;
+    };
+  }, [paramCode, params.highlightA, mode, isLocal, localAccount.session?.focalFamilyCode, archiveLane]);
 
   useEffect(() => {
     if (!isLocal) return;
-    const focal = resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode);
-    setLoadedCode(focal);
-    setReloadKey((k) => k + 1);
-  }, [archiveLane, isLocal, localAccount.session?.focalFamilyCode]);
+    let cancelled = false;
+    void (async () => {
+      const code = await resolveLocalTreeViewFamilyCode(
+        archiveLane,
+        localAccount.session?.focalFamilyCode,
+      );
+      if (!cancelled) {
+        setLoadedCode(code);
+        setReloadKey((k) => k + 1);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [archiveLane, isLocal]);
 
   useEffect(() => {
     if (isLocal && archiveLane === "live") {
@@ -191,11 +219,14 @@ export default function TreeScreen() {
   }, [isLocal, archiveLane]);
 
   useEffect(() => {
-    if (isLocal) return;
     const trimmed = loadedCode.trim();
     if (!trimmed) return;
+    if (isLocal) {
+      void saveLocalTreeViewFamilyCode(archiveLane, trimmed);
+      return;
+    }
     void saveCloudFocalFamilyCode(trimmed);
-  }, [isLocal, loadedCode]);
+  }, [isLocal, archiveLane, loadedCode]);
 
   const onPersonPress = (person: GraphPersonSummary) => {
     setSelectedPerson(person);
@@ -204,7 +235,9 @@ export default function TreeScreen() {
 
   const centerOnPerson = () => {
     if (!selectedPerson) return;
-    setLoadedCode(selectedPerson.familyCode);
+    const code = selectedPerson.familyCode.trim();
+    setLoadedCode(code);
+    if (isLocal) void saveLocalTreeViewFamilyCode(archiveLane, code);
     setSheetOpen(false);
     setReloadKey((k) => k + 1);
   };
