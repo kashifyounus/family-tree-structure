@@ -56,10 +56,10 @@ export function LocalFamilyTree({
   const router = useRouter();
   const view = layout;
   const [gensUp, setGensUp] = useState(() =>
-    Math.max(1, seedGenerationsUp ?? 2),
+    Math.max(2, seedGenerationsUp ?? 3),
   );
   const [gensDown, setGensDown] = useState(() =>
-    Math.max(2, seedGenerationsDown ?? 2),
+    Math.max(2, seedGenerationsDown ?? 3),
   );
   const [siblingSteps, setSiblingSteps] = useState(0);
 
@@ -73,8 +73,8 @@ export function LocalFamilyTree({
   }, [seedGenerationsUp, seedGenerationsDown]);
 
   useEffect(() => {
-    setGensUp(Math.max(1, seedGenerationsUp ?? 2));
-    setGensDown(Math.max(2, seedGenerationsDown ?? 2));
+    setGensUp(Math.max(2, seedGenerationsUp ?? 3));
+    setGensDown(Math.max(2, seedGenerationsDown ?? 3));
     setSiblingSteps(0);
   }, [familyCode, dataRevision, seedGenerationsUp, seedGenerationsDown]);
 
@@ -130,8 +130,8 @@ export function LocalFamilyTree({
   const more = canLoadMore();
 
   const resetExpansion = () => {
-    setGensUp(2);
-    setGensDown(2);
+    setGensUp(3);
+    setGensDown(3);
     setSiblingSteps(0);
   };
 

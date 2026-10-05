@@ -57,8 +57,8 @@ export function buildLocalFamilyGraph(
   familyCode: string,
   options: BuildLocalGraphOptions = {},
 ): FamilyGraph | null {
-  const generationsUp = options.generationsUp ?? 2;
-  const generationsDown = options.generationsDown ?? 2;
+  const generationsUp = options.generationsUp ?? 3;
+  const generationsDown = options.generationsDown ?? 3;
   const siblingSteps = options.siblingSteps ?? 0;
 
   const member = getLocalMemberByFamilyCode(familyCode);
