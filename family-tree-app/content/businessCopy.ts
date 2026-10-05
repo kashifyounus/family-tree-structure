@@ -229,6 +229,7 @@ export const copy = {
     menuShowGraph: "Show graph view",
     sheetProfile: "Open profile",
     sheetCenter: "Center tree here",
+    tapToCenterHint: "Tap a person to show their family tree. Press and hold for profile and actions.",
     loadParents: "Load parents",
     loadChildren: "Load children",
     loadSiblings: "Load siblings",

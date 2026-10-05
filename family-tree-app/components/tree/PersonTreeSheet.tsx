@@ -264,7 +264,7 @@ export function PersonTreeSheet({
         cancelLabel={copy.reports.cancel}
       >
         <AppText variant="bodySmall" className="text-muted-foreground">
-          {person.currentCity ?? copy.tree.sheetProfile}
+          {person.currentCity?.trim() || copy.tree.tapToCenterHint}
         </AppText>
         <View style={styles.actions}>
           {!isPrivate && (

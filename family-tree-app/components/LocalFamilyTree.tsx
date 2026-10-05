@@ -29,6 +29,7 @@ type LocalFamilyTreeProps = {
   immersive?: boolean;
   layout?: "graph" | "list";
   onPersonPress?: (person: GraphPersonSummary) => void;
+  onPersonLongPress?: (person: GraphPersonSummary) => void;
   zoomScale?: number;
   onZoomChange?: (scale: number) => void;
   pathHighlightPersonIds?: string[];
@@ -44,6 +45,7 @@ export function LocalFamilyTree({
   immersive,
   layout = "graph",
   onPersonPress,
+  onPersonLongPress,
   zoomScale,
   onZoomChange,
   pathHighlightPersonIds,
@@ -184,6 +186,7 @@ export function LocalFamilyTree({
           graph={graph}
           testID="local-tree-graph-webview"
           onPersonPress={onPersonPress}
+          onPersonLongPress={onPersonLongPress}
           pathHighlightPersonIds={pathHighlightPersonIds}
           highlightPersonIds={highlightPersonIds}
         />

@@ -256,9 +256,15 @@ function hitNode(clientX, clientY){
   return null;
 }
 
-function postPersonPress(n){
-  const payload = JSON.stringify({type:'personPress', id:n.id, familyCode:n.familyCode});
+function postToNative(msg){
+  const payload = JSON.stringify(msg);
   if(window.ReactNativeWebView) window.ReactNativeWebView.postMessage(payload);
+}
+function postPersonPress(n){
+  postToNative({type:'personPress', id:n.id, familyCode:n.familyCode});
+}
+function postPersonLongPress(n){
+  postToNative({type:'personLongPress', id:n.id, familyCode:n.familyCode});
 }
 
 function onGraph(g){
@@ -277,17 +283,42 @@ function onGraph(g){
   resize();
 }
 
-canvas.addEventListener('pointerdown', e=>{ dragging=true; moved=0; lx=e.clientX; ly=e.clientY; });
+let longPressTimer = null;
+let longPressNode = null;
+let longPressFired = false;
+const LONG_PRESS_MS = 480;
+
+function clearLongPress(){
+  if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer = null; }
+  longPressNode = null;
+}
+
+canvas.addEventListener('pointerdown', e=>{
+  dragging=true; moved=0; longPressFired=false; lx=e.clientX; ly=e.clientY;
+  clearLongPress();
+  const n = hitNode(e.clientX, e.clientY);
+  if(n){
+    longPressNode = n;
+    longPressTimer = setTimeout(()=>{
+      longPressFired = true;
+      postPersonLongPress(n);
+      clearLongPress();
+    }, LONG_PRESS_MS);
+  }
+});
 canvas.addEventListener('pointerup', e=>{
-  if(dragging && moved < 10){
+  if(longPressTimer) clearLongPress();
+  if(dragging && moved < 10 && !longPressFired){
     const n = hitNode(e.clientX, e.clientY);
     if(n) postPersonPress(n);
   }
   dragging=false;
+  longPressFired = false;
 });
 canvas.addEventListener('pointermove', e=>{
   if(!dragging) return;
   moved += Math.abs(e.clientX-lx)+Math.abs(e.clientY-ly);
+  if(moved >= 10) clearLongPress();
   ox += e.clientX-lx; oy += e.clientY-ly; lx=e.clientX; ly=e.clientY; draw();
 });
 canvas.addEventListener('wheel', e=>{
@@ -338,6 +369,7 @@ type GraphWebViewProps = {
   pathHighlightPersonIds?: string[];
   highlightPersonIds?: string[];
   onPersonPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
+  onPersonLongPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
 };
 
 /**
@@ -349,6 +381,7 @@ export function GraphWebView({
   pathHighlightPersonIds,
   highlightPersonIds,
   onPersonPress,
+  onPersonLongPress,
 }: GraphWebViewProps) {
   const webRef = useRef<WebView>(null);
   const payload = useMemo(
@@ -379,15 +412,22 @@ export function GraphWebView({
           webRef.current?.postMessage(payload);
         }}
         onMessage={(event) => {
-          if (!onPersonPress) return;
+          if (!onPersonPress && !onPersonLongPress) return;
           try {
             const msg = JSON.parse(event.nativeEvent.data) as {
               type?: string;
               id?: string;
             };
-            if (msg.type !== "personPress" || !msg.id) return;
+            if (!msg.id) return;
             const node = graph.nodes.find((n) => n.id === msg.id);
-            if (node) onPersonPress(node.data.person);
+            if (!node) return;
+            if (msg.type === "personLongPress") {
+              onPersonLongPress?.(node.data.person);
+              return;
+            }
+            if (msg.type === "personPress") {
+              onPersonPress?.(node.data.person);
+            }
           } catch {
             // ignore malformed messages from canvas
           }

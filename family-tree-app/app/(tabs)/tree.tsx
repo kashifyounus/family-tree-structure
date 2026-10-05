@@ -228,18 +228,30 @@ export default function TreeScreen() {
     void saveCloudFocalFamilyCode(trimmed);
   }, [isLocal, archiveLane, loadedCode]);
 
+  const applyViewFocal = useCallback(
+    (person: GraphPersonSummary) => {
+      const code = person.familyCode.trim();
+      if (!code) return;
+      setLoadedCode(code);
+      if (isLocal) void saveLocalTreeViewFamilyCode(archiveLane, code);
+      setReloadKey((k) => k + 1);
+    },
+    [archiveLane, isLocal],
+  );
+
   const onPersonPress = (person: GraphPersonSummary) => {
+    applyViewFocal(person);
+  };
+
+  const onPersonLongPress = (person: GraphPersonSummary) => {
     setSelectedPerson(person);
     setSheetOpen(true);
   };
 
   const centerOnPerson = () => {
     if (!selectedPerson) return;
-    const code = selectedPerson.familyCode.trim();
-    setLoadedCode(code);
-    if (isLocal) void saveLocalTreeViewFamilyCode(archiveLane, code);
+    applyViewFocal(selectedPerson);
     setSheetOpen(false);
-    setReloadKey((k) => k + 1);
   };
 
   const onlineFocal = onlineGraph?.nodes.find(
@@ -344,6 +356,7 @@ export default function TreeScreen() {
             immersive
             layout={listLayout ? "list" : "graph"}
             onPersonPress={onPersonPress}
+            onPersonLongPress={onPersonLongPress}
             zoomScale={zoom}
             onZoomChange={setZoom}
             pathHighlightPersonIds={
@@ -373,6 +386,7 @@ export default function TreeScreen() {
             <GraphWebView
               graph={onlineGraph}
               onPersonPress={onPersonPress}
+              onPersonLongPress={onPersonLongPress}
               testID="online-tree-graph-webview"
               pathHighlightPersonIds={
                 pathHighlightIds.length >= 2 ? pathHighlightIds : undefined

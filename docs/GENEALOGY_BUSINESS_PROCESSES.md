@@ -8,8 +8,9 @@ Code for kinship features should follow these **processes** (user journeys), not
 2. **View focal** = that person’s `familyCode` (graph ego), not the registered “you” unless no other choice.
 3. Persist **last viewed tree focal** per archive lane (`live` / `demo`).
 4. **Registered focal** (`session.focalFamilyCode`) is only the default when there is no deep link and no last viewed.
+5. **Tap** a person on the graph to recenter the tree on them; **long press** opens profile and relation actions.
 
-Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `buildLocalFamilyGraph`.
+Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `buildLocalFamilyGraph`, `GraphWebView`.
 
 ## Process: Mutual relationship between two people
 
