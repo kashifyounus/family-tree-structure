@@ -9,13 +9,14 @@ export function loadLocalRuleGraphFromKinship(): RuleGraph {
       gender: p.gender as RuleGender,
       birthDate: p.birthDate,
       deathDate: p.deathDate,
+      familyCode: p.familyCode,
     })),
     unions: allUnions.map((u) => ({
       id: u.id,
       partner1Id: u.partner1Id,
       partner2Id: u.partner2Id,
-      marriageDate: u.marriageDate,
-      divorceDate: u.divorceDate,
+      marriageDate: null,
+      divorceDate: null,
       childIds: u.childships.map((c) => c.childId),
     })),
   };

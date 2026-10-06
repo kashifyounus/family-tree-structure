@@ -40,6 +40,17 @@ Implementation: `shared/genealogy/mutualRelationship.ts`, `lib/kinship/mutualRel
 
 Implementation: `AddMemberBottomSheet`, `addMemberRelationCandidates.ts`, `linkNewMemberToAnchor.ts`.
 
+### Picker rules (business, not just save-time)
+
+| Role | User picks | Who appears in the list |
+|------|------------|-------------------------|
+| **Parent** | The **child** who will get a new parent | Children with an **open father or mother slot** for the new member’s gender. Two real parents ⇒ hidden. One real parent + unknown co-parent sentinel ⇒ opposite real slot still open. |
+| **Child** | One or more **parents** | People who can legally be parents of the new child (spouse pair when married, or single parent + unknown slot). Excludes ancestor/descendant/spouse conflicts. |
+| **Spouse** | The person to marry | People who pass `assertCanCreateMarriage` (no duplicate marriage, no ancestor marriage, etc.). |
+| **Sibling** | Existing member(s) to copy parents from | Members with at least one **known** (non-sentinel) parent, and for whom assigning those parents to the new person is valid. Multi-select must share the same parents (enforced again on save). |
+
+Unknown co-parent rows never appear as pick targets. Slot logic: `shared/genealogy/parentSlotRules.ts`. Role gates: `shared/genealogy/addMemberLinkRules.ts`.
+
 ## Process: Edit member profile
 
 1. Open profile → Edit.

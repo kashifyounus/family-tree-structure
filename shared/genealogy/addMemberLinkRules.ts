@@ -5,11 +5,16 @@
 import {
   assertCanAssignParents,
   assertCanCreateMarriage,
-  parentIdsOf,
   spouseIds,
   type RuleGender,
   type RuleGraph,
 } from "../relationshipRules";
+import {
+  hasKnownParent,
+  openParentSlotForGender,
+  parentPairAfterNewParent,
+  resolvedParentPairForChild,
+} from "./parentSlotRules";
 
 export const PROSPECTIVE_MEMBER_ID = "__prospective_member__";
 
@@ -34,6 +39,22 @@ export function withProspectiveMember(
   };
 }
 
+function canAssignParentsToChild(
+  graph: RuleGraph,
+  childId: string,
+  parentAId: string,
+  parentBId: string,
+  newMemberGender: RuleGender,
+): boolean {
+  const extended = withProspectiveMember(graph, newMemberGender);
+  try {
+    assertCanAssignParents(extended, childId, parentAId, parentBId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** New member will marry the anchor. */
 export function canSelectAnchorForNewSpouse(
   graph: RuleGraph,
@@ -55,51 +76,81 @@ export function canSelectChildAnchorForNewParent(
   childId: string,
   newMemberGender: RuleGender,
 ): boolean {
-  const existingParents = parentIdsOf(graph, childId);
-  if (existingParents.length >= 2) {
+  if (!openParentSlotForGender(graph, childId, newMemberGender)) {
     return false;
   }
-  const extended = withProspectiveMember(graph, newMemberGender);
-  const otherParentId = existingParents[0];
-  if (!otherParentId) {
-    const spouses = spouseIds(graph, childId);
-    if (spouses.has(PROSPECTIVE_MEMBER_ID)) return false;
-    return true;
-  }
-  try {
-    assertCanAssignParents(
-      extended,
-      childId,
-      PROSPECTIVE_MEMBER_ID,
-      otherParentId,
-    );
-    return true;
-  } catch {
-    return false;
-  }
+  const pair = parentPairAfterNewParent(
+    graph,
+    childId,
+    PROSPECTIVE_MEMBER_ID,
+    newMemberGender,
+  );
+  if (!pair) return false;
+  return canAssignParentsToChild(
+    graph,
+    childId,
+    pair.parentAId,
+    pair.parentBId,
+    newMemberGender,
+  );
 }
 
-/** New member will be a child of the anchor parent. */
+/** New member will be a child of the anchor parent (and spouse when present). */
 export function canSelectParentAnchorForNewChild(
   graph: RuleGraph,
   parentId: string,
+  newMemberGender: RuleGender,
 ): boolean {
   if (!graph.people.some((p) => p.id === parentId)) return false;
-  const extended = withProspectiveMember(graph, "MALE");
-  const spouseList = [...spouseIds(graph, parentId)];
-  const coParent = spouseList[0];
-  if (!coParent) {
-    return true;
-  }
-  try {
-    assertCanAssignParents(
-      extended,
-      PROSPECTIVE_MEMBER_ID,
-      parentId,
-      coParent,
-    );
-    return true;
-  } catch {
+  const spouses = [...spouseIds(graph, parentId)];
+  if (spouses.length > 0) {
+    for (const coParent of spouses) {
+      if (
+        canAssignParentsToChild(
+          graph,
+          PROSPECTIVE_MEMBER_ID,
+          parentId,
+          coParent,
+          newMemberGender,
+        )
+      ) {
+        return true;
+      }
+    }
     return false;
   }
+  const pair = parentPairAfterNewParent(
+    graph,
+    PROSPECTIVE_MEMBER_ID,
+    parentId,
+    graph.people.find((p) => p.id === parentId)?.gender ?? "MALE",
+  );
+  if (!pair) return false;
+  return canAssignParentsToChild(
+    graph,
+    PROSPECTIVE_MEMBER_ID,
+    pair.parentAId,
+    pair.parentBId,
+    newMemberGender,
+  );
+}
+
+/** New member will share parents with the anchor sibling. */
+export function canSelectSiblingAnchorForNewSibling(
+  graph: RuleGraph,
+  siblingId: string,
+  newMemberGender: RuleGender,
+): boolean {
+  if (!hasKnownParent(graph, siblingId)) {
+    return false;
+  }
+  const pair = resolvedParentPairForChild(graph, siblingId);
+  if (!pair) return false;
+  return canAssignParentsToChild(
+    graph,
+    PROSPECTIVE_MEMBER_ID,
+    pair.parentAId,
+    pair.parentBId,
+    newMemberGender,
+  );
 }

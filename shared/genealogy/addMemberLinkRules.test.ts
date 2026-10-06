@@ -2,7 +2,9 @@ import {
   canSelectAnchorForNewSpouse,
   canSelectChildAnchorForNewParent,
   canSelectParentAnchorForNewChild,
+  canSelectSiblingAnchorForNewSibling,
 } from "./addMemberLinkRules";
+import { UNKNOWN_COPARENT_FAMILY_CODE } from "../unknownCoParent";
 import type { RuleGraph } from "../relationshipRules";
 
 function family(): RuleGraph {
@@ -35,6 +37,51 @@ function family(): RuleGraph {
   };
 }
 
+function singleFatherChild(): RuleGraph {
+  return {
+    people: [
+      {
+        id: "father",
+        gender: "MALE",
+        birthDate: null,
+        deathDate: null,
+        familyCode: "F",
+      },
+      {
+        id: "son",
+        gender: "MALE",
+        birthDate: null,
+        deathDate: null,
+        familyCode: "S",
+      },
+      {
+        id: "unk-f",
+        gender: "FEMALE",
+        birthDate: null,
+        deathDate: null,
+        familyCode: UNKNOWN_COPARENT_FAMILY_CODE.FEMALE,
+      },
+      {
+        id: "unk-m",
+        gender: "MALE",
+        birthDate: null,
+        deathDate: null,
+        familyCode: UNKNOWN_COPARENT_FAMILY_CODE.MALE,
+      },
+    ],
+    unions: [
+      {
+        id: "u",
+        partner1Id: "father",
+        partner2Id: "unk-f",
+        marriageDate: null,
+        divorceDate: null,
+        childIds: ["son"],
+      },
+    ],
+  };
+}
+
 describe("addMemberLinkRules", () => {
   it("allows spouse anchor when shared marriage rules pass", () => {
     const g = family();
@@ -42,14 +89,27 @@ describe("addMemberLinkRules", () => {
     expect(canSelectAnchorForNewSpouse(g, "daughter", "MALE")).toBe(true);
   });
 
-  it("blocks parent role when child already has two parents", () => {
+  it("blocks parent role when child already has two real parents", () => {
     const g = family();
+    expect(canSelectChildAnchorForNewParent(g, "son", "MALE")).toBe(false);
+    expect(canSelectChildAnchorForNewParent(g, "son", "FEMALE")).toBe(false);
+  });
+
+  it("allows parent role when only father is known (unknown co-parent slot)", () => {
+    const g = singleFatherChild();
+    expect(canSelectChildAnchorForNewParent(g, "son", "FEMALE")).toBe(true);
     expect(canSelectChildAnchorForNewParent(g, "son", "MALE")).toBe(false);
   });
 
   it("allows child role when parent can accept another child", () => {
     const g = family();
-    expect(canSelectParentAnchorForNewChild(g, "son")).toBe(true);
-    expect(canSelectParentAnchorForNewChild(g, "father")).toBe(true);
+    expect(canSelectParentAnchorForNewChild(g, "son", "MALE")).toBe(true);
+    expect(canSelectParentAnchorForNewChild(g, "father", "MALE")).toBe(true);
+  });
+
+  it("allows sibling anchor when parents are known and graph rules pass", () => {
+    const g = family();
+    expect(canSelectSiblingAnchorForNewSibling(g, "son", "MALE")).toBe(true);
+    expect(canSelectSiblingAnchorForNewSibling(g, "father", "MALE")).toBe(false);
   });
 });

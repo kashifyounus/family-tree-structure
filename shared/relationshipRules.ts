@@ -10,6 +10,8 @@ export type RulePerson = {
   gender: RuleGender;
   birthDate: string | null;
   deathDate: string | null;
+  /** Present in mobile rule graphs so unknown co-parent slots can be distinguished. */
+  familyCode?: string;
 };
 
 export type RuleUnion = {
