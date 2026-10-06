@@ -18,6 +18,7 @@ export type MemberProfileEditFields = PersonFieldsValue &
     homeTownProvince: PakistanProvince | null;
     homeTownCity: string;
     occupation: string;
+    biradari: string;
     bio: string;
   };
 
@@ -41,6 +42,7 @@ export function editFieldsFromMember(member: MemberRecord): MemberProfileEditFie
     homeTownProvince: home.province,
     homeTownCity: home.city,
     occupation: member.occupation ?? "",
+    biradari: member.biradari ?? "",
     bio: member.bio ?? "",
   };
 }
@@ -62,5 +64,6 @@ export const emptyMemberProfileEditFields: MemberProfileEditFields = {
   homeTownProvince: null,
   homeTownCity: "",
   occupation: "",
+  biradari: "",
   bio: "",
 };

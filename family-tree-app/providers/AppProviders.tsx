@@ -5,6 +5,7 @@ import { StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { installGlobalErrorHandlers } from "@/lib/globalErrorHandlers";
+import { loadKinshipLabelLocale } from "@/lib/settings/kinshipLocale";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AppPreferencesProvider, useAppPreferences } from "@/context/AppPreferencesContext";
@@ -40,6 +41,7 @@ function ThemedApp({ children }: AppProvidersProps) {
 export function AppProviders({ children }: AppProvidersProps) {
   useEffect(() => {
     installGlobalErrorHandlers();
+    void loadKinshipLabelLocale();
   }, []);
 
   return (

@@ -1,4 +1,5 @@
 import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
+import { saveKinshipLabelLocale } from "@/lib/settings/kinshipLocale";
 import type { KinshipPerson } from "@/lib/kinship/types";
 
 jest.mock("@/lib/db/kinshipLoader", () => {

@@ -1,4 +1,5 @@
 import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
+import { saveKinshipLabelLocale } from "@/lib/settings/kinshipLocale";
 
 jest.mock("@/lib/db/kinshipLoader", () => ({
   loadKinshipDataset: () => {
@@ -52,6 +53,10 @@ jest.mock("@/lib/db/kinshipLoader", () => ({
 }));
 
 describe("computeRelationSummary", () => {
+  beforeAll(async () => {
+    await saveKinshipLabelLocale("en");
+  });
+
   it("returns a plain kinship label instead of an edge chain", () => {
     expect(computeRelationSummary("f", "c")).toBe("Daughter");
   });

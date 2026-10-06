@@ -5,6 +5,7 @@ import {
   KINSHIP_LABEL_FALLBACK,
   type KinshipLabelStep,
 } from "../../../shared/humanKinshipLabel";
+import { getKinshipLabelLocale } from "@/lib/settings/kinshipLocale";
 
 export type KinshipStep = { fromId: string; toId: string; relation: string };
 
@@ -52,7 +53,10 @@ export function summarizeKinshipSteps(
   steps: KinshipStep[],
   peopleById: Map<string, KinshipPerson>,
 ): string {
-  const label = humanKinshipLabelFromSteps(stepsToLabelSteps(steps, peopleById));
+  const label = humanKinshipLabelFromSteps(
+    stepsToLabelSteps(steps, peopleById),
+    getKinshipLabelLocale(),
+  );
   if (label) return label;
   if (steps.length > 0) return KINSHIP_LABEL_FALLBACK;
   return "Same person";

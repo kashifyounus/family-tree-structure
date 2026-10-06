@@ -340,6 +340,9 @@ export const copy = {
     childRelationshipLabel: "Relationship to parents",
     quickAddChildHint:
       "Enter name and gender only. You can add birth date, Urdu name, and other details in the profile after saving.",
+    kinshipLabelStyleTitle: "Relationship words",
+    kinshipLabelSouthAsian: "South Asian (Chacha, Khala, …)",
+    kinshipLabelWestern: "Western (Aunt, Uncle, …)",
   },
 
   tools: {

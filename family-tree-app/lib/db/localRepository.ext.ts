@@ -48,6 +48,7 @@ type PersonRow = {
   bio: string | null;
   birth_place: string | null;
   home_town: string | null;
+  biradari: string | null;
 };
 
 function mapRow(row: PersonRow): MemberRecord {
@@ -66,6 +67,7 @@ function mapRow(row: PersonRow): MemberRecord {
     homeTown: row.home_town,
     currentCity: row.current_city,
     occupation: row.occupation,
+    biradari: row.biradari ?? null,
     bio: row.bio,
   };
 }
@@ -162,6 +164,7 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
       urdu_last_name = COALESCE(?, urdu_last_name),
       current_city = COALESCE(?, current_city),
       occupation = COALESCE(?, occupation),
+      biradari = COALESCE(?, biradari),
       bio = COALESCE(?, bio),
       birth_date = COALESCE(?, birth_date),
       death_date = ?,
@@ -178,6 +181,7 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
       input.urduLastName ?? null,
       input.currentCity ?? null,
       input.occupation ?? null,
+      input.biradari ?? null,
       input.bio ?? null,
       input.birthDate ?? null,
       deathDate,

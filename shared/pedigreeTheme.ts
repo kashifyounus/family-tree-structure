@@ -21,4 +21,6 @@ export const kuriosityPedigreeTheme = {
   spouseBar: PEDIGREE_SPOUSE_BAR,
   focalRing: "#1B4332",
   focalFill: "#E8F5EE",
+  /** Wife / mother’s-side wing accent on pedigree cards */
+  maternalWingAccent: "#9B5670",
 };

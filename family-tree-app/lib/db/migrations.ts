@@ -5,6 +5,10 @@ const MIGRATIONS: { id: string; sql: string }[] = [
     id: "20260924_person_is_fixture",
     sql: "ALTER TABLE persons ADD COLUMN is_fixture INTEGER NOT NULL DEFAULT 0",
   },
+  {
+    id: "20261006_person_biradari",
+    sql: "ALTER TABLE persons ADD COLUMN biradari TEXT",
+  },
 ];
 
 export function runSqliteMigrations(db: SQLite.SQLiteDatabase): void {

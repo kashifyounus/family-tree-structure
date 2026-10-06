@@ -157,6 +157,7 @@ export function useMemberProfileScreen({
         birthPlace: places.birthPlace,
         homeTown: places.homeTown,
         occupation: editFields.occupation || undefined,
+        biradari: editFields.biradari.trim() || undefined,
         bio: editFields.bio || undefined,
         deathDate: editFields.isLiving ? null : editFields.deathDate || null,
       });
