@@ -14,6 +14,8 @@ import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import { copy } from "@/content/businessCopy";
 import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
 import { getLocalMemberById } from "@/lib/db/localRepository.ext";
+import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
+import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
@@ -107,13 +109,24 @@ export default function TreeScreen() {
     }
     return ids;
   }, [params.highlightA, params.highlightB]);
-  const pathSeedGens = useMemo(
-    () => Math.min(8, Math.max(2, Math.ceil(pathHighlightIds.length))),
-    [pathHighlightIds.length],
-  );
   const [loadedCode, setLoadedCode] = useState(
     paramCode || DEFAULT_FAMILY_CODE,
   );
+  const pathGraphGens = useMemo(() => {
+    if (pathHighlightIds.length < 2) return null;
+    const focalMember = getLocalMemberByFamilyCode(loadedCode.trim());
+    if (!focalMember) return null;
+    const { allUnions } = loadKinshipDataset();
+    return generationsToIncludeKinshipPath(
+      focalMember.id,
+      pathHighlightIds,
+      allUnions.map((u) => ({
+        partner1Id: u.partner1Id,
+        partner2Id: u.partner2Id,
+        childships: u.childships.map((c) => ({ childId: c.childId })),
+      })),
+    );
+  }, [pathHighlightIds, loadedCode, dataRevision]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [onlineGraph, setOnlineGraph] = useState<FamilyGraph | null>(null);
   const [graphLoading, setGraphLoading] = useState(false);
@@ -405,8 +418,8 @@ export default function TreeScreen() {
               relationHighlightIds.length ? relationHighlightIds : undefined
             }
             ensurePersonIds={pathHighlightIds.length ? pathHighlightIds : undefined}
-            seedGenerationsUp={pathHighlightIds.length ? pathSeedGens : undefined}
-            seedGenerationsDown={pathHighlightIds.length ? pathSeedGens : undefined}
+            seedGenerationsUp={pathGraphGens?.generationsUp}
+            seedGenerationsDown={pathGraphGens?.generationsDown}
           />
         ) : graphLoading ? (
           <View style={styles.loading}>

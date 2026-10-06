@@ -53,10 +53,24 @@ function fitView(){
     minX=Math.min(minX,s.x1,s.x2); minY=Math.min(minY,s.y1,s.y2);
     maxX=Math.max(maxX,s.x1,s.x2); maxY=Math.max(maxY,s.y1,s.y2);
   }
+  const pathFraming = highlightSegments && highlightSegments.length > 0;
+  if(pathFraming){
+    for(const s of highlightSegments){
+      minX=Math.min(minX,s.x1,s.x2); minY=Math.min(minY,s.y1,s.y2);
+      maxX=Math.max(maxX,s.x1,s.x2); maxY=Math.max(maxY,s.y1,s.y2);
+    }
+  }
   if(!Number.isFinite(minX)){ return; }
   const cw=Math.max(1,maxX-minX+pad*2), ch=Math.max(1,maxY-minY+pad*2);
-  scale = Math.min(canvas.width/cw, canvas.height/ch, 1.05);
-  scale = Math.max(0.35, scale);
+  scale = Math.min(canvas.width/cw, canvas.height/ch, pathFraming ? 1.15 : 1.05);
+  scale = Math.max(0.28, scale);
+  if(pathFraming){
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    ox = canvas.width / 2 - cx * scale;
+    oy = canvas.height / 2 - cy * scale;
+    return;
+  }
   const focal = viewNodes.find(n=>n.id===focalId) || viewNodes.find(n=>n.isFocal) || viewNodes[0];
   const fx = focal.x + focal.w/2;
   const fy = focal.y + focal.h * 0.55;
