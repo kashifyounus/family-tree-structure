@@ -25,7 +25,8 @@ let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
 
-function genderAccent(g){
+function genderAccent(g, maternal){
+  if(maternal) return '#9B5670';
   if(g==='FEMALE') return '#f4a6c1';
   if(g==='MALE') return '#7eb6e0';
   return '#c4c4c4';
@@ -176,7 +177,7 @@ function drawCard(n){
   ctx.save();
   roundRect(x,y,w,h,12);
   ctx.clip();
-  ctx.fillStyle = genderAccent(n.gender);
+  ctx.fillStyle = genderAccent(n.gender, n.maternalWing);
   ctx.fillRect(x, y, w, barH);
   ctx.restore();
 

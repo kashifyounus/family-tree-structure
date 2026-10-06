@@ -106,6 +106,12 @@ export function MemberProfileSections({
             {[member.homeTown, member.currentCity].filter(Boolean).join(" · ") || "—"}
           </AppText>
           <AppText variant="labelMedium" className="text-muted-foreground">
+            Biradari
+          </AppText>
+          <AppText variant="bodyMedium" className="text-foreground mb-2">
+            {member.biradari ?? "—"}
+          </AppText>
+          <AppText variant="labelMedium" className="text-muted-foreground">
             Occupation
           </AppText>
           <AppText variant="bodyMedium" className="text-foreground">
@@ -175,6 +181,12 @@ export function MemberProfileSections({
               }}
               onCityChange={(c) => onPatchEditField("homeTownCity", c)}
               testIdPrefix="profile-hometown"
+            />
+            <FormTextInput
+              label="Biradari (clan)"
+              value={editFields.biradari}
+              onChangeText={(v) => onPatchEditField("biradari", v)}
+              placeholder="Optional — family or clan name"
             />
             <FormTextInput
               label="Occupation"

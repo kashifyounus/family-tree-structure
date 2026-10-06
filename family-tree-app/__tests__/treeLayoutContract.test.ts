@@ -78,7 +78,7 @@ describe("tree layout contract", () => {
     expect(positions.get("ego")!.x).toBeGreaterThan(positions.get("spouse1")!.x);
   });
 
-  it("builds a marriage band between focal and each spouse for canvas", () => {
+  it("builds a marriage band for the primary spouse on canvas (B1)", () => {
     const included = collectIncludedPersonIds(
       "ego",
       twoSpouseUnions,

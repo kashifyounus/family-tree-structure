@@ -20,8 +20,10 @@ describe("memberProfileEditForm", () => {
       birthPlace: "Lahore, Punjab",
       homeTown: "Lahore, Punjab",
       occupation: "Engineer",
+      biradari: "Mughal",
       bio: "Notes",
     });
+    expect(fields.biradari).toBe("Mughal");
     expect(fields.firstName).toBe("Ali");
     expect(fields.livingCity).toBe("Karachi");
     expect(fields.livingProvince).toBe("Sindh");
