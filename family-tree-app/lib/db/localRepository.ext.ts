@@ -88,8 +88,9 @@ function loadLocalRuleGraph(): RuleGraph {
     partner_2_id: string;
     marriage_date: string | null;
     divorce_date: string | null;
+    is_active: number;
   }>(
-    "SELECT id, partner_1_id, partner_2_id, marriage_date, divorce_date FROM unions",
+    "SELECT id, partner_1_id, partner_2_id, marriage_date, divorce_date, is_active FROM unions",
   );
   const children = db.getAllSync<{ union_id: string; child_id: string }>(
     "SELECT union_id, child_id FROM children",
@@ -113,6 +114,7 @@ function loadLocalRuleGraph(): RuleGraph {
       partner2Id: union.partner_2_id,
       marriageDate: union.marriage_date,
       divorceDate: union.divorce_date,
+      isActive: union.is_active !== 0,
       childIds: childIds.get(union.id) ?? [],
     })),
   };

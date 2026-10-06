@@ -16,6 +16,7 @@ import {
 import { buildPedigreePathHighlightSegments } from "../../../shared/pedigreePathHighlight";
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
+import { formatBilingualName } from "@/lib/format/displayName";
 import {
   formatPersonDisplayName,
   isUnknownCoParentFamilyCode,
@@ -179,20 +180,33 @@ export function buildPedigreeCanvasPayload(
       lastName: p.lastName,
       familyCode: p.familyCode,
     });
+    const urduLine = [p.urduFirstName, p.urduLastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const englishLine = `${p.firstName} ${p.lastName}`.trim();
     const nameLine1 = isPrivate
       ? p.firstName
       : isUnknownCoParent
         ? UNKNOWN_COPARENT_DISPLAY.firstName
-        : p.firstName.trim();
+        : urduLine
+          ? englishLine
+          : p.firstName.trim();
     const nameLine2 = isPrivate
       ? ""
       : isUnknownCoParent
         ? UNKNOWN_COPARENT_DISPLAY.lastName
-        : p.lastName.trim();
+        : urduLine
+          ? urduLine
+          : p.lastName.trim();
     return {
       id: n.id,
       familyCode: p.familyCode,
-      label: isPrivate ? p.firstName : displayName,
+      label: isPrivate
+        ? p.firstName
+        : isUnknownCoParent
+          ? displayName
+          : formatBilingualName(p) || displayName,
       nameLine1,
       nameLine2,
       initials: isUnknownCoParent
