@@ -19,9 +19,9 @@ import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinsh
 import {
   DEFAULT_TREE_EXPANSION,
   MAX_TREE_GENERATIONS,
+  MAX_COUSIN_DEGREE,
   MAX_TREE_SIBLING_STEPS,
   stepExpandTree,
-  stepExpandTreeLarge,
 } from "../../../shared/genealogy/treeExpansion";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
@@ -166,6 +166,7 @@ export default function TreeScreen() {
         onlineExpansion.generationsDown,
       ),
       siblingSteps: onlineExpansion.siblingSteps,
+      cousinDegree: onlineExpansion.cousinDegree,
     })
       .then((g) => {
         if (g && g.nodes.length > 0) {
@@ -448,14 +449,12 @@ export default function TreeScreen() {
               onExpandTree={() =>
                 setOnlineExpansion((prev) => stepExpandTree(prev))
               }
-              onExpandTreeLarge={() =>
-                setOnlineExpansion((prev) => stepExpandTreeLarge(prev))
-              }
               onExpandTreeMax={() =>
                 setOnlineExpansion({
                   generationsUp: MAX_TREE_GENERATIONS,
                   generationsDown: MAX_TREE_GENERATIONS,
                   siblingSteps: MAX_TREE_SIBLING_STEPS,
+                  cousinDegree: MAX_COUSIN_DEGREE,
                 })
               }
               onLoadParents={() =>

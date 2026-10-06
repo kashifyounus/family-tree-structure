@@ -126,6 +126,7 @@ export function buildFamilyGraph(
   generationsUp = 2,
   generationsDown = 2,
   siblingSteps = 0,
+  cousinDegree = 0,
   preferredFocalUnionId?: string | null,
 ): FamilyGraph {
   const included = collectIncludedPersonIds(
@@ -134,6 +135,7 @@ export function buildFamilyGraph(
     generationsUp,
     generationsDown,
     siblingSteps,
+    cousinDegree,
   );
   const peopleById = new Map(allPeople.map((p) => [p.id, p]));
   const { nodes, edges, focalUnionId, focalUnionIds } = layoutFocalCentric(

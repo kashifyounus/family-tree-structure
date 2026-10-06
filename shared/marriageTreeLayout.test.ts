@@ -43,6 +43,34 @@ describe("marriageTreeLayout", () => {
     expect(included.has("sib")).toBe(true);
   });
 
+  it("includes 1st cousins when cousinDegree >= 1", () => {
+    const withCousin = [
+      ...unions,
+      {
+        id: "u-uncle",
+        partner1Id: "dad",
+        partner2Id: "mom",
+        childships: [{ childId: "ego" }, { childId: "sib" }],
+      },
+      {
+        id: "u-uncle-m",
+        partner1Id: "uncle",
+        partner2Id: "aunt",
+        childships: [{ childId: "cousin1" }],
+      },
+      {
+        id: "u-gp-uncle",
+        partner1Id: "gpa",
+        partner2Id: "gma",
+        childships: [{ childId: "dad" }, { childId: "uncle" }],
+      },
+    ];
+    const base = collectIncludedPersonIds("ego", withCousin, 2, 1, 1, 0);
+    const withCousins = collectIncludedPersonIds("ego", withCousin, 2, 1, 1, 1);
+    expect(base.has("cousin1")).toBe(false);
+    expect(withCousins.has("cousin1")).toBe(true);
+  });
+
   it("includes parent siblings when collateral steps > 0", () => {
     const withUncle = [
       ...unions,

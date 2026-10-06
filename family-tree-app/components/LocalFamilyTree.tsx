@@ -25,7 +25,6 @@ import {
   DEFAULT_TREE_EXPANSION,
   expandTreeToMaximum,
   stepExpandTree,
-  stepExpandTreeLarge,
   treeExpansionHasMore,
   type TreeExpansionState,
 } from "../../../shared/genealogy/treeExpansion";
@@ -64,6 +63,7 @@ function initialTreeExpansion(
       seedGenerationsDown ?? DEFAULT_TREE_EXPANSION.generationsDown,
     ),
     siblingSteps: DEFAULT_TREE_EXPANSION.siblingSteps,
+    cousinDegree: DEFAULT_TREE_EXPANSION.cousinDegree,
   };
 }
 
@@ -126,6 +126,7 @@ export function LocalFamilyTree({
       generationsUp: expansion.generationsUp,
       generationsDown: expansion.generationsDown,
       siblingSteps: expansion.siblingSteps,
+      cousinDegree: expansion.cousinDegree,
       ensurePersonIds,
     }),
     [expansion, ensurePersonIds],
@@ -192,10 +193,6 @@ export function LocalFamilyTree({
     setExpansion((prev) => stepExpandTree(prev));
   };
 
-  const onExpandTreeLarge = () => {
-    setExpansion((prev) => stepExpandTreeLarge(prev));
-  };
-
   const onExpandTreeMax = () => {
     if (!focal) return;
     const { allUnions } = loadKinshipDataset();
@@ -223,16 +220,7 @@ export function LocalFamilyTree({
               disabled={!loadMore.canExpandTree}
               onPress={onExpandTree}
             >
-              <ButtonText>{copy.tree.expandTree}</ButtonText>
-            </Button>
-            <Button
-              testID="tree-expand-large"
-              size="sm"
-              variant="outline"
-              disabled={!loadMore.canExpandTree}
-              onPress={onExpandTreeLarge}
-            >
-              <ButtonText>{copy.tree.expandTreeLarge}</ButtonText>
+              <ButtonText>{copy.tree.loadMore}</ButtonText>
             </Button>
             <Button
               testID="tree-expand-max"
@@ -292,7 +280,7 @@ export function LocalFamilyTree({
       )}
       {view === "graph" && graph ? (
         <GraphWebView
-          key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${expansion.generationsUp}-${expansion.generationsDown}-${expansion.siblingSteps}`}
+          key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${expansion.generationsUp}-${expansion.generationsDown}-${expansion.siblingSteps}-${expansion.cousinDegree}`}
           graph={graph}
           testID="local-tree-graph-webview"
           onPersonPress={onPersonPress}

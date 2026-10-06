@@ -55,6 +55,7 @@ export type BuildLocalGraphOptions = {
   generationsUp?: number;
   generationsDown?: number;
   siblingSteps?: number;
+  cousinDegree?: number;
   focalUnionId?: string | null;
   /** Always include these person ids (e.g. find-relation path). */
   ensurePersonIds?: string[];
@@ -69,6 +70,7 @@ export function buildLocalFamilyGraph(
   let generationsDown =
     options.generationsDown ?? DEFAULT_TREE_GENERATIONS_DOWN;
   const siblingSteps = options.siblingSteps ?? 0;
+  const cousinDegree = options.cousinDegree ?? 0;
 
   const member = getLocalMemberByFamilyCode(familyCode);
   if (!member) return null;
@@ -94,6 +96,7 @@ export function buildLocalFamilyGraph(
     generationsUp,
     generationsDown,
     siblingSteps,
+    cousinDegree,
   );
   for (const id of options.ensurePersonIds ?? []) {
     if (peopleById.has(id)) included.add(id);
