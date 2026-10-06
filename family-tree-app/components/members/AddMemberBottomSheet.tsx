@@ -68,8 +68,8 @@ export function AddMemberBottomSheet({
   );
 
   const members = useMemo(
-    () => filterAddMemberCandidates(relationship, allMembers),
-    [allMembers, relationship],
+    () => filterAddMemberCandidates(relationship, allMembers, person.gender),
+    [allMembers, relationship, person.gender],
   );
 
   const selectionMode = addMemberSelectionMode(relationship);

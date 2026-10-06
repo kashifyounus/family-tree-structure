@@ -3,9 +3,15 @@ import { linkChildToParent, linkSpouse } from "@/lib/data/personService";
 import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import { setLocalParents } from "@/lib/db/localRepository.ext";
+import { loadLocalRuleGraphFromKinship } from "@/lib/kinship/ruleGraphFromDataset";
 import { getParentsForPerson } from "@/lib/kinship/kinshipCore";
 import type { StorageMode } from "@/lib/data/types";
 import type { ParentSlot } from "@/lib/rules/parentSlots";
+import {
+  assertCanAssignParents,
+  assertCanCreateMarriage,
+  RelationshipRuleError,
+} from "../../../shared/relationshipRules";
 
 export type NewMemberRelationKind = "parent" | "child" | "spouse" | "sibling";
 
@@ -35,8 +41,15 @@ export function linkNewMemberToAnchors(
     throw new Error("Choose a different person to link.");
   }
 
+  const graph = loadLocalRuleGraphFromKinship();
+  const newPerson = getLocalMemberById(newPersonId);
+  if (!newPerson) {
+    throw new RelationshipRuleError("NOT_FOUND", "New member was not saved.");
+  }
+
   switch (relation) {
     case "spouse":
+      assertCanCreateMarriage(graph, anchors[0]!, newPersonId);
       linkSpouse(mode, { personId: anchors[0]!, spouseId: newPersonId });
       return;
     case "parent": {
@@ -64,6 +77,7 @@ export function linkNewMemberToAnchors(
       }
       if (!fatherId) fatherId = anchors[0]!;
       if (!motherId) motherId = anchors.find((id) => id !== fatherId) ?? fatherId;
+      assertCanAssignParents(graph, newPersonId, fatherId, motherId);
       setLocalParents({
         personId: newPersonId,
         parentAId: fatherId,
@@ -105,6 +119,7 @@ export function linkNewMemberToAnchors(
         parentAId = aId;
         parentBId = bId;
       }
+      assertCanAssignParents(graph, newPersonId, parentAId!, parentBId!);
       setLocalParents({
         personId: newPersonId,
         parentAId: parentAId!,

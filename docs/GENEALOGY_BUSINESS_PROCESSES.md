@@ -35,8 +35,8 @@ Implementation: `shared/genealogy/mutualRelationship.ts`, `lib/kinship/mutualRel
 
 1. Choose relationship role (parent / child / spouse / sibling).
 2. Enter person fields (first name required; Pakistan place pickers optional).
-3. Pick anchor member(s) from a **filtered** list with relation-aware subtitles.
-4. Save creates the person and links via `linkNewMemberToAnchors` (SQLite kinship rules).
+3. Pick anchor member(s) from a **filtered** list (shared marriage/parent rules + relation-aware subtitles).
+4. Save creates the person and links via `linkNewMemberToAnchors`, re-validated with `relationshipRules`.
 
 Implementation: `AddMemberBottomSheet`, `addMemberRelationCandidates.ts`, `linkNewMemberToAnchor.ts`.
 
