@@ -338,6 +338,8 @@ export const copy = {
     childRelationshipAdopted: "Adopted",
     childRelationshipStep: "Step",
     childRelationshipLabel: "Relationship to parents",
+    quickAddChildHint:
+      "Enter name and gender only. You can add birth date, Urdu name, and other details in the profile after saving.",
   },
 
   tools: {

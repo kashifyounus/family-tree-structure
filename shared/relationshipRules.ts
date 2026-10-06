@@ -19,6 +19,8 @@ export type RuleUnion = {
   marriageDate: string | null;
   divorceDate: string | null;
   childIds: string[];
+  /** When false, union is ended (e.g. divorce). Omitted in tests defaults to active. */
+  isActive?: boolean;
 };
 
 export type RuleGraph = {
@@ -40,7 +42,8 @@ export type RuleCode =
   | "DATE_DIVORCE_BEFORE_MARRIAGE"
   | "DATE_MARRIAGE_BEFORE_BIRTH"
   | "DATE_MARRIAGE_AFTER_DEATH"
-  | "MARRIAGE_MISSING";
+  | "MARRIAGE_MISSING"
+  | "FEMALE_ACTIVE_MARRIAGE";
 
 export const ruleMessages = {
   notFound: "This person is no longer in the family records.",
@@ -63,6 +66,8 @@ export const ruleMessages = {
     "The marriage date cannot be earlier than either person's date of birth.",
   marriageAfterDeath:
     "The marriage date cannot be later than either person's date of death.",
+  femaleActiveMarriage:
+    "She already has a husband recorded. End that marriage before adding another.",
   savePerson:
     "Unable to save the person details. Please review the highlighted fields and try again.",
   saveMarriage:
@@ -173,6 +178,21 @@ export function descendantIds(graph: RuleGraph, personId: string): Set<string> {
   return seen;
 }
 
+export function isUnionActive(union: RuleUnion): boolean {
+  return union.isActive !== false;
+}
+
+/** Partners in unions that are still active (ended unions excluded). */
+export function activeSpouseIds(graph: RuleGraph, personId: string): string[] {
+  const ids: string[] = [];
+  for (const union of graph.unions) {
+    if (!isUnionActive(union)) continue;
+    if (union.partner1Id === personId) ids.push(union.partner2Id);
+    else if (union.partner2Id === personId) ids.push(union.partner1Id);
+  }
+  return ids;
+}
+
 function spouseIds(graph: RuleGraph, personId: string): Set<string> {
   const ids = new Set<string>();
   for (const union of graph.unions) {
@@ -263,6 +283,16 @@ export function assertCanCreateMarriage(
       "ANCESTOR_MARRIAGE",
       ruleMessages.ancestorMarriage,
     );
+  }
+  for (const womanId of [personId, spouseId]) {
+    const woman = personById(graph, womanId);
+    if (woman?.gender !== "FEMALE") continue;
+    if (activeSpouseIds(graph, womanId).length > 0) {
+      throw new RelationshipRuleError(
+        "FEMALE_ACTIVE_MARRIAGE",
+        ruleMessages.femaleActiveMarriage,
+      );
+    }
   }
   assertMarriageTimeline({
     marriageDate,
