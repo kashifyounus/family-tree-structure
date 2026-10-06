@@ -9,7 +9,6 @@ type TreeGraphExpandBarProps = {
   canLoadChildren: boolean;
   canLoadSiblings: boolean;
   onExpandTree: () => void;
-  onExpandTreeLarge?: () => void;
   onExpandTreeMax?: () => void;
   onLoadParents: () => void;
   onLoadChildren: () => void;
@@ -22,7 +21,6 @@ export function TreeGraphExpandBar({
   canLoadChildren,
   canLoadSiblings,
   onExpandTree,
-  onExpandTreeLarge,
   onExpandTreeMax,
   onLoadParents,
   onLoadChildren,
@@ -37,19 +35,8 @@ export function TreeGraphExpandBar({
           disabled={!canExpandTree}
           onPress={onExpandTree}
         >
-          <ButtonText>{copy.tree.expandTree}</ButtonText>
+          <ButtonText>{copy.tree.loadMore}</ButtonText>
         </Button>
-        {onExpandTreeLarge ? (
-          <Button
-            testID="tree-expand-large"
-            size="sm"
-            variant="outline"
-            disabled={!canExpandTree}
-            onPress={onExpandTreeLarge}
-          >
-            <ButtonText>{copy.tree.expandTreeLarge}</ButtonText>
-          </Button>
-        ) : null}
         {onExpandTreeMax ? (
           <Button
             testID="tree-expand-max"

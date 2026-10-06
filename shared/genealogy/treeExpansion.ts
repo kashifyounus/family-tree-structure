@@ -1,8 +1,12 @@
+import { MAX_COUSIN_DEGREE } from "./cousinInclusion";
+
+export { MAX_COUSIN_DEGREE };
 import type { MarriageLayoutUnion } from "../marriageTreeLayout";
 
 export const DEFAULT_TREE_GENERATIONS_UP = 2;
 export const DEFAULT_TREE_GENERATIONS_DOWN = 2;
 export const DEFAULT_TREE_SIBLING_STEPS = 0;
+export const DEFAULT_COUSIN_DEGREE = 0;
 
 /** Safety cap for on-device layout performance. */
 export const MAX_TREE_GENERATIONS = 14;
@@ -12,12 +16,14 @@ export type TreeExpansionState = {
   generationsUp: number;
   generationsDown: number;
   siblingSteps: number;
+  cousinDegree: number;
 };
 
 export const DEFAULT_TREE_EXPANSION: TreeExpansionState = {
   generationsUp: DEFAULT_TREE_GENERATIONS_UP,
   generationsDown: DEFAULT_TREE_GENERATIONS_DOWN,
   siblingSteps: DEFAULT_TREE_SIBLING_STEPS,
+  cousinDegree: DEFAULT_COUSIN_DEGREE,
 };
 
 export function clampTreeExpansion(
@@ -36,10 +42,14 @@ export function clampTreeExpansion(
       MAX_TREE_SIBLING_STEPS,
       Math.max(0, state.siblingSteps),
     ),
+    cousinDegree: Math.min(
+      MAX_COUSIN_DEGREE,
+      Math.max(0, state.cousinDegree),
+    ),
   };
 }
 
-/** One tap: more ancestors, descendants, and collaterals (uncles, aunts, etc.). */
+/** One tap: more generations, collaterals, and cousin levels (1st, 2nd, …). */
 export function stepExpandTree(
   state: TreeExpansionState,
 ): TreeExpansionState {
@@ -47,6 +57,7 @@ export function stepExpandTree(
     generationsUp: state.generationsUp + 1,
     generationsDown: state.generationsDown + 1,
     siblingSteps: state.siblingSteps + 1,
+    cousinDegree: state.cousinDegree + 1,
   });
 }
 
@@ -58,6 +69,7 @@ export function stepExpandTreeLarge(
     generationsUp: state.generationsUp + 3,
     generationsDown: state.generationsDown + 3,
     siblingSteps: state.siblingSteps + 2,
+    cousinDegree: state.cousinDegree + 2,
   });
 }
 
@@ -146,6 +158,7 @@ export function maxReachableTreeExpansion(
     generationsUp: up + 1,
     generationsDown: down + 1,
     siblingSteps: Math.min(MAX_TREE_SIBLING_STEPS, Math.max(up, down) + 1),
+    cousinDegree: Math.min(MAX_COUSIN_DEGREE, Math.max(up, down)),
   });
 }
 
@@ -167,7 +180,8 @@ export function treeExpansionHasMore(
   if (
     clamped.generationsUp < max.generationsUp ||
     clamped.generationsDown < max.generationsDown ||
-    clamped.siblingSteps < max.siblingSteps
+    clamped.siblingSteps < max.siblingSteps ||
+    clamped.cousinDegree < max.cousinDegree
   ) {
     return true;
   }
