@@ -6,6 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { installGlobalErrorHandlers } from "@/lib/globalErrorHandlers";
 import { loadKinshipLabelLocale } from "@/lib/settings/kinshipLocale";
+import { loadPrimaryTreeUnionPrefs } from "@/lib/settings/primaryTreeUnion";
 
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AppPreferencesProvider, useAppPreferences } from "@/context/AppPreferencesContext";
@@ -42,6 +43,7 @@ export function AppProviders({ children }: AppProvidersProps) {
   useEffect(() => {
     installGlobalErrorHandlers();
     void loadKinshipLabelLocale();
+    void loadPrimaryTreeUnionPrefs();
   }, []);
 
   return (

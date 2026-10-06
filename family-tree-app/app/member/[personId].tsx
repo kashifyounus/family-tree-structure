@@ -100,6 +100,8 @@ export default function MemberDetailScreen() {
           onUnlinkParents={profile.unlinkParentLinks}
           onUnlinkMarriage={profile.unlinkMarriage}
           onUnlinkChild={profile.unlinkChildFromMarriage}
+          treePrimaryUnionId={derived.treePrimaryUnionId}
+          onSetPrimaryOnTree={profile.setPrimaryTreeUnionForMember}
         />
       </Screen>
 

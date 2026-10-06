@@ -79,6 +79,10 @@ jest.mock("@/lib/db/kinshipLoader", () => {
 });
 
 describe("computeRelationFinderResult", () => {
+  beforeAll(async () => {
+    await saveKinshipLabelLocale("en");
+  });
+
   it("returns kinship summary and path metadata for parent and child", () => {
     const result = computeRelationFinderResult("f", "c");
     expect(result.ok).toBe(true);

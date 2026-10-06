@@ -41,6 +41,11 @@ import { defaultParentSlotForOpen, type ParentSlot } from "@/lib/rules/parentSlo
 import { livingNameCollisionCount } from "@/lib/members/duplicateNameCue";
 import { listLocalMembers } from "@/lib/db/localRepository";
 import { defaultSpouseGender } from "@/lib/rules/relationshipRules";
+import { resolvePrimaryTreeUnionId } from "../../../shared/genealogy/resolvePrimaryTreeUnion";
+import {
+  getPrimaryTreeUnionId,
+  savePrimaryTreeUnion,
+} from "@/lib/settings/primaryTreeUnion";
 
 type UseMemberProfileScreenArgs = {
   personId: string;
@@ -53,7 +58,7 @@ export function useMemberProfileScreen({
   code,
   skipLoad = false,
 }: UseMemberProfileScreenArgs) {
-  const { mode, bumpDataRevision } = useStorage();
+  const { mode, bumpDataRevision, dataRevision } = useStorage();
   const { showError, showSuccess } = useAppFeedback();
   const { impactLight } = useAppPreferences();
   const localAccount = useLocalAccount();
@@ -515,6 +520,21 @@ export function useMemberProfileScreen({
     setParentQuery("");
   }, []);
 
+  const setPrimaryTreeUnionForMember = useCallback(
+    async (unionId: string) => {
+      if (!member) return;
+      try {
+        await savePrimaryTreeUnion(member.id, unionId);
+        bumpDataRevision();
+        impactLight();
+        showSuccess(copy.profile.primaryOnTreeDone);
+      } catch (e) {
+        showError(e);
+      }
+    },
+    [bumpDataRevision, impactLight, member, showError, showSuccess],
+  );
+
   const cancelEdit = useCallback(() => {
     if (member) setEditFields(editFieldsFromMember(member));
     setEditing(false);
@@ -560,8 +580,15 @@ export function useMemberProfileScreen({
         ? parentCouplesForPicker(mode, member.id, parentQuery)
         : [];
 
+    const personUnionIds = bundle.unions.map((u) => u.id);
+    const treePrimaryUnionId =
+      resolvePrimaryTreeUnionId(getPrimaryTreeUnionId(member.id), personUnionIds) ??
+      [...personUnionIds].sort((a, b) => a.localeCompare(b))[0] ??
+      null;
+
     return {
       marriageOptions,
+      treePrimaryUnionId,
       activeUnion,
       spouseNameFromUnion,
       activeUnionId,
@@ -584,6 +611,7 @@ export function useMemberProfileScreen({
     mode,
     parentQuery,
     parentStaged,
+    dataRevision,
   ]);
 
   return {
@@ -627,5 +655,6 @@ export function useMemberProfileScreen({
     createParentMember,
     onSelectParentCouple,
     dismissCoupleParentsSheet,
+    setPrimaryTreeUnionForMember,
   };
 }
