@@ -38,6 +38,7 @@ describe("treeExpansion", () => {
     expect(next.generationsUp).toBe(3);
     expect(next.generationsDown).toBe(3);
     expect(next.siblingSteps).toBe(1);
+    expect(next.cousinDegree).toBe(1);
   });
 
   it("maxReachableTreeExpansion fits the dataset", () => {

@@ -262,6 +262,7 @@ export async function getFamilyGraph(
   depth = 2,
   siblingSteps = 0,
   preferredFocalUnionId?: string | null,
+  cousinDegree = 0,
 ): Promise<FamilyGraph | null> {
   const focal = await prisma.person.findUnique({ where: { familyCode } });
   if (!focal) return null;
@@ -273,6 +274,7 @@ export async function getFamilyGraph(
     depth,
     depth,
     siblingSteps,
+    cousinDegree,
   );
   const people = await prisma.person.findMany({
     where: { id: { in: [...included] } },
@@ -284,6 +286,7 @@ export async function getFamilyGraph(
     depth,
     depth,
     siblingSteps,
+    cousinDegree,
     preferredFocalUnionId,
   );
   return maskGraph(graph);

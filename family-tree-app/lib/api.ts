@@ -208,6 +208,7 @@ export type MobileFamilyGraph = {
 export type FetchFamilyGraphOptions = {
   depth?: number;
   siblingSteps?: number;
+  cousinDegree?: number;
   focalUnionId?: string | null;
 };
 
@@ -217,9 +218,11 @@ export async function fetchFamilyGraph(
 ): Promise<MobileFamilyGraph | null> {
   const depth = options.depth ?? 2;
   const siblingSteps = options.siblingSteps ?? 0;
+  const cousinDegree = options.cousinDegree ?? 0;
   const qs = new URLSearchParams({
     depth: String(depth),
     siblingSteps: String(siblingSteps),
+    cousinDegree: String(cousinDegree),
   });
   if (options.focalUnionId) {
     qs.set("focalUnionId", options.focalUnionId);

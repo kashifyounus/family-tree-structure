@@ -2,6 +2,8 @@
  * Union-centric pedigree layout shared by web and mobile tree views.
  */
 
+import { includeCousinsUpToDegree } from "./genealogy/cousinInclusion";
+
 import {
   PEDIGREE_CARD_BIG_W,
   PEDIGREE_CARD_SMALL_W,
@@ -168,6 +170,7 @@ export function collectIncludedPersonIds(
   generationsUp: number,
   generationsDown: number,
   siblingSteps = 0,
+  cousinDegree = 0,
 ): Set<string> {
   const included = new Set<string>([focalId]);
 
@@ -262,6 +265,7 @@ export function collectIncludedPersonIds(
   }
 
   collectCollateralsForIncluded(siblingSteps);
+  includeCousinsUpToDegree(focalId, unions, included, cousinDegree);
 
   return included;
 }
