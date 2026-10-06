@@ -234,6 +234,12 @@ export const copy = {
     loadParents: "Load parents",
     loadChildren: "Load children",
     loadSiblings: "Load siblings",
+    expandTree: "Expand tree",
+    expandTreeLarge: "Load extended family",
+    expandTreeMax: "Load full tree",
+    resetTreeView: "Reset to default view",
+    treeExpansionHint:
+      "Starts with two generations. Expand to add parents, children, uncles, aunts, and more.",
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     offlineBanner: "You are offline. Switch to your private archive in Account to keep working.",

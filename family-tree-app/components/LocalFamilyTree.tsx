@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { GraphWebView } from "@/components/tree/GraphWebView";
@@ -21,6 +21,15 @@ import type { GraphPersonSummary } from "@/lib/graph/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
+import {
+  DEFAULT_TREE_EXPANSION,
+  expandTreeToMaximum,
+  stepExpandTree,
+  stepExpandTreeLarge,
+  treeExpansionHasMore,
+  type TreeExpansionState,
+} from "../../../shared/genealogy/treeExpansion";
+import type { MarriageLayoutUnion } from "../../../shared/marriageTreeLayout";
 
 type LocalFamilyTreeProps = {
   familyCode: string;
@@ -41,6 +50,34 @@ type LocalFamilyTreeProps = {
   seedGenerationsDown?: number;
 };
 
+function initialTreeExpansion(
+  seedGenerationsUp?: number,
+  seedGenerationsDown?: number,
+): TreeExpansionState {
+  return {
+    generationsUp: Math.max(
+      DEFAULT_TREE_EXPANSION.generationsUp,
+      seedGenerationsUp ?? DEFAULT_TREE_EXPANSION.generationsUp,
+    ),
+    generationsDown: Math.max(
+      DEFAULT_TREE_EXPANSION.generationsDown,
+      seedGenerationsDown ?? DEFAULT_TREE_EXPANSION.generationsDown,
+    ),
+    siblingSteps: DEFAULT_TREE_EXPANSION.siblingSteps,
+  };
+}
+
+function toLayoutUnions(
+  allUnions: ReturnType<typeof loadKinshipDataset>["allUnions"],
+): MarriageLayoutUnion[] {
+  return allUnions.map((u) => ({
+    id: u.id,
+    partner1Id: u.partner1Id,
+    partner2Id: u.partner2Id,
+    childships: u.childships.map((c) => ({ childId: c.childId })),
+  }));
+}
+
 export function LocalFamilyTree({
   familyCode,
   dataRevision = 0,
@@ -60,37 +97,38 @@ export function LocalFamilyTree({
   const theme = useAppTheme();
   const router = useRouter();
   const view = layout;
-  const [gensUp, setGensUp] = useState(() =>
-    Math.max(2, seedGenerationsUp ?? 3),
+  const [expansion, setExpansion] = useState<TreeExpansionState>(() =>
+    initialTreeExpansion(seedGenerationsUp, seedGenerationsDown),
   );
-  const [gensDown, setGensDown] = useState(() =>
-    Math.max(2, seedGenerationsDown ?? 3),
-  );
-  const [siblingSteps, setSiblingSteps] = useState(0);
 
   useEffect(() => {
-    if (seedGenerationsUp != null) {
-      setGensUp((g) => Math.max(g, seedGenerationsUp));
-    }
-    if (seedGenerationsDown != null) {
-      setGensDown((g) => Math.max(g, seedGenerationsDown));
+    if (seedGenerationsUp != null || seedGenerationsDown != null) {
+      setExpansion((prev) => ({
+        ...prev,
+        generationsUp: Math.max(
+          prev.generationsUp,
+          seedGenerationsUp ?? DEFAULT_TREE_EXPANSION.generationsUp,
+        ),
+        generationsDown: Math.max(
+          prev.generationsDown,
+          seedGenerationsDown ?? DEFAULT_TREE_EXPANSION.generationsDown,
+        ),
+      }));
     }
   }, [seedGenerationsUp, seedGenerationsDown]);
 
   useEffect(() => {
-    setGensUp(Math.max(2, seedGenerationsUp ?? 3));
-    setGensDown(Math.max(2, seedGenerationsDown ?? 3));
-    setSiblingSteps(0);
+    setExpansion(initialTreeExpansion(seedGenerationsUp, seedGenerationsDown));
   }, [familyCode, dataRevision, seedGenerationsUp, seedGenerationsDown]);
 
   const graphOptions: BuildLocalGraphOptions = useMemo(
     () => ({
-      generationsUp: gensUp,
-      generationsDown: gensDown,
-      siblingSteps,
+      generationsUp: expansion.generationsUp,
+      generationsDown: expansion.generationsDown,
+      siblingSteps: expansion.siblingSteps,
       ensurePersonIds,
     }),
-    [gensUp, gensDown, siblingSteps, ensurePersonIds],
+    [expansion, ensurePersonIds],
   );
 
   const focal = useMemo(
@@ -115,29 +153,53 @@ export function LocalFamilyTree({
     return parts.join(" · ");
   }, [focal]);
 
-  const canLoadMore = useCallback(() => {
-    if (!focal || !graph) return { parents: false, children: false, siblings: false };
+  const loadMore = useMemo(() => {
+    if (!focal || !graph) {
+      return {
+        canExpandTree: false,
+        parents: false,
+        children: false,
+        siblings: false,
+      };
+    }
     const { allUnions } = loadKinshipDataset();
+    const layoutUnions = toLayoutUnions(allUnions);
     const included = new Set(graph.nodes.map((n) => n.id));
     const ego = graph.nodes.find((n) => n.id === focal.id);
     return {
+      canExpandTree: treeExpansionHasMore(
+        focal.id,
+        layoutUnions,
+        expansion,
+        included,
+      ),
       parents: ego?.data.hasUnexpandedParents ?? false,
       children: ego?.data.hasUnexpandedChildren ?? false,
       siblings: focalHasUnexpandedSiblings(
         focal.id,
         included,
         allUnions,
-        siblingSteps,
+        expansion.siblingSteps,
       ),
     };
-  }, [focal, graph, siblingSteps]);
-
-  const more = canLoadMore();
+  }, [focal, graph, expansion]);
 
   const resetExpansion = () => {
-    setGensUp(3);
-    setGensDown(3);
-    setSiblingSteps(0);
+    setExpansion(initialTreeExpansion(seedGenerationsUp, seedGenerationsDown));
+  };
+
+  const onExpandTree = () => {
+    setExpansion((prev) => stepExpandTree(prev));
+  };
+
+  const onExpandTreeLarge = () => {
+    setExpansion((prev) => stepExpandTreeLarge(prev));
+  };
+
+  const onExpandTreeMax = () => {
+    if (!focal) return;
+    const { allUnions } = loadKinshipDataset();
+    setExpansion(expandTreeToMaximum(focal.id, toLayoutUnions(allUnions)));
   };
 
   if (!focal) {
@@ -153,39 +215,84 @@ export function LocalFamilyTree({
   return (
     <View style={[styles.root, immersive && { backgroundColor: theme.colors.background }]}>
       {view === "graph" && (
-        <View style={styles.expandRow}>
-          <Button
-            testID="tree-load-parents"
-            size="sm"
-            variant="outline"
-            disabled={!more.parents}
-            onPress={() => setGensUp((g) => g + 1)}
-          >
-            <ButtonText>{copy.tree.loadParents}</ButtonText>
-          </Button>
-          <Button
-            testID="tree-load-siblings"
-            size="sm"
-            variant="outline"
-            disabled={!more.siblings}
-            onPress={() => setSiblingSteps((s) => s + 1)}
-          >
-            <ButtonText>{copy.tree.loadSiblings}</ButtonText>
-          </Button>
-          <Button
-            testID="tree-load-children"
-            size="sm"
-            variant="outline"
-            disabled={!more.children}
-            onPress={() => setGensDown((g) => g + 1)}
-          >
-            <ButtonText>{copy.tree.loadChildren}</ButtonText>
-          </Button>
+        <View style={styles.expandBlock}>
+          <View style={styles.expandRow}>
+            <Button
+              testID="tree-expand"
+              size="sm"
+              disabled={!loadMore.canExpandTree}
+              onPress={onExpandTree}
+            >
+              <ButtonText>{copy.tree.expandTree}</ButtonText>
+            </Button>
+            <Button
+              testID="tree-expand-large"
+              size="sm"
+              variant="outline"
+              disabled={!loadMore.canExpandTree}
+              onPress={onExpandTreeLarge}
+            >
+              <ButtonText>{copy.tree.expandTreeLarge}</ButtonText>
+            </Button>
+            <Button
+              testID="tree-expand-max"
+              size="sm"
+              variant="outline"
+              disabled={!loadMore.canExpandTree}
+              onPress={onExpandTreeMax}
+            >
+              <ButtonText>{copy.tree.expandTreeMax}</ButtonText>
+            </Button>
+          </View>
+          <View style={styles.expandRow}>
+            <Button
+              testID="tree-load-parents"
+              size="sm"
+              variant="ghost"
+              disabled={!loadMore.parents}
+              onPress={() =>
+                setExpansion((prev) => ({
+                  ...prev,
+                  generationsUp: prev.generationsUp + 1,
+                }))
+              }
+            >
+              <ButtonText>{copy.tree.loadParents}</ButtonText>
+            </Button>
+            <Button
+              testID="tree-load-siblings"
+              size="sm"
+              variant="ghost"
+              disabled={!loadMore.siblings}
+              onPress={() =>
+                setExpansion((prev) => ({
+                  ...prev,
+                  siblingSteps: prev.siblingSteps + 1,
+                }))
+              }
+            >
+              <ButtonText>{copy.tree.loadSiblings}</ButtonText>
+            </Button>
+            <Button
+              testID="tree-load-children"
+              size="sm"
+              variant="ghost"
+              disabled={!loadMore.children}
+              onPress={() =>
+                setExpansion((prev) => ({
+                  ...prev,
+                  generationsDown: prev.generationsDown + 1,
+                }))
+              }
+            >
+              <ButtonText>{copy.tree.loadChildren}</ButtonText>
+            </Button>
+          </View>
         </View>
       )}
       {view === "graph" && graph ? (
         <GraphWebView
-          key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${gensUp}-${gensDown}-${siblingSteps}`}
+          key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${expansion.generationsUp}-${expansion.generationsDown}-${expansion.siblingSteps}`}
           graph={graph}
           testID="local-tree-graph-webview"
           onPersonPress={onPersonPress}
@@ -283,7 +390,7 @@ export function LocalFamilyTree({
       )}
       {!immersive && (
         <Button variant="ghost" onPress={resetExpansion}>
-          <ButtonText>{copy.tree.menuReload}</ButtonText>
+          <ButtonText>{copy.tree.resetTreeView}</ButtonText>
         </Button>
       )}
     </View>
@@ -292,12 +399,15 @@ export function LocalFamilyTree({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  expandBlock: {
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    gap: 4,
+  },
   expandRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
-    paddingHorizontal: 12,
-    paddingTop: 8,
   },
   scroll: { flex: 1 },
   content: { padding: 16, paddingBottom: 32 },

@@ -16,6 +16,13 @@ import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
 import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
+import {
+  DEFAULT_TREE_EXPANSION,
+  MAX_TREE_GENERATIONS,
+  MAX_TREE_SIBLING_STEPS,
+  stepExpandTree,
+  stepExpandTreeLarge,
+} from "../../../shared/genealogy/treeExpansion";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
@@ -138,8 +145,7 @@ export default function TreeScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
-  const [onlineDepth, setOnlineDepth] = useState(2);
-  const [onlineSiblingSteps, setOnlineSiblingSteps] = useState(0);
+  const [onlineExpansion, setOnlineExpansion] = useState(DEFAULT_TREE_EXPANSION);
   const [listLayout, setListLayout] = useState(false);
   const [showTapHint, setShowTapHint] = useState(false);
 
@@ -155,8 +161,11 @@ export default function TreeScreen() {
     setUseWebFallback(false);
     setOffline(false);
     void fetchFamilyGraph(loadedCode.trim(), {
-      depth: onlineDepth,
-      siblingSteps: onlineSiblingSteps,
+      depth: Math.max(
+        onlineExpansion.generationsUp,
+        onlineExpansion.generationsDown,
+      ),
+      siblingSteps: onlineExpansion.siblingSteps,
     })
       .then((g) => {
         if (g && g.nodes.length > 0) {
@@ -170,7 +179,7 @@ export default function TreeScreen() {
         setUseWebFallback(true);
       })
       .finally(() => setGraphLoading(false));
-  }, [isLocal, loadedCode, onlineDepth, onlineSiblingSteps]);
+  }, [isLocal, loadedCode, onlineExpansion]);
 
   useEffect(() => {
     loadOnlineGraph();
@@ -428,12 +437,45 @@ export default function TreeScreen() {
         ) : onlineGraph && !useWebFallback ? (
           <>
             <TreeGraphExpandBar
+              canExpandTree={
+                !!onlineFocal?.hasUnexpandedParents ||
+                !!onlineFocal?.hasUnexpandedChildren ||
+                !!onlineFocal?.hasUnexpandedSiblings
+              }
               canLoadParents={!!onlineFocal?.hasUnexpandedParents}
               canLoadChildren={!!onlineFocal?.hasUnexpandedChildren}
               canLoadSiblings={!!onlineFocal?.hasUnexpandedSiblings}
-              onLoadParents={() => setOnlineDepth((d) => d + 1)}
-              onLoadSiblings={() => setOnlineSiblingSteps((s) => s + 1)}
-              onLoadChildren={() => setOnlineDepth((d) => d + 1)}
+              onExpandTree={() =>
+                setOnlineExpansion((prev) => stepExpandTree(prev))
+              }
+              onExpandTreeLarge={() =>
+                setOnlineExpansion((prev) => stepExpandTreeLarge(prev))
+              }
+              onExpandTreeMax={() =>
+                setOnlineExpansion({
+                  generationsUp: MAX_TREE_GENERATIONS,
+                  generationsDown: MAX_TREE_GENERATIONS,
+                  siblingSteps: MAX_TREE_SIBLING_STEPS,
+                })
+              }
+              onLoadParents={() =>
+                setOnlineExpansion((prev) => ({
+                  ...prev,
+                  generationsUp: prev.generationsUp + 1,
+                }))
+              }
+              onLoadSiblings={() =>
+                setOnlineExpansion((prev) => ({
+                  ...prev,
+                  siblingSteps: prev.siblingSteps + 1,
+                }))
+              }
+              onLoadChildren={() =>
+                setOnlineExpansion((prev) => ({
+                  ...prev,
+                  generationsDown: prev.generationsDown + 1,
+                }))
+              }
             />
             <GraphWebView
               graph={onlineGraph}
