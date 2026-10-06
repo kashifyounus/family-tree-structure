@@ -50,6 +50,10 @@ export default function RootLayout() {
             name="find-relation"
             options={{ title: "Find relation", headerBackTitle: "Tree" }}
           />
+          <Stack.Screen
+            name="connection-tree"
+            options={{ title: "Connection tree", headerBackTitle: "Back" }}
+          />
           <Stack.Screen name="story/[storyId]" options={{ title: "Story" }} />
           <Stack.Screen
             name="add-member"
