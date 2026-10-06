@@ -70,29 +70,12 @@ export function focalHasUnexpandedSiblings(
   focalId: string,
   visibleIds: Set<string>,
   unions: KinshipUnionRecord[],
-  siblingSteps: number,
+  _siblingSteps: number,
 ): boolean {
-  if (siblingSteps > 0) {
-    const focalUnions = unions.filter(
-      (u) => u.partner1Id === focalId || u.partner2Id === focalId,
-    );
-    const ring = new Set<string>();
-    for (const id of siblingsOf(focalId, unions)) ring.add(id);
-    for (const u of focalUnions) {
-      const spouseId =
-        u.partner1Id === focalId ? u.partner2Id : u.partner1Id;
-      for (const id of siblingsOf(spouseId, unions)) ring.add(id);
+  for (const personId of visibleIds) {
+    if (siblingsOf(personId, unions).some((id) => !visibleIds.has(id))) {
+      return true;
     }
-    return [...ring].some((id) => !visibleIds.has(id));
   }
-  return (
-    siblingsOf(focalId, unions).some((id) => !visibleIds.has(id)) ||
-    unions
-      .filter((u) => u.partner1Id === focalId || u.partner2Id === focalId)
-      .some((u) => {
-        const spouseId =
-          u.partner1Id === focalId ? u.partner2Id : u.partner1Id;
-        return siblingsOf(spouseId, unions).some((id) => !visibleIds.has(id));
-      })
-  );
+  return siblingsOf(focalId, unions).some((id) => !visibleIds.has(id));
 }
