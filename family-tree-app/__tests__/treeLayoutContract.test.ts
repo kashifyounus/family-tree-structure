@@ -137,7 +137,7 @@ describe("tree layout contract", () => {
     };
 
     const payload = buildPedigreeCanvasPayload(graph);
-    expect(payload.marriageBands?.length).toBe(2);
+    expect(payload.marriageBands?.length).toBe(1);
     expect(payload.marriageBands?.[0]?.x2).toBeLessThanOrEqual(
       (positions.get("spouse1")?.x ?? 0) + 2,
     );

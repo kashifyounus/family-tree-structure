@@ -42,6 +42,8 @@ type MemberProfileSectionsProps = {
   onUnlinkParents?: () => void;
   onUnlinkMarriage?: (unionId: string) => void;
   onUnlinkChild?: (unionId: string, childId: string) => void;
+  treePrimaryUnionId?: string | null;
+  onSetPrimaryOnTree?: (unionId: string) => void;
 };
 
 export function MemberProfileSections({
@@ -63,6 +65,8 @@ export function MemberProfileSections({
   onUnlinkParents,
   onUnlinkMarriage,
   onUnlinkChild,
+  treePrimaryUnionId,
+  onSetPrimaryOnTree,
 }: MemberProfileSectionsProps) {
   const theme = useAppTheme();
   const activeUnion = bundle.unions.find((u) => u.id === activeUnionId);
@@ -221,7 +225,14 @@ export function MemberProfileSections({
             delay={80 + index * 40}
             title={copy.tree.marriageTo(u.partner1Name, u.partner2Name)}
             subtitle={
-              u.isActive === false ? copy.profile.previousMarriage : copy.profile.currentMarriage
+              [
+                u.isActive === false
+                  ? copy.profile.previousMarriage
+                  : copy.profile.currentMarriage,
+                treePrimaryUnionId === u.id ? copy.profile.primaryOnTree : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")
             }
           >
             <View className="flex-row flex-wrap gap-2">
@@ -233,6 +244,18 @@ export function MemberProfileSections({
               >
                 <ButtonText>View marriage</ButtonText>
               </Button>
+              {onSetPrimaryOnTree &&
+              bundle.unions.length > 1 &&
+              treePrimaryUnionId !== u.id ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onPress={() => onSetPrimaryOnTree(u.id)}
+                >
+                  <ButtonText>{copy.profile.setPrimaryOnTree}</ButtonText>
+                </Button>
+              ) : null}
               {canEditLocal && onUnlinkMarriage ? (
                 <Button
                   variant="ghost"

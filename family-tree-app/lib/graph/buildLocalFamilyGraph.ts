@@ -6,6 +6,8 @@ import {
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import type { KinshipPerson, KinshipUnionRecord } from "@/lib/kinship/types";
 import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
+import { resolvePrimaryTreeUnionId } from "../../../shared/genealogy/resolvePrimaryTreeUnion";
+import { getPrimaryTreeUnionId } from "@/lib/settings/primaryTreeUnion";
 import {
   collectIncludedPersonIds,
   layoutMarriageCentricGraph,
@@ -101,6 +103,17 @@ export function buildLocalFamilyGraph(
       ]),
   );
 
+  const focalPersonUnionIds = layoutUnions
+    .filter((u) => u.partner1Id === focal.id || u.partner2Id === focal.id)
+    .map((u) => u.id);
+  const preferredFocalUnionId =
+    options.focalUnionId ??
+    resolvePrimaryTreeUnionId(
+      getPrimaryTreeUnionId(focal.id),
+      focalPersonUnionIds,
+    ) ??
+    undefined;
+
   const {
     positions,
     edges: layoutEdges,
@@ -115,7 +128,7 @@ export function buildLocalFamilyGraph(
     0,
     0,
     {
-      preferredFocalUnionId: options.focalUnionId,
+      preferredFocalUnionId,
       phoneSingleParentSide: false,
     },
   );
