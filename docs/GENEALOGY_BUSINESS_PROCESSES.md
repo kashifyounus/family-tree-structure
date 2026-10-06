@@ -4,26 +4,45 @@ Code for kinship features should follow these **processes** (user journeys), not
 
 ## Process: View a member’s family tree
 
-1. User picks a person (profile **Family tree**, tree sheet **Center tree**, or `familyCode` deep link).
+1. User picks a person (profile **Family tree**, tree sheet **Center tree**, tap on graph, or `familyCode` deep link).
 2. **View focal** = that person’s `familyCode` (graph ego), not the registered “you” unless no other choice.
 3. Persist **last viewed tree focal** per archive lane (`live` / `demo`).
 4. **Registered focal** (`session.focalFamilyCode`) is only the default when there is no deep link and no last viewed.
 5. **Tap** a person on the graph to recenter the tree on them; **long press** opens profile and relation actions.
+6. **List view** on tree: tap a child name to recenter on that person (switches to graph focal).
 
 Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `buildLocalFamilyGraph`, `GraphWebView`.
 
 ## Process: Mutual relationship between two people
 
-1. User selects person A and person B.
-2. System finds kinship **A → B** and **B → A** (shortest paths).
-3. UI shows both directional labels and the **link chain** on the shortest path (parent / child / spouse steps).
-4. Optional: open tree centered on A with path highlighted.
+1. User opens **Tools → Find relation** (legacy “Compare” redirects here).
+2. User selects person A and person B.
+3. System finds kinship **A → B** and **B → A** (shortest paths).
+4. UI shows both directional labels and the **link chain** on the shortest path.
+5. User picks whose tree to center on, then **View path on tree**.
 
 Implementation: `shared/genealogy/mutualRelationship.ts`, `lib/kinship/mutualRelationshipProcess.ts`, `app/find-relation.tsx`.
 
 ## Process: Add member with relationship
 
-See add-member flow in `AddMemberBottomSheet` and `linkNewMemberToAnchors`.
+1. Choose relationship role (parent / child / spouse / sibling).
+2. Enter person fields (first name required; Pakistan place pickers optional).
+3. Pick anchor member(s) from a **filtered** list with relation-aware subtitles.
+4. Save creates the person and links via `linkNewMemberToAnchors` (SQLite kinship rules).
+
+Implementation: `AddMemberBottomSheet`, `addMemberRelationCandidates.ts`, `linkNewMemberToAnchor.ts`.
+
+## Process: Edit member profile
+
+1. Open profile → Edit.
+2. `PersonFields` + Pakistan province/city pickers for birth, living city, home town.
+3. Save writes formatted `"City, Province"` strings to SQLite.
+
+Implementation: `useMemberProfileScreen`, `pakistanPlaceForm.ts`, `MemberProfileSections`.
+
+## Process: Unlink relationships
+
+From member profile: unlink parents, marriage, or child from union (`localRepository.ext` + profile sections).
 
 ## Account focal vs view focal
 

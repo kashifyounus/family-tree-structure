@@ -28,6 +28,7 @@ import {
   addMemberSelectionMode,
   filterAddMemberCandidates,
 } from "@/lib/members/addMemberRelationCandidates";
+import { addMemberPickerSubtitle } from "@/lib/members/addMemberPickerSubtitle";
 
 const RELATIONSHIP_OPTIONS: { value: NewMemberRelationKind; label: string; hint: string }[] = [
   { value: "parent", label: "Parent", hint: "New member is a parent of one person" },
@@ -228,6 +229,7 @@ export function AddMemberBottomSheet({
                   prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
                 )
               }
+              subtitleForMember={(m) => addMemberPickerSubtitle(relationship, m)}
             />
           )}
         </View>

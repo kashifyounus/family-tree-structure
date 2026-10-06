@@ -21,6 +21,7 @@ type ExistingMemberPickerProps = {
   multiSelect?: boolean;
   selectedIds?: string[];
   onToggleSelect?: (id: string) => void;
+  subtitleForMember?: (member: BriefMember) => string;
 };
 
 export function ExistingMemberPicker({
@@ -31,6 +32,7 @@ export function ExistingMemberPicker({
   multiSelect = false,
   selectedIds = [],
   onToggleSelect,
+  subtitleForMember,
 }: ExistingMemberPickerProps) {
   const [query, setQuery] = useState("");
 
@@ -43,7 +45,7 @@ export function ExistingMemberPicker({
       .filter((m) => !excluded.has(m.id))
       .filter((m) => {
         if (!q) return true;
-        const subtitle = memberPickerSubtitle(m);
+        const subtitle = subtitleForMember?.(m) ?? memberPickerSubtitle(m);
         const nick = m.nickname?.trim().toLowerCase() ?? "";
         return (
           m.name.toLowerCase().includes(q) ||
@@ -88,7 +90,7 @@ export function ExistingMemberPicker({
               initials={memberInitials(m.name)}
               name={m.name}
               nickname={m.nickname}
-              subtitle={memberPickerSubtitle(m)}
+              subtitle={subtitleForMember?.(m) ?? memberPickerSubtitle(m)}
               selected={selected}
               onPress={() => handlePress(m.id)}
             />

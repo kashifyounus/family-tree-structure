@@ -30,6 +30,8 @@ type LocalFamilyTreeProps = {
   layout?: "graph" | "list";
   onPersonPress?: (person: GraphPersonSummary) => void;
   onPersonLongPress?: (person: GraphPersonSummary) => void;
+  /** List mode: tap a child name to recenter the tree on them. */
+  onRecenterOnFamilyCode?: (familyCode: string) => void;
   zoomScale?: number;
   onZoomChange?: (scale: number) => void;
   pathHighlightPersonIds?: string[];
@@ -46,6 +48,7 @@ export function LocalFamilyTree({
   layout = "graph",
   onPersonPress,
   onPersonLongPress,
+  onRecenterOnFamilyCode,
   zoomScale,
   onZoomChange,
   pathHighlightPersonIds,
@@ -253,12 +256,16 @@ export function LocalFamilyTree({
                     <Pressable
                       key={c.id}
                       className="mt-2 py-1 active:opacity-80"
-                      onPress={() =>
+                      onPress={() => {
+                        if (onRecenterOnFamilyCode) {
+                          onRecenterOnFamilyCode(c.familyCode);
+                          return;
+                        }
                         router.push({
                           pathname: "/member/[personId]",
                           params: { personId: c.id, code: c.familyCode },
-                        })
-                      }
+                        });
+                      }}
                     >
                       <AppText variant="bodyMedium" className="text-primary">
                         {c.name}

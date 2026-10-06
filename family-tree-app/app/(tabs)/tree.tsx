@@ -31,6 +31,10 @@ import { InfoBanner } from "@/components/ui/InfoBanner";
 import { Spinner } from "@/components/ui/spinner";
 import { AppText } from "@/components/ui/AppText";
 import { useAppTheme } from "@/theme/useAppTheme";
+import {
+  dismissTreeTapHint,
+  loadTreeTapHintDismissed,
+} from "@/lib/tree/treeTapHintStorage";
 
 function mapOnlineGraph(g: MobileFamilyGraph): FamilyGraph {
   return {
@@ -124,6 +128,7 @@ export default function TreeScreen() {
   const [onlineDepth, setOnlineDepth] = useState(2);
   const [onlineSiblingSteps, setOnlineSiblingSteps] = useState(0);
   const [listLayout, setListLayout] = useState(false);
+  const [showTapHint, setShowTapHint] = useState(false);
 
   const uri = useMemo(() => {
     return `${apiUrl}/tree/${encodeURIComponent(loadedCode)}?embed=1`;
@@ -228,9 +233,9 @@ export default function TreeScreen() {
     void saveCloudFocalFamilyCode(trimmed);
   }, [isLocal, archiveLane, loadedCode]);
 
-  const applyViewFocal = useCallback(
-    (person: GraphPersonSummary) => {
-      const code = person.familyCode.trim();
+  const applyViewFocalByCode = useCallback(
+    (familyCode: string) => {
+      const code = familyCode.trim();
       if (!code) return;
       setLoadedCode(code);
       if (isLocal) void saveLocalTreeViewFamilyCode(archiveLane, code);
@@ -238,6 +243,20 @@ export default function TreeScreen() {
     },
     [archiveLane, isLocal],
   );
+
+  const applyViewFocal = useCallback(
+    (person: GraphPersonSummary) => {
+      applyViewFocalByCode(person.familyCode);
+    },
+    [applyViewFocalByCode],
+  );
+
+  useEffect(() => {
+    if (!isLocal) return;
+    void loadTreeTapHintDismissed().then((dismissed) => {
+      setShowTapHint(!dismissed);
+    });
+  }, [isLocal]);
 
   const onPersonPress = (person: GraphPersonSummary) => {
     applyViewFocal(person);
@@ -347,6 +366,22 @@ export default function TreeScreen() {
         <DemoArchiveBanner testID="tree-demo-banner" />
       )}
 
+      {isLocal && showTapHint && (
+        <View className="px-3 py-2 gap-2">
+          <InfoBanner icon="gesture-tap">{copy.tree.tapToCenterHint}</InfoBanner>
+          <AppText
+            variant="labelLarge"
+            className="text-primary"
+            onPress={() => {
+              void dismissTreeTapHint();
+              setShowTapHint(false);
+            }}
+          >
+            {copy.tree.tapHintDismiss}
+          </AppText>
+        </View>
+      )}
+
       <View style={styles.canvas}>
         {isLocal ? (
           <LocalFamilyTree
@@ -357,6 +392,10 @@ export default function TreeScreen() {
             layout={listLayout ? "list" : "graph"}
             onPersonPress={onPersonPress}
             onPersonLongPress={onPersonLongPress}
+            onRecenterOnFamilyCode={(code) => {
+              applyViewFocalByCode(code);
+              setListLayout(false);
+            }}
             zoomScale={zoom}
             onZoomChange={setZoom}
             pathHighlightPersonIds={

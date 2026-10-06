@@ -76,25 +76,39 @@ export function linkNewMemberToAnchors(
       return;
     }
     case "sibling": {
-      const anchorPersonId = anchors[0]!;
       const { peopleById, unionsAsChildFor } = loadKinshipDataset();
-      const parents = getParentsForPerson(
-        anchorPersonId,
-        unionsAsChildFor(anchorPersonId),
-        peopleById,
-      );
-      if (parents.length < 1) {
-        throw new Error("Record parents for this person before linking a sibling.");
+      let parentAId: string | null = null;
+      let parentBId: string | null = null;
+      for (const anchorPersonId of anchors) {
+        const parents = getParentsForPerson(
+          anchorPersonId,
+          unionsAsChildFor(anchorPersonId),
+          peopleById,
+        );
+        if (parents.length < 1) {
+          throw new Error("Record parents for each selected sibling before linking.");
+        }
+        const father = parents.find((p) => p.gender === "MALE");
+        const mother = parents.find((p) => p.gender === "FEMALE");
+        const aId = father?.id ?? parents[0]!.id;
+        const bId =
+          mother?.id ?? parents.find((p) => p.id !== aId)?.id ?? aId;
+        const key = [aId, bId].sort().join("|");
+        const expected = parentAId && parentBId
+          ? [parentAId, parentBId].sort().join("|")
+          : null;
+        if (expected && expected !== key) {
+          throw new Error(
+            "Selected siblings do not share the same parents. Pick siblings from one family.",
+          );
+        }
+        parentAId = aId;
+        parentBId = bId;
       }
-      const father = parents.find((p) => p.gender === "MALE");
-      const mother = parents.find((p) => p.gender === "FEMALE");
-      const parentAId = father?.id ?? parents[0]!.id;
-      const parentBId =
-        mother?.id ?? parents.find((p) => p.id !== parentAId)?.id ?? parentAId;
       setLocalParents({
         personId: newPersonId,
-        parentAId,
-        parentBId,
+        parentAId: parentAId!,
+        parentBId: parentBId!,
       });
       return;
     }
