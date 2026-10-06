@@ -5,6 +5,7 @@ import {
 } from "@/lib/db/localRepository";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import type { KinshipPerson, KinshipUnionRecord } from "@/lib/kinship/types";
+import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
 import {
   collectIncludedPersonIds,
   layoutMarriageCentricGraph,
@@ -57,8 +58,8 @@ export function buildLocalFamilyGraph(
   familyCode: string,
   options: BuildLocalGraphOptions = {},
 ): FamilyGraph | null {
-  const generationsUp = options.generationsUp ?? 3;
-  const generationsDown = options.generationsDown ?? 3;
+  let generationsUp = options.generationsUp ?? 3;
+  let generationsDown = options.generationsDown ?? 3;
   const siblingSteps = options.siblingSteps ?? 0;
 
   const member = getLocalMemberByFamilyCode(familyCode);
@@ -68,9 +69,20 @@ export function buildLocalFamilyGraph(
   const focal = peopleById.get(member.id);
   if (!focal) return null;
 
+  const layoutUnions = toLayoutUnions(allUnions);
+  if (options.ensurePersonIds?.length) {
+    const pathGens = generationsToIncludeKinshipPath(
+      focal.id,
+      options.ensurePersonIds,
+      layoutUnions,
+    );
+    generationsUp = Math.max(generationsUp, pathGens.generationsUp);
+    generationsDown = Math.max(generationsDown, pathGens.generationsDown);
+  }
+
   const included = collectIncludedPersonIds(
     focal.id,
-    toLayoutUnions(allUnions),
+    layoutUnions,
     generationsUp,
     generationsDown,
     siblingSteps,

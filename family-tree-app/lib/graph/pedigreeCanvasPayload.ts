@@ -274,20 +274,27 @@ export function buildPedigreeCanvasPayload(
 
   const marriageBand = marriageBands[0] ?? null;
 
-  const framingNodeIds = new Set<string>([graph.focalPersonId]);
-  for (const id of graph.focalPartnerIds ?? []) framingNodeIds.add(id);
-  for (const id of pathIds) framingNodeIds.add(id);
-  for (const id of highlightPersonIds ?? []) framingNodeIds.add(id);
-  for (const e of graph.edges) {
-    if (e.type === "child" && e.source === graph.focalPersonId) {
-      framingNodeIds.add(e.target);
+  const framingNodeIds = new Set<string>();
+  if (pathIds.length >= 2) {
+    framingNodeIds.add(graph.focalPersonId);
+    for (const id of pathIds) framingNodeIds.add(id);
+    for (const id of highlightPersonIds ?? []) framingNodeIds.add(id);
+  } else {
+    framingNodeIds.add(graph.focalPersonId);
+    for (const id of graph.focalPartnerIds ?? []) framingNodeIds.add(id);
+    for (const id of pathIds) framingNodeIds.add(id);
+    for (const id of highlightPersonIds ?? []) framingNodeIds.add(id);
+    for (const e of graph.edges) {
+      if (e.type === "child" && e.source === graph.focalPersonId) {
+        framingNodeIds.add(e.target);
+      }
     }
-  }
-  const focalNode = nodes.find((n) => n.id === graph.focalPersonId);
-  if (focalNode) {
-    for (const n of nodes) {
-      if (n.y < focalNode.y - 1) {
-        framingNodeIds.add(n.id);
+    const focalNode = nodes.find((n) => n.id === graph.focalPersonId);
+    if (focalNode) {
+      for (const n of nodes) {
+        if (n.y < focalNode.y - 1) {
+          framingNodeIds.add(n.id);
+        }
       }
     }
   }
