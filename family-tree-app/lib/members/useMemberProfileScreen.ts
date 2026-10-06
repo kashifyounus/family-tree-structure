@@ -33,6 +33,7 @@ import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
 import {
   editFieldsFromMember,
   emptyMemberProfileEditFields,
+  placesFromEditFields,
   type MemberProfileEditFields,
 } from "@/lib/members/memberProfileEditForm";
 import { recordRecentVisit } from "@/lib/recentPeople";
@@ -133,7 +134,6 @@ export function useMemberProfileScreen({
     if (!member) return;
     const errors: FieldErrors = {
       firstName: required(editFields.firstName, "First name"),
-      lastName: required(editFields.lastName, "Last name"),
     };
     const filtered = Object.fromEntries(
       Object.entries(errors).filter(([, message]) => message),
@@ -145,16 +145,17 @@ export function useMemberProfileScreen({
     }
     setFieldErrors({});
     try {
+      const places = placesFromEditFields(editFields);
       updatePerson(mode, {
         personId: member.id,
         firstName: editFields.firstName,
-        lastName: editFields.lastName,
+        lastName: editFields.lastName.trim(),
         nickname: editFields.nickname.trim() || undefined,
         gender: editFields.gender,
-        currentCity: editFields.city || undefined,
+        currentCity: places.currentCity,
         birthDate: editFields.birthDate || undefined,
-        birthPlace: editFields.birthPlace || undefined,
-        homeTown: editFields.homeTown || undefined,
+        birthPlace: places.birthPlace,
+        homeTown: places.homeTown,
         occupation: editFields.occupation || undefined,
         bio: editFields.bio || undefined,
         deathDate: editFields.isLiving ? null : editFields.deathDate || null,

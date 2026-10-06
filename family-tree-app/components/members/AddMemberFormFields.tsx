@@ -8,21 +8,18 @@ import { GenderField } from "@/components/ui/GenderField";
 import type { Gender } from "@/lib/data/types";
 import type { FieldErrors } from "@/lib/forms/fieldErrors";
 import {
-  formatPakistanPlace,
-  parsePakistanPlace,
-  type PakistanProvince,
-} from "../../../shared/geo/pakistanPlaces";
+  birthPlaceFromPakistanFields,
+  livingCityFromPakistanFields,
+  type PakistanPlaceFields,
+} from "@/lib/forms/pakistanPlaceForm";
+import type { PakistanProvince } from "../../../shared/geo/pakistanPlaces";
 
 export type AddMemberFormValue = {
   firstName: string;
   lastName: string;
   gender: Gender;
   birthDate: string;
-  birthProvince: PakistanProvince | null;
-  birthCity: string;
-  livingProvince: PakistanProvince | null;
-  livingCity: string;
-};
+} & PakistanPlaceFields;
 
 export const emptyAddMemberFormValue = (): AddMemberFormValue => ({
   firstName: "",
@@ -99,25 +96,9 @@ export function AddMemberFormFields({
 }
 
 export function birthPlaceFromForm(value: AddMemberFormValue): string | undefined {
-  if (!value.birthCity.trim() || !value.birthProvince) return undefined;
-  return formatPakistanPlace(value.birthCity, value.birthProvince);
+  return birthPlaceFromPakistanFields(value);
 }
 
 export function livingCityFromForm(value: AddMemberFormValue): string | undefined {
-  if (!value.livingCity.trim() || !value.livingProvince) return undefined;
-  return formatPakistanPlace(value.livingCity, value.livingProvince);
-}
-
-export function hydrateAddMemberPlaces(
-  birthPlace?: string | null,
-  currentCity?: string | null,
-): Pick<AddMemberFormValue, "birthProvince" | "birthCity" | "livingProvince" | "livingCity"> {
-  const birth = parsePakistanPlace(birthPlace);
-  const living = parsePakistanPlace(currentCity);
-  return {
-    birthProvince: birth.province,
-    birthCity: birth.city,
-    livingProvince: living.province,
-    livingCity: living.city,
-  };
+  return livingCityFromPakistanFields(value);
 }

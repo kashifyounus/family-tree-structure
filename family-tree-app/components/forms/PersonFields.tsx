@@ -21,6 +21,7 @@ type PersonFieldsProps = {
   firstNameTestID?: string;
   lastNameTestID?: string;
   showDeathFields?: boolean;
+  hideBirthPlaceField?: boolean;
 };
 
 export function PersonFields({
@@ -30,6 +31,7 @@ export function PersonFields({
   firstNameTestID,
   lastNameTestID,
   showDeathFields = true,
+  hideBirthPlaceField = false,
 }: PersonFieldsProps) {
   return (
     <View className="gap-3 w-full">
@@ -80,11 +82,13 @@ export function PersonFields({
         value={value.birthDate}
         onChange={(d) => onChange({ birthDate: d })}
       />
-      <FormTextInput
-        label="Birth location / city"
-        value={value.birthPlace}
-        onChangeText={(t) => onChange({ birthPlace: t })}
-      />
+      {!hideBirthPlaceField ? (
+        <FormTextInput
+          label="Birth location / city"
+          value={value.birthPlace}
+          onChangeText={(t) => onChange({ birthPlace: t })}
+        />
+      ) : null}
       {showDeathFields && !value.isLiving ? (
         <>
           <DatePickerField
