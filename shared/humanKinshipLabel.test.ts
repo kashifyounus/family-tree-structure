@@ -88,13 +88,38 @@ describe("humanKinshipLabelFromSteps", () => {
     ).toBe("Brother-in-law");
   });
 
-  it("returns null for distant or asymmetric paths", () => {
+  it("labels cousins once removed and great-grandparents", () => {
     expect(
       humanKinshipLabelFromSteps([
         { relation: "child", toGender: "MALE" },
         { relation: "child", toGender: "MALE" },
         { relation: "parent", toGender: "MALE" },
         { relation: "parent", toGender: "MALE" },
+        { relation: "parent", toGender: "MALE" },
+      ]),
+    ).toBe("Paternal First cousin once removed");
+    expect(
+      humanKinshipLabelFromSteps([
+        { relation: "child", toGender: "FEMALE" },
+        { relation: "child", toGender: "FEMALE" },
+        { relation: "child", toGender: "FEMALE" },
+      ]),
+    ).toBe("Great-grandmother");
+    expect(
+      humanKinshipLabelFromSteps([
+        { relation: "child", toGender: "MALE" },
+        { relation: "child", toGender: "MALE" },
+        { relation: "child", toGender: "MALE" },
+        { relation: "parent", toGender: "MALE" },
+      ]),
+    ).toBe("Paternal Great-uncle");
+  });
+
+  it("returns null for paths with spouse hops in the middle", () => {
+    expect(
+      humanKinshipLabelFromSteps([
+        { relation: "child", toGender: "MALE" },
+        { relation: "spouse", toGender: "FEMALE" },
         { relation: "parent", toGender: "MALE" },
       ]),
     ).toBeNull();
