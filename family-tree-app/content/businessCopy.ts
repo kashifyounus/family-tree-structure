@@ -230,6 +230,7 @@ export const copy = {
     sheetProfile: "Open profile",
     sheetCenter: "Center tree here",
     tapToCenterHint: "Tap a person to show their family tree. Press and hold for profile and actions.",
+    tapHintDismiss: "Got it",
     loadParents: "Load parents",
     loadChildren: "Load children",
     loadSiblings: "Load siblings",
@@ -367,6 +368,7 @@ export const copy = {
     findRelationRun: "Show relation",
     findRelationResult: "Result",
     findRelationOpenTree: "View path on tree",
+    findRelationTreeFocalHint: "Choose whose family tree to center on, then open the tree.",
     findRelationPathsTruncated:
       "Large family — only the first 32 paths are shown. Choose closer relatives to see more.",
     findRelationPathMeta: (paths: number, people: number) =>

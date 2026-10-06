@@ -1,0 +1,32 @@
+appId: com.mughals.familytree
+tags:
+  - smoke
+  - demo
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    notVisible:
+      id: genealogy-boot-screen
+    timeout: 180000
+- extendedWaitUntil:
+    visible:
+      id: onboarding-screen
+    timeout: 300000
+- scrollUntilVisible:
+    element:
+      id: onboarding-get-started
+- tapOn:
+    id: onboarding-kay-showcase
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 120000
+- tapOn:
+    id: home-tree
+- extendedWaitUntil:
+    visible:
+      id: local-tree-graph-webview
+    timeout: 30000
+- assertVisible:
+    text: "Got it"

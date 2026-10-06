@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 
 import {
   ExistingMemberPicker,
@@ -27,6 +27,11 @@ function memberName(members: BriefMember[], id: string): string {
 
 export default function FindRelationScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    personA?: string;
+    personB?: string;
+    compareA?: string;
+  }>();
   const { mode } = useStorage();
   const members: BriefMember[] = useMemo(
     () => (mode === "local" ? peopleForPicker(mode) : []),
@@ -39,6 +44,19 @@ export default function FindRelationScreen() {
     typeof runMutualRelationshipProcess
   > | null>(null);
   const [pathIndex, setPathIndex] = useState(0);
+  const [treeFocalSide, setTreeFocalSide] = useState<"a" | "b">("a");
+
+  useEffect(() => {
+    const a =
+      typeof params.personA === "string"
+        ? params.personA
+        : typeof params.compareA === "string"
+          ? params.compareA
+          : "";
+    const b = typeof params.personB === "string" ? params.personB : "";
+    if (a.trim()) setPersonA(a.trim());
+    if (b.trim()) setPersonB(b.trim());
+  }, [params.personA, params.personB, params.compareA]);
 
   const runSearch = () => {
     if (!personA || !personB) return;
@@ -70,7 +88,8 @@ export default function FindRelationScreen() {
   const openOnTree = () => {
     if (!personA || !personB || !result?.ok) return;
     const pathNodeIds = [personA, ...activePath.map((s) => s.toId)];
-    const focalMember = getLocalMemberById(personA);
+    const focalPersonId = treeFocalSide === "a" ? personA : personB;
+    const focalMember = getLocalMemberById(focalPersonId);
     router.push({
       pathname: "/(tabs)/tree",
       params: {
@@ -191,6 +210,21 @@ export default function FindRelationScreen() {
                       result.paths.length,
                       result.nodeIdsOnPaths.length,
                     )}
+                  </AppText>
+                  <View className="flex-row flex-wrap gap-2 mb-3">
+                    <OutlineChip
+                      label={nameA}
+                      selected={treeFocalSide === "a"}
+                      onPress={() => setTreeFocalSide("a")}
+                    />
+                    <OutlineChip
+                      label={nameB}
+                      selected={treeFocalSide === "b"}
+                      onPress={() => setTreeFocalSide("b")}
+                    />
+                  </View>
+                  <AppText variant="labelSmall" className="text-muted-foreground mb-2">
+                    {copy.tools.findRelationTreeFocalHint}
                   </AppText>
                   <Button variant="outline" onPress={openOnTree}>
                     <ButtonText>{copy.tools.findRelationOpenTree}</ButtonText>

@@ -5,8 +5,8 @@ import {
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import * as Sharing from "expo-sharing";
-import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import { Alert, StyleSheet } from "react-native";
 
 import { FormTextInput } from "@/components/ui/FormTextInput";
@@ -16,31 +16,22 @@ import { Screen } from "@/components/ui/Screen";
 import { copy } from "@/content/businessCopy";
 import { useAppFeedback } from "@/context/ErrorContext";
 import { useStorage } from "@/context/StorageContext";
-import { listLocalMembers } from "@/lib/db/localRepository";
 import {
   exportLocalDatabaseJson,
   importLocalDatabaseJson,
 } from "@/lib/db/localRepository.ext";
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
-import { computeRelationSummary } from "@/lib/kinship/relationshipPath";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 
 export default function ToolsScreen() {
   const theme = useAppTheme();
+  const router = useRouter();
   const { mode, archiveLane, bumpDataRevision, localMemberCount } = useStorage();
   const liveBackupEnabled = mode === "local" && archiveLane === "live";
   const { showError, showSuccess } = useAppFeedback();
   const { compareA } = useLocalSearchParams<{ compareA?: string }>();
   const [importText, setImportText] = useState("");
-  const [personA, setPersonA] = useState("");
-  const [personB, setPersonB] = useState("");
-
-  useEffect(() => {
-    if (compareA && typeof compareA === "string") {
-      setPersonA(compareA);
-    }
-  }, [compareA]);
   const [driveBusy, setDriveBusy] = useState(false);
 
   const exportDb = () => {
@@ -130,30 +121,11 @@ export default function ToolsScreen() {
     ]);
   };
 
-  const relationHint = () => {
-    const members = listLocalMembers();
-    const a = members.find(
-      (m) =>
-        m.familyCode === personA.trim() ||
-        `${m.firstName} ${m.lastName}`.toLowerCase().includes(personA.toLowerCase()),
-    );
-    const b = members.find(
-      (m) =>
-        m.familyCode === personB.trim() ||
-        `${m.firstName} ${m.lastName}`.toLowerCase().includes(personB.toLowerCase()),
-    );
-    if (!a || !b) {
-      Alert.alert(copy.tools.compareTitle, copy.tools.compareNotFound);
-      return;
-    }
-    if (a.id === b.id) {
-      Alert.alert(copy.tools.compareTitle, copy.tools.compareSame);
-      return;
-    }
-    Alert.alert(
-      copy.tools.compareTitle,
-      copy.tools.compareResult(computeRelationSummary(a.id, b.id)),
-    );
+  const openFindRelation = () => {
+    router.push({
+      pathname: "/find-relation",
+      params: compareA ? { personA: String(compareA) } : {},
+    });
   };
 
   return (
@@ -215,14 +187,12 @@ export default function ToolsScreen() {
 
           <AppCard style={styles.card}>
             <AppCardContent style={styles.cardInner}>
-              <AppText variant="titleMedium">{copy.tools.compareTitle}</AppText>
+              <AppText variant="titleMedium">{copy.tools.findRelationTitle}</AppText>
               <AppText variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                {copy.tools.compareHint}
+                {copy.tools.findRelationIntro}
               </AppText>
-              <FormTextInput label="Person A" value={personA} onChangeText={setPersonA} />
-              <FormTextInput label="Person B" value={personB} onChangeText={setPersonB} />
-              <Button variant="outline" onPress={relationHint}>
-                <ButtonText>{copy.tools.compareButton}</ButtonText>
+              <Button variant="outline" onPress={openFindRelation}>
+                <ButtonText>{copy.tools.findRelationRun}</ButtonText>
               </Button>
             </AppCardContent>
           </AppCard>

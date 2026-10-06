@@ -20,6 +20,7 @@ import { listMembers } from "@/lib/data/memberRepository";
 import type { MemberRecord } from "@/lib/data/types";
 import { memberInitials, memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
 import { loadRecentPeople, type RecentPerson } from "@/lib/recentPeople";
+import { resolveLocalTreeViewFamilyCode } from "@/lib/tree/focalFamilyCode";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -234,7 +235,25 @@ export default function HomeScreen() {
 
       <View className="h-px w-px overflow-hidden opacity-0">
         <Pressable testID="home-directory" onPress={() => router.push("/(tabs)/members")} />
-        <Pressable testID="home-tree" onPress={() => router.push("/(tabs)/tree")} />
+        <Pressable
+          testID="home-tree"
+          onPress={() => {
+            void (async () => {
+              if (mode === "local") {
+                const code = await resolveLocalTreeViewFamilyCode(
+                  archiveLane,
+                  focalFamilyCode,
+                );
+                router.push({
+                  pathname: "/(tabs)/tree",
+                  params: { familyCode: code },
+                });
+                return;
+              }
+              router.push("/(tabs)/tree");
+            })();
+          }}
+        />
         <Pressable testID="home-insights" onPress={() => router.push("/(tabs)/reports")} />
       </View>
     </Screen>
