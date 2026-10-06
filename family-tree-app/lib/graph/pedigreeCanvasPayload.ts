@@ -50,7 +50,29 @@ export type PedigreeCanvasNode = {
   hasUnexpandedChildren: boolean;
   nickname: string | null;
   tier: "big" | "small";
+  /** Mother’s-side wing (spouse line) — distinct card accent */
+  maternalWing?: boolean;
 };
+
+function maternalWingPersonIds(graph: FamilyGraph): Set<string> {
+  const ids = new Set<string>();
+  for (const partnerId of graph.focalPartnerIds ?? []) {
+    ids.add(partnerId);
+    for (const edge of graph.edges) {
+      if (edge.type === "parent" && edge.target === partnerId) {
+        ids.add(edge.source);
+      }
+      if (
+        edge.type === "sibling" &&
+        (edge.source === partnerId || edge.target === partnerId)
+      ) {
+        ids.add(edge.source);
+        ids.add(edge.target);
+      }
+    }
+  }
+  return ids;
+}
 
 export type PedigreeMarriageBand = {
   x1: number;
@@ -170,6 +192,7 @@ export function buildPedigreeCanvasPayload(
   options: PedigreeCanvasPayloadOptions = {},
 ): PedigreeCanvasPayload {
   const partnerIds = new Set(graph.focalPartnerIds ?? []);
+  const maternalIds = maternalWingPersonIds(graph);
   const nodes: PedigreeCanvasNode[] = graph.nodes.map((n) => {
     const p = n.data.person;
     const isPrivate = p.treeDisplayIsPrivate === true;
@@ -227,6 +250,7 @@ export function buildPedigreeCanvasPayload(
       isPrivate,
       hasUnexpandedParents: Boolean(n.data.hasUnexpandedParents),
       hasUnexpandedChildren: Boolean(n.data.hasUnexpandedChildren),
+      maternalWing: maternalIds.has(n.id) && n.id !== graph.focalPersonId,
     };
   });
 

@@ -4,8 +4,9 @@ import {
 } from "expo-file-system/legacy";
 import { Stack, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, View } from "react-native";
+import type { KinshipLabelLocale } from "../../shared/humanKinshipLabel";
 
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
 import { FormTextInput } from "@/components/ui/FormTextInput";
@@ -19,6 +20,12 @@ import {
 } from "@/lib/db/localRepository.ext";
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
 import { AppText } from "@/components/ui/AppText";
+import { OutlineChip } from "@/components/ui/OutlineChip";
+import {
+  getKinshipLabelLocale,
+  loadKinshipLabelLocale,
+  saveKinshipLabelLocale,
+} from "@/lib/settings/kinshipLocale";
 
 export default function ArchiveSettingsScreen() {
   const router = useRouter();
@@ -26,6 +33,19 @@ export default function ArchiveSettingsScreen() {
   const { showError, showSuccess } = useAppFeedback();
   const [importText, setImportText] = useState("");
   const [driveBusy, setDriveBusy] = useState(false);
+  const [kinshipLocale, setKinshipLocale] = useState<KinshipLabelLocale>(
+    getKinshipLabelLocale(),
+  );
+
+  useEffect(() => {
+    void loadKinshipLabelLocale().then(setKinshipLocale);
+  }, []);
+
+  const setKinshipStyle = useCallback(async (locale: KinshipLabelLocale) => {
+    await saveKinshipLabelLocale(locale);
+    setKinshipLocale(locale);
+    showSuccess(copy.profile.kinshipLabelStyleTitle);
+  }, [showSuccess]);
 
   const exportDb = () => {
     Alert.alert(copy.tools.exportFile, copy.tree.exportPrivacyHint, [
@@ -107,6 +127,24 @@ export default function ArchiveSettingsScreen() {
           Export, backup, and restore your private archive. Advanced utilities remain on the Tools
           screen.
         </AppText>
+
+        <View className="rounded-xl border border-border bg-card p-4 gap-3 mb-4">
+          <AppText variant="titleSmall" className="font-semibold">
+            {copy.profile.kinshipLabelStyleTitle}
+          </AppText>
+          <View className="flex-row flex-wrap gap-2">
+            <OutlineChip
+              label={copy.profile.kinshipLabelSouthAsian}
+              selected={kinshipLocale === "en-PK"}
+              onPress={() => void setKinshipStyle("en-PK")}
+            />
+            <OutlineChip
+              label={copy.profile.kinshipLabelWestern}
+              selected={kinshipLocale === "en"}
+              onPress={() => void setKinshipStyle("en")}
+            />
+          </View>
+        </View>
 
         {mode === "local" ? (
           <View className="gap-4">

@@ -17,6 +17,7 @@ export type MemberRecord = {
   homeTown: string | null;
   currentCity: string | null;
   occupation: string | null;
+  biradari: string | null;
   bio: string | null;
   fatherName?: string | null;
   motherName?: string | null;
@@ -31,6 +32,7 @@ export type CreateMemberInput = {
   urduLastName?: string;
   currentCity?: string;
   occupation?: string;
+  biradari?: string;
   bio?: string;
   birthDate?: string;
   deathDate?: string;

@@ -45,6 +45,8 @@ export type MarriageLayoutOptions = {
    * Wife-side parents stay off-tree until the user loads more generations.
    */
   phoneSingleParentSide?: boolean;
+  /** When true (default), only the primary union appears on the marriage row (B1). */
+  onlyPrimarySpouseOnRow?: boolean;
 };
 
 export type MarriageLayoutResult = {
@@ -353,11 +355,16 @@ export function layoutMarriageCentricGraph(
     }
   }
 
+  const rowSpouseEntries =
+    options?.onlyPrimarySpouseOnRow === false
+      ? spouseEntries
+      : spouseEntries.slice(0, 1);
+
   let husbandId = focalId;
   let wifeId: string | null = null;
   let rightMost = originX + coupleStep;
 
-  const primaryEntry = spouseEntries[0];
+  const primaryEntry = rowSpouseEntries[0];
   if (primaryEntry) {
     const partners = resolveMarriagePartners(
       focalId,
@@ -377,19 +384,21 @@ export function layoutMarriageCentricGraph(
     });
     rightMost = originX + coupleStep;
 
-    let extraX = originX + coupleStep;
-    for (let i = 1; i < spouseEntries.length; i++) {
-      const entry = spouseEntries[i];
-      extraX += coupleStep;
-      ensurePosition(positions, entry.spouseId, extraX, originY);
-      rightMost = Math.max(rightMost, extraX);
-      edges.push({
-        id: `spouse-${focalId}-${entry.spouseId}`,
-        source: focalId,
-        target: entry.spouseId,
-        type: "spouse",
-        label: entry.union.id,
-      });
+    if (options?.onlyPrimarySpouseOnRow === false) {
+      let extraX = originX + coupleStep;
+      for (let i = 1; i < rowSpouseEntries.length; i++) {
+        const entry = rowSpouseEntries[i];
+        extraX += coupleStep;
+        ensurePosition(positions, entry.spouseId, extraX, originY);
+        rightMost = Math.max(rightMost, extraX);
+        edges.push({
+          id: `spouse-${focalId}-${entry.spouseId}`,
+          source: focalId,
+          target: entry.spouseId,
+          type: "spouse",
+          label: entry.union.id,
+        });
+      }
     }
   } else {
     ensurePosition(positions, focalId, originX, originY);
@@ -489,7 +498,7 @@ export function layoutMarriageCentricGraph(
     placeParentsAbove(focalId, originX, "center");
   }
 
-  spouseEntries.forEach((entry, unionIndex) => {
+  rowSpouseEntries.forEach((entry, unionIndex) => {
     const focalX = positions.get(focalId)?.x ?? originX;
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
     const leftX = Math.min(focalX, spouseX);
@@ -535,9 +544,9 @@ export function layoutMarriageCentricGraph(
   return {
     positions,
     focalPersonId: focalId,
-    focalPartnerIds: spouseEntries.map((e) => e.spouseId),
-    focalUnionId: spouseEntries[0]?.union.id ?? null,
-    focalUnionIds: spouseEntries.map((e) => e.union.id),
+    focalPartnerIds: rowSpouseEntries.map((e) => e.spouseId),
+    focalUnionId: rowSpouseEntries[0]?.union.id ?? null,
+    focalUnionIds: rowSpouseEntries.map((e) => e.union.id),
     edges,
   };
 }
