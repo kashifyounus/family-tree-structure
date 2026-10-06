@@ -20,7 +20,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8, fitMode = 'pedigree';
+let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8, fitMode = 'pedigree', cousinOverlay = null, marriageLabelEn = 'Married', marriageLabelUr = '';
 let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
@@ -101,29 +101,36 @@ function drawMarriageBand(band){
   const x1 = band.x1;
   const x2 = band.x2;
   if(x2 <= x1 + 8) return;
-  const label = band.label || '';
-  if(!label) return;
   const cx = (x1 + x2) / 2;
-  const cream = theme.canvas || '#F6F1E7';
-  let display = label.length > 28 ? label.slice(0, 27) + '…' : label;
-  ctx.font = '500 11px system-ui';
+  ctx.save();
+  ctx.strokeStyle = '#B83C3C';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([10, 6]);
+  ctx.beginPath();
+  ctx.moveTo(x1, midY);
+  ctx.lineTo(x2, midY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#B83C3C';
+  ctx.font = '12px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const tw = ctx.measureText(display).width;
+  ctx.fillText('♥', cx, midY - 10);
+  const cream = theme.canvas || '#F6F1E7';
+  const line1 = marriageLabelEn || 'Married';
+  const line2 = marriageLabelUr || '';
+  ctx.font = '500 10px system-ui';
+  const tw = Math.max(ctx.measureText(line1).width, line2 ? ctx.measureText(line2).width : 0);
   const padH = 8;
-  const pillH = 16;
+  const pillH = line2 ? 28 : 16;
   const pillW = tw + padH * 2;
-  roundRect(cx - pillW / 2, midY - pillH / 2, pillW, pillH, 4);
+  roundRect(cx - pillW / 2, midY + 4, pillW, pillH, 4);
   ctx.fillStyle = cream;
   ctx.fill();
-  ctx.strokeStyle = cream;
-  ctx.lineWidth = 5;
-  ctx.lineJoin = 'round';
-  ctx.strokeText(display, cx, midY);
-  ctx.lineWidth = 3;
-  ctx.strokeText(display, cx, midY);
   ctx.fillStyle = '#6b7280';
-  ctx.fillText(display, cx, midY);
+  ctx.fillText(line1, cx, midY + (line2 ? 12 : 14));
+  if(line2) ctx.fillText(line2, cx, midY + 24);
+  ctx.restore();
 }
 
 function drawMarriageBands(){
@@ -135,11 +142,14 @@ function drawSegments(){
   for(const s of segments){
     ctx.strokeStyle = s.color || theme.connector;
     ctx.lineWidth = s.strokeWidth || 4;
+    if(s.dashed) ctx.setLineDash([10, 6]);
+    else ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(s.x1,s.y1);
     ctx.lineTo(s.x2,s.y2);
     ctx.stroke();
   }
+  ctx.setLineDash([]);
   for(const s of highlightSegments){
     ctx.strokeStyle = s.color || '#7828A0';
     ctx.lineWidth = s.strokeWidth || 6;
@@ -183,26 +193,41 @@ function drawCard(n){
   ctx.save();
   roundRect(x,y,w,h,12);
   ctx.clip();
-  ctx.fillStyle = genderAccent(n.gender, n.maternalWing);
+  const barColor = n.bandColor || genderAccent(n.gender, n.maternalWing);
+  ctx.fillStyle = barColor;
   ctx.fillRect(x, y, w, barH);
   ctx.restore();
 
   const cx = x + w/2;
   const maxW = w - pad * 2;
+  const roleEn = (n.roleLineEn || '').trim();
+  const roleUr = (n.roleLineUr || '').trim();
   const rawLine2 = (n.nameLine2 || '').trim();
-  const line2 = rawLine2 ? wrapName(rawLine2, maxW) : '';
-  const line1 = line2
+  const nameUr = rawLine2 ? wrapName(rawLine2, maxW) : '';
+  const nameEn = nameUr
     ? wrapName((n.nameLine1 || '').trim(), maxW)
     : wrapName(n.label || (n.nameLine1 || '').trim(), maxW);
-  const textTop = y + barH + pad;
-  ctx.fillStyle = '#111827';
-  ctx.font = '700 ' + namePx + 'px system-ui';
+  let textTop = y + barH + pad;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(line1, cx, textTop);
+  if(roleEn){
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '600 9px system-ui';
+    ctx.fillText(wrapName(roleEn, maxW), cx, textTop);
+    textTop += 11;
+  }
+  if(roleUr){
+    ctx.font = '500 9px system-ui';
+    ctx.fillText(wrapName(roleUr, maxW), cx, textTop);
+    textTop += 11;
+  }
+  ctx.fillStyle = '#111827';
+  ctx.font = '700 ' + namePx + 'px system-ui';
+  ctx.fillText(nameEn, cx, textTop);
   let yearsY = textTop + nameLH + yearGap;
-  if(line2){
-    ctx.fillText(line2, cx, textTop + nameLH);
+  if(nameUr){
+    ctx.font = '600 ' + (namePx - 1) + 'px system-ui';
+    ctx.fillText(nameUr, cx, textTop + nameLH);
     yearsY = textTop + nameLH * 2 + yearGap;
   }
   if(n.nickname){
@@ -245,10 +270,15 @@ function drawCard(n){
 
   const hi = highlightPersonIds && highlightPersonIds.indexOf(n.id) >= 0;
   if(n.isFocal || hi){
-    ctx.strokeStyle = hi ? '#7828A0' : theme.primary;
-    ctx.lineWidth = hi ? 3 : 3;
+    ctx.strokeStyle = hi ? '#7828A0' : (n.isSpouseCard ? '#B83C3C' : theme.primary);
+    ctx.lineWidth = n.isFocal ? 3 : 2;
     roundRect(x-2,y-2,w+4,h+4,14);
     ctx.stroke();
+  }
+  if(n.isFocal){
+    ctx.fillStyle = theme.primary;
+    ctx.font = '9px system-ui';
+    ctx.fillText('★', x + w - 10, y + h - 8);
   }
   ctx.restore();
 }
@@ -300,6 +330,9 @@ function onGraph(g){
   framingNodeIds = g.framingNodeIds || null;
   chevronOffset = g.chevronOffset || 8;
   fitMode = g.fitMode === 'timeline' ? 'timeline' : 'pedigree';
+  cousinOverlay = g.cousinOverlay || null;
+  marriageLabelEn = g.marriageLabelEn || 'Married';
+  marriageLabelUr = g.marriageLabelUr || '';
   if(g.theme) theme = Object.assign(theme, g.theme);
   fitView();
   resize();

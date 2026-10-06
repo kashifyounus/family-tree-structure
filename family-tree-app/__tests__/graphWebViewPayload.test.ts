@@ -63,10 +63,16 @@ describe("graph webview payload", () => {
     expect(payload.nodes[0]?.familyCode).toBe("FAM-10001");
     expect(payload.nodes[0]?.x).toBe(120);
     expect(payload.nodes[0]?.w).toBe(PEDIGREE_CARD_BIG_W);
-    expect(payload.nodes[0]?.h).toBe(PEDIGREE_CARD_BIG_H);
+    expect(payload.nodes[0]?.h).toBeGreaterThanOrEqual(PEDIGREE_CARD_BIG_H);
+    expect(payload.nodes[0]?.bandColor).toBeTruthy();
+    expect(payload.nodes[0]?.visualBand).toBe("focal");
+    expect(payload.uiVariant).toBe("cousin-network");
     expect(payload.nodes[0]?.years).toContain("1955");
     expect(payload.nodes[1]?.years).toContain("1960");
     expect(payload.segments.length).toBeGreaterThan(0);
+    expect(
+      payload.segments.some((s) => s.kind === "spouse" && s.dashed === true),
+    ).toBe(true);
     expect(payload.theme.canvas).toBe("#F6F1E7");
     expect(payload.theme.primary).toBe("#1B4332");
   });

@@ -22,6 +22,8 @@ import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
 import { TreeGraphFloatingBar } from "@/components/tree/TreeGraphFloatingBar";
+import { TreeLegendBar } from "@/components/tree/TreeLegendBar";
+import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
 import {
   DEFAULT_TREE_EXPANSION,
   expandTreeToMaximum,
@@ -146,6 +148,16 @@ export function LocalFamilyTree({
     () => buildLocalFamilyGraph(familyCode.trim(), graphOptions),
     [familyCode, graphOptions, dataRevision],
   );
+
+  const showCousinLegend = useMemo(() => {
+    if (!focal || !graph?.focalPartnerIds?.[0]) return false;
+    const rel = computeRelationFinderResult(
+      focal.id,
+      graph.focalPartnerIds[0],
+    );
+    const label = rel.summaries[0] ?? "";
+    return rel.ok && /cousin/i.test(label);
+  }, [focal, graph?.focalPartnerIds]);
 
   const focalMetaLine = useMemo(() => {
     if (!focal) return "";
@@ -318,6 +330,8 @@ export function LocalFamilyTree({
         </ScrollView>
       )}
       {view === "graph" && immersive ? (
+        <>
+        <TreeLegendBar showCousinLink={showCousinLegend} />
         <TreeGraphFloatingBar
           canLoadMore={loadMore.canExpandTree}
           onLoadMore={onExpandTree}
@@ -347,6 +361,7 @@ export function LocalFamilyTree({
             }))
           }
         />
+        </>
       ) : null}
       {!immersive && (
         <Button variant="ghost" onPress={resetExpansion}>
