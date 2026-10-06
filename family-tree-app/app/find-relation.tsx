@@ -13,11 +13,17 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { copy } from "@/content/businessCopy";
 import { useStorage } from "@/context/StorageContext";
+import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { peopleForPicker } from "@/lib/data/personService";
 import {
   computeRelationFinderResult,
   type RelationFinderResult,
 } from "@/lib/kinship/relationPaths";
+import { runMutualRelationshipProcess } from "@/lib/kinship/mutualRelationshipProcess";
+
+function memberName(members: BriefMember[], id: string): string {
+  return members.find((m) => m.id === id)?.name ?? "Member";
+}
 
 export default function FindRelationScreen() {
   const router = useRouter();
@@ -29,6 +35,9 @@ export default function FindRelationScreen() {
   const [personA, setPersonA] = useState("");
   const [personB, setPersonB] = useState("");
   const [result, setResult] = useState<RelationFinderResult | null>(null);
+  const [mutual, setMutual] = useState<ReturnType<
+    typeof runMutualRelationshipProcess
+  > | null>(null);
   const [pathIndex, setPathIndex] = useState(0);
 
   const runSearch = () => {
@@ -43,11 +52,15 @@ export default function FindRelationScreen() {
         nodeIdsOnPaths: [personA],
         edgeKeysOnPaths: [],
       });
+      setMutual(
+        runMutualRelationshipProcess(personA, personB),
+      );
       setPathIndex(0);
       return;
     }
     const next = computeRelationFinderResult(personA, personB);
     setResult(next);
+    setMutual(runMutualRelationshipProcess(personA, personB));
     setPathIndex(0);
   };
 
@@ -56,19 +69,21 @@ export default function FindRelationScreen() {
 
   const openOnTree = () => {
     if (!personA || !personB || !result?.ok) return;
-    const pathNodeIds = [
-      personA,
-      ...activePath.map((s) => s.toId),
-    ];
+    const pathNodeIds = [personA, ...activePath.map((s) => s.toId)];
+    const focalMember = getLocalMemberById(personA);
     router.push({
       pathname: "/(tabs)/tree",
       params: {
+        familyCode: focalMember?.familyCode ?? "",
         highlightA: personA,
         highlightB: personB,
         pathNodes: pathNodeIds.join(","),
       },
     });
   };
+
+  const nameA = memberName(members, personA);
+  const nameB = memberName(members, personB);
 
   return (
     <>
@@ -107,6 +122,45 @@ export default function FindRelationScreen() {
           <Button onPress={runSearch} disabled={!personA || !personB}>
             <ButtonText>{copy.tools.findRelationRun}</ButtonText>
           </Button>
+
+          {mutual?.ok && personA && personB && personA !== personB ? (
+            <SectionCard title={copy.tools.findRelationMutualTitle}>
+              <AppText variant="bodyMedium" className="text-foreground mb-2">
+                {copy.tools.findRelationMutualLine(
+                  nameA,
+                  mutual.howPersonARelatesToB,
+                  nameB,
+                )}
+              </AppText>
+              <AppText variant="bodyMedium" className="text-foreground mb-3">
+                {copy.tools.findRelationMutualLine(
+                  nameB,
+                  mutual.howPersonBRelatesToA,
+                  nameA,
+                )}
+              </AppText>
+              {mutual.mutualLinks.length > 0 ? (
+                <>
+                  <AppText variant="labelMedium" className="text-muted-foreground mb-2">
+                    {copy.tools.findRelationLinkChainTitle}
+                  </AppText>
+                  {mutual.mutualLinks.map((link, i) => (
+                    <AppText
+                      key={`link-${i}`}
+                      variant="bodySmall"
+                      className="text-foreground mb-1"
+                    >
+                      {copy.tools.findRelationLinkRow(
+                        memberName(members, link.fromPersonId),
+                        link.linkPhrase,
+                        memberName(members, link.toPersonId),
+                      )}
+                    </AppText>
+                  ))}
+                </>
+              ) : null}
+            </SectionCard>
+          ) : null}
 
           {result ? (
             <SectionCard title={copy.tools.findRelationResult}>

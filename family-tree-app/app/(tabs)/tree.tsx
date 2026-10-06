@@ -20,7 +20,9 @@ import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
 import {
   resolveCloudFocalFamilyCode,
   resolveLocalFocalFamilyCode,
+  resolveLocalTreeViewFamilyCode,
   saveCloudFocalFamilyCode,
+  saveLocalTreeViewFamilyCode,
 } from "@/lib/tree/focalFamilyCode";
 import type { FamilyGraph } from "@/lib/graph/types";
 import type { GraphPersonSummary } from "@/lib/graph/types";
@@ -157,32 +159,58 @@ export default function TreeScreen() {
   }, [loadOnlineGraph, dataRevision, reloadKey]);
 
   useEffect(() => {
-    if (typeof params.highlightA === "string" && params.highlightA.trim()) {
-      const member = getLocalMemberById(params.highlightA.trim());
-      if (member?.familyCode) {
-        setLoadedCode(member.familyCode);
+    let cancelled = false;
+    void (async () => {
+      if (paramCode) {
+        if (!cancelled) {
+          setLoadedCode(paramCode);
+          if (isLocal) await saveLocalTreeViewFamilyCode(archiveLane, paramCode);
+        }
         return;
       }
-    }
-    if (paramCode) {
-      setLoadedCode(paramCode);
-      return;
-    }
-    void (async () => {
+      if (typeof params.highlightA === "string" && params.highlightA.trim()) {
+        const member = getLocalMemberById(params.highlightA.trim());
+        if (member?.familyCode) {
+          if (!cancelled) {
+            setLoadedCode(member.familyCode);
+            if (isLocal) {
+              await saveLocalTreeViewFamilyCode(archiveLane, member.familyCode);
+            }
+          }
+          return;
+        }
+      }
       const focal =
         mode === "local"
-          ? resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode)
+          ? await resolveLocalTreeViewFamilyCode(
+              archiveLane,
+              localAccount.session?.focalFamilyCode,
+            )
           : await resolveCloudFocalFamilyCode(localAccount.session?.focalFamilyCode);
-      setLoadedCode(focal);
+      if (!cancelled) setLoadedCode(focal);
     })();
-  }, [paramCode, params.highlightA, mode, localAccount.session?.focalFamilyCode]);
+    return () => {
+      cancelled = true;
+    };
+  }, [paramCode, params.highlightA, mode, isLocal, localAccount.session?.focalFamilyCode, archiveLane]);
 
   useEffect(() => {
     if (!isLocal) return;
-    const focal = resolveLocalFocalFamilyCode(localAccount.session?.focalFamilyCode);
-    setLoadedCode(focal);
-    setReloadKey((k) => k + 1);
-  }, [archiveLane, isLocal, localAccount.session?.focalFamilyCode]);
+    let cancelled = false;
+    void (async () => {
+      const code = await resolveLocalTreeViewFamilyCode(
+        archiveLane,
+        localAccount.session?.focalFamilyCode,
+      );
+      if (!cancelled) {
+        setLoadedCode(code);
+        setReloadKey((k) => k + 1);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [archiveLane, isLocal]);
 
   useEffect(() => {
     if (isLocal && archiveLane === "live") {
@@ -191,22 +219,39 @@ export default function TreeScreen() {
   }, [isLocal, archiveLane]);
 
   useEffect(() => {
-    if (isLocal) return;
     const trimmed = loadedCode.trim();
     if (!trimmed) return;
+    if (isLocal) {
+      void saveLocalTreeViewFamilyCode(archiveLane, trimmed);
+      return;
+    }
     void saveCloudFocalFamilyCode(trimmed);
-  }, [isLocal, loadedCode]);
+  }, [isLocal, archiveLane, loadedCode]);
+
+  const applyViewFocal = useCallback(
+    (person: GraphPersonSummary) => {
+      const code = person.familyCode.trim();
+      if (!code) return;
+      setLoadedCode(code);
+      if (isLocal) void saveLocalTreeViewFamilyCode(archiveLane, code);
+      setReloadKey((k) => k + 1);
+    },
+    [archiveLane, isLocal],
+  );
 
   const onPersonPress = (person: GraphPersonSummary) => {
+    applyViewFocal(person);
+  };
+
+  const onPersonLongPress = (person: GraphPersonSummary) => {
     setSelectedPerson(person);
     setSheetOpen(true);
   };
 
   const centerOnPerson = () => {
     if (!selectedPerson) return;
-    setLoadedCode(selectedPerson.familyCode);
+    applyViewFocal(selectedPerson);
     setSheetOpen(false);
-    setReloadKey((k) => k + 1);
   };
 
   const onlineFocal = onlineGraph?.nodes.find(
@@ -311,6 +356,7 @@ export default function TreeScreen() {
             immersive
             layout={listLayout ? "list" : "graph"}
             onPersonPress={onPersonPress}
+            onPersonLongPress={onPersonLongPress}
             zoomScale={zoom}
             onZoomChange={setZoom}
             pathHighlightPersonIds={
@@ -340,6 +386,7 @@ export default function TreeScreen() {
             <GraphWebView
               graph={onlineGraph}
               onPersonPress={onPersonPress}
+              onPersonLongPress={onPersonLongPress}
               testID="online-tree-graph-webview"
               pathHighlightPersonIds={
                 pathHighlightIds.length >= 2 ? pathHighlightIds : undefined
