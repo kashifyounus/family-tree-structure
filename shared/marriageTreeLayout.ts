@@ -222,26 +222,16 @@ export function collectIncludedPersonIds(
     return [...sibs];
   }
 
-  function collectSiblingRing(steps: number): void {
+  /** Siblings of everyone already on the tree (ego, parents, grandparents, …). */
+  function collectCollateralsForIncluded(steps: number): void {
     if (steps <= 0) return;
-    const focalUnions = unions.filter(
-      (u) => u.partner1Id === focalId || u.partner2Id === focalId,
-    );
-    let seeds = new Set<string>([focalId]);
-    for (const u of focalUnions) {
-      const spouseId =
-        u.partner1Id === focalId ? u.partner2Id : u.partner1Id;
-      seeds.add(spouseId);
-    }
     for (let step = 0; step < steps; step++) {
-      const nextSeeds = new Set<string>();
-      for (const personId of seeds) {
+      const snapshot = [...included];
+      for (const personId of snapshot) {
         for (const sibId of siblingsOf(personId)) {
           included.add(sibId);
-          nextSeeds.add(sibId);
         }
       }
-      seeds = nextSeeds;
     }
   }
 
@@ -271,7 +261,7 @@ export function collectIncludedPersonIds(
     }
   }
 
-  collectSiblingRing(siblingSteps);
+  collectCollateralsForIncluded(siblingSteps);
 
   return included;
 }

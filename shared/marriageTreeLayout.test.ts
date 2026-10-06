@@ -43,6 +43,22 @@ describe("marriageTreeLayout", () => {
     expect(included.has("sib")).toBe(true);
   });
 
+  it("includes parent siblings when collateral steps > 0", () => {
+    const withUncle = [
+      ...unions,
+      {
+        id: "u-gp",
+        partner1Id: "gpa",
+        partner2Id: "gma",
+        childships: [{ childId: "dad" }, { childId: "uncle" }],
+      },
+    ];
+    const without = collectIncludedPersonIds("ego", withUncle, 2, 1, 0);
+    const withCollateral = collectIncludedPersonIds("ego", withUncle, 2, 1, 1);
+    expect(without.has("uncle")).toBe(false);
+    expect(withCollateral.has("uncle")).toBe(true);
+  });
+
   it("includes spouse parents when generationsUp >= 1", () => {
     const withSpouseParents = [
       ...unions,

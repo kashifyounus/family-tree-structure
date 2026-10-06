@@ -7,6 +7,10 @@ import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import type { KinshipPerson, KinshipUnionRecord } from "@/lib/kinship/types";
 import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
 import { resolvePrimaryTreeUnionId } from "../../../shared/genealogy/resolvePrimaryTreeUnion";
+import {
+  DEFAULT_TREE_GENERATIONS_DOWN,
+  DEFAULT_TREE_GENERATIONS_UP,
+} from "../../../shared/genealogy/treeExpansion";
 import { getPrimaryTreeUnionId } from "@/lib/settings/primaryTreeUnion";
 import {
   collectIncludedPersonIds,
@@ -60,8 +64,10 @@ export function buildLocalFamilyGraph(
   familyCode: string,
   options: BuildLocalGraphOptions = {},
 ): FamilyGraph | null {
-  let generationsUp = options.generationsUp ?? 3;
-  let generationsDown = options.generationsDown ?? 3;
+  let generationsUp =
+    options.generationsUp ?? DEFAULT_TREE_GENERATIONS_UP;
+  let generationsDown =
+    options.generationsDown ?? DEFAULT_TREE_GENERATIONS_DOWN;
   const siblingSteps = options.siblingSteps ?? 0;
 
   const member = getLocalMemberByFamilyCode(familyCode);
