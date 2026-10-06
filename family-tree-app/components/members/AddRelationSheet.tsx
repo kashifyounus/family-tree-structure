@@ -225,7 +225,7 @@ export function AddRelationSheet({
           ))}
         </View>
       ) : null}
-      {kind === "child" ? (
+      {kind === "child" && mode === "link" ? (
         <View className="gap-2">
           <AppText variant="labelSmall" className="text-muted-foreground">
             {copy.profile.childRelationshipLabel}
@@ -296,13 +296,21 @@ export function AddRelationSheet({
           />
         </>
       ) : (
-        <PersonFields
-          value={person}
-          onChange={patchPerson}
-          fieldErrors={fieldErrors}
-          firstNameTestID="member-child-first"
-          lastNameTestID="member-child-last"
-        />
+        <>
+          {kind === "child" ? (
+            <AppText variant="bodySmall" className="text-muted-foreground">
+              {copy.profile.quickAddChildHint}
+            </AppText>
+          ) : null}
+          <PersonFields
+            value={person}
+            onChange={patchPerson}
+            fieldErrors={fieldErrors}
+            firstNameTestID="member-child-first"
+            lastNameTestID="member-child-last"
+            minimal={kind === "child"}
+          />
+        </>
       )}
       {kind === "parent" && onLinkParentCouple ? (
         <Button variant="outline" className="rounded-full min-h-10 mt-1" onPress={onLinkParentCouple}>

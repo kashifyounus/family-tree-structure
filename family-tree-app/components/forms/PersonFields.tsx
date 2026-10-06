@@ -22,6 +22,8 @@ type PersonFieldsProps = {
   lastNameTestID?: string;
   showDeathFields?: boolean;
   hideBirthPlaceField?: boolean;
+  /** First name, last name, and gender only (e.g. quick add child). */
+  minimal?: boolean;
 };
 
 export function PersonFields({
@@ -32,6 +34,7 @@ export function PersonFields({
   lastNameTestID,
   showDeathFields = true,
   hideBirthPlaceField = false,
+  minimal = false,
 }: PersonFieldsProps) {
   return (
     <View className="gap-3 w-full">
@@ -49,6 +52,13 @@ export function PersonFields({
         onChangeText={(t) => onChange({ lastName: t })}
         errorText={fieldErrors.lastName ?? fieldErrors.chLast ?? fieldErrors.spLast}
       />
+      <GenderField
+        value={value.gender}
+        onChange={(g) => onChange({ gender: g })}
+        label="Gender"
+      />
+      {minimal ? null : (
+        <>
       <FormTextInput
         label="Maiden name"
         value={value.maidenName}
@@ -64,11 +74,6 @@ export function PersonFields({
         value={value.nickname}
         onChangeText={(t) => onChange({ nickname: t })}
         placeholder="Optional — shown as a green chip"
-      />
-      <GenderField
-        value={value.gender}
-        onChange={(g) => onChange({ gender: g })}
-        label="Gender"
       />
       <View className="flex-row items-center justify-between py-1">
         <AppText variant="labelLarge">Living</AppText>
@@ -103,6 +108,8 @@ export function PersonFields({
           />
         </>
       ) : null}
+        </>
+      )}
     </View>
   );
 }

@@ -71,9 +71,26 @@ describe("relationship rules", () => {
     expect(descendantIds(family, "father").has("grandson")).toBe(true);
   });
 
-  it("allows a second marriage for the same person", () => {
+  it("allows a second marriage for a man but not a second husband for a woman", () => {
+    const family = graph();
     expect(() =>
-      assertCanCreateMarriage(graph(), "son", "daughter", "2012-01-01"),
+      assertCanCreateMarriage(family, "son", "daughter", "2012-01-01"),
+    ).not.toThrow();
+    expect(() => assertCanCreateMarriage(family, "wife", "father")).toThrow(
+      /husband/,
+    );
+  });
+
+  it("allows a woman to marry again after the prior union is inactive", () => {
+    const family = graph();
+    const ended: RuleGraph = {
+      ...family,
+      unions: family.unions.map((u) =>
+        u.id === "son-marriage" ? { ...u, isActive: false } : u,
+      ),
+    };
+    expect(() =>
+      assertCanCreateMarriage(ended, "wife", "father", "2020-01-01"),
     ).not.toThrow();
   });
 
@@ -88,7 +105,7 @@ describe("relationship rules", () => {
       }),
     ).toThrow(/divorce date/i);
     expect(() =>
-      assertCanCreateMarriage(graph(), "daughter", "wife", "1970-01-01"),
+      assertCanCreateMarriage(graph(), "son", "daughter", "1970-01-01"),
     ).toThrow(/date of birth/i);
   });
 
