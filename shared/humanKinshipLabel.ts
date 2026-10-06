@@ -41,6 +41,18 @@ function grandchildLabel(gender: KinshipGender): string {
   return "Grandchild";
 }
 
+function greatGrandparentLabel(gender: KinshipGender): string {
+  if (gender === "FEMALE") return "Great-grandmother";
+  if (gender === "MALE") return "Great-grandfather";
+  return "Great-grandparent";
+}
+
+function greatGrandchildLabel(gender: KinshipGender): string {
+  if (gender === "FEMALE") return "Great-granddaughter";
+  if (gender === "MALE") return "Great-grandson";
+  return "Great-grandchild";
+}
+
 function nieceNephewLabel(gender: KinshipGender): string {
   if (gender === "FEMALE") return "Niece";
   if (gender === "MALE") return "Nephew";
@@ -52,6 +64,15 @@ function auntUncleLabel(
   gender: KinshipGender,
 ): string {
   const role = gender === "FEMALE" ? "Aunt" : "Uncle";
+  const prefix = side === "paternal" ? "Paternal" : "Maternal";
+  return `${prefix} ${role}`;
+}
+
+function greatAuntUncleLabel(
+  side: "paternal" | "maternal",
+  gender: KinshipGender,
+): string {
+  const role = gender === "FEMALE" ? "Great-aunt" : "Great-uncle";
   const prefix = side === "paternal" ? "Paternal" : "Maternal";
   return `${prefix} ${role}`;
 }
@@ -101,26 +122,61 @@ function cousinOrdinal(degree: number): string {
   }
 }
 
-/** Up via `child` edges, then down via `parent` edges (BFS kinship graph). */
-function isUpDownPath(relations: string[], up: number, down: number): boolean {
-  if (relations.length !== up + down) return false;
-  for (let i = 0; i < up; i++) {
-    if (relations[i] !== "child") return false;
-  }
-  for (let i = up; i < relations.length; i++) {
-    if (relations[i] !== "parent") return false;
-  }
-  return true;
+function removedSuffix(times: number): string {
+  if (times === 1) return " once removed";
+  if (times === 2) return " twice removed";
+  return ` ${times} times removed`;
 }
 
-function labelCousinPath(steps: KinshipLabelStep[], up: number): string | null {
-  if (!isUpDownPath(steps.map((s) => s.relation), up, up) || up < 2) {
-    return null;
+/** Up via `child` edges, then down via `parent` edges (BFS kinship graph). */
+function parseUpDownPath(relations: string[]): { up: number; down: number } | null {
+  let up = 0;
+  while (up < relations.length && relations[up] === "child") up += 1;
+  let down = 0;
+  while (down < relations.length - up && relations[relations.length - 1 - down] === "parent") {
+    down += 1;
   }
-  const degree = up - 1;
+  if (up + down !== relations.length) return null;
+  return { up, down };
+}
+
+function labelCousinPath(steps: KinshipLabelStep[], up: number, down: number): string | null {
+  const relations = steps.map((s) => s.relation);
+  const parsed = parseUpDownPath(relations);
+  if (!parsed || parsed.up !== up || parsed.down !== down) return null;
+  if (up < 2 || down < 2) return null;
+
+  const degree = Math.min(up, down) - 1;
+  const removed = Math.abs(up - down);
   const side = lineageSideFromParentStep(steps[0]);
   const base = cousinOrdinal(degree);
-  return `${sidePrefix(side)}${base}`;
+  const label = removed === 0 ? base : `${base}${removedSuffix(removed)}`;
+  return `${sidePrefix(side)}${label}`;
+}
+
+function labelUpDownKinship(steps: KinshipLabelStep[]): string | null {
+  const relations = steps.map((s) => s.relation);
+  const parsed = parseUpDownPath(relations);
+  if (!parsed) return null;
+  const { up, down } = parsed;
+  const targetGender = steps[steps.length - 1]?.toGender;
+
+  if (down === 0 && up >= 2) {
+    if (up === 2) return grandparentLabel(targetGender);
+    if (up === 3) return greatGrandparentLabel(targetGender);
+    return null;
+  }
+  if (up === 0 && down >= 2) {
+    if (down === 2) return grandchildLabel(targetGender);
+    if (down === 3) return greatGrandchildLabel(targetGender);
+    return null;
+  }
+
+  if (up >= 2 && down >= 2) {
+    return labelCousinPath(steps, up, down);
+  }
+
+  return null;
 }
 
 /**
@@ -182,13 +238,37 @@ export function humanKinshipLabelFromSteps(
     if (a === "spouse" && b === "child" && c === "parent") {
       return siblingInLawLabel(targetGender);
     }
+    if (a === "child" && b === "child" && c === "child") {
+      return greatGrandparentLabel(targetGender);
+    }
+    if (a === "parent" && b === "parent" && c === "parent") {
+      return greatGrandchildLabel(targetGender);
+    }
     return null;
   }
 
+  if (relations.length === 4) {
+    const [a, b, c, d] = relations;
+    if (a === "child" && b === "child" && c === "child" && d === "parent") {
+      const side = lineageSideFromParentStep(steps[0]);
+      return greatAuntUncleLabel(side, targetGender);
+    }
+  }
+
+  const upDownLabel = labelUpDownKinship(steps);
+  if (upDownLabel) return upDownLabel;
+
   if (relations.length >= 4 && relations.length % 2 === 0) {
     const half = relations.length / 2;
-    const cousin = labelCousinPath(steps, half);
+    const cousin = labelCousinPath(steps, half, half);
     if (cousin) return cousin;
+  }
+
+  if (relations.length >= 5) {
+    const parsed = parseUpDownPath(relations);
+    if (parsed && parsed.up >= 2 && parsed.down >= 2) {
+      return labelCousinPath(steps, parsed.up, parsed.down);
+    }
   }
 
   return null;

@@ -10,7 +10,7 @@ One PR per slice where possible. Update status as items land on `main`.
 | 4 | Unify Tools Compare → Find relation | done | #40 |
 | 5 | Add-member subtitles + sibling parent check | done | #40 |
 | 6 | Tree hint, home focal, list recenter, Maestro 13 | done | #40 |
-| 7 | Kinship labels (cousin / once-removed fallbacks) | pending | `shared/humanKinshipLabel.ts` |
+| 7 | Kinship labels (cousin / once-removed fallbacks) | done | #41 `humanKinshipLabel.ts` |
 | 8 | Find relation distant-path canvas framing | pending | GAPS.md |
 | 9 | Spouse/child candidate marriage rules | pending | `relationshipRules` |
 | 10 | Maestro emulator green on `main` (Q5) | in_work | `mobile-maestro.yml` |
