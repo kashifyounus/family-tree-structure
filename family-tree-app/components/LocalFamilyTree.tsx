@@ -21,6 +21,7 @@ import type { GraphPersonSummary } from "@/lib/graph/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
+import { TreeGraphFloatingBar } from "@/components/tree/TreeGraphFloatingBar";
 import {
   DEFAULT_TREE_EXPANSION,
   expandTreeToMaximum,
@@ -100,6 +101,7 @@ export function LocalFamilyTree({
   const [expansion, setExpansion] = useState<TreeExpansionState>(() =>
     initialTreeExpansion(seedGenerationsUp, seedGenerationsDown),
   );
+  const [fineTuneOpen, setFineTuneOpen] = useState(false);
 
   useEffect(() => {
     if (seedGenerationsUp != null || seedGenerationsDown != null) {
@@ -211,84 +213,23 @@ export function LocalFamilyTree({
 
   return (
     <View style={[styles.root, immersive && { backgroundColor: theme.colors.background }]}>
-      {view === "graph" && (
-        <View style={styles.expandBlock}>
-          <View style={styles.expandRow}>
-            <Button
-              testID="tree-expand"
-              size="sm"
-              disabled={!loadMore.canExpandTree}
-              onPress={onExpandTree}
-            >
-              <ButtonText>{copy.tree.loadMore}</ButtonText>
-            </Button>
-            <Button
-              testID="tree-expand-max"
-              size="sm"
-              variant="outline"
-              disabled={!loadMore.canExpandTree}
-              onPress={onExpandTreeMax}
-            >
-              <ButtonText>{copy.tree.expandTreeMax}</ButtonText>
-            </Button>
-          </View>
-          <View style={styles.expandRow}>
-            <Button
-              testID="tree-load-parents"
-              size="sm"
-              variant="ghost"
-              disabled={!loadMore.parents}
-              onPress={() =>
-                setExpansion((prev) => ({
-                  ...prev,
-                  generationsUp: prev.generationsUp + 1,
-                }))
-              }
-            >
-              <ButtonText>{copy.tree.loadParents}</ButtonText>
-            </Button>
-            <Button
-              testID="tree-load-siblings"
-              size="sm"
-              variant="ghost"
-              disabled={!loadMore.siblings}
-              onPress={() =>
-                setExpansion((prev) => ({
-                  ...prev,
-                  siblingSteps: prev.siblingSteps + 1,
-                }))
-              }
-            >
-              <ButtonText>{copy.tree.loadSiblings}</ButtonText>
-            </Button>
-            <Button
-              testID="tree-load-children"
-              size="sm"
-              variant="ghost"
-              disabled={!loadMore.children}
-              onPress={() =>
-                setExpansion((prev) => ({
-                  ...prev,
-                  generationsDown: prev.generationsDown + 1,
-                }))
-              }
-            >
-              <ButtonText>{copy.tree.loadChildren}</ButtonText>
-            </Button>
-          </View>
-        </View>
-      )}
       {view === "graph" && graph ? (
         <GraphWebView
           key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${expansion.generationsUp}-${expansion.generationsDown}-${expansion.siblingSteps}-${expansion.cousinDegree}`}
           graph={graph}
           testID="local-tree-graph-webview"
+          edgeToEdge={immersive}
+          fitMode={
+            pathHighlightPersonIds && pathHighlightPersonIds.length >= 2
+              ? "timeline"
+              : "pedigree"
+          }
           onPersonPress={onPersonPress}
           onPersonLongPress={onPersonLongPress}
           pathHighlightPersonIds={pathHighlightPersonIds}
           highlightPersonIds={highlightPersonIds}
         />
-      ) : (
+      ) : view === "graph" ? null : (
         <ScrollView
           style={[styles.scroll, { backgroundColor: theme.colors.background }]}
           contentContainerStyle={[
@@ -376,6 +317,37 @@ export function LocalFamilyTree({
           </AppText>
         </ScrollView>
       )}
+      {view === "graph" && immersive ? (
+        <TreeGraphFloatingBar
+          canLoadMore={loadMore.canExpandTree}
+          onLoadMore={onExpandTree}
+          onLoadFull={onExpandTreeMax}
+          fineTuneOpen={fineTuneOpen}
+          onOpenFineTune={() => setFineTuneOpen((v) => !v)}
+          canLoadParents={loadMore.parents}
+          canLoadChildren={loadMore.children}
+          canLoadSiblings={loadMore.siblings}
+          onLoadParents={() =>
+            setExpansion((prev) => ({
+              ...prev,
+              generationsUp: prev.generationsUp + 1,
+            }))
+          }
+          onLoadSiblings={() =>
+            setExpansion((prev) => ({
+              ...prev,
+              siblingSteps: prev.siblingSteps + 1,
+              cousinDegree: prev.cousinDegree + 1,
+            }))
+          }
+          onLoadChildren={() =>
+            setExpansion((prev) => ({
+              ...prev,
+              generationsDown: prev.generationsDown + 1,
+            }))
+          }
+        />
+      ) : null}
       {!immersive && (
         <Button variant="ghost" onPress={resetExpansion}>
           <ButtonText>{copy.tree.resetTreeView}</ButtonText>
@@ -387,16 +359,6 @@ export function LocalFamilyTree({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  expandBlock: {
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    gap: 4,
-  },
-  expandRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-  },
   scroll: { flex: 1 },
   content: { padding: 16, paddingBottom: 32 },
   empty: { flex: 1, padding: 20, justifyContent: "center" },

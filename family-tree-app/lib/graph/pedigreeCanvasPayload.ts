@@ -197,7 +197,11 @@ export function buildPedigreeCanvasPayload(
     const p = n.data.person;
     const isPrivate = p.treeDisplayIsPrivate === true;
     const isUnknownCoParent = isUnknownCoParentFamilyCode(p.familyCode);
-    const isBig = n.id === graph.focalPersonId || partnerIds.has(n.id);
+    const highlightSet = new Set(options.highlightPersonIds ?? []);
+    const isBig =
+      n.id === graph.focalPersonId ||
+      partnerIds.has(n.id) ||
+      highlightSet.has(n.id);
     const displayName = formatPersonDisplayName({
       firstName: p.firstName,
       lastName: p.lastName,

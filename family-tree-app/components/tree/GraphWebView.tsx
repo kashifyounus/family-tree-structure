@@ -20,7 +20,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8;
+let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8, fitMode = 'pedigree';
 let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
@@ -76,7 +76,13 @@ function fitView(){
   const fx = focal.x + focal.w/2;
   const fy = focal.y + focal.h * 0.55;
   ox = canvas.width/2 - fx * scale;
-  oy = canvas.height * 0.68 - fy * scale;
+  if(fitMode === 'timeline'){
+    let maxY = -Infinity;
+    for(const n of viewNodes){ maxY = Math.max(maxY, n.y + n.h); }
+    oy = canvas.height * 0.9 - maxY * scale;
+  } else {
+    oy = canvas.height * 0.72 - fy * scale;
+  }
 }
 
 function roundRect(x,y,w,h,r){
@@ -293,6 +299,7 @@ function onGraph(g){
     : (g.marriageBand ? [g.marriageBand] : []);
   framingNodeIds = g.framingNodeIds || null;
   chevronOffset = g.chevronOffset || 8;
+  fitMode = g.fitMode === 'timeline' ? 'timeline' : 'pedigree';
   if(g.theme) theme = Object.assign(theme, g.theme);
   fitView();
   resize();
@@ -383,6 +390,8 @@ type GraphWebViewProps = {
   testID?: string;
   pathHighlightPersonIds?: string[];
   highlightPersonIds?: string[];
+  fitMode?: "pedigree" | "timeline";
+  edgeToEdge?: boolean;
   onPersonPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
   onPersonLongPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
 };
@@ -395,19 +404,22 @@ export function GraphWebView({
   testID,
   pathHighlightPersonIds,
   highlightPersonIds,
+  fitMode = "pedigree",
+  edgeToEdge = false,
   onPersonPress,
   onPersonLongPress,
 }: GraphWebViewProps) {
   const webRef = useRef<WebView>(null);
   const payload = useMemo(
     () =>
-      JSON.stringify(
-        buildPedigreeCanvasPayload(graph, {
+      JSON.stringify({
+        ...buildPedigreeCanvasPayload(graph, {
           pathHighlightPersonIds,
           highlightPersonIds,
         }),
-      ),
-    [graph, pathHighlightPersonIds, highlightPersonIds],
+        fitMode,
+      }),
+    [graph, pathHighlightPersonIds, highlightPersonIds, fitMode],
   );
 
   useEffect(() => {
@@ -415,7 +427,10 @@ export function GraphWebView({
   }, [payload]);
 
   return (
-    <View style={styles.wrap} testID={testID}>
+    <View
+      style={[styles.wrap, edgeToEdge && styles.wrapEdge]}
+      testID={testID}
+    >
       <WebView
         ref={webRef}
         originWhitelist={["*"]}
@@ -457,5 +472,6 @@ export function GraphWebView({
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, minHeight: 320, borderRadius: 12, overflow: "hidden" },
+  wrapEdge: { borderRadius: 0, minHeight: 280 },
   web: { flex: 1, backgroundColor: kuriosityDesign.brand.pedigreeCanvas },
 });
