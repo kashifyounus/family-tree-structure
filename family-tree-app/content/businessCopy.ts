@@ -239,6 +239,8 @@ export const copy = {
     expandTreeLarge: "Load extended family",
     expandTreeMax: "Load full tree",
     resetTreeView: "Reset to default view",
+    showFineTune: "Fine-tune expansion",
+    hideFineTune: "Hide fine-tune",
     treeExpansionHint:
       "Starts with two generations. Load more to add uncles, aunts, cousins (1st, 2nd, 3rd…), and deeper ancestors.",
     zoomIn: "Zoom in",
@@ -382,7 +384,11 @@ export const copy = {
     findRelationPerson2: "Person 2",
     findRelationRun: "Show relation",
     findRelationResult: "Result",
-    findRelationOpenTree: "View path on tree",
+    findRelationOpenTree: "View on full family tree",
+    findRelationConnectionTree: "View connection tree",
+    connectionTreeTitle: "Connection tree",
+    connectionTreeHint: "Older generations above · pinch to zoom · drag to pan",
+    connectionTreeEmpty: "We could not draw a connection map for this pair.",
     findRelationTreeFocalHint: "Choose whose family tree to center on, then open the tree.",
     findRelationPathsTruncated:
       "Large family — only the first 32 paths are shown. Choose closer relatives to see more.",
