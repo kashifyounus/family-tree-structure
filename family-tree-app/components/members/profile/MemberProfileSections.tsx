@@ -4,6 +4,7 @@ import { MarriageChildrenList } from "@/components/members/profile/MarriageChild
 import { ParentPairCards } from "@/components/members/profile/ParentPairCards";
 import { SiblingsTable } from "@/components/members/profile/SiblingsTable";
 import { SpousePill } from "@/components/members/profile/SpousePill";
+import { ProvinceCityPicker } from "@/components/forms/ProvinceCityPicker";
 import { PersonFields } from "@/components/forms/PersonFields";
 import { AppCard, AppCardContent } from "@/components/ui/AppCard";
 import { AppText } from "@/components/ui/AppText";
@@ -140,16 +141,40 @@ export function MemberProfileSections({
                 }
               }}
               fieldErrors={fieldErrors}
+              hideBirthPlaceField
             />
-            <FormTextInput
-              label="Current city"
-              value={editFields.city}
-              onChangeText={(v) => onPatchEditField("city", v)}
+            <ProvinceCityPicker
+              label="Birth place (optional)"
+              province={editFields.birthProvince}
+              city={editFields.birthCity}
+              onProvinceChange={(p) => {
+                onPatchEditField("birthProvince", p);
+                onPatchEditField("birthCity", "");
+              }}
+              onCityChange={(c) => onPatchEditField("birthCity", c)}
+              testIdPrefix="profile-birth"
             />
-            <FormTextInput
-              label="Home town"
-              value={editFields.homeTown}
-              onChangeText={(v) => onPatchEditField("homeTown", v)}
+            <ProvinceCityPicker
+              label="Living city (optional)"
+              province={editFields.livingProvince}
+              city={editFields.livingCity}
+              onProvinceChange={(p) => {
+                onPatchEditField("livingProvince", p);
+                onPatchEditField("livingCity", "");
+              }}
+              onCityChange={(c) => onPatchEditField("livingCity", c)}
+              testIdPrefix="profile-living"
+            />
+            <ProvinceCityPicker
+              label="Home town (optional)"
+              province={editFields.homeTownProvince}
+              city={editFields.homeTownCity}
+              onProvinceChange={(p) => {
+                onPatchEditField("homeTownProvince", p);
+                onPatchEditField("homeTownCity", "");
+              }}
+              onCityChange={(c) => onPatchEditField("homeTownCity", c)}
+              testIdPrefix="profile-hometown"
             />
             <FormTextInput
               label="Occupation"
