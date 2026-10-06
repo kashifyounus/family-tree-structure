@@ -10,8 +10,10 @@ Code for kinship features should follow these **processes** (user journeys), not
 4. **Registered focal** (`session.focalFamilyCode`) is only the default when there is no deep link and no last viewed.
 5. **Tap** a person on the graph to recenter the tree on them; **long press** opens profile and relation actions.
 6. **List view** on tree: tap a child name to recenter on that person (switches to graph focal).
+7. **Default expansion** shows about two generations; **Load more** / **Load full tree** (and fine-tune parents, siblings, children) widen inclusion per `shared/genealogy/treeExpansion.ts` and cousin-degree rules in `shared/genealogy/cousinInclusion.ts`.
+8. **Cousin-network presentation** (canvas cards): generation/side color bands (GGP, GP, paternal, maternal, focal), bilingual name lines, English kinship role from focal when the archive loads, dashed red marriage connectors, marriage heart band, and a **purple path** when the primary spouse is also a cousin (same rule as Find relation). Legend appears on immersive graph when the cousin link applies.
 
-Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `buildLocalFamilyGraph`, `GraphWebView`.
+Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `buildLocalFamilyGraph`, `buildPedigreeCanvasPayload`, `GraphWebView`, `TreeLegendBar`, `shared/genealogy/pedigreeNodePresentation.ts`, `shared/pedigreeBandTheme.ts`.
 
 ## Process: Mutual relationship between two people
 

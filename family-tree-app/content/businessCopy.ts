@@ -250,6 +250,23 @@ export const copy = {
     privatePerson: "Private",
     exportPrivacyHint:
       "This file contains private family data. Only share it with people you trust.",
+    legendTitle: "Legend",
+    legendBand: (band: string) => {
+      const labels: Record<string, string> = {
+        ggp: "Great-grandparents",
+        gp: "Grandparents",
+        paternal: "Paternal / siblings",
+        maternal: "Maternal line",
+        focal: "Focal person",
+        spouse: "Spouse",
+        child: "Children",
+      };
+      return labels[band] ?? band;
+    },
+    legendCousinLink: "Cousin link",
+    marriageOnTree: "Married",
+    marriageOnTreeUr: "شادی شدہ",
+    alsoCousinsOnTree: (label: string) => `Also ${label}`,
   },
 
   members: {

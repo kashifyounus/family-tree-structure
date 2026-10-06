@@ -38,6 +38,8 @@ export type PedigreeSegment = {
   kind: "spouse" | "parent" | "union-stem" | "union-branch" | "sibling";
   color: string;
   strokeWidth: number;
+  /** Dashed stroke (e.g. marriage connectors in cousin-network UI). */
+  dashed?: boolean;
 };
 
 function styleForKind(
