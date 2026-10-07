@@ -35,7 +35,7 @@ import {
 } from "@/lib/tree/focalFamilyCode";
 import type { FamilyGraph } from "@/lib/graph/types";
 import type { GraphPersonSummary } from "@/lib/graph/types";
-import { IconButton } from "@/components/ui/IconButton";
+import { TreeFocalSearchHeader } from "@/components/tree/TreeFocalSearchHeader";
 import { InfoBanner } from "@/components/ui/InfoBanner";
 import { Spinner } from "@/components/ui/spinner";
 import { AppText } from "@/components/ui/AppText";
@@ -313,6 +313,14 @@ export default function TreeScreen() {
     return copy.tree.title;
   }, [loadedCode, isLocal, onlineGraph]);
 
+  const treeHeaderUrdu = useMemo(() => {
+    if (!isLocal) return null;
+    const member = getLocalMemberByFamilyCode(loadedCode.trim());
+    if (!member) return null;
+    const parts = [member.urduFirstName, member.urduLastName].filter(Boolean);
+    return parts.join(" ").trim() || null;
+  }, [loadedCode, isLocal]);
+
   const centerOnMyMarriage = () => {
     void (async () => {
       const code =
@@ -332,36 +340,19 @@ export default function TreeScreen() {
         { paddingTop: insets.top, backgroundColor: theme.colors.background },
       ]}
     >
-      <View style={[styles.topBar, { backgroundColor: theme.colors.surface }]}>
-        <AppText
-          variant="titleSmall"
-          numberOfLines={1}
-          style={{ color: theme.colors.onSurface, flex: 1, marginLeft: 8 }}
-        >
-          {treeHeaderTitle}
-        </AppText>
-        <IconButton
-          icon="filter-variant"
-          accessibilityLabel="Filter tree"
-          onPress={() => setMenuOpen(true)}
-        />
-        <IconButton
-          icon="magnify-plus-outline"
-          accessibilityLabel={copy.tree.zoomIn}
-          onPress={() => setZoom((z) => Math.min(2.5, z + 0.2))}
-        />
-        <IconButton
-          icon="magnify-minus-outline"
-          accessibilityLabel={copy.tree.zoomOut}
-          onPress={() => setZoom((z) => Math.max(0.55, z - 0.2))}
-        />
-        <IconButton
-          testID="tree-overflow-menu"
-          icon="dots-vertical"
-          accessibilityLabel={copy.tree.options}
-          onPress={() => setMenuOpen(true)}
-        />
-      </View>
+      <TreeFocalSearchHeader
+        style={{ backgroundColor: theme.colors.surface }}
+        titleEn={treeHeaderTitle}
+        titleUr={treeHeaderUrdu}
+        searchEnabled={isLocal}
+        onOpenMenu={() => setMenuOpen(true)}
+        onZoomIn={() => setZoom((z) => Math.min(2.5, z + 0.2))}
+        onZoomOut={() => setZoom((z) => Math.max(0.55, z - 0.2))}
+        onSelectFamilyCode={(code) => {
+          applyViewFocalByCode(code);
+          setListLayout(false);
+        }}
+      />
 
       {!isLocal && offline && (
         <View className="px-3 py-2 gap-2">
@@ -547,11 +538,6 @@ export default function TreeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 4,
-  },
   canvas: { flex: 1, minHeight: 0 },
   webview: { flex: 1 },
   loading: {

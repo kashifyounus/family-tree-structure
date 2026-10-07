@@ -123,6 +123,9 @@ export function buildLocalFamilyGraph(
     ) ??
     undefined;
 
+  const cousinNetworkPosterSpread =
+    generationsUp >= 2 || cousinDegree >= 1 || siblingSteps >= 1;
+
   const {
     positions,
     edges: layoutEdges,
@@ -139,6 +142,8 @@ export function buildLocalFamilyGraph(
     {
       preferredFocalUnionId,
       phoneSingleParentSide: false,
+      maxAncestorGenerations: generationsUp,
+      cousinNetworkPosterSpread,
     },
   );
 

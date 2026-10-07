@@ -17,7 +17,10 @@ import { buildPedigreePathHighlightSegments } from "../../../shared/pedigreePath
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
 import { formatBilingualName } from "@/lib/format/displayName";
-import { roleLabelFromFocal, clearRoleLabelCache } from "@/lib/kinship/roleLabelFromFocal";
+import {
+  roleLabelsFromFocal,
+  clearRoleLabelCache,
+} from "@/lib/kinship/roleLabelFromFocal";
 import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
 import {
   generationOffsetFromFocal,
@@ -276,14 +279,14 @@ export function buildPedigreeCanvasPayload(
     });
     const bandColor = PEDIGREE_BAND_COLORS[visualBand];
     const bandLabels = PEDIGREE_BAND_LABELS[visualBand];
-    const roleLineEn =
+    const roleLabels =
       useDetailCards && !isPrivate && !isUnknownCoParent
         ? n.id === graph.focalPersonId
-          ? bandLabels.en
-          : roleLabelFromFocal(graph.focalPersonId, n.id)
-        : "";
-    const roleLineUr =
-      useDetailCards && !isPrivate && !isUnknownCoParent ? bandLabels.ur : "";
+          ? { en: bandLabels.en, ur: bandLabels.ur }
+          : roleLabelsFromFocal(graph.focalPersonId, n.id)
+        : { en: "", ur: "" };
+    const roleLineEn = roleLabels.en;
+    const roleLineUr = roleLabels.ur || bandLabels.ur;
     const detail = useDetailCards && (roleLineEn || roleLineUr);
     return {
       id: n.id,
