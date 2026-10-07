@@ -132,6 +132,7 @@ export function buildLocalFamilyGraph(
     focalPartnerIds,
     focalUnionId,
     focalUnionIds,
+    sharedAncestorIds,
   } = layoutMarriageCentricGraph(
     focal.id,
     layoutPeople,
@@ -205,6 +206,7 @@ export function buildLocalFamilyGraph(
     focalPartnerIds,
     focalMarriageLabel,
     focalMarriageBands,
+    sharedAncestorIds,
     nodes,
     edges,
   };
