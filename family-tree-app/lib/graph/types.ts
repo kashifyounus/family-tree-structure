@@ -46,6 +46,8 @@ export type FamilyGraph = {
   focalMarriageLabel?: string | null;
   /** One label per spouse on the focal marriage row (same order as focalPartnerIds). */
   focalMarriageBands?: { partnerId: string; label: string }[];
+  /** Merged ancestor cards centered above the couple (cousin / shared lineage). */
+  sharedAncestorIds?: string[];
   nodes: FamilyGraphNode[];
   edges: FamilyGraphEdge[];
 };
