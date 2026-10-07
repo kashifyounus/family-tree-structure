@@ -36,6 +36,8 @@ import {
   isUnknownCoParentFamilyCode,
   UNKNOWN_COPARENT_DISPLAY,
 } from "../../../shared/unknownCoParent";
+import { appendGhostBranchPlaceholders } from "@/lib/graph/ghostBranchPlaceholders";
+import { copy } from "@/content/businessCopy";
 
 export {
   PEDIGREE_CARD_W,
@@ -71,6 +73,9 @@ export type PedigreeCanvasNode = {
   roleLineEn?: string;
   roleLineUr?: string;
   isSpouseCard?: boolean;
+  isSharedAncestor?: boolean;
+  isGhost?: boolean;
+  ghostAnchorId?: string;
 };
 
 const PEDIGREE_CARD_DETAIL_SMALL_H = 92;
@@ -224,6 +229,7 @@ export function buildPedigreeCanvasPayload(
 ): PedigreeCanvasPayload {
   clearRoleLabelCache();
   const partnerIds = new Set(graph.focalPartnerIds ?? []);
+  const sharedAncestorSet = new Set(graph.sharedAncestorIds ?? []);
   const maternalIds = maternalWingPersonIds(graph);
   const layoutEdges = graph.edges.map((e) => ({
     source: e.source,
@@ -270,13 +276,16 @@ export function buildPedigreeCanvasPayload(
       n.id,
       layoutEdges,
     );
-    const visualBand = resolvePedigreeVisualBand({
+    let visualBand = resolvePedigreeVisualBand({
       focalId: graph.focalPersonId,
       personId: n.id,
       isSpouse: isSpouseCard,
       isMaternalWing: maternalIds.has(n.id),
       generationOffset: genOffset,
     });
+    if (sharedAncestorSet.has(n.id)) {
+      visualBand = "ggp";
+    }
     const bandColor = PEDIGREE_BAND_COLORS[visualBand];
     const bandLabels = PEDIGREE_BAND_LABELS[visualBand];
     const roleLabels =
@@ -328,6 +337,7 @@ export function buildPedigreeCanvasPayload(
       roleLineEn,
       roleLineUr,
       isSpouseCard,
+      isSharedAncestor: sharedAncestorSet.has(n.id),
     };
   });
 
@@ -348,6 +358,16 @@ export function buildPedigreeCanvasPayload(
   }));
 
   let segments = buildPedigreeConnectorSegments(boxes, pedigreeEdges);
+  if (graph.nodes.length <= 160) {
+    appendGhostBranchPlaceholders(graph, nodes, segments, {
+      parentsEn: copy.tree.ghostMoreAncestorsEn,
+      parentsUr: copy.tree.ghostMoreAncestorsUr,
+      siblingsEn: copy.tree.ghostMoreSiblingsEn,
+      siblingsUr: copy.tree.ghostMoreSiblingsUr,
+      marriageEn: copy.tree.ghostOtherMarriageEn,
+      marriageUr: copy.tree.ghostOtherMarriageUr,
+    });
+  }
   segments = segments.map((s) =>
     s.kind === "spouse" ? { ...s, dashed: true } : s,
   );

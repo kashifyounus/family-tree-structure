@@ -267,6 +267,12 @@ export const copy = {
       return labels[band] ?? band;
     },
     legendCousinLink: "Cousin link",
+    ghostMoreAncestorsEn: "More ancestors",
+    ghostMoreAncestorsUr: "مزید آباء",
+    ghostMoreSiblingsEn: "More siblings",
+    ghostMoreSiblingsUr: "مزید بہن بھائی",
+    ghostOtherMarriageEn: "Other marriage",
+    ghostOtherMarriageUr: "دوسری شادی",
     marriageOnTree: "Married",
     marriageOnTreeUr: "شادی شدہ",
     alsoCousinsOnTree: (label: string) => `Also ${label}`,

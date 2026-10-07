@@ -4,6 +4,7 @@
 
 import { includeCousinsUpToDegree } from "./genealogy/cousinInclusion";
 import { applyCousinNetworkPosterSpread } from "./genealogy/cousinNetworkPosterLayout";
+import { reconcileSharedAncestors } from "./genealogy/sharedAncestorMerge";
 
 import {
   PEDIGREE_CARD_BIG_W,
@@ -64,6 +65,8 @@ export type MarriageLayoutResult = {
   focalUnionId: string | null;
   focalUnionIds: string[];
   edges: MarriageLayoutEdge[];
+  /** Ancestors merged to the center when both wings share kinship. */
+  sharedAncestorIds?: string[];
 };
 
 /** @deprecated Use pedigreeLayoutTokens — kept for tests referencing spacing scale. */
@@ -326,6 +329,7 @@ export function layoutMarriageCentricGraph(
       focalUnionId: null,
       focalUnionIds: [],
       edges,
+      sharedAncestorIds: [],
     };
   }
 
@@ -511,6 +515,18 @@ export function layoutMarriageCentricGraph(
     placeAncestorChain(focalId, originX, "center", 0);
   }
 
+  const sharedAncestorIds =
+    wifeId && maxAncestorGenerations >= 2
+      ? reconcileSharedAncestors(
+          positions,
+          husbandId,
+          wifeId,
+          unions,
+          included,
+          originY,
+        )
+      : [];
+
   rowSpouseEntries.forEach((entry, unionIndex) => {
     const focalX = positions.get(focalId)?.x ?? originX;
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
@@ -572,5 +588,6 @@ export function layoutMarriageCentricGraph(
     focalUnionId: rowSpouseEntries[0]?.union.id ?? null,
     focalUnionIds: rowSpouseEntries.map((e) => e.union.id),
     edges,
+    sharedAncestorIds,
   };
 }

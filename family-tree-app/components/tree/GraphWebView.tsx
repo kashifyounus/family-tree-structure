@@ -178,17 +178,20 @@ function drawCard(n){
   const yearPx = 11;
   const yearGap = 5;
   ctx.save();
+  if(n.isGhost){ ctx.globalAlpha = 0.62; }
   ctx.shadowColor = 'rgba(15,23,42,0.1)';
-  ctx.shadowBlur = 6;
+  ctx.shadowBlur = n.isGhost ? 0 : 6;
   ctx.shadowOffsetY = 2;
   roundRect(x,y,w,h,12);
-  ctx.fillStyle = n.isFocal ? (theme.focalFill || '#E8F5EE') : (theme.surface || '#FFFDF8');
+  ctx.fillStyle = n.isGhost ? 'rgba(255,253,248,0.35)' : (n.isFocal ? (theme.focalFill || '#E8F5EE') : (theme.surface || '#FFFDF8'));
   ctx.fill();
   ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = '#e5e7eb';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = n.isGhost ? '#9ca3af' : '#e5e7eb';
+  ctx.lineWidth = n.isGhost ? 1.5 : 1;
+  if(n.isGhost) ctx.setLineDash([5, 4]);
   roundRect(x,y,w,h,12);
   ctx.stroke();
+  if(n.isGhost) ctx.setLineDash([]);
 
   ctx.save();
   roundRect(x,y,w,h,12);
@@ -280,6 +283,12 @@ function drawCard(n){
     ctx.font = '9px system-ui';
     ctx.fillText('★', x + w - 10, y + h - 8);
   }
+  if(n.isSharedAncestor){
+    ctx.strokeStyle = '#E6B428';
+    ctx.lineWidth = 2.5;
+    roundRect(x-2,y-2,w+4,h+4,12);
+    ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -302,6 +311,7 @@ function hitNode(clientX, clientY){
   const y = (clientY - oy) / scale;
   for(let i=nodes.length-1;i>=0;i--){
     const n=nodes[i];
+    if(n.isGhost) continue;
     if(x>=n.x&&x<=n.x+n.w&&y>=n.y&&y<=n.y+n.h) return n;
   }
   return null;
