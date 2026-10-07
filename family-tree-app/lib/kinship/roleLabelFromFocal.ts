@@ -1,33 +1,52 @@
-import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
+import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
+import {
+  computeRelationFinderResult,
+  summarizeKinshipStepsForLocale,
+} from "@/lib/kinship/relationPaths";
 
-const roleCache = new Map<string, string>();
+const roleCache = new Map<string, { en: string; ur: string }>();
 
 function cacheKey(focalId: string, personId: string): string {
   return `${focalId}:${personId}`;
 }
 
-/** Kinship role of `personId` relative to focal (English label). */
-export function roleLabelFromFocal(
+export type FocalRoleLabels = { en: string; ur: string };
+
+/** Kinship role of `personId` relative to focal (English + Urdu script). */
+export function roleLabelsFromFocal(
   focalId: string,
   personId: string,
-): string {
-  if (focalId === personId) return "You";
+): FocalRoleLabels {
+  if (focalId === personId) {
+    return { en: "You", ur: "آپ" };
+  }
   const key = cacheKey(focalId, personId);
   const hit = roleCache.get(key);
   if (hit) return hit;
 
-  let label = "Relative";
+  let labels: FocalRoleLabels = { en: "Relative", ur: "رشتہ دار" };
   try {
     const result = computeRelationFinderResult(focalId, personId);
-    label =
-      result.ok && result.summaries[0]
-        ? result.summaries[0]
-        : result.message || "Relative";
+    if (result.ok && result.paths[0]) {
+      const { peopleById } = loadKinshipDataset();
+      const steps = result.paths[0];
+      labels = {
+        en: summarizeKinshipStepsForLocale(steps, peopleById, "en"),
+        ur: summarizeKinshipStepsForLocale(steps, peopleById, "ur"),
+      };
+    } else if (result.summaries[0]) {
+      labels = { en: result.summaries[0], ur: "رشتہ دار" };
+    }
   } catch {
-    label = "Relative";
+    labels = { en: "Relative", ur: "رشتہ دار" };
   }
-  roleCache.set(key, label);
-  return label;
+  roleCache.set(key, labels);
+  return labels;
+}
+
+/** @deprecated Use roleLabelsFromFocal */
+export function roleLabelFromFocal(focalId: string, personId: string): string {
+  return roleLabelsFromFocal(focalId, personId).en;
 }
 
 export function clearRoleLabelCache(): void {

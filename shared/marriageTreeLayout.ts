@@ -3,6 +3,7 @@
  */
 
 import { includeCousinsUpToDegree } from "./genealogy/cousinInclusion";
+import { applyCousinNetworkPosterSpread } from "./genealogy/cousinNetworkPosterLayout";
 
 import {
   PEDIGREE_CARD_BIG_W,
@@ -49,6 +50,10 @@ export type MarriageLayoutOptions = {
   phoneSingleParentSide?: boolean;
   /** When true (default), only the primary union appears on the marriage row (B1). */
   onlyPrimarySpouseOnRow?: boolean;
+  /** How many parent generations to stack above each marriage-row partner (default 1). */
+  maxAncestorGenerations?: number;
+  /** Widen paternal/maternal wings after layout (cousin-network poster). */
+  cousinNetworkPosterSpread?: boolean;
 };
 
 export type MarriageLayoutResult = {
@@ -453,12 +458,21 @@ export function layoutMarriageCentricGraph(
     );
   }
 
-  function placeParentsAbove(
+  const maxAncestorGenerations = Math.max(
+    1,
+    options?.maxAncestorGenerations ?? 1,
+  );
+
+  function placeAncestorChain(
     personId: string,
     anchorX: number,
     side: "left" | "right" | "center",
+    depth: number,
   ): void {
+    if (depth >= maxAncestorGenerations) return;
     const parents = parentsForPerson(personId);
+    if (parents.length === 0) return;
+    const rowY = originY - V * (depth + 1);
     parents.forEach((parent, index) => {
       let x = anchorX;
       if (side === "left") {
@@ -467,29 +481,34 @@ export function layoutMarriageCentricGraph(
           PEDIGREE_PARENT_OUTER_MARGIN -
           (parents.length - index) * PEDIGREE_COLUMN_STEP;
       } else if (side === "right") {
-        x = anchorX + PEDIGREE_CARD_BIG_W + PEDIGREE_PARENT_MID_GAP + index * PEDIGREE_COLUMN_STEP;
+        x =
+          anchorX +
+          PEDIGREE_CARD_BIG_W +
+          PEDIGREE_PARENT_MID_GAP +
+          index * PEDIGREE_COLUMN_STEP;
       } else {
         x = anchorX + (index - (parents.length - 1) / 2) * H;
       }
-      ensurePosition(positions, parent.id, x, originY - V);
+      ensurePosition(positions, parent.id, x, rowY);
       edges.push({
-        id: `parent-${parent.id}-${personId}`,
+        id: `parent-${parent.id}-${personId}-${depth}`,
         source: parent.id,
         target: personId,
         type: "parent",
       });
+      placeAncestorChain(parent.id, x, side, depth + 1);
     });
   }
 
   if (wifeId) {
     const husbandX = positions.get(husbandId)?.x ?? originX;
     const wifeX = positions.get(wifeId)?.x ?? originX + coupleStep;
-    placeParentsAbove(husbandId, husbandX, "left");
+    placeAncestorChain(husbandId, husbandX, "left", 0);
     if (!options?.phoneSingleParentSide) {
-      placeParentsAbove(wifeId, wifeX, "right");
+      placeAncestorChain(wifeId, wifeX, "right", 0);
     }
   } else {
-    placeParentsAbove(focalId, originX, "center");
+    placeAncestorChain(focalId, originX, "center", 0);
   }
 
   rowSpouseEntries.forEach((entry, unionIndex) => {
@@ -532,6 +551,17 @@ export function layoutMarriageCentricGraph(
       personId,
       Math.max(rightMost, leftMost) + H,
       originY + V,
+    );
+  }
+
+  if (options?.cousinNetworkPosterSpread) {
+    applyCousinNetworkPosterSpread(
+      positions,
+      focalId,
+      rowSpouseEntries.map((e) => e.spouseId),
+      unions,
+      included,
+      originY,
     );
   }
 
