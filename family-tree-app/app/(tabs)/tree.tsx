@@ -15,7 +15,7 @@ import { copy } from "@/content/businessCopy";
 import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
 import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
-import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
+import { treeExpansionForKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
 import {
   DEFAULT_TREE_EXPANSION,
   MAX_TREE_GENERATIONS,
@@ -119,12 +119,12 @@ export default function TreeScreen() {
   const [loadedCode, setLoadedCode] = useState(
     paramCode || DEFAULT_FAMILY_CODE,
   );
-  const pathGraphGens = useMemo(() => {
+  const pathGraphExpansion = useMemo(() => {
     if (pathHighlightIds.length < 2) return null;
     const focalMember = getLocalMemberByFamilyCode(loadedCode.trim());
     if (!focalMember) return null;
     const { allUnions } = loadKinshipDataset();
-    return generationsToIncludeKinshipPath(
+    return treeExpansionForKinshipPath(
       focalMember.id,
       pathHighlightIds,
       allUnions.map((u) => ({
@@ -419,8 +419,10 @@ export default function TreeScreen() {
               relationHighlightIds.length ? relationHighlightIds : undefined
             }
             ensurePersonIds={pathHighlightIds.length ? pathHighlightIds : undefined}
-            seedGenerationsUp={pathGraphGens?.generationsUp}
-            seedGenerationsDown={pathGraphGens?.generationsDown}
+            seedGenerationsUp={pathGraphExpansion?.generationsUp}
+            seedGenerationsDown={pathGraphExpansion?.generationsDown}
+            seedSiblingSteps={pathGraphExpansion?.siblingSteps}
+            seedCousinDegree={pathGraphExpansion?.cousinDegree}
           />
         ) : graphLoading ? (
           <View style={styles.loading}>

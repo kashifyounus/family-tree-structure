@@ -84,3 +84,39 @@ export function generationsToIncludeKinshipPath(
     generationsDown: Math.min(MAX_GEN, maxDown + 1),
   };
 }
+
+export type KinshipPathTreeExpansion = KinshipPathGenerations & {
+  siblingSteps: number;
+  cousinDegree: number;
+};
+
+/** Full local tree expansion so find-relation paths (including distant cousins) fit on the graph. */
+export function treeExpansionForKinshipPath(
+  focalPersonId: string,
+  pathPersonIds: readonly string[],
+  unions: MarriageUnionForPath[],
+): KinshipPathTreeExpansion {
+  const gens = generationsToIncludeKinshipPath(
+    focalPersonId,
+    pathPersonIds,
+    unions,
+  );
+  const unique = [...new Set(pathPersonIds.filter(Boolean))];
+  let maxCousin = 0;
+  let needsCollateral = false;
+  for (const id of unique) {
+    const { up, down } = shortestUpDownBetween(focalPersonId, id, unions);
+    if (up >= 2 && down >= 2) {
+      maxCousin = Math.max(maxCousin, Math.min(up, down) - 1);
+      needsCollateral = true;
+    }
+    if (up >= 1 && down >= 1 && Math.min(up, down) === 1) {
+      needsCollateral = true;
+    }
+  }
+  return {
+    ...gens,
+    siblingSteps: needsCollateral ? Math.max(1, maxCousin) : 0,
+    cousinDegree: Math.min(8, maxCousin),
+  };
+}

@@ -50,11 +50,15 @@ type LocalFamilyTreeProps = {
   ensurePersonIds?: string[];
   seedGenerationsUp?: number;
   seedGenerationsDown?: number;
+  seedSiblingSteps?: number;
+  seedCousinDegree?: number;
 };
 
 function initialTreeExpansion(
   seedGenerationsUp?: number,
   seedGenerationsDown?: number,
+  seedSiblingSteps?: number,
+  seedCousinDegree?: number,
 ): TreeExpansionState {
   return {
     generationsUp: Math.max(
@@ -65,8 +69,14 @@ function initialTreeExpansion(
       DEFAULT_TREE_EXPANSION.generationsDown,
       seedGenerationsDown ?? DEFAULT_TREE_EXPANSION.generationsDown,
     ),
-    siblingSteps: DEFAULT_TREE_EXPANSION.siblingSteps,
-    cousinDegree: DEFAULT_TREE_EXPANSION.cousinDegree,
+    siblingSteps: Math.max(
+      DEFAULT_TREE_EXPANSION.siblingSteps,
+      seedSiblingSteps ?? DEFAULT_TREE_EXPANSION.siblingSteps,
+    ),
+    cousinDegree: Math.max(
+      DEFAULT_TREE_EXPANSION.cousinDegree,
+      seedCousinDegree ?? DEFAULT_TREE_EXPANSION.cousinDegree,
+    ),
   };
 }
 
@@ -96,17 +106,29 @@ export function LocalFamilyTree({
   ensurePersonIds,
   seedGenerationsUp,
   seedGenerationsDown,
+  seedSiblingSteps,
+  seedCousinDegree,
 }: LocalFamilyTreeProps) {
   const theme = useAppTheme();
   const router = useRouter();
   const view = layout;
   const [expansion, setExpansion] = useState<TreeExpansionState>(() =>
-    initialTreeExpansion(seedGenerationsUp, seedGenerationsDown),
+    initialTreeExpansion(
+      seedGenerationsUp,
+      seedGenerationsDown,
+      seedSiblingSteps,
+      seedCousinDegree,
+    ),
   );
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
 
   useEffect(() => {
-    if (seedGenerationsUp != null || seedGenerationsDown != null) {
+    if (
+      seedGenerationsUp != null ||
+      seedGenerationsDown != null ||
+      seedSiblingSteps != null ||
+      seedCousinDegree != null
+    ) {
       setExpansion((prev: TreeExpansionState) => ({
         ...prev,
         generationsUp: Math.max(
@@ -117,13 +139,40 @@ export function LocalFamilyTree({
           prev.generationsDown,
           seedGenerationsDown ?? DEFAULT_TREE_EXPANSION.generationsDown,
         ),
+        siblingSteps: Math.max(
+          prev.siblingSteps,
+          seedSiblingSteps ?? DEFAULT_TREE_EXPANSION.siblingSteps,
+        ),
+        cousinDegree: Math.max(
+          prev.cousinDegree,
+          seedCousinDegree ?? DEFAULT_TREE_EXPANSION.cousinDegree,
+        ),
       }));
     }
-  }, [seedGenerationsUp, seedGenerationsDown]);
+  }, [
+    seedGenerationsUp,
+    seedGenerationsDown,
+    seedSiblingSteps,
+    seedCousinDegree,
+  ]);
 
   useEffect(() => {
-    setExpansion(initialTreeExpansion(seedGenerationsUp, seedGenerationsDown));
-  }, [familyCode, dataRevision, seedGenerationsUp, seedGenerationsDown]);
+    setExpansion(
+      initialTreeExpansion(
+        seedGenerationsUp,
+        seedGenerationsDown,
+        seedSiblingSteps,
+        seedCousinDegree,
+      ),
+    );
+  }, [
+    familyCode,
+    dataRevision,
+    seedGenerationsUp,
+    seedGenerationsDown,
+    seedSiblingSteps,
+    seedCousinDegree,
+  ]);
 
   const graphOptions: BuildLocalGraphOptions = useMemo(
     () => ({
@@ -200,7 +249,40 @@ export function LocalFamilyTree({
   }, [focal, graph, expansion]);
 
   const resetExpansion = () => {
-    setExpansion(initialTreeExpansion(seedGenerationsUp, seedGenerationsDown));
+    setExpansion(
+      initialTreeExpansion(
+        seedGenerationsUp,
+        seedGenerationsDown,
+        seedSiblingSteps,
+        seedCousinDegree,
+      ),
+    );
+  };
+
+  const onGhostPress = (event: {
+    ghostKind?: string;
+  }) => {
+    switch (event.ghostKind) {
+      case "parents":
+        setExpansion((prev) => ({
+          ...prev,
+          generationsUp: prev.generationsUp + 1,
+        }));
+        break;
+      case "siblings":
+        setExpansion((prev) => ({
+          ...prev,
+          siblingSteps: prev.siblingSteps + 1,
+          cousinDegree: prev.cousinDegree + 1,
+        }));
+        break;
+      case "marriage":
+        setExpansion((prev) => stepExpandTree(prev));
+        break;
+      default:
+        setExpansion((prev) => stepExpandTree(prev));
+        break;
+    }
   };
 
   const onExpandTree = () => {
@@ -240,6 +322,7 @@ export function LocalFamilyTree({
           onPersonLongPress={onPersonLongPress}
           pathHighlightPersonIds={pathHighlightPersonIds}
           highlightPersonIds={highlightPersonIds}
+          onGhostPress={onGhostPress}
         />
       ) : view === "graph" ? null : (
         <ScrollView

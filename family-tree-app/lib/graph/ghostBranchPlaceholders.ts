@@ -36,6 +36,7 @@ export function appendGhostBranchPlaceholders(
         roleEn: copy.parentsEn,
         roleUr: copy.parentsUr,
         anchorId: n.id,
+        ghostKind: "parents",
       }));
       segments.push(ghostStem(n.x + n.w / 2, n.y, gx + GHOST_W / 2, gy + GHOST_H, `ghost-up-${n.id}`));
     }
@@ -49,6 +50,7 @@ export function appendGhostBranchPlaceholders(
         roleEn: copy.siblingsEn,
         roleUr: copy.siblingsUr,
         anchorId: n.id,
+        ghostKind: "siblings",
       }));
       segments.push(ghostStem(gx + GHOST_W, gy + GHOST_H / 2, n.x, n.y + n.h / 2, `ghost-sib-${n.id}`));
     }
@@ -74,6 +76,7 @@ export function appendGhostBranchPlaceholders(
         roleUr: copy.marriageUr,
         anchorId: ego.id,
         isMarriageGhost: true,
+        ghostKind: "marriage",
       }));
       segments.push({
         id: `ghost-marriage-seg-${partnerId}`,
@@ -91,6 +94,8 @@ export function appendGhostBranchPlaceholders(
   }
 }
 
+export type GhostBranchKind = "parents" | "siblings" | "marriage";
+
 function makeGhostNode(input: {
   id: string;
   x: number;
@@ -99,6 +104,7 @@ function makeGhostNode(input: {
   roleUr: string;
   anchorId: string;
   isMarriageGhost?: boolean;
+  ghostKind: GhostBranchKind;
 }): PedigreeCanvasNode {
   return {
     id: input.id,
@@ -126,6 +132,7 @@ function makeGhostNode(input: {
     roleLineUr: input.roleUr,
     isGhost: true,
     ghostAnchorId: input.anchorId,
+    ghostKind: input.ghostKind,
   };
 }
 
