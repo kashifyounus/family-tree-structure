@@ -11,9 +11,11 @@ Code for kinship features should follow these **processes** (user journeys), not
 5. **Tap** a person on the graph to recenter the tree on them; **long press** opens profile and relation actions.
 6. **List view** on tree: tap a child name to recenter on that person (switches to graph focal).
 7. **Default expansion** shows about two generations; **Load more** / **Load full tree** (and fine-tune parents, siblings, children) widen inclusion per `shared/genealogy/treeExpansion.ts` and cousin-degree rules in `shared/genealogy/cousinInclusion.ts`.
-8. **Cousin-network presentation** (canvas cards): generation/side color bands (GGP, GP, paternal, maternal, focal), bilingual name lines, English kinship role from focal when the archive loads, dashed red marriage connectors, marriage heart band, and a **purple path** when the primary spouse is also a cousin (same rule as Find relation). Legend appears on immersive graph when the cousin link applies.
+8. **Cousin-network presentation** (canvas cards): generation/side color bands (GGP, GP, paternal, maternal, focal), bilingual name lines, English + Urdu kinship role from focal when the archive loads, dashed red marriage connectors, marriage heart band, and a **purple path** when the primary spouse is also a cousin (same rule as Find relation). Legend appears on immersive graph when the cousin link applies.
+9. **Poster layout** when expansion includes collaterals or extra generations: stack `generationsUp` ancestor rows above each marriage-row wing and widen paternal (left) / maternal (right) spacing for landscape cousin networks.
+10. **Tree header**: bilingual focal name (English + Urdu) and member search (name, Urdu name, or family code) to recenter the graph.
 
-Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `buildLocalFamilyGraph`, `buildPedigreeCanvasPayload`, `GraphWebView`, `TreeLegendBar`, `shared/genealogy/pedigreeNodePresentation.ts`, `shared/pedigreeBandTheme.ts`.
+Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `TreeFocalSearchHeader`, `buildLocalFamilyGraph`, `buildPedigreeCanvasPayload`, `GraphWebView`, `TreeLegendBar`, `shared/genealogy/pedigreeNodePresentation.ts`, `shared/pedigreeBandTheme.ts`, `shared/genealogy/cousinNetworkPosterLayout.ts`, `roleLabelsFromFocal`.
 
 ## Process: Mutual relationship between two people
 
