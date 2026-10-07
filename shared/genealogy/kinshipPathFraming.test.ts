@@ -1,6 +1,7 @@
 import {
   generationsToIncludeKinshipPath,
   shortestUpDownBetween,
+  treeExpansionForKinshipPath,
 } from "./kinshipPathFraming";
 
 const unions = [
@@ -32,5 +33,10 @@ describe("kinshipPathFraming", () => {
     const gens = generationsToIncludeKinshipPath("c1", ["c1", "gp1", "c2"], unions);
     expect(gens.generationsUp).toBeGreaterThanOrEqual(2);
     expect(gens.generationsDown).toBeGreaterThanOrEqual(2);
+  });
+
+  it("raises sibling steps when the path needs a collateral on the tree", () => {
+    const exp = treeExpansionForKinshipPath("c1", ["c1", "c2"], unions);
+    expect(exp.siblingSteps).toBeGreaterThanOrEqual(1);
   });
 });

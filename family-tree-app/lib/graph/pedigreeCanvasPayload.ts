@@ -76,6 +76,7 @@ export type PedigreeCanvasNode = {
   isSharedAncestor?: boolean;
   isGhost?: boolean;
   ghostAnchorId?: string;
+  ghostKind?: "parents" | "siblings" | "marriage";
 };
 
 const PEDIGREE_CARD_DETAIL_SMALL_H = 92;

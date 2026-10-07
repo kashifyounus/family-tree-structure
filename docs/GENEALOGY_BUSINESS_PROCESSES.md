@@ -15,7 +15,8 @@ Code for kinship features should follow these **processes** (user journeys), not
 9. **Poster layout** when expansion includes collaterals or extra generations: stack `generationsUp` ancestor rows above each marriage-row wing and widen paternal (left) / maternal (right) spacing for landscape cousin networks.
 10. **Tree header**: bilingual focal name (English + Urdu) and member search (name, Urdu name, or family code) to recenter the graph.
 11. **Shared ancestors**: when both marriage-row wings include the same ancestor (typical cousin marriage), merge that person to **one centered card** at the top (`reconcileSharedAncestors`) with a gold highlight.
-12. **Ghost branches**: dashed, semi-transparent placeholders for **more ancestors**, **more siblings**, or **other marriages** not yet on the canvas — tap **Load more** to replace ghosts with real members (ghost cards are not tappable).
+12. **Ghost branches**: dashed, semi-transparent placeholders for **more ancestors**, **more siblings**, or **other marriages** not yet on the canvas — **tap a ghost** to run the matching expansion step (parents / siblings+cousins / load-more for marriage).
+13. **Find relation → full tree**: opening the tree from Find relation seeds `generationsUp`/`Down` plus **cousin degree** and **sibling steps** from `treeExpansionForKinshipPath` so distant cousins appear on the graph with path highlight.
 
 Implementation: `lib/tree/focalFamilyCode.ts`, `app/(tabs)/tree.tsx`, `TreeFocalSearchHeader`, `buildLocalFamilyGraph`, `buildPedigreeCanvasPayload`, `ghostBranchPlaceholders.ts`, `GraphWebView`, `TreeLegendBar`, `shared/genealogy/pedigreeNodePresentation.ts`, `shared/pedigreeBandTheme.ts`, `shared/genealogy/cousinNetworkPosterLayout.ts`, `shared/genealogy/sharedAncestorMerge.ts`, `roleLabelsFromFocal`.
 
