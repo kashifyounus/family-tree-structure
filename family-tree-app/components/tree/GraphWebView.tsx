@@ -311,7 +311,6 @@ function hitNode(clientX, clientY){
   const y = (clientY - oy) / scale;
   for(let i=nodes.length-1;i>=0;i--){
     const n=nodes[i];
-    if(n.isGhost) continue;
     if(x>=n.x&&x<=n.x+n.w&&y>=n.y&&y<=n.y+n.h) return n;
   }
   return null;
@@ -326,6 +325,9 @@ function postPersonPress(n){
 }
 function postPersonLongPress(n){
   postToNative({type:'personLongPress', id:n.id, familyCode:n.familyCode});
+}
+function postGhostPress(n){
+  postToNative({type:'ghostPress', id:n.id, ghostKind:n.ghostKind, anchorId:n.ghostAnchorId});
 }
 
 function onGraph(g){
@@ -375,7 +377,10 @@ canvas.addEventListener('pointerup', e=>{
   if(longPressTimer) clearLongPress();
   if(dragging && moved < 10 && !longPressFired){
     const n = hitNode(e.clientX, e.clientY);
-    if(n) postPersonPress(n);
+    if(n){
+      if(n.isGhost) postGhostPress(n);
+      else postPersonPress(n);
+    }
   }
   dragging=false;
   longPressFired = false;
@@ -437,6 +442,11 @@ type GraphWebViewProps = {
   edgeToEdge?: boolean;
   onPersonPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
   onPersonLongPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
+  onGhostPress?: (event: {
+    id: string;
+    ghostKind?: string;
+    anchorId?: string;
+  }) => void;
 };
 
 /**
@@ -451,6 +461,7 @@ export function GraphWebView({
   edgeToEdge = false,
   onPersonPress,
   onPersonLongPress,
+  onGhostPress,
 }: GraphWebViewProps) {
   const webRef = useRef<WebView>(null);
   const payload = useMemo(
@@ -485,13 +496,23 @@ export function GraphWebView({
           webRef.current?.postMessage(payload);
         }}
         onMessage={(event) => {
-          if (!onPersonPress && !onPersonLongPress) return;
+          if (!onPersonPress && !onPersonLongPress && !onGhostPress) return;
           try {
             const msg = JSON.parse(event.nativeEvent.data) as {
               type?: string;
               id?: string;
+              ghostKind?: string;
+              anchorId?: string;
             };
             if (!msg.id) return;
+            if (msg.type === "ghostPress") {
+              onGhostPress?.({
+                id: msg.id,
+                ghostKind: msg.ghostKind,
+                anchorId: msg.anchorId,
+              });
+              return;
+            }
             const node = graph.nodes.find((n) => n.id === msg.id);
             if (!node) return;
             if (msg.type === "personLongPress") {
