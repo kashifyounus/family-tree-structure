@@ -24,9 +24,9 @@ Stakeholder tree-map requirements: [`docs/REQUIREMENTS_FAMILY_TREE_MAP.md`](./RE
 
 **Shipped in app 1.0.7:** Add parent link-only; gender chips; shared `PersonFields` on add child/spouse/member; nickname on create + picker search; tree v7 connector colors + name-only canvas; Reports tab visible; Find relation entry screen; `docs/APP_ID_MIGRATION.md`.
 
-**Still open (follow-up PRs):** Full v6 tree placement polish; Google Drive backup (U2); package id migration (U1 code).
+**Still open (follow-up PRs):** Google Drive backup (U2); package id migration (U1 code).
 
-**Recently addressed on tree stack (#51–#52):** Cousin-network cards, poster wings, shared ancestor merge, marriage/ancestor ghost placeholders (tappable), find-relation path expansion including distant cousins.
+**Recently addressed on tree stack (#51–#53):** Cousin-network UI, poster wings, shared ancestor merge, ghost placeholders (tappable), find-relation path expansion, **v6 collateral/cousin wing placement** (`shared/genealogy/collateralTreePlacement.ts`).
 
 **1.0.9 slice:** Reports KPI strip + presets + custom AND query (`shared/archiveQuery.ts`); Find relation purple 6px path highlight on tree; professional copy pass on reports / find-relation.
 
