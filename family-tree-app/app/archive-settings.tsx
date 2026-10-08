@@ -18,7 +18,7 @@ import {
   importLocalDatabaseJson,
 } from "@/lib/db/localRepository.ext";
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
-import { defaultJsonExportCachePath } from "../../../shared/backupArtifacts";
+import { defaultJsonExportCachePath } from "../../shared/backupArtifacts";
 import { AppText } from "@/components/ui/AppText";
 
 export default function ArchiveSettingsScreen() {
