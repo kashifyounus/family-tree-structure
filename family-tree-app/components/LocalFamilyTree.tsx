@@ -28,8 +28,8 @@ import {
   stepExpandTree,
   treeExpansionHasMore,
   type TreeExpansionState,
-} from "../../../shared/genealogy/treeExpansion";
-import type { MarriageLayoutUnion } from "../../../shared/marriageTreeLayout";
+} from "../../shared/genealogy/treeExpansion";
+import type { MarriageLayoutUnion } from "../../shared/marriageTreeLayout";
 
 type LocalFamilyTreeProps = {
   familyCode: string;
@@ -105,7 +105,7 @@ export function LocalFamilyTree({
 
   useEffect(() => {
     if (seedGenerationsUp != null || seedGenerationsDown != null) {
-      setExpansion((prev) => ({
+      setExpansion((prev: TreeExpansionState) => ({
         ...prev,
         generationsUp: Math.max(
           prev.generationsUp,
@@ -192,7 +192,7 @@ export function LocalFamilyTree({
   };
 
   const onExpandTree = () => {
-    setExpansion((prev) => stepExpandTree(prev));
+    setExpansion((prev: TreeExpansionState) => stepExpandTree(prev));
   };
 
   const onExpandTreeMax = () => {
@@ -328,20 +328,20 @@ export function LocalFamilyTree({
           canLoadChildren={loadMore.children}
           canLoadSiblings={loadMore.siblings}
           onLoadParents={() =>
-            setExpansion((prev) => ({
+            setExpansion((prev: TreeExpansionState) => ({
               ...prev,
               generationsUp: prev.generationsUp + 1,
             }))
           }
           onLoadSiblings={() =>
-            setExpansion((prev) => ({
+            setExpansion((prev: TreeExpansionState) => ({
               ...prev,
               siblingSteps: prev.siblingSteps + 1,
               cousinDegree: prev.cousinDegree + 1,
             }))
           }
           onLoadChildren={() =>
-            setExpansion((prev) => ({
+            setExpansion((prev: TreeExpansionState) => ({
               ...prev,
               generationsDown: prev.generationsDown + 1,
             }))
