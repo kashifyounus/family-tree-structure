@@ -67,7 +67,7 @@ Status values: `done` | `in_work` | `pending`
 | Q2 | `treeLayoutContract.test.ts` | done | |
 | Q3 | Maestro flows 01, 09–12, 06, 07 | done | Contracts in CI |
 | Q4 | Mobile `tsc --noEmit` in CI | done | `npm run typecheck` + contract test Gender fix |
-| Q5 | Emulator Maestro on `main` push | in_work | Fix: boot `testID`, longer waits, `emulator-boot-timeout`, no cancel on `main` |
+| Q5 | Emulator Maestro on `main` push | in_work | See [`QA_MAESTRO_Q5.md`](./QA_MAESTRO_Q5.md) — Oct 2026 retest: ANR on slow emu; flow 08 needs session; 09 fails `onboarding-screen` vs NavigationGate |
 | Q6 | `wipeFixtureDataset` UI | deferred | Full demo wipe is product path |
 
 ---
