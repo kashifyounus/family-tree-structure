@@ -13,7 +13,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { copy } from "@/content/businessCopy";
 import { listLocalMembers } from "@/lib/db/localRepository";
 import { formatBilingualName } from "@/lib/format/displayName";
-import { memberPickerSubtitle } from "@/lib/members/memberPickerSubtitle";
+import { memberRecordSubtitle } from "@/lib/members/memberPickerSubtitle";
 
 type TreeFocalSearchHeaderProps = {
   titleEn: string;
@@ -113,7 +113,7 @@ export function TreeFocalSearchHeader({
                   {formatBilingualName(item) || `${item.firstName} ${item.lastName}`}
                 </AppText>
                 <AppText variant="labelSmall" style={styles.resultSub} numberOfLines={1}>
-                  {memberPickerSubtitle(item)}
+                  {memberRecordSubtitle(item)}
                 </AppText>
               </Pressable>
             )}

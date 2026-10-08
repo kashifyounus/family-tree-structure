@@ -264,23 +264,23 @@ export function LocalFamilyTree({
   }) => {
     switch (event.ghostKind) {
       case "parents":
-        setExpansion((prev) => ({
+        setExpansion((prev: TreeExpansionState) => ({
           ...prev,
           generationsUp: prev.generationsUp + 1,
         }));
         break;
       case "siblings":
-        setExpansion((prev) => ({
+        setExpansion((prev: TreeExpansionState) => ({
           ...prev,
           siblingSteps: prev.siblingSteps + 1,
           cousinDegree: prev.cousinDegree + 1,
         }));
         break;
       case "marriage":
-        setExpansion((prev) => stepExpandTree(prev));
+        setExpansion((prev: TreeExpansionState) => stepExpandTree(prev));
         break;
       default:
-        setExpansion((prev) => stepExpandTree(prev));
+        setExpansion((prev: TreeExpansionState) => stepExpandTree(prev));
         break;
     }
   };

@@ -64,6 +64,7 @@ export type PedigreeCanvasNode = {
   isPrivate: boolean;
   hasUnexpandedParents: boolean;
   hasUnexpandedChildren: boolean;
+  hasUnexpandedSiblings?: boolean;
   nickname: string | null;
   tier: "big" | "small";
   /** Mother’s-side wing (spouse line) — distinct card accent */
@@ -332,6 +333,7 @@ export function buildPedigreeCanvasPayload(
       isPrivate,
       hasUnexpandedParents: Boolean(n.data.hasUnexpandedParents),
       hasUnexpandedChildren: Boolean(n.data.hasUnexpandedChildren),
+      hasUnexpandedSiblings: Boolean(n.data.hasUnexpandedSiblings),
       maternalWing: maternalIds.has(n.id) && n.id !== graph.focalPersonId,
       visualBand,
       bandColor,
