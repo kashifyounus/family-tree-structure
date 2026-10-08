@@ -7,13 +7,21 @@ import {
 } from "@/lib/api/mobilePersonDetails";
 import { normalizeApiBaseUrl } from "@/lib/apiUrl";
 
-const TOKEN_KEY = "mughals_auth_token";
-const API_URL_KEY = "mughals_api_base_url";
+import {
+  deleteSecurePrimaryAndLegacy,
+  readSecureWithLegacyKey,
+} from "@/lib/storage/legacySecureStore";
+import { readWithLegacyKey } from "@/lib/storage/legacyAsyncStorage";
+
+const TOKEN_KEY = "kuriosity_auth_token";
+const TOKEN_KEY_LEGACY = "mughals_auth_token";
+const API_URL_KEY = "kuriosity_api_base_url";
+const API_URL_KEY_LEGACY = "mughals_api_base_url";
 
 let apiUrlOverride: string | null = null;
 
 export async function loadApiUrlOverride(): Promise<string | null> {
-  apiUrlOverride = await AsyncStorage.getItem(API_URL_KEY);
+  apiUrlOverride = await readWithLegacyKey(API_URL_KEY, API_URL_KEY_LEGACY);
   return apiUrlOverride;
 }
 
@@ -35,12 +43,12 @@ export function getApiBaseUrl(): string {
 }
 
 export async function getAuthToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(TOKEN_KEY);
+  return readSecureWithLegacyKey(TOKEN_KEY, TOKEN_KEY_LEGACY);
 }
 
 export async function setAuthToken(token: string | null): Promise<void> {
   if (!token) {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await deleteSecurePrimaryAndLegacy(TOKEN_KEY, TOKEN_KEY_LEGACY);
     return;
   }
   await SecureStore.setItemAsync(TOKEN_KEY, token);

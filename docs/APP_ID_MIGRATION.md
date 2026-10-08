@@ -37,7 +37,7 @@ Until U2 is done, sign-in may fail on builds using the new package id.
 ## Local data & keys (separate follow-ups)
 
 - **SQLite:** `kuriosity_family.db` with legacy `mughals_family.db` migrate-on-launch (see `docs/SQLITE_STORAGE.md`).
-- **AsyncStorage / SecureStore:** `mughals_*` key prefixes — migrate read-once on first launch (see backup/P1 PR and step 2 backlog).
+- **AsyncStorage / SecureStore:** `kuriosity_*` / `@kuriosity/*` keys with migrate-on-read from legacy `mughals_*` (`lib/storage/legacyAsyncStorage.ts`, `legacySecureStore.ts`). New package id still starts with empty storage unless users restore backup.
 - **Backup filenames:** `kuriosity-family-backup.json` with legacy import (P1).
 
 ## Maestro / CI

@@ -1,9 +1,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const TREE_OPENED_KEY = "mughals_live_tree_checklist_opened";
+import {
+  readWithLegacyKey,
+  removePrimaryAndLegacy,
+} from "@/lib/storage/legacyAsyncStorage";
+
+const TREE_OPENED_KEY = "kuriosity_live_tree_checklist_opened";
+const TREE_OPENED_KEY_LEGACY = "mughals_live_tree_checklist_opened";
 
 export async function isLiveTreeChecklistOpened(): Promise<boolean> {
-  return (await AsyncStorage.getItem(TREE_OPENED_KEY)) === "1";
+  const value = await readWithLegacyKey(TREE_OPENED_KEY, TREE_OPENED_KEY_LEGACY);
+  return value === "1";
 }
 
 export async function markLiveTreeChecklistOpened(): Promise<void> {
@@ -11,5 +18,5 @@ export async function markLiveTreeChecklistOpened(): Promise<void> {
 }
 
 export async function resetLiveTreeChecklistOpened(): Promise<void> {
-  await AsyncStorage.removeItem(TREE_OPENED_KEY);
+  await removePrimaryAndLegacy(TREE_OPENED_KEY, TREE_OPENED_KEY_LEGACY);
 }
