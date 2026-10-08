@@ -85,8 +85,14 @@ function singleFatherChild(): RuleGraph {
 describe("addMemberLinkRules", () => {
   it("allows spouse anchor when shared marriage rules pass", () => {
     const g = family();
-    expect(canSelectAnchorForNewSpouse(g, "wife", "FEMALE")).toBe(true);
     expect(canSelectAnchorForNewSpouse(g, "daughter", "MALE")).toBe(true);
+    expect(canSelectAnchorForNewSpouse(g, "son", "FEMALE")).toBe(true);
+  });
+
+  it("blocks spouse anchor when female monogamy would be violated", () => {
+    const g = family();
+    expect(canSelectAnchorForNewSpouse(g, "wife", "MALE")).toBe(false);
+    expect(canSelectAnchorForNewSpouse(g, "mother", "MALE")).toBe(false);
   });
 
   it("blocks parent role when child already has two real parents", () => {
