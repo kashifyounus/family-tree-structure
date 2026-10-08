@@ -8,7 +8,7 @@ import { AppText } from "@/components/ui/AppText";
 import { IconButton } from "@/components/ui/IconButton";
 import { copy } from "@/content/businessCopy";
 import { buildConnectionPathGraph } from "@/lib/graph/buildConnectionPathGraph";
-import type { PathLayoutStep } from "../../../shared/genealogy/pathTimelineLayout";
+import type { PathLayoutStep } from "../../shared/genealogy/pathTimelineLayout";
 import { useAppTheme } from "@/theme/useAppTheme";
 
 export default function ConnectionTreeScreen() {
