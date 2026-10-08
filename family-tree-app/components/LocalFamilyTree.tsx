@@ -414,7 +414,16 @@ export function LocalFamilyTree({
       )}
       {view === "graph" && immersive ? (
         <>
-        <TreeLegendBar showCousinLink={showCousinLegend} />
+        <TreeLegendBar
+          showCousinLink={showCousinLegend}
+          showSharedAncestor={(graph?.sharedAncestorIds?.length ?? 0) > 0}
+          showGhostHint={
+            loadMore.canExpandTree ||
+            loadMore.parents ||
+            loadMore.children ||
+            loadMore.siblings
+          }
+        />
         <TreeGraphFloatingBar
           canLoadMore={loadMore.canExpandTree}
           onLoadMore={onExpandTree}

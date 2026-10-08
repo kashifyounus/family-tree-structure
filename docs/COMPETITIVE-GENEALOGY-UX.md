@@ -112,7 +112,9 @@ IDs reference the [requirement → test table](./TESTING-REQUIREMENTS.md#kuriosi
 | T-05 | Truncation + summary copy | Large-tree safety |
 | — | Maestro smoke flows | Regression vs competitor “it just works” |
 
-**Still open from GAPS:** v6 placement + marriage ghost labels; distant-cousin subgraph framing on find-relation → tree.
+**Tree stack (#51–#53):** Cousin-network cards, poster wings, shared-ancestor merge, tappable ghost branches, collateral/cousin wing placement (`collateralTreePlacement`), find-relation path expansion — shipped in mobile tree.
+
+**Still open from GAPS:** Google Drive backup (U2); package id migration (U1); distant-path labels for rare asymmetric kinship (`KINSHIP_LABEL_FALLBACK`).
 
 ### P1 — reports & backup (Family Gem parity + trust)
 

@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GraphWebView } from "@/components/tree/GraphWebView";
+import { TreeLegendBar } from "@/components/tree/TreeLegendBar";
 import { AppText } from "@/components/ui/AppText";
 import { IconButton } from "@/components/ui/IconButton";
 import { copy } from "@/content/businessCopy";

@@ -5,6 +5,7 @@
 import { includeCousinsUpToDegree } from "./genealogy/cousinInclusion";
 import { applyCousinNetworkPosterSpread } from "./genealogy/cousinNetworkPosterLayout";
 import { reconcileSharedAncestors } from "./genealogy/sharedAncestorMerge";
+import { placeRemainingIncludedPersons } from "./genealogy/collateralTreePlacement";
 
 import {
   PEDIGREE_CARD_BIG_W,
@@ -558,17 +559,16 @@ export function layoutMarriageCentricGraph(
     });
   });
 
-  for (const personId of included) {
-    if (positions.has(personId)) continue;
-    const p = peopleById.get(personId);
-    if (!p) continue;
-    ensurePosition(
-      positions,
-      personId,
-      Math.max(rightMost, leftMost) + H,
-      originY + V,
-    );
-  }
+  placeRemainingIncludedPersons(
+    positions,
+    edges,
+    included,
+    unions,
+    peopleById,
+    originY,
+    focalId,
+    rowSpouseEntries.map((e) => e.spouseId),
+  );
 
   if (options?.cousinNetworkPosterSpread) {
     applyCousinNetworkPosterSpread(

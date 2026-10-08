@@ -267,6 +267,8 @@ export const copy = {
       return labels[band] ?? band;
     },
     legendCousinLink: "Cousin link",
+    legendSharedAncestor: "Shared ancestor",
+    legendGhostBranch: "Tap to load more",
     ghostMoreAncestorsEn: "More ancestors",
     ghostMoreAncestorsUr: "مزید آباء",
     ghostMoreSiblingsEn: "More siblings",

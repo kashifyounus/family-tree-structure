@@ -26,7 +26,7 @@ Stakeholder tree-map requirements: [`docs/REQUIREMENTS_FAMILY_TREE_MAP.md`](./RE
 
 **Still open (follow-up PRs):** add-member marriage rules (#43); OAuth SHA-1 for `com.kuriosity.engineering` (required for Drive sign-in on U1 builds).
 
-**Tree stack (in PR):** Cousin-network cards, poster wings, shared ancestor merge, marriage/ancestor ghost placeholders (tappable), find-relation cousin expansion, v6 collateral placement.
+**Shipped on tree stack:** Cousin-network UI, poster wings, shared ancestor merge, ghost placeholders (tappable), find-relation cousin expansion, v6 collateral/cousin wing placement (`shared/genealogy/collateralTreePlacement.ts`).
 
 **1.0.9 slice:** Reports KPI strip + presets + custom AND query (`shared/archiveQuery.ts`); Find relation purple 6px path highlight on tree; professional copy pass on reports / find-relation.
 

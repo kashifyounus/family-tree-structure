@@ -17,9 +17,15 @@ const LEGEND_BANDS: PedigreeVisualBand[] = [
 
 type TreeLegendBarProps = {
   showCousinLink?: boolean;
+  showSharedAncestor?: boolean;
+  showGhostHint?: boolean;
 };
 
-export function TreeLegendBar({ showCousinLink }: TreeLegendBarProps) {
+export function TreeLegendBar({
+  showCousinLink,
+  showSharedAncestor,
+  showGhostHint,
+}: TreeLegendBarProps) {
   return (
     <View style={styles.wrap} pointerEvents="none">
       <AppText variant="labelSmall" style={styles.title}>
@@ -41,6 +47,22 @@ export function TreeLegendBar({ showCousinLink }: TreeLegendBarProps) {
             <View style={[styles.swatch, styles.cousinDash]} />
             <AppText variant="labelSmall" style={styles.chipText}>
               {copy.tree.legendCousinLink}
+            </AppText>
+          </View>
+        ) : null}
+        {showSharedAncestor ? (
+          <View style={styles.chip}>
+            <View style={[styles.swatch, styles.sharedAnc]} />
+            <AppText variant="labelSmall" style={styles.chipText}>
+              {copy.tree.legendSharedAncestor}
+            </AppText>
+          </View>
+        ) : null}
+        {showGhostHint ? (
+          <View style={styles.chip}>
+            <View style={[styles.swatch, styles.ghostSwatch]} />
+            <AppText variant="labelSmall" style={styles.chipText}>
+              {copy.tree.legendGhostBranch}
             </AppText>
           </View>
         ) : null}
@@ -67,6 +89,17 @@ const styles = StyleSheet.create({
     borderColor: "#7828A0",
     borderStyle: "dashed",
     width: 18,
+  },
+  sharedAnc: {
+    backgroundColor: "#E6B428",
+    borderWidth: 2,
+    borderColor: "#E6B428",
+  },
+  ghostSwatch: {
+    backgroundColor: "transparent",
+    borderWidth: 1.5,
+    borderColor: "#9ca3af",
+    borderStyle: "dashed",
   },
   chipText: { color: "#374151", fontSize: 10 },
 });
