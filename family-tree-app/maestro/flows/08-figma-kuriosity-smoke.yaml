@@ -1,3 +1,5 @@
+# Kuriosity UI smoke — requires an established session (home tab).
+# Do not use launchApp clearState. In CI, run after 09-demo-onboarding-kay (see ci-maestro-smoke.sh).
 appId: com.mughals.familytree
 tags:
   - smoke

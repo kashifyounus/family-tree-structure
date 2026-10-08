@@ -10,7 +10,7 @@ if [[ ! -f "$APK" ]]; then
   APK="$ROOT/android/app/build/outputs/apk/debug/app-debug.apk"
 fi
 
-DEFAULT_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml"
+DEFAULT_CI_FLOWS="maestro/flows/01-onboarding-private-archive.yaml,maestro/flows/09-demo-onboarding-kay.yaml,maestro/flows/08-figma-kuriosity-smoke.yaml,maestro/flows/10-archive-lane-switch.yaml,maestro/flows/11-demo-clear-restart.yaml,maestro/flows/12-tree-load-more.yaml"
 export MAESTRO_CI_FLOWS="${MAESTRO_CI_FLOWS:-$DEFAULT_CI_FLOWS}"
 DEFAULT_FLOW="maestro/flows/01-onboarding-private-archive.yaml"
 FLOW="${MAESTRO_CI_FLOW:-$DEFAULT_FLOW}"
@@ -82,7 +82,7 @@ adb shell input keyevent 82 >/dev/null 2>&1 || true
 adb shell wm dismiss-keyguard >/dev/null 2>&1 || true
 sleep 15
 
-export MAESTRO_DRIVER_STARTUP_TIMEOUT="${MAESTRO_DRIVER_STARTUP_TIMEOUT:-600000}"
+export MAESTRO_DRIVER_STARTUP_TIMEOUT="${MAESTRO_DRIVER_STARTUP_TIMEOUT:-900000}"
 echo "MAESTRO_DRIVER_STARTUP_TIMEOUT=${MAESTRO_DRIVER_STARTUP_TIMEOUT}ms"
 
 APP_ID="${MAESTRO_APP_ID:-com.mughals.familytree}"

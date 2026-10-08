@@ -18,7 +18,9 @@ npm run test:smoke
 
 When this passes, **S4a** is satisfied.
 
-**S4 (CI path):** When the `Android emulator — Maestro smoke` job on `main` is green, it runs flows **01, 09–12** (same as the quick checklist). You may sign **S4** in the table below with that Actions run URL instead of a physical device.
+**S4 (CI path):** When the `Android emulator — Maestro smoke` job on `main` is green, it runs flows **01, 09, 08, 10–12** (see `ci-maestro-smoke.sh`). You may sign **S4** in the table below with that Actions run URL instead of a physical device.
+
+**Reliable emulator:** GitHub-hosted runners have no KVM; for flaky Q5 runs use a USB device or self-hosted runner with KVM ([`QA_MAESTRO_Q5.md`](./QA_MAESTRO_Q5.md)).
 
 **S4 (manual path):** Optional on-device pass using the steps below.
 
@@ -43,6 +45,7 @@ When this passes, **S4a** is satisfied.
 |------|--------|
 | `01-onboarding-private-archive` | Live registration |
 | `09-demo-onboarding-kay` | Demo seed |
+| `08-figma-kuriosity-smoke` | Home / add-member / Members / profile (after `09` in CI) |
 | `10-archive-lane-switch` | Live ↔ demo + banner |
 | `11-demo-clear-restart` | Clear demo |
 | `12-tree-load-more` | All three load-more buttons |

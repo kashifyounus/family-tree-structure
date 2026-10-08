@@ -7,6 +7,7 @@ import { AppLockScreen } from "@/components/security/AppLockScreen";
 import { AppPrivacyOverlay } from "@/components/security/AppPrivacyOverlay";
 import { useAppPreferences } from "@/context/AppPreferencesContext";
 import { useStorage } from "@/context/StorageContext";
+import { isOnOnboardingRoute } from "@/lib/navigation/onboardingRoute";
 import { log } from "@/lib/logging/logger";
 
 type NavigationGateProps = {
@@ -19,6 +20,7 @@ export function NavigationGate({ children, fallback }: NavigationGateProps) {
   const prefs = useAppPreferences();
   const segments = useSegments();
   const router = useRouter();
+  const onOnboarding = isOnOnboardingRoute(segments);
 
   useEffect(() => {
     if (!ready) return;
@@ -27,15 +29,14 @@ export function NavigationGate({ children, fallback }: NavigationGateProps) {
 
   useEffect(() => {
     if (!ready) return;
-    const inOnboarding = segments[0] === "onboarding";
-    if (!onboardingComplete && !inOnboarding) {
+    if (!onboardingComplete && !onOnboarding) {
       router.replace("/onboarding");
       return;
     }
-    if (onboardingComplete && inOnboarding) {
+    if (onboardingComplete && onOnboarding) {
       router.replace("/(tabs)");
     }
-  }, [ready, onboardingComplete, segments, router]);
+  }, [ready, onboardingComplete, onOnboarding, router]);
 
   useEffect(() => {
     if (!prefs.pinEnabled) return;
@@ -55,17 +56,13 @@ export function NavigationGate({ children, fallback }: NavigationGateProps) {
     return <AppLockScreen onUnlocked={prefs.unlock} />;
   }
 
-  const awaitingOnboarding =
-    !onboardingComplete && segments[0] !== "onboarding";
+  if (!onboardingComplete && !onOnboarding) {
+    return fallback ?? <GenealogyBootScreen message="Opening onboarding…" />;
+  }
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} testID="navigation-gate-ready">
       {children}
-      {awaitingOnboarding ? (
-        <View style={styles.onboardingOverlay} pointerEvents="auto">
-          {fallback ?? <GenealogyBootScreen message="Opening onboarding…" />}
-        </View>
-      ) : null}
       <AppPrivacyOverlay />
     </View>
   );
@@ -73,8 +70,4 @@ export function NavigationGate({ children, fallback }: NavigationGateProps) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  onboardingOverlay: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 10,
-  },
 });
