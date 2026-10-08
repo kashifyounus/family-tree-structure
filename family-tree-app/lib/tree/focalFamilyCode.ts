@@ -3,9 +3,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DEFAULT_FAMILY_CODE } from "@/constants/appMeta";
 import type { ArchiveLane } from "@/lib/db/archiveLane";
 import { loadRecentPeople } from "@/lib/recentPeople";
+import { readWithLegacyKey } from "@/lib/storage/legacyAsyncStorage";
 
-const CLOUD_FOCAL_KEY = "@mughals/cloud-focal-family-code/v1";
-const LOCAL_TREE_VIEW_PREFIX = "@mughals/local-tree-view-focal/v2";
+const CLOUD_FOCAL_KEY = "@kuriosity/cloud-focal-family-code/v1";
+const CLOUD_FOCAL_KEY_LEGACY = "@mughals/cloud-focal-family-code/v1";
+const LOCAL_TREE_VIEW_PREFIX = "@kuriosity/local-tree-view-focal/v2";
+const LOCAL_TREE_VIEW_PREFIX_LEGACY = "@mughals/local-tree-view-focal/v2";
 
 function localTreeViewKey(lane: ArchiveLane): string {
   return `${LOCAL_TREE_VIEW_PREFIX}/${lane}`;
@@ -13,7 +16,7 @@ function localTreeViewKey(lane: ArchiveLane): string {
 
 export async function loadCloudFocalFamilyCode(): Promise<string | null> {
   try {
-    const value = await AsyncStorage.getItem(CLOUD_FOCAL_KEY);
+    const value = await readWithLegacyKey(CLOUD_FOCAL_KEY, CLOUD_FOCAL_KEY_LEGACY);
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
   } catch {
@@ -59,7 +62,10 @@ export async function loadLocalTreeViewFamilyCode(
   lane: ArchiveLane,
 ): Promise<string | null> {
   try {
-    const value = await AsyncStorage.getItem(localTreeViewKey(lane));
+    const value = await readWithLegacyKey(
+      localTreeViewKey(lane),
+      `${LOCAL_TREE_VIEW_PREFIX_LEGACY}/${lane}`,
+    );
     const trimmed = value?.trim();
     return trimmed ? trimmed : null;
   } catch {

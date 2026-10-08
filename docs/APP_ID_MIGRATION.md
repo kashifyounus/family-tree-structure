@@ -10,7 +10,7 @@
 3. **iOS:** New bundle identifier; TestFlight + App Store Connect new app record if required.
 4. **SecureStore / local keys:** Audit `mughals_*` key prefixes; migrate read-once from old keys on first launch after upgrade.
 5. **Maestro / CI:** Update package name in flows and `test-android-env.sh`.
-6. **Backup filenames:** Rename `mughals-family-backup.json` → `kuriosity-family-backup.json` with backward-compatible import.
+6. **Backup filenames:** Export uses `kuriosity-family-backup.json`; legacy `mughals-family-backup.json` remains accepted (`shared/backupArtifacts.ts`). Google Drive uploads both `.db` and `.json` with the `kuriosity-family-YYYY-MM-DD` prefix.
 7. **Google OAuth (U2):** Register new SHA-1 for release + debug keystores against the target package when id changes.
 
 This wave documents the plan only; package id remains `com.mughals.familytree` until a dedicated migration release.

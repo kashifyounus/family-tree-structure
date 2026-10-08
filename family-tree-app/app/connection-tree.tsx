@@ -87,14 +87,17 @@ export default function ConnectionTreeScreen() {
           </View>
         </View>
         {graph && graph.nodes.length > 0 ? (
-          <GraphWebView
-            graph={graph}
-            fitMode="timeline"
-            edgeToEdge
-            pathHighlightPersonIds={pathIds}
-            highlightPersonIds={[personA, personB]}
-            testID="connection-tree-graph"
-          />
+          <>
+            <GraphWebView
+              graph={graph}
+              fitMode="timeline"
+              edgeToEdge
+              pathHighlightPersonIds={pathIds}
+              highlightPersonIds={[personA, personB]}
+              testID="connection-tree-graph"
+            />
+            <TreeLegendBar showCousinLink />
+          </>
         ) : (
           <View style={styles.empty}>
             <AppText variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>

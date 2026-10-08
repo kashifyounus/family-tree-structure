@@ -391,7 +391,8 @@ export const copy = {
     driveBody:
       "Create a secure copy of your private archive and store it in your Google Drive. You will be asked to sign in with Google on this device.",
     driveButton: "Save copy to Google Drive",
-    driveSuccess: (name: string) => `A copy was saved to Google Drive as ${name}.`,
+    driveSuccess: (name: string) =>
+      `SQLite and JSON copies were saved to Google Drive (${name} and matching .json).`,
     fileBackupTitle: "Export or restore backup file",
     fileBackupBody: (count: number) =>
       `Download a portable backup of ${count} family member${count === 1 ? "" : "s"}, or restore from a backup you saved earlier. Restoring replaces your live archive on this device.`,

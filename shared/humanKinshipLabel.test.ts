@@ -124,14 +124,29 @@ describe("humanKinshipLabelFromSteps", () => {
     ).toBe("Paternal Great-uncle");
   });
 
-  it("returns null for paths with spouse hops in the middle", () => {
+  it("labels marriage-bridge paths", () => {
     expect(
       humanKinshipLabelFromSteps([
         { relation: "child", toGender: "MALE" },
         { relation: "spouse", toGender: "FEMALE" },
         { relation: "parent", toGender: "MALE" },
-      ]),
-    ).toBeNull();
+      ], "en"),
+    ).toBe("Relative by marriage");
+  });
+
+  it("labels cousin once removed with en-PK style", () => {
+    expect(
+      humanKinshipLabelFromSteps(
+        [
+          { relation: "child", toGender: "MALE" },
+          { relation: "child", toGender: "MALE" },
+          { relation: "parent", toGender: "MALE" },
+          { relation: "parent", toGender: "MALE" },
+          { relation: "parent", toGender: "MALE" },
+        ],
+        "en-PK",
+      ),
+    ).toContain("cousin");
   });
 
   it("exposes a user-facing fallback constant", () => {

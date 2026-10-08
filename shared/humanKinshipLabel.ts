@@ -384,6 +384,11 @@ export function humanKinshipLabelFromSteps(
     if (a === "parent" && b === "parent" && c === "parent") {
       return greatGrandchildLabel(targetGender);
     }
+    if (a === "child" && b === "spouse" && c === "parent") {
+      if (locale === "ur") return "شادی سے رشتہ";
+      if (locale === "en-PK") return "Rishta through marriage";
+      return "Relative by marriage";
+    }
     return null;
   }
 

@@ -24,7 +24,9 @@ Stakeholder tree-map requirements: [`docs/REQUIREMENTS_FAMILY_TREE_MAP.md`](./RE
 
 **Shipped in app 1.0.7:** Add parent link-only; gender chips; shared `PersonFields` on add child/spouse/member; nickname on create + picker search; tree v7 connector colors + name-only canvas; Reports tab visible; Find relation entry screen; `docs/APP_ID_MIGRATION.md`.
 
-**Still open (follow-up PRs):** Google Drive backup (U2); package id migration (U1 code).
+**Still open (follow-up PRs):** Play/App Store package id flip to `com.kuriosity.engineering` (U1 release step — code prep in `packageIdentity.ts` + AsyncStorage key migration).
+
+**Recently addressed:** Google Drive backup hardening (U2) — dual SQLite + JSON upload, token retry, kuriosity filenames; export JSON rename with legacy alias; kinship labels for marriage-bridge and once-removed niece/nephew paths (P2).
 
 **Recently addressed on tree stack (#51–#53):** Cousin-network UI, poster wings, shared ancestor merge, ghost placeholders (tappable), find-relation path expansion, **v6 collateral/cousin wing placement** (`shared/genealogy/collateralTreePlacement.ts`).
 
