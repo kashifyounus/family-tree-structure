@@ -15,5 +15,5 @@ One PR per slice where possible. Update status as items land on `main`.
 | 9 | Spouse/child candidate marriage rules | pending | `relationshipRules` |
 | 10 | Maestro emulator green on `main` (Q5) | in_work | `mobile-maestro.yml` |
 | 11 | Device smoke sign-off (S4) | pending | `DEVICE_SMOKE_FAMILY_TREE.md` |
-| 12 | Google Drive backup hardening (U2) | pending | GAPS |
-| 13 | Package id migration (U1) | in PR | `APP_ID_MIGRATION.md`, `com.kuriosity.engineering` |
+| 12 | Google Drive backup hardening (U2) | in PR | `GOOGLE_DRIVE_BACKUP.md`, dual upload |
+| 13 | Package id migration (U1) | done | `APP_ID_MIGRATION.md`, `com.kuriosity.engineering` |
