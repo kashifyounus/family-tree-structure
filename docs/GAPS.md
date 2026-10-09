@@ -24,7 +24,7 @@ Stakeholder tree-map requirements: [`docs/REQUIREMENTS_FAMILY_TREE_MAP.md`](./RE
 
 **Shipped in app 1.0.7:** Add parent link-only; gender chips; shared `PersonFields` on add child/spouse/member; nickname on create + picker search; tree v7 connector colors + name-only canvas; Reports tab visible; Find relation entry screen; `docs/APP_ID_MIGRATION.md`.
 
-**Still open (follow-up PRs):** Full v6 tree placement + marriage ghost labels; Find relation canvas subgraph framing for distant cousins; Google Drive backup (U2); AsyncStorage `mughals_*` migration (post-U1); OAuth SHA-1 for new package (U2).
+**Still open (follow-up PRs):** Full v6 tree placement + marriage ghost labels; tree stack #50–#53; add-member marriage rules (#43); OAuth SHA-1 for `com.kuriosity.engineering` (required for Drive sign-in on U1 builds).
 
 **1.0.9 slice:** Reports KPI strip + presets + custom AND query (`shared/archiveQuery.ts`); Find relation purple 6px path highlight on tree; professional copy pass on reports / find-relation.
 

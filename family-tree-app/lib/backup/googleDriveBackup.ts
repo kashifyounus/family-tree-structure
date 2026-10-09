@@ -4,10 +4,13 @@ import {
   isErrorWithCode,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
+import { cacheDirectory, writeAsStringAsync } from "expo-file-system/legacy";
 
 import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
 import { copyDatabaseToCache } from "@/lib/backup/exportDatabase";
+import { exportLocalDatabaseJson } from "@/lib/db/localRepository.ext";
+import { driveBackupNamesForDate } from "../../../shared/backupArtifacts";
 
 const DRIVE_UPLOAD =
   "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
@@ -61,13 +64,16 @@ function toFileUri(path: string): string {
   return path.startsWith("file://") ? path : `file://${path}`;
 }
 
-export async function backupDatabaseToGoogleDrive(): Promise<string> {
-  const dbPath = await copyDatabaseToCache();
-  const token = await getAccessToken();
-  const fileName = `kuriosity-family-${new Date().toISOString().slice(0, 10)}.db`;
+async function uploadFileToDrive(
+  token: string,
+  fileName: string,
+  localPath: string,
+  mimeType: string,
+  allowTokenRetry = true,
+): Promise<string> {
   const metadata = JSON.stringify({
     name: fileName,
-    mimeType: "application/x-sqlite3",
+    mimeType,
   });
 
   const formData = new FormData();
@@ -77,9 +83,9 @@ export async function backupDatabaseToGoogleDrive(): Promise<string> {
     name: "metadata",
   } as unknown as Blob);
   formData.append("file", {
-    uri: toFileUri(dbPath),
+    uri: toFileUri(localPath),
     name: fileName,
-    type: "application/x-sqlite3",
+    type: mimeType,
   } as unknown as Blob);
 
   const response = await fetch(DRIVE_UPLOAD, {
@@ -91,6 +97,20 @@ export async function backupDatabaseToGoogleDrive(): Promise<string> {
     body: formData,
   });
 
+  if (response.status === 401 && allowTokenRetry) {
+    const refreshed = await GoogleSignin.getTokens();
+    if (!refreshed.accessToken) {
+      throw new AppError("AUTH", copy.errors.auth);
+    }
+    return uploadFileToDrive(
+      refreshed.accessToken,
+      fileName,
+      localPath,
+      mimeType,
+      false,
+    );
+  }
+
   if (!response.ok) {
     const text = await response.text();
     throw new AppError("BACKUP", copy.errors.backup, {
@@ -99,4 +119,27 @@ export async function backupDatabaseToGoogleDrive(): Promise<string> {
   }
   const json = (await response.json()) as { id?: string; name?: string };
   return json.name ?? fileName;
+}
+
+/**
+ * Uploads SQLite + portable JSON copies to the user's Google Drive (Android).
+ */
+export async function backupDatabaseToGoogleDrive(): Promise<string> {
+  const dbPath = await copyDatabaseToCache();
+  const token = await getAccessToken();
+  const isoDate = new Date().toISOString().slice(0, 10);
+  const names = driveBackupNamesForDate(isoDate);
+
+  const sqliteName = await uploadFileToDrive(
+    token,
+    names.sqlite,
+    dbPath,
+    "application/x-sqlite3",
+  );
+
+  const jsonPath = `${cacheDirectory}kuriosity_drive_export_${Date.now()}.json`;
+  await writeAsStringAsync(jsonPath, exportLocalDatabaseJson());
+  await uploadFileToDrive(token, names.json, jsonPath, "application/json");
+
+  return sqliteName;
 }

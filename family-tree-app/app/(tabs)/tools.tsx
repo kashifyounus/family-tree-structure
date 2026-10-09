@@ -21,6 +21,7 @@ import {
   importLocalDatabaseJson,
 } from "@/lib/db/localRepository.ext";
 import { backupDatabaseToGoogleDrive } from "@/lib/backup/googleDriveBackup";
+import { defaultJsonExportCachePath } from "../../../shared/backupArtifacts";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 
@@ -47,7 +48,7 @@ export default function ToolsScreen() {
   const runExport = async () => {
     try {
       const json = exportLocalDatabaseJson();
-      const path = `${cacheDirectory}mughals-family-backup.json`;
+      const path = defaultJsonExportCachePath(cacheDirectory ?? "");
       await writeAsStringAsync(path, json);
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(path, {
