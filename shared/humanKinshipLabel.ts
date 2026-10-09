@@ -59,6 +59,14 @@ function nieceNephewLabel(gender: KinshipGender): string {
   return "Nibling";
 }
 
+function grandNieceNephewLabel(gender: KinshipGender): string {
+  if (gender === "FEMALE") return "Grand-niece";
+  if (gender === "MALE") return "Grand-nephew";
+  return "Grand-nibling";
+}
+
+const RELATIVE_BY_MARRIAGE = "Relative by marriage";
+
 function auntUncleLabel(
   side: "paternal" | "maternal",
   gender: KinshipGender,
@@ -172,10 +180,38 @@ function labelUpDownKinship(steps: KinshipLabelStep[]): string | null {
     return null;
   }
 
+  if (up === 1 && down === 3) {
+    return grandNieceNephewLabel(targetGender);
+  }
+
   if (up >= 2 && down >= 2) {
     return labelCousinPath(steps, up, down);
   }
 
+  return null;
+}
+
+/** Blood path with a single spouse hop (not covered by in-law shortcuts). */
+function labelMarriageBridgePath(steps: KinshipLabelStep[]): string | null {
+  const relations = steps.map((s) => s.relation);
+  if (relations.length === 3) {
+    const [a, b, c] = relations;
+    if (a === "child" && b === "spouse" && c === "parent") {
+      return RELATIVE_BY_MARRIAGE;
+    }
+    if (a === "parent" && b === "spouse" && c === "child") {
+      return RELATIVE_BY_MARRIAGE;
+    }
+  }
+  if (relations.length === 4) {
+    const [a, b, c, d] = relations;
+    if (a === "child" && b === "child" && c === "spouse" && d === "parent") {
+      return RELATIVE_BY_MARRIAGE;
+    }
+    if (a === "parent" && b === "spouse" && c === "child" && d === "parent") {
+      return RELATIVE_BY_MARRIAGE;
+    }
+  }
   return null;
 }
 
@@ -244,6 +280,8 @@ export function humanKinshipLabelFromSteps(
     if (a === "parent" && b === "parent" && c === "parent") {
       return greatGrandchildLabel(targetGender);
     }
+    const marriageAtThree = labelMarriageBridgePath(steps);
+    if (marriageAtThree) return marriageAtThree;
     return null;
   }
 
@@ -253,6 +291,8 @@ export function humanKinshipLabelFromSteps(
       const side = lineageSideFromParentStep(steps[0]);
       return greatAuntUncleLabel(side, targetGender);
     }
+    const marriageAtFour = labelMarriageBridgePath(steps);
+    if (marriageAtFour) return marriageAtFour;
   }
 
   const upDownLabel = labelUpDownKinship(steps);

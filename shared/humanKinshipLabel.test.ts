@@ -115,14 +115,40 @@ describe("humanKinshipLabelFromSteps", () => {
     ).toBe("Paternal Great-uncle");
   });
 
-  it("returns null for paths with spouse hops in the middle", () => {
+  it("labels marriage-bridge paths with a spouse hop", () => {
     expect(
       humanKinshipLabelFromSteps([
         { relation: "child", toGender: "MALE" },
         { relation: "spouse", toGender: "FEMALE" },
         { relation: "parent", toGender: "MALE" },
       ]),
-    ).toBeNull();
+    ).toBe("Relative by marriage");
+    expect(
+      humanKinshipLabelFromSteps([
+        { relation: "parent", toGender: "FEMALE" },
+        { relation: "spouse", toGender: "MALE" },
+        { relation: "child", toGender: "MALE" },
+      ]),
+    ).toBe("Relative by marriage");
+  });
+
+  it("labels grand-niece and grand-nephew (up one, down three)", () => {
+    expect(
+      humanKinshipLabelFromSteps([
+        { relation: "child", toGender: "MALE" },
+        { relation: "parent", toGender: "FEMALE" },
+        { relation: "parent", toGender: "FEMALE" },
+        { relation: "parent", toGender: "MALE" },
+      ]),
+    ).toBe("Grand-nephew");
+    expect(
+      humanKinshipLabelFromSteps([
+        { relation: "child", toGender: "FEMALE" },
+        { relation: "parent", toGender: "MALE" },
+        { relation: "parent", toGender: "MALE" },
+        { relation: "parent", toGender: "FEMALE" },
+      ]),
+    ).toBe("Grand-niece");
   });
 
   it("exposes a user-facing fallback constant", () => {
