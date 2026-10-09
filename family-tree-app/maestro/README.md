@@ -35,9 +35,11 @@ maestro test maestro/flows/01-onboarding-private-archive.yaml
 | `05-complete-family-workflow` | Full flow with Maestro screenshots (onboarding → spouse → marriage → child → search) |
 | `06-link-existing-spouse` | Onboarding → add second member → **link existing** as spouse (create vs link toggle) |
 | `07-link-existing-child` | Marriage (new spouse) → add third member → **link existing** as child on union |
-| `08-figma-kuriosity-smoke` | Home → add-member sheet → Members → Margaret showcase profile (no clean-state required) |
+| `08-figma-kuriosity-smoke` | Home → add-member sheet → Members → showcase profile (**requires session** — run `09` or `01` first; CI runs `09` then `08`) |
 
-Run `01` before `02` on a clean install. Flows `03` and `04` assume onboarding completed. Flows `05`–`07` clear app state and are self-contained.
+Run `01` before `02` on a clean install. Flows `03` and `04` assume onboarding completed. Flows `05`–`07` clear app state and are self-contained. **Do not** run `08` after `clearState` without onboarding.
+
+**Slow emulator / CI:** set `MAESTRO_DRIVER_STARTUP_TIMEOUT=900000`. Prefer hardware KVM or a physical device ([`docs/QA_MAESTRO_Q5.md`](../../docs/QA_MAESTRO_Q5.md)).
 
 ## Screenshots and video (CI / cloud agent)
 
