@@ -33,6 +33,14 @@ export async function saveArchiveLane(lane: ArchiveLane): Promise<void> {
 
 export function localAccountSessionKey(lane: ArchiveLane = activeLane): string {
   return lane === "demo"
+    ? "kuriosity_local_account_id_demo"
+    : "kuriosity_local_account_id_live";
+}
+
+export function legacyLocalAccountSessionKey(
+  lane: ArchiveLane = activeLane,
+): string {
+  return lane === "demo"
     ? "mughals_local_account_id_demo"
     : "mughals_local_account_id_live";
 }

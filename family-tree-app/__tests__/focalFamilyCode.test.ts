@@ -31,6 +31,17 @@ describe("focalFamilyCode", () => {
     expect(await loadCloudFocalFamilyCode()).toBe("FAM-77777");
   });
 
+  it("migrates legacy cloud focal AsyncStorage key", async () => {
+    await AsyncStorage.setItem(
+      "@mughals/cloud-focal-family-code/v1",
+      "FAM-LEGACY",
+    );
+    expect(await loadCloudFocalFamilyCode()).toBe("FAM-LEGACY");
+    expect(
+      await AsyncStorage.getItem("@kuriosity/cloud-focal-family-code/v1"),
+    ).toBe("FAM-LEGACY");
+  });
+
   it("resolveCloudFocalFamilyCode falls back to household then default", async () => {
     expect(await resolveCloudFocalFamilyCode("FAM-20002")).toBe("FAM-20002");
     expect(await resolveCloudFocalFamilyCode(null)).toBe(DEFAULT_FAMILY_CODE);

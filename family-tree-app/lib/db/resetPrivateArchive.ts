@@ -1,11 +1,11 @@
-import * as SecureStore from "expo-secure-store";
-
 import {
   getActiveArchiveLane,
+  legacyLocalAccountSessionKey,
   localAccountSessionKey,
   setActiveArchiveLane,
   type ArchiveLane,
 } from "@/lib/db/archiveLane";
+import { deleteSecurePrimaryAndLegacy } from "@/lib/storage/legacySecureStore";
 import { getDatabaseForLane, resetLocalDatabase } from "@/lib/db/database";
 import { resetLiveTreeChecklistOpened } from "@/lib/archive/liveChecklistStorage";
 import { resetOnboardingForLane } from "@/lib/onboarding/storage";
@@ -21,7 +21,10 @@ export async function resetPrivateArchiveAndSignOut(): Promise<void> {
   const lane: ArchiveLane = "live";
   setActiveArchiveLane(lane);
   resetLocalDatabase();
-  await SecureStore.deleteItemAsync(localAccountSessionKey(lane));
+  await deleteSecurePrimaryAndLegacy(
+    localAccountSessionKey(lane),
+    legacyLocalAccountSessionKey(lane),
+  );
   await resetOnboardingForLane(lane);
   await resetLiveTreeChecklistOpened();
 }
@@ -31,7 +34,10 @@ export async function resetDemoArchiveAndRestart(): Promise<void> {
   const lane: ArchiveLane = "demo";
   setActiveArchiveLane(lane);
   resetLocalDatabase();
-  await SecureStore.deleteItemAsync(localAccountSessionKey(lane));
+  await deleteSecurePrimaryAndLegacy(
+    localAccountSessionKey(lane),
+    legacyLocalAccountSessionKey(lane),
+  );
   await resetOnboardingForLane(lane);
 }
 
@@ -39,6 +45,9 @@ export async function resetActiveArchiveAndSignOut(): Promise<void> {
   const lane = getActiveArchiveLane();
   setActiveArchiveLane(lane);
   resetLocalDatabase();
-  await SecureStore.deleteItemAsync(localAccountSessionKey(lane));
+  await deleteSecurePrimaryAndLegacy(
+    localAccountSessionKey(lane),
+    legacyLocalAccountSessionKey(lane),
+  );
   await resetOnboardingForLane(lane);
 }

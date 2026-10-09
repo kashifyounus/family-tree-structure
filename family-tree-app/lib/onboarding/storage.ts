@@ -4,31 +4,44 @@ import {
   getActiveArchiveLane,
   type ArchiveLane,
 } from "@/lib/db/archiveLane";
+import {
+  readWithLegacyKey,
+  removePrimaryAndLegacy,
+} from "@/lib/storage/legacyAsyncStorage";
 
-function completeKey(lane: ArchiveLane): string {
-  return lane === "demo"
-    ? "mughals_onboarding_complete_demo"
-    : "mughals_onboarding_complete_live";
+function completeKeys(lane: ArchiveLane): { primary: string; legacy: string } {
+  if (lane === "demo") {
+    return {
+      primary: "kuriosity_onboarding_complete_demo",
+      legacy: "mughals_onboarding_complete_demo",
+    };
+  }
+  return {
+    primary: "kuriosity_onboarding_complete_live",
+    legacy: "mughals_onboarding_complete_live",
+  };
 }
 
 export async function isOnboardingComplete(
   lane?: ArchiveLane,
 ): Promise<boolean> {
-  const key = completeKey(lane ?? getActiveArchiveLane());
-  const v = await AsyncStorage.getItem(key);
+  const { primary, legacy } = completeKeys(lane ?? getActiveArchiveLane());
+  const v = await readWithLegacyKey(primary, legacy);
   return v === "1";
 }
 
 export async function setOnboardingComplete(
   lane?: ArchiveLane,
 ): Promise<void> {
-  await AsyncStorage.setItem(completeKey(lane ?? getActiveArchiveLane()), "1");
+  const { primary } = completeKeys(lane ?? getActiveArchiveLane());
+  await AsyncStorage.setItem(primary, "1");
 }
 
 export async function resetOnboardingForLane(
   lane: ArchiveLane,
 ): Promise<void> {
-  await AsyncStorage.removeItem(completeKey(lane));
+  const { primary, legacy } = completeKeys(lane);
+  await removePrimaryAndLegacy(primary, legacy);
 }
 
 /** @deprecated use resetOnboardingForLane(getActiveArchiveLane()) */

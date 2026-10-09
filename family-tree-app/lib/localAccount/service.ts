@@ -4,7 +4,15 @@ import { z } from "zod";
 
 import { copy } from "@/content/businessCopy";
 import { AppError } from "@/lib/errors/AppError";
-import { assertLiveArchiveLane, localAccountSessionKey } from "@/lib/db/archiveLane";
+import {
+  assertLiveArchiveLane,
+  legacyLocalAccountSessionKey,
+  localAccountSessionKey,
+} from "@/lib/db/archiveLane";
+import {
+  deleteSecurePrimaryAndLegacy,
+  readSecureWithLegacyKey,
+} from "@/lib/storage/legacySecureStore";
 import { createLocalMember } from "@/lib/db/localRepository";
 import { getDatabase } from "@/lib/db/database";
 import type { Gender } from "@/lib/data/types";
@@ -141,19 +149,28 @@ export async function signInLocalAccount(
 }
 
 export async function loadLocalAccountSession(): Promise<LocalAccountSession | null> {
-  const id = await SecureStore.getItemAsync(localAccountSessionKey());
+  const id = await readSecureWithLegacyKey(
+    localAccountSessionKey(),
+    legacyLocalAccountSessionKey(),
+  );
   if (!id) return null;
   const db = getDatabase();
   const row = db.getFirstSync<AccountRow>("SELECT * FROM local_accounts WHERE id = ?", [
     id,
   ]);
   if (!row) {
-    await SecureStore.deleteItemAsync(localAccountSessionKey());
+    await deleteSecurePrimaryAndLegacy(
+      localAccountSessionKey(),
+      legacyLocalAccountSessionKey(),
+    );
     return null;
   }
   return mapRow(row);
 }
 
 export async function signOutLocalAccount(): Promise<void> {
-  await SecureStore.deleteItemAsync(localAccountSessionKey());
+  await deleteSecurePrimaryAndLegacy(
+    localAccountSessionKey(),
+    legacyLocalAccountSessionKey(),
+  );
 }

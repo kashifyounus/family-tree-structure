@@ -1,8 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getActiveArchiveLane } from "@/lib/db/archiveLane";
+import { readWithLegacyKey } from "@/lib/storage/legacyAsyncStorage";
 
 const MAX = 8;
+const RECENT_PREFIX = "@kuriosity/recent-people/v1";
+const RECENT_PREFIX_LEGACY = "@mughals/recent-people/v1";
 
 export type RecentPerson = {
   personId: string;
@@ -12,12 +15,16 @@ export type RecentPerson = {
 };
 
 function storageKey(): string {
-  return `@mughals/recent-people/v1/${getActiveArchiveLane()}`;
+  return `${RECENT_PREFIX}/${getActiveArchiveLane()}`;
+}
+
+function legacyStorageKey(): string {
+  return `${RECENT_PREFIX_LEGACY}/${getActiveArchiveLane()}`;
 }
 
 export async function loadRecentPeople(): Promise<RecentPerson[]> {
   try {
-    const raw = await AsyncStorage.getItem(storageKey());
+    const raw = await readWithLegacyKey(storageKey(), legacyStorageKey());
     if (!raw) return [];
     const parsed = JSON.parse(raw) as RecentPerson[];
     return Array.isArray(parsed) ? parsed : [];

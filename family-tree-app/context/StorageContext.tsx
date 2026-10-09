@@ -34,8 +34,10 @@ import { AppError } from "@/lib/errors/AppError";
 import { normalizeApiBaseUrl, validateApiBaseUrl } from "@/lib/apiUrl";
 import { getLocalAccountCount } from "@/lib/localAccount/service";
 import { log } from "@/lib/logging/logger";
+import { readWithLegacyKey } from "@/lib/storage/legacyAsyncStorage";
 
-const MODE_KEY = "mughals_storage_mode";
+const MODE_KEY = "kuriosity_storage_mode";
+const MODE_KEY_LEGACY = "mughals_storage_mode";
 
 type StorageState = {
   ready: boolean;
@@ -71,6 +73,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       setArchiveLaneState(lane);
       setActiveArchiveLane(lane);
       getDatabase();
+      await readWithLegacyKey(MODE_KEY, MODE_KEY_LEGACY);
       await AsyncStorage.setItem(MODE_KEY, "local");
       setModeState("local");
       const url = await loadApiUrlOverride();

@@ -12,8 +12,16 @@ import {
   type ReactNode,
 } from "react";
 
-const STORAGE_KEY = "@mughals/app-preferences/v1";
-const PIN_HASH_KEY = "mughals_app_pin_hash";
+import { readWithLegacyKey } from "@/lib/storage/legacyAsyncStorage";
+import {
+  deleteSecurePrimaryAndLegacy,
+  readSecureWithLegacyKey,
+} from "@/lib/storage/legacySecureStore";
+
+const STORAGE_KEY = "@kuriosity/app-preferences/v1";
+const STORAGE_KEY_LEGACY = "@mughals/app-preferences/v1";
+const PIN_HASH_KEY = "kuriosity_app_pin_hash";
+const PIN_HASH_KEY_LEGACY = "mughals_app_pin_hash";
 
 export type ThemePreference = "light" | "dark";
 export type TextScalePreference = "normal" | "large";
@@ -71,7 +79,7 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void (async () => {
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        const raw = await readWithLegacyKey(STORAGE_KEY, STORAGE_KEY_LEGACY);
         const merged = raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
         setPrefs(merged);
         if (merged.pinEnabled) {
@@ -129,7 +137,7 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
   );
 
   const clearPin = useCallback(async () => {
-    await SecureStore.deleteItemAsync(PIN_HASH_KEY);
+    await deleteSecurePrimaryAndLegacy(PIN_HASH_KEY, PIN_HASH_KEY_LEGACY);
     await patchPrefs({ pinEnabled: false, biometricUnlockEnabled: false });
     setLocked(false);
   }, [patchPrefs]);
@@ -160,7 +168,10 @@ export function AppPreferencesProvider({ children }: { children: ReactNode }) {
   }, [prefs.biometricUnlockEnabled, prefs.pinEnabled]);
 
   const verifyPin = useCallback(async (pin: string) => {
-    const stored = await SecureStore.getItemAsync(PIN_HASH_KEY);
+    const stored = await readSecureWithLegacyKey(
+      PIN_HASH_KEY,
+      PIN_HASH_KEY_LEGACY,
+    );
     if (!stored) return false;
     const digest = await hashPin(pin);
     return digest === stored;
