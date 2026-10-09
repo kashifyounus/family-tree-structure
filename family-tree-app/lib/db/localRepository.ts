@@ -25,6 +25,7 @@ type PersonRow = {
   birth_place: string | null;
   home_town: string | null;
   occupation: string | null;
+  biradari: string | null;
   bio: string | null;
 };
 
@@ -44,6 +45,7 @@ function mapRow(row: PersonRow): MemberRecord {
     homeTown: row.home_town,
     currentCity: row.current_city,
     occupation: row.occupation,
+    biradari: row.biradari ?? null,
     bio: row.bio,
   };
 }
@@ -60,8 +62,10 @@ export function listLocalMembers(query = ""): MemberRecord[] {
         `SELECT * FROM persons WHERE
           family_code LIKE ? OR first_name LIKE ? OR last_name LIKE ?
           OR urdu_first_name LIKE ? OR urdu_last_name LIKE ?
+          OR biradari LIKE ?
         ORDER BY updated_at DESC LIMIT 200`,
         [
+          `%${trimmed}%`,
           `%${trimmed}%`,
           `%${trimmed}%`,
           `%${trimmed}%`,

@@ -1,29 +1,89 @@
+import {
+  DEFAULT_KINSHIP_LABEL_LOCALE,
+  type KinshipLabelLocale,
+} from "./kinshipLabelLocale";
+
 export type KinshipGender = "MALE" | "FEMALE" | "OTHER" | null | undefined;
+
+export type { KinshipLabelLocale } from "./kinshipLabelLocale";
+export { DEFAULT_KINSHIP_LABEL_LOCALE } from "./kinshipLabelLocale";
 
 export type KinshipLabelStep = {
   relation: string;
   toGender?: KinshipGender;
 };
 
-function parentLabel(gender: KinshipGender): string {
+function parentLabel(
+  gender: KinshipGender,
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
+): string {
+  if (locale === "ur") {
+    if (gender === "FEMALE") return "والدہ";
+    if (gender === "MALE") return "والد";
+    return "والدین";
+  }
+  if (locale === "en-PK") {
+    if (gender === "FEMALE") return "Ammi";
+    if (gender === "MALE") return "Abbu";
+    return "Parent";
+  }
   if (gender === "FEMALE") return "Mother";
   if (gender === "MALE") return "Father";
   return "Parent";
 }
 
-function childLabel(gender: KinshipGender): string {
+function childLabel(
+  gender: KinshipGender,
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
+): string {
+  if (locale === "ur") {
+    if (gender === "FEMALE") return "بیٹی";
+    if (gender === "MALE") return "بیٹا";
+    return "اولاد";
+  }
+  if (locale === "en-PK") {
+    if (gender === "FEMALE") return "Beti";
+    if (gender === "MALE") return "Beta";
+    return "Child";
+  }
   if (gender === "FEMALE") return "Daughter";
   if (gender === "MALE") return "Son";
   return "Child";
 }
 
-function spouseLabel(gender: KinshipGender): string {
+function spouseLabel(
+  gender: KinshipGender,
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
+): string {
+  if (locale === "ur") {
+    if (gender === "FEMALE") return "بیوی";
+    if (gender === "MALE") return "شوہر";
+    return "شریک حیات";
+  }
+  if (locale === "en-PK") {
+    if (gender === "FEMALE") return "Biwi";
+    if (gender === "MALE") return "Shohar";
+    return "Spouse";
+  }
   if (gender === "FEMALE") return "Wife";
   if (gender === "MALE") return "Husband";
   return "Spouse";
 }
 
-function siblingLabel(gender: KinshipGender): string {
+function siblingLabel(
+  gender: KinshipGender,
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
+): string {
+  if (locale === "ur") {
+    if (gender === "FEMALE") return "بہن";
+    if (gender === "MALE") return "بھائی";
+    return "بہن / بھائی";
+  }
+  if (locale === "en-PK") {
+    if (gender === "FEMALE") return "Behan";
+    if (gender === "MALE") return "Bhai";
+    return "Sibling";
+  }
   if (gender === "FEMALE") return "Sister";
   if (gender === "MALE") return "Brother";
   return "Sibling";
@@ -70,7 +130,20 @@ const RELATIVE_BY_MARRIAGE = "Relative by marriage";
 function auntUncleLabel(
   side: "paternal" | "maternal",
   gender: KinshipGender,
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
 ): string {
+  if (locale === "ur") {
+    if (side === "paternal") {
+      return gender === "FEMALE" ? "پھپھو" : "چچا";
+    }
+    return gender === "FEMALE" ? "خالہ" : "ماموں";
+  }
+  if (locale === "en-PK") {
+    if (side === "paternal") {
+      return gender === "FEMALE" ? "Phuppo" : "Chacha";
+    }
+    return gender === "FEMALE" ? "Khala" : "Mama";
+  }
   const role = gender === "FEMALE" ? "Aunt" : "Uncle";
   const prefix = side === "paternal" ? "Paternal" : "Maternal";
   return `${prefix} ${role}`;
@@ -148,7 +221,12 @@ function parseUpDownPath(relations: string[]): { up: number; down: number } | nu
   return { up, down };
 }
 
-function labelCousinPath(steps: KinshipLabelStep[], up: number, down: number): string | null {
+function labelCousinPath(
+  steps: KinshipLabelStep[],
+  up: number,
+  down: number,
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
+): string | null {
   const relations = steps.map((s) => s.relation);
   const parsed = parseUpDownPath(relations);
   if (!parsed || parsed.up !== up || parsed.down !== down) return null;
@@ -159,10 +237,36 @@ function labelCousinPath(steps: KinshipLabelStep[], up: number, down: number): s
   const side = lineageSideFromParentStep(steps[0]);
   const base = cousinOrdinal(degree);
   const label = removed === 0 ? base : `${base}${removedSuffix(removed)}`;
+  if (locale === "ur") {
+    const ord =
+      degree === 1
+        ? "پہلا کزن"
+        : degree === 2
+          ? "دوسرا کزن"
+          : degree === 3
+            ? "تیسرا کزن"
+            : `${degree}واں کزن`;
+    const sideUr =
+      side === "paternal" ? "والد کی طرف" : "والدہ کی طرف";
+    const rem =
+      removed === 0
+        ? ""
+        : removed === 1
+          ? " (ایک بار ہٹ)"
+          : ` (${removed} بار ہٹ)`;
+    return `${sideUr} — ${ord}${rem}`;
+  }
+  if (locale === "en-PK") {
+    const sa = removed === 0 ? `${base} (cousin)` : `${base}${removedSuffix(removed)}`;
+    return `${side === "paternal" ? "Chacha line — " : "Khala/Mama line — "}${sa}`;
+  }
   return `${sidePrefix(side)}${label}`;
 }
 
-function labelUpDownKinship(steps: KinshipLabelStep[]): string | null {
+function labelUpDownKinship(
+  steps: KinshipLabelStep[],
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
+): string | null {
   const relations = steps.map((s) => s.relation);
   const parsed = parseUpDownPath(relations);
   if (!parsed) return null;
@@ -170,8 +274,28 @@ function labelUpDownKinship(steps: KinshipLabelStep[]): string | null {
   const targetGender = steps[steps.length - 1]?.toGender;
 
   if (down === 0 && up >= 2) {
-    if (up === 2) return grandparentLabel(targetGender);
-    if (up === 3) return greatGrandparentLabel(targetGender);
+    if (up === 2) {
+      const side = lineageSideFromParentStep(steps[0]);
+      if (locale === "ur") {
+        if (side === "maternal") {
+          return targetGender === "FEMALE" ? "نانی" : "نانا";
+        }
+        return targetGender === "FEMALE" ? "دادی" : "دادا";
+      }
+      if (locale === "en-PK") {
+        if (side === "maternal") {
+          return targetGender === "FEMALE" ? "Nani" : "Nana";
+        }
+        return targetGender === "FEMALE" ? "Dadi" : "Dada";
+      }
+      return grandparentLabel(targetGender);
+    }
+    if (up === 3) {
+      if (locale === "ur") {
+        return targetGender === "FEMALE" ? "پردادی" : "پردادا";
+      }
+      return greatGrandparentLabel(targetGender);
+    }
     return null;
   }
   if (up === 0 && down >= 2) {
@@ -185,7 +309,7 @@ function labelUpDownKinship(steps: KinshipLabelStep[]): string | null {
   }
 
   if (up >= 2 && down >= 2) {
-    return labelCousinPath(steps, up, down);
+    return labelCousinPath(steps, up, down, locale);
   }
 
   return null;
@@ -220,30 +344,46 @@ function labelMarriageBridgePath(steps: KinshipLabelStep[]): string | null {
  */
 export function humanKinshipLabelFromSteps(
   steps: KinshipLabelStep[],
+  locale: KinshipLabelLocale = DEFAULT_KINSHIP_LABEL_LOCALE,
 ): string | null {
-  if (steps.length === 0) return "Same person";
+  if (steps.length === 0) {
+    return locale === "ur" ? "آپ" : "Same person";
+  }
 
   const relations = steps.map((s) => s.relation);
   const targetGender = steps[steps.length - 1]?.toGender;
 
   if (relations.length === 1) {
     const rel = relations[0];
-    if (rel === "child") return parentLabel(targetGender);
-    if (rel === "parent") return childLabel(targetGender);
-    if (rel === "spouse") return spouseLabel(targetGender);
+    if (rel === "child") return parentLabel(targetGender, locale);
+    if (rel === "parent") return childLabel(targetGender, locale);
+    if (rel === "spouse") return spouseLabel(targetGender, locale);
     return null;
   }
 
   if (relations.length === 2) {
     const [a, b] = relations;
     if (a === "child" && b === "child") {
+      const side = lineageSideFromParentStep(steps[0]);
+      if (locale === "ur") {
+        if (side === "maternal") {
+          return targetGender === "FEMALE" ? "نانی" : "نانا";
+        }
+        return targetGender === "FEMALE" ? "دادی" : "دادا";
+      }
+      if (locale === "en-PK") {
+        if (side === "maternal") {
+          return targetGender === "FEMALE" ? "Nani" : "Nana";
+        }
+        return targetGender === "FEMALE" ? "Dadi" : "Dada";
+      }
       return grandparentLabel(targetGender);
     }
     if (a === "parent" && b === "parent") {
       return grandchildLabel(targetGender);
     }
     if (a === "child" && b === "parent") {
-      return siblingLabel(targetGender);
+      return siblingLabel(targetGender, locale);
     }
     if (a === "child" && b === "spouse") {
       return stepParentLabel(targetGender);
@@ -266,7 +406,7 @@ export function humanKinshipLabelFromSteps(
     const [a, b, c] = relations;
     if (a === "child" && b === "child" && c === "parent") {
       const side = lineageSideFromParentStep(steps[0]);
-      return auntUncleLabel(side, targetGender);
+      return auntUncleLabel(side, targetGender, locale);
     }
     if (a === "child" && b === "parent" && c === "parent") {
       return nieceNephewLabel(targetGender);
@@ -295,19 +435,19 @@ export function humanKinshipLabelFromSteps(
     if (marriageAtFour) return marriageAtFour;
   }
 
-  const upDownLabel = labelUpDownKinship(steps);
+  const upDownLabel = labelUpDownKinship(steps, locale);
   if (upDownLabel) return upDownLabel;
 
   if (relations.length >= 4 && relations.length % 2 === 0) {
     const half = relations.length / 2;
-    const cousin = labelCousinPath(steps, half, half);
+    const cousin = labelCousinPath(steps, half, half, locale);
     if (cousin) return cousin;
   }
 
   if (relations.length >= 5) {
     const parsed = parseUpDownPath(relations);
     if (parsed && parsed.up >= 2 && parsed.down >= 2) {
-      return labelCousinPath(steps, parsed.up, parsed.down);
+      return labelCousinPath(steps, parsed.up, parsed.down, locale);
     }
   }
 

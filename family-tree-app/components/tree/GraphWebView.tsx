@@ -20,12 +20,13 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8;
+let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8, fitMode = 'pedigree', cousinOverlay = null, marriageLabelEn = 'Married', marriageLabelUr = '';
 let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
 
-function genderAccent(g){
+function genderAccent(g, maternal){
+  if(maternal) return '#9B5670';
   if(g==='FEMALE') return '#f4a6c1';
   if(g==='MALE') return '#7eb6e0';
   return '#c4c4c4';
@@ -75,7 +76,13 @@ function fitView(){
   const fx = focal.x + focal.w/2;
   const fy = focal.y + focal.h * 0.55;
   ox = canvas.width/2 - fx * scale;
-  oy = canvas.height * 0.68 - fy * scale;
+  if(fitMode === 'timeline'){
+    let maxY = -Infinity;
+    for(const n of viewNodes){ maxY = Math.max(maxY, n.y + n.h); }
+    oy = canvas.height * 0.9 - maxY * scale;
+  } else {
+    oy = canvas.height * 0.72 - fy * scale;
+  }
 }
 
 function roundRect(x,y,w,h,r){
@@ -94,29 +101,36 @@ function drawMarriageBand(band){
   const x1 = band.x1;
   const x2 = band.x2;
   if(x2 <= x1 + 8) return;
-  const label = band.label || '';
-  if(!label) return;
   const cx = (x1 + x2) / 2;
-  const cream = theme.canvas || '#F6F1E7';
-  let display = label.length > 28 ? label.slice(0, 27) + '…' : label;
-  ctx.font = '500 11px system-ui';
+  ctx.save();
+  ctx.strokeStyle = '#B83C3C';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([10, 6]);
+  ctx.beginPath();
+  ctx.moveTo(x1, midY);
+  ctx.lineTo(x2, midY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#B83C3C';
+  ctx.font = '12px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const tw = ctx.measureText(display).width;
+  ctx.fillText('♥', cx, midY - 10);
+  const cream = theme.canvas || '#F6F1E7';
+  const line1 = marriageLabelEn || 'Married';
+  const line2 = marriageLabelUr || '';
+  ctx.font = '500 10px system-ui';
+  const tw = Math.max(ctx.measureText(line1).width, line2 ? ctx.measureText(line2).width : 0);
   const padH = 8;
-  const pillH = 16;
+  const pillH = line2 ? 28 : 16;
   const pillW = tw + padH * 2;
-  roundRect(cx - pillW / 2, midY - pillH / 2, pillW, pillH, 4);
+  roundRect(cx - pillW / 2, midY + 4, pillW, pillH, 4);
   ctx.fillStyle = cream;
   ctx.fill();
-  ctx.strokeStyle = cream;
-  ctx.lineWidth = 5;
-  ctx.lineJoin = 'round';
-  ctx.strokeText(display, cx, midY);
-  ctx.lineWidth = 3;
-  ctx.strokeText(display, cx, midY);
   ctx.fillStyle = '#6b7280';
-  ctx.fillText(display, cx, midY);
+  ctx.fillText(line1, cx, midY + (line2 ? 12 : 14));
+  if(line2) ctx.fillText(line2, cx, midY + 24);
+  ctx.restore();
 }
 
 function drawMarriageBands(){
@@ -128,11 +142,14 @@ function drawSegments(){
   for(const s of segments){
     ctx.strokeStyle = s.color || theme.connector;
     ctx.lineWidth = s.strokeWidth || 4;
+    if(s.dashed) ctx.setLineDash([10, 6]);
+    else ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(s.x1,s.y1);
     ctx.lineTo(s.x2,s.y2);
     ctx.stroke();
   }
+  ctx.setLineDash([]);
   for(const s of highlightSegments){
     ctx.strokeStyle = s.color || '#7828A0';
     ctx.lineWidth = s.strokeWidth || 6;
@@ -161,41 +178,59 @@ function drawCard(n){
   const yearPx = 11;
   const yearGap = 5;
   ctx.save();
+  if(n.isGhost){ ctx.globalAlpha = 0.62; }
   ctx.shadowColor = 'rgba(15,23,42,0.1)';
-  ctx.shadowBlur = 6;
+  ctx.shadowBlur = n.isGhost ? 0 : 6;
   ctx.shadowOffsetY = 2;
   roundRect(x,y,w,h,12);
-  ctx.fillStyle = n.isFocal ? (theme.focalFill || '#E8F5EE') : (theme.surface || '#FFFDF8');
+  ctx.fillStyle = n.isGhost ? 'rgba(255,253,248,0.35)' : (n.isFocal ? (theme.focalFill || '#E8F5EE') : (theme.surface || '#FFFDF8'));
   ctx.fill();
   ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = '#e5e7eb';
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = n.isGhost ? '#9ca3af' : '#e5e7eb';
+  ctx.lineWidth = n.isGhost ? 1.5 : 1;
+  if(n.isGhost) ctx.setLineDash([5, 4]);
   roundRect(x,y,w,h,12);
   ctx.stroke();
+  if(n.isGhost) ctx.setLineDash([]);
 
   ctx.save();
   roundRect(x,y,w,h,12);
   ctx.clip();
-  ctx.fillStyle = genderAccent(n.gender);
+  const barColor = n.bandColor || genderAccent(n.gender, n.maternalWing);
+  ctx.fillStyle = barColor;
   ctx.fillRect(x, y, w, barH);
   ctx.restore();
 
   const cx = x + w/2;
   const maxW = w - pad * 2;
+  const roleEn = (n.roleLineEn || '').trim();
+  const roleUr = (n.roleLineUr || '').trim();
   const rawLine2 = (n.nameLine2 || '').trim();
-  const line2 = rawLine2 ? wrapName(rawLine2, maxW) : '';
-  const line1 = line2
+  const nameUr = rawLine2 ? wrapName(rawLine2, maxW) : '';
+  const nameEn = nameUr
     ? wrapName((n.nameLine1 || '').trim(), maxW)
     : wrapName(n.label || (n.nameLine1 || '').trim(), maxW);
-  const textTop = y + barH + pad;
-  ctx.fillStyle = '#111827';
-  ctx.font = '700 ' + namePx + 'px system-ui';
+  let textTop = y + barH + pad;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText(line1, cx, textTop);
+  if(roleEn){
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '600 9px system-ui';
+    ctx.fillText(wrapName(roleEn, maxW), cx, textTop);
+    textTop += 11;
+  }
+  if(roleUr){
+    ctx.font = '500 9px system-ui';
+    ctx.fillText(wrapName(roleUr, maxW), cx, textTop);
+    textTop += 11;
+  }
+  ctx.fillStyle = '#111827';
+  ctx.font = '700 ' + namePx + 'px system-ui';
+  ctx.fillText(nameEn, cx, textTop);
   let yearsY = textTop + nameLH + yearGap;
-  if(line2){
-    ctx.fillText(line2, cx, textTop + nameLH);
+  if(nameUr){
+    ctx.font = '600 ' + (namePx - 1) + 'px system-ui';
+    ctx.fillText(nameUr, cx, textTop + nameLH);
     yearsY = textTop + nameLH * 2 + yearGap;
   }
   if(n.nickname){
@@ -238,9 +273,20 @@ function drawCard(n){
 
   const hi = highlightPersonIds && highlightPersonIds.indexOf(n.id) >= 0;
   if(n.isFocal || hi){
-    ctx.strokeStyle = hi ? '#7828A0' : theme.primary;
-    ctx.lineWidth = hi ? 3 : 3;
+    ctx.strokeStyle = hi ? '#7828A0' : (n.isSpouseCard ? '#B83C3C' : theme.primary);
+    ctx.lineWidth = n.isFocal ? 3 : 2;
     roundRect(x-2,y-2,w+4,h+4,14);
+    ctx.stroke();
+  }
+  if(n.isFocal){
+    ctx.fillStyle = theme.primary;
+    ctx.font = '9px system-ui';
+    ctx.fillText('★', x + w - 10, y + h - 8);
+  }
+  if(n.isSharedAncestor){
+    ctx.strokeStyle = '#E6B428';
+    ctx.lineWidth = 2.5;
+    roundRect(x-2,y-2,w+4,h+4,12);
     ctx.stroke();
   }
   ctx.restore();
@@ -280,6 +326,9 @@ function postPersonPress(n){
 function postPersonLongPress(n){
   postToNative({type:'personLongPress', id:n.id, familyCode:n.familyCode});
 }
+function postGhostPress(n){
+  postToNative({type:'ghostPress', id:n.id, ghostKind:n.ghostKind, anchorId:n.ghostAnchorId});
+}
 
 function onGraph(g){
   nodes = g.nodes || [];
@@ -292,6 +341,10 @@ function onGraph(g){
     : (g.marriageBand ? [g.marriageBand] : []);
   framingNodeIds = g.framingNodeIds || null;
   chevronOffset = g.chevronOffset || 8;
+  fitMode = g.fitMode === 'timeline' ? 'timeline' : 'pedigree';
+  cousinOverlay = g.cousinOverlay || null;
+  marriageLabelEn = g.marriageLabelEn || 'Married';
+  marriageLabelUr = g.marriageLabelUr || '';
   if(g.theme) theme = Object.assign(theme, g.theme);
   fitView();
   resize();
@@ -324,7 +377,10 @@ canvas.addEventListener('pointerup', e=>{
   if(longPressTimer) clearLongPress();
   if(dragging && moved < 10 && !longPressFired){
     const n = hitNode(e.clientX, e.clientY);
-    if(n) postPersonPress(n);
+    if(n){
+      if(n.isGhost) postGhostPress(n);
+      else postPersonPress(n);
+    }
   }
   dragging=false;
   longPressFired = false;
@@ -382,8 +438,15 @@ type GraphWebViewProps = {
   testID?: string;
   pathHighlightPersonIds?: string[];
   highlightPersonIds?: string[];
+  fitMode?: "pedigree" | "timeline";
+  edgeToEdge?: boolean;
   onPersonPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
   onPersonLongPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
+  onGhostPress?: (event: {
+    id: string;
+    ghostKind?: string;
+    anchorId?: string;
+  }) => void;
 };
 
 /**
@@ -394,19 +457,23 @@ export function GraphWebView({
   testID,
   pathHighlightPersonIds,
   highlightPersonIds,
+  fitMode = "pedigree",
+  edgeToEdge = false,
   onPersonPress,
   onPersonLongPress,
+  onGhostPress,
 }: GraphWebViewProps) {
   const webRef = useRef<WebView>(null);
   const payload = useMemo(
     () =>
-      JSON.stringify(
-        buildPedigreeCanvasPayload(graph, {
+      JSON.stringify({
+        ...buildPedigreeCanvasPayload(graph, {
           pathHighlightPersonIds,
           highlightPersonIds,
         }),
-      ),
-    [graph, pathHighlightPersonIds, highlightPersonIds],
+        fitMode,
+      }),
+    [graph, pathHighlightPersonIds, highlightPersonIds, fitMode],
   );
 
   useEffect(() => {
@@ -414,7 +481,10 @@ export function GraphWebView({
   }, [payload]);
 
   return (
-    <View style={styles.wrap} testID={testID}>
+    <View
+      style={[styles.wrap, edgeToEdge && styles.wrapEdge]}
+      testID={testID}
+    >
       <WebView
         ref={webRef}
         originWhitelist={["*"]}
@@ -426,13 +496,23 @@ export function GraphWebView({
           webRef.current?.postMessage(payload);
         }}
         onMessage={(event) => {
-          if (!onPersonPress && !onPersonLongPress) return;
+          if (!onPersonPress && !onPersonLongPress && !onGhostPress) return;
           try {
             const msg = JSON.parse(event.nativeEvent.data) as {
               type?: string;
               id?: string;
+              ghostKind?: string;
+              anchorId?: string;
             };
             if (!msg.id) return;
+            if (msg.type === "ghostPress") {
+              onGhostPress?.({
+                id: msg.id,
+                ghostKind: msg.ghostKind,
+                anchorId: msg.anchorId,
+              });
+              return;
+            }
             const node = graph.nodes.find((n) => n.id === msg.id);
             if (!node) return;
             if (msg.type === "personLongPress") {
@@ -456,5 +536,6 @@ export function GraphWebView({
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, minHeight: 320, borderRadius: 12, overflow: "hidden" },
+  wrapEdge: { borderRadius: 0, minHeight: 280 },
   web: { flex: 1, backgroundColor: kuriosityDesign.brand.pedigreeCanvas },
 });

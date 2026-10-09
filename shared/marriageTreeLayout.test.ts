@@ -43,6 +43,50 @@ describe("marriageTreeLayout", () => {
     expect(included.has("sib")).toBe(true);
   });
 
+  it("includes 1st cousins when cousinDegree >= 1", () => {
+    const withCousin = [
+      ...unions,
+      {
+        id: "u-uncle",
+        partner1Id: "dad",
+        partner2Id: "mom",
+        childships: [{ childId: "ego" }, { childId: "sib" }],
+      },
+      {
+        id: "u-uncle-m",
+        partner1Id: "uncle",
+        partner2Id: "aunt",
+        childships: [{ childId: "cousin1" }],
+      },
+      {
+        id: "u-gp-uncle",
+        partner1Id: "gpa",
+        partner2Id: "gma",
+        childships: [{ childId: "dad" }, { childId: "uncle" }],
+      },
+    ];
+    const base = collectIncludedPersonIds("ego", withCousin, 2, 1, 1, 0);
+    const withCousins = collectIncludedPersonIds("ego", withCousin, 2, 1, 1, 1);
+    expect(base.has("cousin1")).toBe(false);
+    expect(withCousins.has("cousin1")).toBe(true);
+  });
+
+  it("includes parent siblings when collateral steps > 0", () => {
+    const withUncle = [
+      ...unions,
+      {
+        id: "u-gp",
+        partner1Id: "gpa",
+        partner2Id: "gma",
+        childships: [{ childId: "dad" }, { childId: "uncle" }],
+      },
+    ];
+    const without = collectIncludedPersonIds("ego", withUncle, 2, 1, 0);
+    const withCollateral = collectIncludedPersonIds("ego", withUncle, 2, 1, 1);
+    expect(without.has("uncle")).toBe(false);
+    expect(withCollateral.has("uncle")).toBe(true);
+  });
+
   it("includes spouse parents when generationsUp >= 1", () => {
     const withSpouseParents = [
       ...unions,
@@ -116,7 +160,7 @@ describe("marriageTreeLayout", () => {
     expect(husbSibX).toBeLessThan(husbandX);
   });
 
-  it("centers each union child column under that spouse pair", () => {
+  it("centers primary union children under the primary spouse (B1)", () => {
     const twoSpouseUnions = [
       {
         id: "u1",
@@ -143,6 +187,45 @@ describe("marriageTreeLayout", () => {
       people,
       twoSpouseUnions,
       included,
+    );
+    const egoX = positions.get("ego")!.x;
+    const s1X = positions.get("spouse1")!.x;
+    const c1X = positions.get("c1")!.x;
+    expect(positions.has("spouse2")).toBe(false);
+    const mid1 = (Math.min(egoX, s1X) + Math.max(egoX, s1X) + 112) / 2;
+    expect(Math.abs(c1X + 44 - mid1)).toBeLessThan(40);
+  });
+
+  it("can lay out every spouse column when onlyPrimarySpouseOnRow is false", () => {
+    const twoSpouseUnions = [
+      {
+        id: "u1",
+        partner1Id: "ego",
+        partner2Id: "spouse1",
+        childships: [{ childId: "c1" }],
+      },
+      {
+        id: "u2",
+        partner1Id: "ego",
+        partner2Id: "spouse2",
+        childships: [{ childId: "c2" }],
+      },
+      {
+        id: "u-parent",
+        partner1Id: "dad",
+        partner2Id: "mom",
+        childships: [{ childId: "ego" }],
+      },
+    ];
+    const included = collectIncludedPersonIds("ego", twoSpouseUnions, 1, 1, 0);
+    const { positions } = layoutMarriageCentricGraph(
+      "ego",
+      people,
+      twoSpouseUnions,
+      included,
+      0,
+      0,
+      { onlyPrimarySpouseOnRow: false },
     );
     const egoX = positions.get("ego")!.x;
     const s1X = positions.get("spouse1")!.x;

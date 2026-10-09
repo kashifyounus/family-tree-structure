@@ -48,6 +48,7 @@ type PersonRow = {
   bio: string | null;
   birth_place: string | null;
   home_town: string | null;
+  biradari: string | null;
 };
 
 function mapRow(row: PersonRow): MemberRecord {
@@ -66,6 +67,7 @@ function mapRow(row: PersonRow): MemberRecord {
     homeTown: row.home_town,
     currentCity: row.current_city,
     occupation: row.occupation,
+    biradari: row.biradari ?? null,
     bio: row.bio,
   };
 }
@@ -88,8 +90,9 @@ function loadLocalRuleGraph(): RuleGraph {
     partner_2_id: string;
     marriage_date: string | null;
     divorce_date: string | null;
+    is_active: number;
   }>(
-    "SELECT id, partner_1_id, partner_2_id, marriage_date, divorce_date FROM unions",
+    "SELECT id, partner_1_id, partner_2_id, marriage_date, divorce_date, is_active FROM unions",
   );
   const children = db.getAllSync<{ union_id: string; child_id: string }>(
     "SELECT union_id, child_id FROM children",
@@ -113,6 +116,7 @@ function loadLocalRuleGraph(): RuleGraph {
       partner2Id: union.partner_2_id,
       marriageDate: union.marriage_date,
       divorceDate: union.divorce_date,
+      isActive: union.is_active !== 0,
       childIds: childIds.get(union.id) ?? [],
     })),
   };
@@ -160,6 +164,7 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
       urdu_last_name = COALESCE(?, urdu_last_name),
       current_city = COALESCE(?, current_city),
       occupation = COALESCE(?, occupation),
+      biradari = COALESCE(?, biradari),
       bio = COALESCE(?, bio),
       birth_date = COALESCE(?, birth_date),
       death_date = ?,
@@ -176,6 +181,7 @@ export function updateLocalMember(input: UpdateMemberInput): MemberRecord {
       input.urduLastName ?? null,
       input.currentCity ?? null,
       input.occupation ?? null,
+      input.biradari ?? null,
       input.bio ?? null,
       input.birthDate ?? null,
       deathDate,

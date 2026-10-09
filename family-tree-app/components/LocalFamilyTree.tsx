@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { GraphWebView } from "@/components/tree/GraphWebView";
@@ -21,6 +21,17 @@ import type { GraphPersonSummary } from "@/lib/graph/types";
 import { useAppTheme } from "@/theme/useAppTheme";
 import { AppText } from "@/components/ui/AppText";
 import { Button, ButtonText } from "@/components/ui/button";
+import { TreeGraphFloatingBar } from "@/components/tree/TreeGraphFloatingBar";
+import { TreeLegendBar } from "@/components/tree/TreeLegendBar";
+import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
+import {
+  DEFAULT_TREE_EXPANSION,
+  expandTreeToMaximum,
+  stepExpandTree,
+  treeExpansionHasMore,
+  type TreeExpansionState,
+} from "../../shared/genealogy/treeExpansion";
+import type { MarriageLayoutUnion } from "../../shared/marriageTreeLayout";
 
 type LocalFamilyTreeProps = {
   familyCode: string;
@@ -39,7 +50,46 @@ type LocalFamilyTreeProps = {
   ensurePersonIds?: string[];
   seedGenerationsUp?: number;
   seedGenerationsDown?: number;
+  seedSiblingSteps?: number;
+  seedCousinDegree?: number;
 };
+
+function initialTreeExpansion(
+  seedGenerationsUp?: number,
+  seedGenerationsDown?: number,
+  seedSiblingSteps?: number,
+  seedCousinDegree?: number,
+): TreeExpansionState {
+  return {
+    generationsUp: Math.max(
+      DEFAULT_TREE_EXPANSION.generationsUp,
+      seedGenerationsUp ?? DEFAULT_TREE_EXPANSION.generationsUp,
+    ),
+    generationsDown: Math.max(
+      DEFAULT_TREE_EXPANSION.generationsDown,
+      seedGenerationsDown ?? DEFAULT_TREE_EXPANSION.generationsDown,
+    ),
+    siblingSteps: Math.max(
+      DEFAULT_TREE_EXPANSION.siblingSteps,
+      seedSiblingSteps ?? DEFAULT_TREE_EXPANSION.siblingSteps,
+    ),
+    cousinDegree: Math.max(
+      DEFAULT_TREE_EXPANSION.cousinDegree,
+      seedCousinDegree ?? DEFAULT_TREE_EXPANSION.cousinDegree,
+    ),
+  };
+}
+
+function toLayoutUnions(
+  allUnions: ReturnType<typeof loadKinshipDataset>["allUnions"],
+): MarriageLayoutUnion[] {
+  return allUnions.map((u) => ({
+    id: u.id,
+    partner1Id: u.partner1Id,
+    partner2Id: u.partner2Id,
+    childships: u.childships.map((c) => ({ childId: c.childId })),
+  }));
+}
 
 export function LocalFamilyTree({
   familyCode,
@@ -56,41 +106,83 @@ export function LocalFamilyTree({
   ensurePersonIds,
   seedGenerationsUp,
   seedGenerationsDown,
+  seedSiblingSteps,
+  seedCousinDegree,
 }: LocalFamilyTreeProps) {
   const theme = useAppTheme();
   const router = useRouter();
   const view = layout;
-  const [gensUp, setGensUp] = useState(() =>
-    Math.max(2, seedGenerationsUp ?? 3),
+  const [expansion, setExpansion] = useState<TreeExpansionState>(() =>
+    initialTreeExpansion(
+      seedGenerationsUp,
+      seedGenerationsDown,
+      seedSiblingSteps,
+      seedCousinDegree,
+    ),
   );
-  const [gensDown, setGensDown] = useState(() =>
-    Math.max(2, seedGenerationsDown ?? 3),
-  );
-  const [siblingSteps, setSiblingSteps] = useState(0);
+  const [fineTuneOpen, setFineTuneOpen] = useState(false);
 
   useEffect(() => {
-    if (seedGenerationsUp != null) {
-      setGensUp((g) => Math.max(g, seedGenerationsUp));
+    if (
+      seedGenerationsUp != null ||
+      seedGenerationsDown != null ||
+      seedSiblingSteps != null ||
+      seedCousinDegree != null
+    ) {
+      setExpansion((prev: TreeExpansionState) => ({
+        ...prev,
+        generationsUp: Math.max(
+          prev.generationsUp,
+          seedGenerationsUp ?? DEFAULT_TREE_EXPANSION.generationsUp,
+        ),
+        generationsDown: Math.max(
+          prev.generationsDown,
+          seedGenerationsDown ?? DEFAULT_TREE_EXPANSION.generationsDown,
+        ),
+        siblingSteps: Math.max(
+          prev.siblingSteps,
+          seedSiblingSteps ?? DEFAULT_TREE_EXPANSION.siblingSteps,
+        ),
+        cousinDegree: Math.max(
+          prev.cousinDegree,
+          seedCousinDegree ?? DEFAULT_TREE_EXPANSION.cousinDegree,
+        ),
+      }));
     }
-    if (seedGenerationsDown != null) {
-      setGensDown((g) => Math.max(g, seedGenerationsDown));
-    }
-  }, [seedGenerationsUp, seedGenerationsDown]);
+  }, [
+    seedGenerationsUp,
+    seedGenerationsDown,
+    seedSiblingSteps,
+    seedCousinDegree,
+  ]);
 
   useEffect(() => {
-    setGensUp(Math.max(2, seedGenerationsUp ?? 3));
-    setGensDown(Math.max(2, seedGenerationsDown ?? 3));
-    setSiblingSteps(0);
-  }, [familyCode, dataRevision, seedGenerationsUp, seedGenerationsDown]);
+    setExpansion(
+      initialTreeExpansion(
+        seedGenerationsUp,
+        seedGenerationsDown,
+        seedSiblingSteps,
+        seedCousinDegree,
+      ),
+    );
+  }, [
+    familyCode,
+    dataRevision,
+    seedGenerationsUp,
+    seedGenerationsDown,
+    seedSiblingSteps,
+    seedCousinDegree,
+  ]);
 
   const graphOptions: BuildLocalGraphOptions = useMemo(
     () => ({
-      generationsUp: gensUp,
-      generationsDown: gensDown,
-      siblingSteps,
+      generationsUp: expansion.generationsUp,
+      generationsDown: expansion.generationsDown,
+      siblingSteps: expansion.siblingSteps,
+      cousinDegree: expansion.cousinDegree,
       ensurePersonIds,
     }),
-    [gensUp, gensDown, siblingSteps, ensurePersonIds],
+    [expansion, ensurePersonIds],
   );
 
   const focal = useMemo(
@@ -106,6 +198,16 @@ export function LocalFamilyTree({
     [familyCode, graphOptions, dataRevision],
   );
 
+  const showCousinLegend = useMemo(() => {
+    if (!focal || !graph?.focalPartnerIds?.[0]) return false;
+    const rel = computeRelationFinderResult(
+      focal.id,
+      graph.focalPartnerIds[0],
+    );
+    const label = rel.summaries[0] ?? "";
+    return rel.ok && /cousin/i.test(label);
+  }, [focal, graph?.focalPartnerIds]);
+
   const focalMetaLine = useMemo(() => {
     if (!focal) return "";
     const born = formatDisplayDate(focal.birthDate ?? undefined);
@@ -115,29 +217,82 @@ export function LocalFamilyTree({
     return parts.join(" · ");
   }, [focal]);
 
-  const canLoadMore = useCallback(() => {
-    if (!focal || !graph) return { parents: false, children: false, siblings: false };
+  const loadMore = useMemo(() => {
+    if (!focal || !graph) {
+      return {
+        canExpandTree: false,
+        parents: false,
+        children: false,
+        siblings: false,
+      };
+    }
     const { allUnions } = loadKinshipDataset();
+    const layoutUnions = toLayoutUnions(allUnions);
     const included = new Set(graph.nodes.map((n) => n.id));
     const ego = graph.nodes.find((n) => n.id === focal.id);
     return {
+      canExpandTree: treeExpansionHasMore(
+        focal.id,
+        layoutUnions,
+        expansion,
+        included,
+      ),
       parents: ego?.data.hasUnexpandedParents ?? false,
       children: ego?.data.hasUnexpandedChildren ?? false,
       siblings: focalHasUnexpandedSiblings(
         focal.id,
         included,
         allUnions,
-        siblingSteps,
+        expansion.siblingSteps,
       ),
     };
-  }, [focal, graph, siblingSteps]);
-
-  const more = canLoadMore();
+  }, [focal, graph, expansion]);
 
   const resetExpansion = () => {
-    setGensUp(3);
-    setGensDown(3);
-    setSiblingSteps(0);
+    setExpansion(
+      initialTreeExpansion(
+        seedGenerationsUp,
+        seedGenerationsDown,
+        seedSiblingSteps,
+        seedCousinDegree,
+      ),
+    );
+  };
+
+  const onGhostPress = (event: {
+    ghostKind?: string;
+  }) => {
+    switch (event.ghostKind) {
+      case "parents":
+        setExpansion((prev: TreeExpansionState) => ({
+          ...prev,
+          generationsUp: prev.generationsUp + 1,
+        }));
+        break;
+      case "siblings":
+        setExpansion((prev: TreeExpansionState) => ({
+          ...prev,
+          siblingSteps: prev.siblingSteps + 1,
+          cousinDegree: prev.cousinDegree + 1,
+        }));
+        break;
+      case "marriage":
+        setExpansion((prev: TreeExpansionState) => stepExpandTree(prev));
+        break;
+      default:
+        setExpansion((prev: TreeExpansionState) => stepExpandTree(prev));
+        break;
+    }
+  };
+
+  const onExpandTree = () => {
+    setExpansion((prev: TreeExpansionState) => stepExpandTree(prev));
+  };
+
+  const onExpandTreeMax = () => {
+    if (!focal) return;
+    const { allUnions } = loadKinshipDataset();
+    setExpansion(expandTreeToMaximum(focal.id, toLayoutUnions(allUnions)));
   };
 
   if (!focal) {
@@ -152,48 +307,24 @@ export function LocalFamilyTree({
 
   return (
     <View style={[styles.root, immersive && { backgroundColor: theme.colors.background }]}>
-      {view === "graph" && (
-        <View style={styles.expandRow}>
-          <Button
-            testID="tree-load-parents"
-            size="sm"
-            variant="outline"
-            disabled={!more.parents}
-            onPress={() => setGensUp((g) => g + 1)}
-          >
-            <ButtonText>{copy.tree.loadParents}</ButtonText>
-          </Button>
-          <Button
-            testID="tree-load-siblings"
-            size="sm"
-            variant="outline"
-            disabled={!more.siblings}
-            onPress={() => setSiblingSteps((s) => s + 1)}
-          >
-            <ButtonText>{copy.tree.loadSiblings}</ButtonText>
-          </Button>
-          <Button
-            testID="tree-load-children"
-            size="sm"
-            variant="outline"
-            disabled={!more.children}
-            onPress={() => setGensDown((g) => g + 1)}
-          >
-            <ButtonText>{copy.tree.loadChildren}</ButtonText>
-          </Button>
-        </View>
-      )}
       {view === "graph" && graph ? (
         <GraphWebView
-          key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${gensUp}-${gensDown}-${siblingSteps}`}
+          key={`${dataRevision}-${graph.focalPersonId}-${graph.nodes.length}-${expansion.generationsUp}-${expansion.generationsDown}-${expansion.siblingSteps}-${expansion.cousinDegree}`}
           graph={graph}
           testID="local-tree-graph-webview"
+          edgeToEdge={immersive}
+          fitMode={
+            pathHighlightPersonIds && pathHighlightPersonIds.length >= 2
+              ? "timeline"
+              : "pedigree"
+          }
           onPersonPress={onPersonPress}
           onPersonLongPress={onPersonLongPress}
           pathHighlightPersonIds={pathHighlightPersonIds}
           highlightPersonIds={highlightPersonIds}
+          onGhostPress={onGhostPress}
         />
-      ) : (
+      ) : view === "graph" ? null : (
         <ScrollView
           style={[styles.scroll, { backgroundColor: theme.colors.background }]}
           contentContainerStyle={[
@@ -281,9 +412,52 @@ export function LocalFamilyTree({
           </AppText>
         </ScrollView>
       )}
+      {view === "graph" && immersive ? (
+        <>
+        <TreeLegendBar
+          showCousinLink={showCousinLegend}
+          showSharedAncestor={(graph?.sharedAncestorIds?.length ?? 0) > 0}
+          showGhostHint={
+            loadMore.canExpandTree ||
+            loadMore.parents ||
+            loadMore.children ||
+            loadMore.siblings
+          }
+        />
+        <TreeGraphFloatingBar
+          canLoadMore={loadMore.canExpandTree}
+          onLoadMore={onExpandTree}
+          onLoadFull={onExpandTreeMax}
+          fineTuneOpen={fineTuneOpen}
+          onOpenFineTune={() => setFineTuneOpen((v) => !v)}
+          canLoadParents={loadMore.parents}
+          canLoadChildren={loadMore.children}
+          canLoadSiblings={loadMore.siblings}
+          onLoadParents={() =>
+            setExpansion((prev: TreeExpansionState) => ({
+              ...prev,
+              generationsUp: prev.generationsUp + 1,
+            }))
+          }
+          onLoadSiblings={() =>
+            setExpansion((prev: TreeExpansionState) => ({
+              ...prev,
+              siblingSteps: prev.siblingSteps + 1,
+              cousinDegree: prev.cousinDegree + 1,
+            }))
+          }
+          onLoadChildren={() =>
+            setExpansion((prev: TreeExpansionState) => ({
+              ...prev,
+              generationsDown: prev.generationsDown + 1,
+            }))
+          }
+        />
+        </>
+      ) : null}
       {!immersive && (
         <Button variant="ghost" onPress={resetExpansion}>
-          <ButtonText>{copy.tree.menuReload}</ButtonText>
+          <ButtonText>{copy.tree.resetTreeView}</ButtonText>
         </Button>
       )}
     </View>
@@ -292,13 +466,6 @@ export function LocalFamilyTree({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  expandRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingTop: 8,
-  },
   scroll: { flex: 1 },
   content: { padding: 16, paddingBottom: 32 },
   empty: { flex: 1, padding: 20, justifyContent: "center" },

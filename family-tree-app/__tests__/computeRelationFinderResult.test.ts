@@ -1,4 +1,5 @@
 import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
+import { saveKinshipLabelLocale } from "@/lib/settings/kinshipLocale";
 import type { KinshipPerson } from "@/lib/kinship/types";
 
 jest.mock("@/lib/db/kinshipLoader", () => {
@@ -78,6 +79,10 @@ jest.mock("@/lib/db/kinshipLoader", () => {
 });
 
 describe("computeRelationFinderResult", () => {
+  beforeAll(async () => {
+    await saveKinshipLabelLocale("en");
+  });
+
   it("returns kinship summary and path metadata for parent and child", () => {
     const result = computeRelationFinderResult("f", "c");
     expect(result.ok).toBe(true);

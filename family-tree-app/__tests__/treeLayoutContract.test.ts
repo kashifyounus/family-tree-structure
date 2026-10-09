@@ -78,7 +78,7 @@ describe("tree layout contract", () => {
     expect(positions.get("ego")!.x).toBeGreaterThan(positions.get("spouse1")!.x);
   });
 
-  it("builds a marriage band between focal and each spouse for canvas", () => {
+  it("builds a marriage band for the primary spouse on canvas (B1)", () => {
     const included = collectIncludedPersonIds(
       "ego",
       twoSpouseUnions,
@@ -137,7 +137,7 @@ describe("tree layout contract", () => {
     };
 
     const payload = buildPedigreeCanvasPayload(graph);
-    expect(payload.marriageBands?.length).toBe(2);
+    expect(payload.marriageBands?.length).toBe(1);
     expect(payload.marriageBands?.[0]?.x2).toBeLessThanOrEqual(
       (positions.get("spouse1")?.x ?? 0) + 2,
     );

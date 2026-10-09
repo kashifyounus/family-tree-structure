@@ -6,6 +6,12 @@ import {
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import type { KinshipPerson, KinshipUnionRecord } from "@/lib/kinship/types";
 import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
+import { resolvePrimaryTreeUnionId } from "../../../shared/genealogy/resolvePrimaryTreeUnion";
+import {
+  DEFAULT_TREE_GENERATIONS_DOWN,
+  DEFAULT_TREE_GENERATIONS_UP,
+} from "../../../shared/genealogy/treeExpansion";
+import { getPrimaryTreeUnionId } from "@/lib/settings/primaryTreeUnion";
 import {
   collectIncludedPersonIds,
   layoutMarriageCentricGraph,
@@ -49,6 +55,7 @@ export type BuildLocalGraphOptions = {
   generationsUp?: number;
   generationsDown?: number;
   siblingSteps?: number;
+  cousinDegree?: number;
   focalUnionId?: string | null;
   /** Always include these person ids (e.g. find-relation path). */
   ensurePersonIds?: string[];
@@ -58,9 +65,12 @@ export function buildLocalFamilyGraph(
   familyCode: string,
   options: BuildLocalGraphOptions = {},
 ): FamilyGraph | null {
-  let generationsUp = options.generationsUp ?? 3;
-  let generationsDown = options.generationsDown ?? 3;
+  let generationsUp =
+    options.generationsUp ?? DEFAULT_TREE_GENERATIONS_UP;
+  let generationsDown =
+    options.generationsDown ?? DEFAULT_TREE_GENERATIONS_DOWN;
   const siblingSteps = options.siblingSteps ?? 0;
+  const cousinDegree = options.cousinDegree ?? 0;
 
   const member = getLocalMemberByFamilyCode(familyCode);
   if (!member) return null;
@@ -86,6 +96,7 @@ export function buildLocalFamilyGraph(
     generationsUp,
     generationsDown,
     siblingSteps,
+    cousinDegree,
   );
   for (const id of options.ensurePersonIds ?? []) {
     if (peopleById.has(id)) included.add(id);
@@ -101,12 +112,27 @@ export function buildLocalFamilyGraph(
       ]),
   );
 
+  const focalPersonUnionIds = layoutUnions
+    .filter((u) => u.partner1Id === focal.id || u.partner2Id === focal.id)
+    .map((u) => u.id);
+  const preferredFocalUnionId =
+    options.focalUnionId ??
+    resolvePrimaryTreeUnionId(
+      getPrimaryTreeUnionId(focal.id),
+      focalPersonUnionIds,
+    ) ??
+    undefined;
+
+  const cousinNetworkPosterSpread =
+    generationsUp >= 2 || cousinDegree >= 1 || siblingSteps >= 1;
+
   const {
     positions,
     edges: layoutEdges,
     focalPartnerIds,
     focalUnionId,
     focalUnionIds,
+    sharedAncestorIds,
   } = layoutMarriageCentricGraph(
     focal.id,
     layoutPeople,
@@ -115,8 +141,10 @@ export function buildLocalFamilyGraph(
     0,
     0,
     {
-      preferredFocalUnionId: options.focalUnionId,
+      preferredFocalUnionId,
       phoneSingleParentSide: false,
+      maxAncestorGenerations: generationsUp,
+      cousinNetworkPosterSpread,
     },
   );
 
@@ -178,6 +206,7 @@ export function buildLocalFamilyGraph(
     focalPartnerIds,
     focalMarriageLabel,
     focalMarriageBands,
+    sharedAncestorIds,
     nodes,
     edges,
   };

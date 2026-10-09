@@ -32,6 +32,7 @@ function mapSummaryToMember(m: MobilePersonSummary): MemberRecord {
     homeTown: m.homeTown,
     currentCity: m.currentCity,
     occupation: m.occupation,
+    biradari: null,
     bio: m.bio,
   };
 }

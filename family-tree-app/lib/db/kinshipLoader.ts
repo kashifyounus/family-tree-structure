@@ -21,6 +21,7 @@ type PersonRow = {
   birth_place: string | null;
   home_town: string | null;
   occupation: string | null;
+  biradari?: string | null;
   bio: string | null;
 };
 
@@ -60,6 +61,7 @@ export function rowToMember(row: PersonRow): MemberRecord {
     birthPlace: row.birth_place,
     homeTown: row.home_town,
     occupation: row.occupation,
+    biradari: row.biradari ?? null,
     bio: row.bio,
   };
 }

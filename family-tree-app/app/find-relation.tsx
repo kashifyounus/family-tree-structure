@@ -85,6 +85,21 @@ export default function FindRelationScreen() {
   const activePath = result?.paths[pathIndex] ?? [];
   const activeSummary = result?.summaries[pathIndex] ?? result?.message;
 
+  const openConnectionTree = () => {
+    if (!personA || !personB || !result?.ok) return;
+    const pathSteps = result.paths[pathIndex] ?? [];
+    if (pathSteps.length === 0 && personA !== personB) return;
+    router.push({
+      pathname: "/connection-tree",
+      params: {
+        personA,
+        personB,
+        pathSteps: JSON.stringify(pathSteps),
+        summary: activeSummary ?? "",
+      },
+    });
+  };
+
   const openOnTree = () => {
     if (!personA || !personB || !result?.ok) return;
     const pathNodeIds = [personA, ...activePath.map((s) => s.toId)];
@@ -226,6 +241,9 @@ export default function FindRelationScreen() {
                   <AppText variant="labelSmall" className="text-muted-foreground mb-2">
                     {copy.tools.findRelationTreeFocalHint}
                   </AppText>
+                  <Button onPress={openConnectionTree}>
+                    <ButtonText>{copy.tools.findRelationConnectionTree}</ButtonText>
+                  </Button>
                   <Button variant="outline" onPress={openOnTree}>
                     <ButtonText>{copy.tools.findRelationOpenTree}</ButtonText>
                   </Button>

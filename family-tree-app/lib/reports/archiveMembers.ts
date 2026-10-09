@@ -35,6 +35,7 @@ function rowToMember(row: {
     homeTown: row.home_town,
     currentCity: row.current_city,
     occupation: row.occupation,
+    biradari: null,
     bio: row.bio,
   };
 }

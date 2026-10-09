@@ -15,7 +15,14 @@ import { copy } from "@/content/businessCopy";
 import { getLocalMemberByFamilyCode } from "@/lib/db/localRepository";
 import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
-import { generationsToIncludeKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
+import { treeExpansionForKinshipPath } from "../../../shared/genealogy/kinshipPathFraming";
+import {
+  DEFAULT_TREE_EXPANSION,
+  MAX_TREE_GENERATIONS,
+  MAX_COUSIN_DEGREE,
+  MAX_TREE_SIBLING_STEPS,
+  stepExpandTree,
+} from "../../../shared/genealogy/treeExpansion";
 import { useLocalAccount } from "@/context/LocalAccountContext";
 import { useStorage } from "@/context/StorageContext";
 import { fetchFamilyGraph, type MobileFamilyGraph } from "@/lib/api";
@@ -28,7 +35,7 @@ import {
 } from "@/lib/tree/focalFamilyCode";
 import type { FamilyGraph } from "@/lib/graph/types";
 import type { GraphPersonSummary } from "@/lib/graph/types";
-import { IconButton } from "@/components/ui/IconButton";
+import { TreeFocalSearchHeader } from "@/components/tree/TreeFocalSearchHeader";
 import { InfoBanner } from "@/components/ui/InfoBanner";
 import { Spinner } from "@/components/ui/spinner";
 import { AppText } from "@/components/ui/AppText";
@@ -112,12 +119,12 @@ export default function TreeScreen() {
   const [loadedCode, setLoadedCode] = useState(
     paramCode || DEFAULT_FAMILY_CODE,
   );
-  const pathGraphGens = useMemo(() => {
+  const pathGraphExpansion = useMemo(() => {
     if (pathHighlightIds.length < 2) return null;
     const focalMember = getLocalMemberByFamilyCode(loadedCode.trim());
     if (!focalMember) return null;
     const { allUnions } = loadKinshipDataset();
-    return generationsToIncludeKinshipPath(
+    return treeExpansionForKinshipPath(
       focalMember.id,
       pathHighlightIds,
       allUnions.map((u) => ({
@@ -138,8 +145,7 @@ export default function TreeScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
-  const [onlineDepth, setOnlineDepth] = useState(2);
-  const [onlineSiblingSteps, setOnlineSiblingSteps] = useState(0);
+  const [onlineExpansion, setOnlineExpansion] = useState(DEFAULT_TREE_EXPANSION);
   const [listLayout, setListLayout] = useState(false);
   const [showTapHint, setShowTapHint] = useState(false);
 
@@ -155,8 +161,12 @@ export default function TreeScreen() {
     setUseWebFallback(false);
     setOffline(false);
     void fetchFamilyGraph(loadedCode.trim(), {
-      depth: onlineDepth,
-      siblingSteps: onlineSiblingSteps,
+      depth: Math.max(
+        onlineExpansion.generationsUp,
+        onlineExpansion.generationsDown,
+      ),
+      siblingSteps: onlineExpansion.siblingSteps,
+      cousinDegree: onlineExpansion.cousinDegree,
     })
       .then((g) => {
         if (g && g.nodes.length > 0) {
@@ -170,7 +180,7 @@ export default function TreeScreen() {
         setUseWebFallback(true);
       })
       .finally(() => setGraphLoading(false));
-  }, [isLocal, loadedCode, onlineDepth, onlineSiblingSteps]);
+  }, [isLocal, loadedCode, onlineExpansion]);
 
   useEffect(() => {
     loadOnlineGraph();
@@ -303,6 +313,14 @@ export default function TreeScreen() {
     return copy.tree.title;
   }, [loadedCode, isLocal, onlineGraph]);
 
+  const treeHeaderUrdu = useMemo(() => {
+    if (!isLocal) return null;
+    const member = getLocalMemberByFamilyCode(loadedCode.trim());
+    if (!member) return null;
+    const parts = [member.urduFirstName, member.urduLastName].filter(Boolean);
+    return parts.join(" ").trim() || null;
+  }, [loadedCode, isLocal]);
+
   const centerOnMyMarriage = () => {
     void (async () => {
       const code =
@@ -322,36 +340,19 @@ export default function TreeScreen() {
         { paddingTop: insets.top, backgroundColor: theme.colors.background },
       ]}
     >
-      <View style={[styles.topBar, { backgroundColor: theme.colors.surface }]}>
-        <AppText
-          variant="titleSmall"
-          numberOfLines={1}
-          style={{ color: theme.colors.onSurface, flex: 1, marginLeft: 8 }}
-        >
-          {treeHeaderTitle}
-        </AppText>
-        <IconButton
-          icon="filter-variant"
-          accessibilityLabel="Filter tree"
-          onPress={() => setMenuOpen(true)}
-        />
-        <IconButton
-          icon="magnify-plus-outline"
-          accessibilityLabel={copy.tree.zoomIn}
-          onPress={() => setZoom((z) => Math.min(2.5, z + 0.2))}
-        />
-        <IconButton
-          icon="magnify-minus-outline"
-          accessibilityLabel={copy.tree.zoomOut}
-          onPress={() => setZoom((z) => Math.max(0.55, z - 0.2))}
-        />
-        <IconButton
-          testID="tree-overflow-menu"
-          icon="dots-vertical"
-          accessibilityLabel={copy.tree.options}
-          onPress={() => setMenuOpen(true)}
-        />
-      </View>
+      <TreeFocalSearchHeader
+        style={{ backgroundColor: theme.colors.surface }}
+        titleEn={treeHeaderTitle}
+        titleUr={treeHeaderUrdu}
+        searchEnabled={isLocal}
+        onOpenMenu={() => setMenuOpen(true)}
+        onZoomIn={() => setZoom((z) => Math.min(2.5, z + 0.2))}
+        onZoomOut={() => setZoom((z) => Math.max(0.55, z - 0.2))}
+        onSelectFamilyCode={(code) => {
+          applyViewFocalByCode(code);
+          setListLayout(false);
+        }}
+      />
 
       {!isLocal && offline && (
         <View className="px-3 py-2 gap-2">
@@ -418,8 +419,10 @@ export default function TreeScreen() {
               relationHighlightIds.length ? relationHighlightIds : undefined
             }
             ensurePersonIds={pathHighlightIds.length ? pathHighlightIds : undefined}
-            seedGenerationsUp={pathGraphGens?.generationsUp}
-            seedGenerationsDown={pathGraphGens?.generationsDown}
+            seedGenerationsUp={pathGraphExpansion?.generationsUp}
+            seedGenerationsDown={pathGraphExpansion?.generationsDown}
+            seedSiblingSteps={pathGraphExpansion?.siblingSteps}
+            seedCousinDegree={pathGraphExpansion?.cousinDegree}
           />
         ) : graphLoading ? (
           <View style={styles.loading}>
@@ -428,12 +431,43 @@ export default function TreeScreen() {
         ) : onlineGraph && !useWebFallback ? (
           <>
             <TreeGraphExpandBar
+              canExpandTree={
+                !!onlineFocal?.hasUnexpandedParents ||
+                !!onlineFocal?.hasUnexpandedChildren ||
+                !!onlineFocal?.hasUnexpandedSiblings
+              }
               canLoadParents={!!onlineFocal?.hasUnexpandedParents}
               canLoadChildren={!!onlineFocal?.hasUnexpandedChildren}
               canLoadSiblings={!!onlineFocal?.hasUnexpandedSiblings}
-              onLoadParents={() => setOnlineDepth((d) => d + 1)}
-              onLoadSiblings={() => setOnlineSiblingSteps((s) => s + 1)}
-              onLoadChildren={() => setOnlineDepth((d) => d + 1)}
+              onExpandTree={() =>
+                setOnlineExpansion((prev) => stepExpandTree(prev))
+              }
+              onExpandTreeMax={() =>
+                setOnlineExpansion({
+                  generationsUp: MAX_TREE_GENERATIONS,
+                  generationsDown: MAX_TREE_GENERATIONS,
+                  siblingSteps: MAX_TREE_SIBLING_STEPS,
+                  cousinDegree: MAX_COUSIN_DEGREE,
+                })
+              }
+              onLoadParents={() =>
+                setOnlineExpansion((prev) => ({
+                  ...prev,
+                  generationsUp: prev.generationsUp + 1,
+                }))
+              }
+              onLoadSiblings={() =>
+                setOnlineExpansion((prev) => ({
+                  ...prev,
+                  siblingSteps: prev.siblingSteps + 1,
+                }))
+              }
+              onLoadChildren={() =>
+                setOnlineExpansion((prev) => ({
+                  ...prev,
+                  generationsDown: prev.generationsDown + 1,
+                }))
+              }
             />
             <GraphWebView
               graph={onlineGraph}
@@ -506,11 +540,6 @@ export default function TreeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 4,
-  },
   canvas: { flex: 1, minHeight: 0 },
   webview: { flex: 1 },
   loading: {

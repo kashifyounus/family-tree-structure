@@ -16,11 +16,28 @@ import {
 import { buildPedigreePathHighlightSegments } from "../../../shared/pedigreePathHighlight";
 import { kuriosityPedigreeTheme } from "../../../shared/pedigreeTheme";
 import { kuriosityDesign } from "@/lib/design/kuriosityDesignSystem";
+import { formatBilingualName } from "@/lib/format/displayName";
+import {
+  roleLabelsFromFocal,
+  clearRoleLabelCache,
+} from "@/lib/kinship/roleLabelFromFocal";
+import { computeRelationFinderResult } from "@/lib/kinship/relationPaths";
+import {
+  generationOffsetFromFocal,
+  resolvePedigreeVisualBand,
+} from "../../../shared/genealogy/pedigreeNodePresentation";
+import {
+  PEDIGREE_BAND_COLORS,
+  PEDIGREE_BAND_LABELS,
+  type PedigreeVisualBand,
+} from "../../../shared/pedigreeBandTheme";
 import {
   formatPersonDisplayName,
   isUnknownCoParentFamilyCode,
   UNKNOWN_COPARENT_DISPLAY,
 } from "../../../shared/unknownCoParent";
+import { appendGhostBranchPlaceholders } from "@/lib/graph/ghostBranchPlaceholders";
+import { copy } from "@/content/businessCopy";
 
 export {
   PEDIGREE_CARD_W,
@@ -47,9 +64,44 @@ export type PedigreeCanvasNode = {
   isPrivate: boolean;
   hasUnexpandedParents: boolean;
   hasUnexpandedChildren: boolean;
+  hasUnexpandedSiblings?: boolean;
   nickname: string | null;
   tier: "big" | "small";
+  /** Mother’s-side wing (spouse line) — distinct card accent */
+  maternalWing?: boolean;
+  visualBand?: PedigreeVisualBand;
+  bandColor?: string;
+  roleLineEn?: string;
+  roleLineUr?: string;
+  isSpouseCard?: boolean;
+  isSharedAncestor?: boolean;
+  isGhost?: boolean;
+  ghostAnchorId?: string;
+  ghostKind?: "parents" | "siblings" | "marriage";
 };
+
+const PEDIGREE_CARD_DETAIL_SMALL_H = 92;
+const PEDIGREE_CARD_DETAIL_BIG_H = 102;
+
+function maternalWingPersonIds(graph: FamilyGraph): Set<string> {
+  const ids = new Set<string>();
+  for (const partnerId of graph.focalPartnerIds ?? []) {
+    ids.add(partnerId);
+    for (const edge of graph.edges) {
+      if (edge.type === "parent" && edge.target === partnerId) {
+        ids.add(edge.source);
+      }
+      if (
+        edge.type === "sibling" &&
+        (edge.source === partnerId || edge.target === partnerId)
+      ) {
+        ids.add(edge.source);
+        ids.add(edge.target);
+      }
+    }
+  }
+  return ids;
+}
 
 export type PedigreeMarriageBand = {
   x1: number;
@@ -113,6 +165,11 @@ export function marriageBandForPartnerOnRow(
   return marriageBandBetween(leftNode, rightNode, label);
 }
 
+export type CousinOverlayPayload = {
+  message: string;
+  pathPersonIds: string[];
+};
+
 export type PedigreeCanvasPayload = {
   focalPersonId: string;
   nodes: PedigreeCanvasNode[];
@@ -124,6 +181,10 @@ export type PedigreeCanvasPayload = {
   chevronOffset: number;
   theme: PedigreeCanvasTheme;
   highlightPersonIds?: string[];
+  cousinOverlay?: CousinOverlayPayload | null;
+  marriageLabelEn?: string;
+  marriageLabelUr?: string;
+  uiVariant?: "cousin-network";
 };
 
 export const defaultPedigreeCanvasTheme: PedigreeCanvasTheme = {
@@ -168,31 +229,84 @@ export function buildPedigreeCanvasPayload(
   graph: FamilyGraph,
   options: PedigreeCanvasPayloadOptions = {},
 ): PedigreeCanvasPayload {
+  clearRoleLabelCache();
   const partnerIds = new Set(graph.focalPartnerIds ?? []);
+  const sharedAncestorSet = new Set(graph.sharedAncestorIds ?? []);
+  const maternalIds = maternalWingPersonIds(graph);
+  const layoutEdges = graph.edges.map((e) => ({
+    source: e.source,
+    target: e.target,
+    type: e.type,
+  }));
+  const useDetailCards = graph.nodes.length <= 160;
   const nodes: PedigreeCanvasNode[] = graph.nodes.map((n) => {
     const p = n.data.person;
     const isPrivate = p.treeDisplayIsPrivate === true;
     const isUnknownCoParent = isUnknownCoParentFamilyCode(p.familyCode);
-    const isBig = n.id === graph.focalPersonId || partnerIds.has(n.id);
+    const highlightSet = new Set(options.highlightPersonIds ?? []);
+    const isBig =
+      n.id === graph.focalPersonId ||
+      partnerIds.has(n.id) ||
+      highlightSet.has(n.id);
     const displayName = formatPersonDisplayName({
       firstName: p.firstName,
       lastName: p.lastName,
       familyCode: p.familyCode,
     });
+    const urduLine = [p.urduFirstName, p.urduLastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const englishLine = `${p.firstName} ${p.lastName}`.trim();
     const nameLine1 = isPrivate
       ? p.firstName
       : isUnknownCoParent
         ? UNKNOWN_COPARENT_DISPLAY.firstName
-        : p.firstName.trim();
+        : urduLine
+          ? englishLine
+          : p.firstName.trim();
     const nameLine2 = isPrivate
       ? ""
       : isUnknownCoParent
         ? UNKNOWN_COPARENT_DISPLAY.lastName
-        : p.lastName.trim();
+        : urduLine
+          ? urduLine
+          : p.lastName.trim();
+    const isSpouseCard = partnerIds.has(n.id);
+    const genOffset = generationOffsetFromFocal(
+      graph.focalPersonId,
+      n.id,
+      layoutEdges,
+    );
+    let visualBand = resolvePedigreeVisualBand({
+      focalId: graph.focalPersonId,
+      personId: n.id,
+      isSpouse: isSpouseCard,
+      isMaternalWing: maternalIds.has(n.id),
+      generationOffset: genOffset,
+    });
+    if (sharedAncestorSet.has(n.id)) {
+      visualBand = "ggp";
+    }
+    const bandColor = PEDIGREE_BAND_COLORS[visualBand];
+    const bandLabels = PEDIGREE_BAND_LABELS[visualBand];
+    const roleLabels =
+      useDetailCards && !isPrivate && !isUnknownCoParent
+        ? n.id === graph.focalPersonId
+          ? { en: bandLabels.en, ur: bandLabels.ur }
+          : roleLabelsFromFocal(graph.focalPersonId, n.id)
+        : { en: "", ur: "" };
+    const roleLineEn = roleLabels.en;
+    const roleLineUr = roleLabels.ur || bandLabels.ur;
+    const detail = useDetailCards && (roleLineEn || roleLineUr);
     return {
       id: n.id,
       familyCode: p.familyCode,
-      label: isPrivate ? p.firstName : displayName,
+      label: isPrivate
+        ? p.firstName
+        : isUnknownCoParent
+          ? displayName
+          : formatBilingualName(p) || displayName,
       nameLine1,
       nameLine2,
       initials: isUnknownCoParent
@@ -206,13 +320,27 @@ export function buildPedigreeCanvasPayload(
       x: n.position.x,
       y: n.position.y,
       w: isBig ? PEDIGREE_CARD_BIG_W : PEDIGREE_CARD_SMALL_W,
-      h: isBig ? PEDIGREE_CARD_BIG_H : PEDIGREE_CARD_SMALL_H,
+      h: detail
+        ? isBig
+          ? PEDIGREE_CARD_DETAIL_BIG_H
+          : PEDIGREE_CARD_DETAIL_SMALL_H
+        : isBig
+          ? PEDIGREE_CARD_BIG_H
+          : PEDIGREE_CARD_SMALL_H,
       tier: isBig ? "big" : "small",
       isFocal: Boolean(n.data.isFocal) || n.id === graph.focalPersonId,
       isDeceased: Boolean(n.data.isDeceased) || !p.isLiving,
       isPrivate,
       hasUnexpandedParents: Boolean(n.data.hasUnexpandedParents),
       hasUnexpandedChildren: Boolean(n.data.hasUnexpandedChildren),
+      hasUnexpandedSiblings: Boolean(n.data.hasUnexpandedSiblings),
+      maternalWing: maternalIds.has(n.id) && n.id !== graph.focalPersonId,
+      visualBand,
+      bandColor,
+      roleLineEn,
+      roleLineUr,
+      isSpouseCard,
+      isSharedAncestor: sharedAncestorSet.has(n.id),
     };
   });
 
@@ -232,7 +360,20 @@ export function buildPedigreeCanvasPayload(
     label: e.label,
   }));
 
-  const segments = buildPedigreeConnectorSegments(boxes, pedigreeEdges);
+  let segments = buildPedigreeConnectorSegments(boxes, pedigreeEdges);
+  if (graph.nodes.length <= 160) {
+    appendGhostBranchPlaceholders(graph, nodes, segments, {
+      parentsEn: copy.tree.ghostMoreAncestorsEn,
+      parentsUr: copy.tree.ghostMoreAncestorsUr,
+      siblingsEn: copy.tree.ghostMoreSiblingsEn,
+      siblingsUr: copy.tree.ghostMoreSiblingsUr,
+      marriageEn: copy.tree.ghostOtherMarriageEn,
+      marriageUr: copy.tree.ghostOtherMarriageUr,
+    });
+  }
+  segments = segments.map((s) =>
+    s.kind === "spouse" ? { ...s, dashed: true } : s,
+  );
   const pathIds = options.pathHighlightPersonIds?.filter(Boolean) ?? [];
   const highlightSegments =
     pathIds.length >= 2
@@ -299,17 +440,49 @@ export function buildPedigreeCanvasPayload(
     }
   }
 
+  let cousinOverlay: CousinOverlayPayload | null = null;
+  const primaryPartner = graph.focalPartnerIds?.[0];
+  if (primaryPartner) {
+    try {
+      const rel = computeRelationFinderResult(
+        graph.focalPersonId,
+        primaryPartner,
+      );
+      const label = rel.summaries[0] ?? "";
+      if (rel.ok && /cousin/i.test(label)) {
+        const steps = rel.paths[0] ?? [];
+        const pathPersonIds = [
+          graph.focalPersonId,
+          ...steps.map((s) => s.toId),
+        ];
+        cousinOverlay = { message: label, pathPersonIds };
+      }
+    } catch {
+      cousinOverlay = null;
+    }
+  }
+
   return {
     focalPersonId: graph.focalPersonId,
     nodes,
     segments,
-    highlightSegments,
+    highlightSegments:
+      cousinOverlay && cousinOverlay.pathPersonIds.length >= 2
+        ? buildPedigreePathHighlightSegments(
+            boxes,
+            cousinOverlay.pathPersonIds,
+          )
+        : highlightSegments,
     marriageBand,
     marriageBands,
     framingNodeIds: [...framingNodeIds],
     chevronOffset: PEDIGREE_CHEVRON_OFFSET,
     theme: defaultPedigreeCanvasTheme,
     highlightPersonIds,
+    cousinOverlay,
+    marriageLabelEn: "Married",
+    marriageLabelUr: "شادی شدہ",
+    uiVariant: "cousin-network",
   };
 }
 

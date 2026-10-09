@@ -2,6 +2,11 @@
  * Union-centric pedigree layout shared by web and mobile tree views.
  */
 
+import { includeCousinsUpToDegree } from "./genealogy/cousinInclusion";
+import { applyCousinNetworkPosterSpread } from "./genealogy/cousinNetworkPosterLayout";
+import { reconcileSharedAncestors } from "./genealogy/sharedAncestorMerge";
+import { placeRemainingIncludedPersons } from "./genealogy/collateralTreePlacement";
+
 import {
   PEDIGREE_CARD_BIG_W,
   PEDIGREE_CARD_SMALL_W,
@@ -45,6 +50,12 @@ export type MarriageLayoutOptions = {
    * Wife-side parents stay off-tree until the user loads more generations.
    */
   phoneSingleParentSide?: boolean;
+  /** When true (default), only the primary union appears on the marriage row (B1). */
+  onlyPrimarySpouseOnRow?: boolean;
+  /** How many parent generations to stack above each marriage-row partner (default 1). */
+  maxAncestorGenerations?: number;
+  /** Widen paternal/maternal wings after layout (cousin-network poster). */
+  cousinNetworkPosterSpread?: boolean;
 };
 
 export type MarriageLayoutResult = {
@@ -55,6 +66,8 @@ export type MarriageLayoutResult = {
   focalUnionId: string | null;
   focalUnionIds: string[];
   edges: MarriageLayoutEdge[];
+  /** Ancestors merged to the center when both wings share kinship. */
+  sharedAncestorIds?: string[];
 };
 
 /** @deprecated Use pedigreeLayoutTokens — kept for tests referencing spacing scale. */
@@ -166,6 +179,7 @@ export function collectIncludedPersonIds(
   generationsUp: number,
   generationsDown: number,
   siblingSteps = 0,
+  cousinDegree = 0,
 ): Set<string> {
   const included = new Set<string>([focalId]);
 
@@ -220,26 +234,16 @@ export function collectIncludedPersonIds(
     return [...sibs];
   }
 
-  function collectSiblingRing(steps: number): void {
+  /** Siblings of everyone already on the tree (ego, parents, grandparents, …). */
+  function collectCollateralsForIncluded(steps: number): void {
     if (steps <= 0) return;
-    const focalUnions = unions.filter(
-      (u) => u.partner1Id === focalId || u.partner2Id === focalId,
-    );
-    let seeds = new Set<string>([focalId]);
-    for (const u of focalUnions) {
-      const spouseId =
-        u.partner1Id === focalId ? u.partner2Id : u.partner1Id;
-      seeds.add(spouseId);
-    }
     for (let step = 0; step < steps; step++) {
-      const nextSeeds = new Set<string>();
-      for (const personId of seeds) {
+      const snapshot = [...included];
+      for (const personId of snapshot) {
         for (const sibId of siblingsOf(personId)) {
           included.add(sibId);
-          nextSeeds.add(sibId);
         }
       }
-      seeds = nextSeeds;
     }
   }
 
@@ -269,7 +273,8 @@ export function collectIncludedPersonIds(
     }
   }
 
-  collectSiblingRing(siblingSteps);
+  collectCollateralsForIncluded(siblingSteps);
+  includeCousinsUpToDegree(focalId, unions, included, cousinDegree);
 
   return included;
 }
@@ -325,6 +330,7 @@ export function layoutMarriageCentricGraph(
       focalUnionId: null,
       focalUnionIds: [],
       edges,
+      sharedAncestorIds: [],
     };
   }
 
@@ -353,11 +359,16 @@ export function layoutMarriageCentricGraph(
     }
   }
 
+  const rowSpouseEntries =
+    options?.onlyPrimarySpouseOnRow === false
+      ? spouseEntries
+      : spouseEntries.slice(0, 1);
+
   let husbandId = focalId;
   let wifeId: string | null = null;
   let rightMost = originX + coupleStep;
 
-  const primaryEntry = spouseEntries[0];
+  const primaryEntry = rowSpouseEntries[0];
   if (primaryEntry) {
     const partners = resolveMarriagePartners(
       focalId,
@@ -377,19 +388,21 @@ export function layoutMarriageCentricGraph(
     });
     rightMost = originX + coupleStep;
 
-    let extraX = originX + coupleStep;
-    for (let i = 1; i < spouseEntries.length; i++) {
-      const entry = spouseEntries[i];
-      extraX += coupleStep;
-      ensurePosition(positions, entry.spouseId, extraX, originY);
-      rightMost = Math.max(rightMost, extraX);
-      edges.push({
-        id: `spouse-${focalId}-${entry.spouseId}`,
-        source: focalId,
-        target: entry.spouseId,
-        type: "spouse",
-        label: entry.union.id,
-      });
+    if (options?.onlyPrimarySpouseOnRow === false) {
+      let extraX = originX + coupleStep;
+      for (let i = 1; i < rowSpouseEntries.length; i++) {
+        const entry = rowSpouseEntries[i];
+        extraX += coupleStep;
+        ensurePosition(positions, entry.spouseId, extraX, originY);
+        rightMost = Math.max(rightMost, extraX);
+        edges.push({
+          id: `spouse-${focalId}-${entry.spouseId}`,
+          source: focalId,
+          target: entry.spouseId,
+          type: "spouse",
+          label: entry.union.id,
+        });
+      }
     }
   } else {
     ensurePosition(positions, focalId, originX, originY);
@@ -450,12 +463,21 @@ export function layoutMarriageCentricGraph(
     );
   }
 
-  function placeParentsAbove(
+  const maxAncestorGenerations = Math.max(
+    1,
+    options?.maxAncestorGenerations ?? 1,
+  );
+
+  function placeAncestorChain(
     personId: string,
     anchorX: number,
     side: "left" | "right" | "center",
+    depth: number,
   ): void {
+    if (depth >= maxAncestorGenerations) return;
     const parents = parentsForPerson(personId);
+    if (parents.length === 0) return;
+    const rowY = originY - V * (depth + 1);
     parents.forEach((parent, index) => {
       let x = anchorX;
       if (side === "left") {
@@ -464,32 +486,49 @@ export function layoutMarriageCentricGraph(
           PEDIGREE_PARENT_OUTER_MARGIN -
           (parents.length - index) * PEDIGREE_COLUMN_STEP;
       } else if (side === "right") {
-        x = anchorX + PEDIGREE_CARD_BIG_W + PEDIGREE_PARENT_MID_GAP + index * PEDIGREE_COLUMN_STEP;
+        x =
+          anchorX +
+          PEDIGREE_CARD_BIG_W +
+          PEDIGREE_PARENT_MID_GAP +
+          index * PEDIGREE_COLUMN_STEP;
       } else {
         x = anchorX + (index - (parents.length - 1) / 2) * H;
       }
-      ensurePosition(positions, parent.id, x, originY - V);
+      ensurePosition(positions, parent.id, x, rowY);
       edges.push({
-        id: `parent-${parent.id}-${personId}`,
+        id: `parent-${parent.id}-${personId}-${depth}`,
         source: parent.id,
         target: personId,
         type: "parent",
       });
+      placeAncestorChain(parent.id, x, side, depth + 1);
     });
   }
 
   if (wifeId) {
     const husbandX = positions.get(husbandId)?.x ?? originX;
     const wifeX = positions.get(wifeId)?.x ?? originX + coupleStep;
-    placeParentsAbove(husbandId, husbandX, "left");
+    placeAncestorChain(husbandId, husbandX, "left", 0);
     if (!options?.phoneSingleParentSide) {
-      placeParentsAbove(wifeId, wifeX, "right");
+      placeAncestorChain(wifeId, wifeX, "right", 0);
     }
   } else {
-    placeParentsAbove(focalId, originX, "center");
+    placeAncestorChain(focalId, originX, "center", 0);
   }
 
-  spouseEntries.forEach((entry, unionIndex) => {
+  const sharedAncestorIds =
+    wifeId && maxAncestorGenerations >= 2
+      ? reconcileSharedAncestors(
+          positions,
+          husbandId,
+          wifeId,
+          unions,
+          included,
+          originY,
+        )
+      : [];
+
+  rowSpouseEntries.forEach((entry, unionIndex) => {
     const focalX = positions.get(focalId)?.x ?? originX;
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
     const leftX = Math.min(focalX, spouseX);
@@ -520,24 +559,35 @@ export function layoutMarriageCentricGraph(
     });
   });
 
-  for (const personId of included) {
-    if (positions.has(personId)) continue;
-    const p = peopleById.get(personId);
-    if (!p) continue;
-    ensurePosition(
+  placeRemainingIncludedPersons(
+    positions,
+    edges,
+    included,
+    unions,
+    peopleById,
+    originY,
+    focalId,
+    rowSpouseEntries.map((e) => e.spouseId),
+  );
+
+  if (options?.cousinNetworkPosterSpread) {
+    applyCousinNetworkPosterSpread(
       positions,
-      personId,
-      Math.max(rightMost, leftMost) + H,
-      originY + V,
+      focalId,
+      rowSpouseEntries.map((e) => e.spouseId),
+      unions,
+      included,
+      originY,
     );
   }
 
   return {
     positions,
     focalPersonId: focalId,
-    focalPartnerIds: spouseEntries.map((e) => e.spouseId),
-    focalUnionId: spouseEntries[0]?.union.id ?? null,
-    focalUnionIds: spouseEntries.map((e) => e.union.id),
+    focalPartnerIds: rowSpouseEntries.map((e) => e.spouseId),
+    focalUnionId: rowSpouseEntries[0]?.union.id ?? null,
+    focalUnionIds: rowSpouseEntries.map((e) => e.union.id),
     edges,
+    sharedAncestorIds,
   };
 }
