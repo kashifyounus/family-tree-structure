@@ -1,38 +1,51 @@
 import type { BriefMember } from "@/components/members/ExistingMemberPicker";
+import type { Gender } from "@/lib/data/types";
 import type { NewMemberRelationKind } from "@/lib/data/linkNewMemberToAnchor";
-import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
-import { getParentsForPerson } from "@/lib/kinship/kinshipCore";
+import { loadLocalRuleGraphFromKinship } from "@/lib/kinship/ruleGraphFromDataset";
+import {
+  canSelectAnchorForNewSpouse,
+  canSelectChildAnchorForNewParent,
+  canSelectParentAnchorForNewChild,
+  canSelectSiblingAnchorForNewSibling,
+} from "../../../shared/genealogy/addMemberLinkRules";
 import { isUnknownCoParentFamilyCode } from "../../../shared/unknownCoParent";
+import type { RuleGender } from "../../../shared/relationshipRules";
 
 function isUnknownRow(m: BriefMember): boolean {
   return isUnknownCoParentFamilyCode(m.familyCode);
+}
+
+function toRuleGender(gender: Gender): RuleGender {
+  return gender;
 }
 
 /** Members eligible to link when adding a new person with the given relationship role. */
 export function filterAddMemberCandidates(
   relation: NewMemberRelationKind,
   members: BriefMember[],
+  newMemberGender: Gender = "MALE",
 ): BriefMember[] {
   const base = members.filter((m) => !isUnknownRow(m));
-  const { peopleById, unionsAsChildFor } = loadKinshipDataset();
+  const ruleGender = toRuleGender(newMemberGender);
+  const graph = loadLocalRuleGraphFromKinship();
 
   switch (relation) {
     case "parent":
-      // New person will be a parent of the selected child.
-      return base;
+      return base.filter((m) =>
+        canSelectChildAnchorForNewParent(graph, m.id, ruleGender),
+      );
     case "child":
-      // New person will be a child of selected parent(s).
-      return base.filter((m) => {
-        const p = peopleById.get(m.id);
-        return !!p;
-      });
+      return base.filter((m) =>
+        canSelectParentAnchorForNewChild(graph, m.id, ruleGender),
+      );
     case "spouse":
-      return base;
+      return base.filter((m) =>
+        canSelectAnchorForNewSpouse(graph, m.id, ruleGender),
+      );
     case "sibling":
-      return base.filter((m) => {
-        const parents = getParentsForPerson(m.id, unionsAsChildFor(m.id), peopleById);
-        return parents.length > 0;
-      });
+      return base.filter((m) =>
+        canSelectSiblingAnchorForNewSibling(graph, m.id, ruleGender),
+      );
     default: {
       const _never: never = relation;
       return _never;

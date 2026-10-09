@@ -3,9 +3,17 @@ import { linkChildToParent, linkSpouse } from "@/lib/data/personService";
 import { getLocalMemberById } from "@/lib/db/localRepository.ext";
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import { setLocalParents } from "@/lib/db/localRepository.ext";
+import { loadLocalRuleGraphFromKinship } from "@/lib/kinship/ruleGraphFromDataset";
 import { getParentsForPerson } from "@/lib/kinship/kinshipCore";
 import type { StorageMode } from "@/lib/data/types";
 import type { ParentSlot } from "@/lib/rules/parentSlots";
+import { parentPairAfterNewParent } from "../../../shared/genealogy/parentSlotRules";
+import {
+  assertCanAssignParents,
+  assertCanCreateMarriage,
+  spouseIds,
+  RelationshipRuleError,
+} from "../../../shared/relationshipRules";
 
 export type NewMemberRelationKind = "parent" | "child" | "spouse" | "sibling";
 
@@ -35,15 +43,31 @@ export function linkNewMemberToAnchors(
     throw new Error("Choose a different person to link.");
   }
 
+  const graph = loadLocalRuleGraphFromKinship();
+  const newPerson = getLocalMemberById(newPersonId);
+  if (!newPerson) {
+    throw new RelationshipRuleError("NOT_FOUND", "New member was not saved.");
+  }
+
   switch (relation) {
     case "spouse":
+      assertCanCreateMarriage(graph, anchors[0]!, newPersonId);
       linkSpouse(mode, { personId: anchors[0]!, spouseId: newPersonId });
       return;
     case "parent": {
-      const newPerson = getLocalMemberById(newPersonId);
-      const slot: ParentSlot = newPerson?.gender === "FEMALE" ? "mother" : "father";
+      const childId = anchors[0]!;
+      const gender = newPerson.gender as "MALE" | "FEMALE" | "OTHER";
+      const pair = parentPairAfterNewParent(graph, childId, newPersonId, gender);
+      if (!pair) {
+        throw new RelationshipRuleError(
+          "PARENTS_MUST_DIFFER",
+          "This child already has parents recorded for that role.",
+        );
+      }
+      assertCanAssignParents(graph, childId, pair.parentAId, pair.parentBId);
+      const slot: ParentSlot = newPerson.gender === "FEMALE" ? "mother" : "father";
       assignParentSlot(mode, {
-        childId: anchors[0]!,
+        childId,
         slot,
         parentPersonId: newPersonId,
       });
@@ -51,7 +75,28 @@ export function linkNewMemberToAnchors(
     }
     case "child": {
       if (anchors.length === 1) {
-        linkChildToParent(mode, anchors[0]!, newPersonId);
+        const parentId = anchors[0]!;
+        const anchor = getLocalMemberById(parentId);
+        const spouses = [...spouseIds(graph, parentId)];
+        const coParent = spouses[0];
+        if (coParent) {
+          assertCanAssignParents(graph, newPersonId, parentId, coParent);
+        } else {
+          const pair = parentPairAfterNewParent(
+            graph,
+            newPersonId,
+            parentId,
+            anchor?.gender ?? "MALE",
+          );
+          if (!pair) {
+            throw new RelationshipRuleError(
+              "PARENTS_MUST_DIFFER",
+              "Unable to record parents for this child.",
+            );
+          }
+          assertCanAssignParents(graph, newPersonId, pair.parentAId, pair.parentBId);
+        }
+        linkChildToParent(mode, parentId, newPersonId);
         return;
       }
       const people = anchors.map((id) => getLocalMemberById(id)).filter(Boolean);
@@ -64,6 +109,7 @@ export function linkNewMemberToAnchors(
       }
       if (!fatherId) fatherId = anchors[0]!;
       if (!motherId) motherId = anchors.find((id) => id !== fatherId) ?? fatherId;
+      assertCanAssignParents(graph, newPersonId, fatherId, motherId);
       setLocalParents({
         personId: newPersonId,
         parentAId: fatherId,
@@ -105,6 +151,7 @@ export function linkNewMemberToAnchors(
         parentAId = aId;
         parentBId = bId;
       }
+      assertCanAssignParents(graph, newPersonId, parentAId!, parentBId!);
       setLocalParents({
         personId: newPersonId,
         parentAId: parentAId!,

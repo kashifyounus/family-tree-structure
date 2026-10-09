@@ -10,6 +10,8 @@ export type RulePerson = {
   gender: RuleGender;
   birthDate: string | null;
   deathDate: string | null;
+  /** Present in mobile rule graphs so unknown co-parent slots can be distinguished. */
+  familyCode?: string;
 };
 
 export type RuleUnion = {
@@ -135,7 +137,7 @@ function personById(graph: RuleGraph, id: string): RulePerson | undefined {
   return graph.people.find((person) => person.id === id);
 }
 
-function parentIdsOf(graph: RuleGraph, personId: string): string[] {
+export function parentIdsOf(graph: RuleGraph, personId: string): string[] {
   const ids = new Set<string>();
   for (const union of graph.unions) {
     if (!union.childIds.includes(personId)) continue;
@@ -193,7 +195,7 @@ export function activeSpouseIds(graph: RuleGraph, personId: string): string[] {
   return ids;
 }
 
-function spouseIds(graph: RuleGraph, personId: string): Set<string> {
+export function spouseIds(graph: RuleGraph, personId: string): Set<string> {
   const ids = new Set<string>();
   for (const union of graph.unions) {
     if (union.partner1Id === personId) ids.add(union.partner2Id);
