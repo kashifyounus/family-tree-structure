@@ -1,8 +1,8 @@
-appId: com.mughals.familytree
+appId: com.kuriosity.engineering
 tags:
   - smoke
 ---
-- stopApp: com.mughals.familytree
+- stopApp: com.kuriosity.engineering
 - launchApp:
     clearState: true
 - extendedWaitUntil:

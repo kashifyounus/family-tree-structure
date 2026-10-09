@@ -5,7 +5,7 @@
 ## Prerequisites
 
 1. Install Maestro CLI: https://maestro.mobile.dev/docs/getting-started/installing-maestro  
-2. Install the app on the device (`com.mughals.familytree`):
+2. Install the app on the device (`com.kuriosity.engineering`):
    - Development build: `npx expo run:android`
    - Or install the release APK from `scripts/build-apk-local.sh`
 3. Start an Android emulator (or connect a phone with USB debugging).

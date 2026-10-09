@@ -69,7 +69,7 @@ adb push "$APK" /data/local/tmp/family-tree-debug.apk
 adb shell pm install -r -g /data/local/tmp/family-tree-debug.apk
 
 echo "== Launch smoke =="
-adb shell am start -n com.mughals.familytree/.MainActivity || true
+adb shell am start -n com.kuriosity.engineering/.MainActivity || true
 
 if [[ "${RUN_MAESTRO:-0}" == "1" ]]; then
   if ! command -v maestro >/dev/null; then

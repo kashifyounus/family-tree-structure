@@ -104,7 +104,7 @@ describe("Maestro flow files", () => {
     expect(files).toContain("12-tree-load-more.yaml");
     for (const file of files) {
       const body = readFileSync(join(flowsDir, file), "utf8");
-      expect(body).toContain("appId: com.mughals.familytree");
+      expect(body).toContain("appId: com.kuriosity.engineering");
       expect(body).toMatch(/smoke/);
     }
   });
