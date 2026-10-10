@@ -291,6 +291,8 @@ export const copy = {
     emptyCloud:
       "No members found. Check your connection address and family cloud sign-in in Account.",
     newMemberTitle: "New family member",
+    standaloneAddHint:
+      "Save a person on their own. Open their profile afterward to add spouse, children, parents, or siblings.",
     saveMember: "Save member",
     longPressDelete: "Press and hold to remove",
     removeTitle: "Remove family member",
