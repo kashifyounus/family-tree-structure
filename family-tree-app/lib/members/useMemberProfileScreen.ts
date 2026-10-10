@@ -79,6 +79,8 @@ export function useMemberProfileScreen({
     slot: ParentSlot;
   } | null>(null);
   const [parentQuery, setParentQuery] = useState("");
+  const [relationSaving, setRelationSaving] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const patchEditField = useCallback(
@@ -135,8 +137,15 @@ export function useMemberProfileScreen({
     return null;
   }, [canEditLocal, localAccount.session, member]);
 
+  const refreshAfterMutation = useCallback(() => {
+    bumpDataRevision();
+    requestAnimationFrame(() => {
+      void reload();
+    });
+  }, [bumpDataRevision, reload]);
+
   const saveEdit = useCallback(() => {
-    if (!member) return;
+    if (!member || profileSaving) return;
     const errors: FieldErrors = {
       firstName: required(editFields.firstName, "First name"),
     };
@@ -149,6 +158,7 @@ export function useMemberProfileScreen({
       return;
     }
     setFieldErrors({});
+    setProfileSaving(true);
     try {
       const places = placesFromEditFields(editFields);
       updatePerson(mode, {
@@ -167,14 +177,24 @@ export function useMemberProfileScreen({
         deathDate: editFields.isLiving ? null : editFields.deathDate || null,
       });
       setEditing(false);
-      bumpDataRevision();
-      void reload();
+      refreshAfterMutation();
       impactLight();
       showSuccess(copy.success.saved);
     } catch (e) {
       showError(e);
+    } finally {
+      setProfileSaving(false);
     }
-  }, [bumpDataRevision, editFields, impactLight, member, mode, reload, showError, showSuccess]);
+  }, [
+    editFields,
+    impactLight,
+    member,
+    mode,
+    profileSaving,
+    refreshAfterMutation,
+    showError,
+    showSuccess,
+  ]);
 
   const linkSpouseMember = useCallback(
     (spouseId: string) => {
@@ -390,6 +410,8 @@ export function useMemberProfileScreen({
         return;
       }
       setFieldErrors({});
+      if (relationSaving) return;
+      setRelationSaving(true);
       try {
         addChild(mode, {
           parentPersonId: member.id,
@@ -404,15 +426,25 @@ export function useMemberProfileScreen({
           relationshipType: payload.relationshipType,
         });
         setChildOpen(false);
-        bumpDataRevision();
-        void reload();
+        refreshAfterMutation();
         impactLight();
         showSuccess(copy.profile.childSaved);
       } catch (e) {
         showError(e);
+      } finally {
+        setRelationSaving(false);
       }
     },
-    [bumpDataRevision, chUnionId, impactLight, member, mode, reload, showError, showSuccess],
+    [
+      chUnionId,
+      impactLight,
+      member,
+      mode,
+      refreshAfterMutation,
+      relationSaving,
+      showError,
+      showSuccess,
+    ],
   );
 
   const applyParentAssignResult = useCallback(
@@ -656,5 +688,7 @@ export function useMemberProfileScreen({
     onSelectParentCouple,
     dismissCoupleParentsSheet,
     setPrimaryTreeUnionForMember,
+    relationSaving,
+    profileSaving,
   };
 }

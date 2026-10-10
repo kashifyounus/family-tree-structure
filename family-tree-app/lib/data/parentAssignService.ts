@@ -12,6 +12,9 @@ import {
   type ParentSlot,
 } from "@/lib/rules/parentSlots";
 import { pairParentsWithUnknownCoParent } from "../../../shared/unknownCoParent";
+import { bothRealParentsFilled } from "../../../shared/genealogy/parentSlotRules";
+import { loadLocalRuleGraphFromKinship } from "@/lib/kinship/ruleGraphFromDataset";
+import { copy } from "@/content/businessCopy";
 
 function requireLocal(mode: StorageMode): void {
   if (mode !== "local") {
@@ -79,6 +82,10 @@ export function assignParentSlot(mode: StorageMode, input: AssignInput): AssignP
   }
   if (input.parentPersonId === input.childId) {
     throw new Error("A person cannot be their own parent.");
+  }
+  const graph = loadLocalRuleGraphFromKinship();
+  if (bothRealParentsFilled(graph, input.childId) && !input.staged) {
+    throw new Error(copy.profile.parentsFullUseChange);
   }
   return resolveParentPair(input.childId, input);
 }

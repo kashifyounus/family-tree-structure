@@ -144,6 +144,7 @@ export function buildLocalFamilyGraph(
       preferredFocalUnionId,
       phoneSingleParentSide: false,
       maxAncestorGenerations: generationsUp,
+      maxDescendantGenerations: generationsDown,
       cousinNetworkPosterSpread,
     },
   );

@@ -47,6 +47,7 @@ type MemberProfileRelationSheetsProps = {
     options?: { relationshipType?: "BIOLOGICAL" | "ADOPTED" | "STEP" },
   ) => void;
   onSelectParentCouple: (row: ParentCoupleRow) => void;
+  relationSaving?: boolean;
 };
 
 export function MemberProfileRelationSheets({
@@ -72,6 +73,7 @@ export function MemberProfileRelationSheets({
   onSubmitLinkChild,
   onSubmitLinkChildren,
   onSelectParentCouple,
+  relationSaving = false,
 }: MemberProfileRelationSheetsProps) {
   return (
     <>
@@ -87,6 +89,7 @@ export function MemberProfileRelationSheets({
         onSubmitLink={onSubmitLinkSpouse}
         submitTestID="member-spouse-save"
         fieldErrors={fieldErrors}
+        submitting={relationSaving}
       />
 
       <AddRelationSheet
@@ -104,6 +107,7 @@ export function MemberProfileRelationSheets({
         onSubmitLinkMany={onSubmitLinkChildren}
         submitTestID="member-child-save"
         fieldErrors={fieldErrors}
+        submitting={relationSaving}
       />
 
       <CoupleParentPickerSheet

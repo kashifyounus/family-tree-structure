@@ -89,6 +89,7 @@ type AddRelationSheetProps = {
   onSubmitLinkMany?: (memberIds: string[], options?: AddRelationLinkOptions) => void;
   submitTestID?: string;
   fieldErrors?: FieldErrors;
+  submitting?: boolean;
 };
 
 export function AddRelationSheet({
@@ -111,6 +112,7 @@ export function AddRelationSheet({
   onSubmitLinkMany,
   submitTestID,
   fieldErrors = {},
+  submitting = false,
 }: AddRelationSheetProps) {
   const router = useRouter();
   const parentLinkOnly = kind === "parent";
@@ -182,6 +184,7 @@ export function AddRelationSheet({
       submitLabel={copy.profile.saveChanges}
       submitTestID={submitTestID}
       cancelLabel={copy.reports.cancel}
+      loading={submitting}
     >
       {!parentLinkOnly ? (
         <MemberFormModeToggle mode={mode} onChange={setMode} />
