@@ -1,8 +1,9 @@
 import { loadKinshipDataset } from "@/lib/db/kinshipLoader";
 import {
+  bestKinshipLabelFromPathsForLocale,
   computeRelationFinderResult,
-  summarizeKinshipStepsForLocale,
 } from "@/lib/kinship/relationPaths";
+import { structuralKinshipLabelsForTree } from "../../../shared/genealogy/structuralKinshipRole";
 
 const roleCache = new Map<string, { en: string; ur: string }>();
 
@@ -26,16 +27,33 @@ export function roleLabelsFromFocal(
 
   let labels: FocalRoleLabels = { en: "Relative", ur: "رشتہ دار" };
   try {
-    const result = computeRelationFinderResult(focalId, personId);
-    if (result.ok && result.paths[0]) {
-      const { peopleById } = loadKinshipDataset();
-      const steps = result.paths[0];
-      labels = {
-        en: summarizeKinshipStepsForLocale(steps, peopleById, "en"),
-        ur: summarizeKinshipStepsForLocale(steps, peopleById, "ur"),
-      };
-    } else if (result.summaries[0]) {
-      labels = { en: result.summaries[0], ur: "رشتہ دار" };
+    const { peopleById, allUnions } = loadKinshipDataset();
+    const structural = structuralKinshipLabelsForTree(
+      focalId,
+      personId,
+      peopleById,
+      allUnions,
+    );
+    if (structural) {
+      labels = structural;
+    } else {
+      const result = computeRelationFinderResult(focalId, personId);
+      if (result.ok && result.paths.length > 0) {
+        labels = {
+          en: bestKinshipLabelFromPathsForLocale(
+            result.paths,
+            peopleById,
+            "en",
+          ),
+          ur: bestKinshipLabelFromPathsForLocale(
+            result.paths,
+            peopleById,
+            "ur",
+          ),
+        };
+      } else if (result.summaries[0]) {
+        labels = { en: result.summaries[0], ur: "رشتہ دار" };
+      }
     }
   } catch {
     labels = { en: "Relative", ur: "رشتہ دار" };

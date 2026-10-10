@@ -81,6 +81,25 @@ export function summarizeKinshipStepsForLocale(
   return locale === "ur" ? "آپ" : "Same person";
 }
 
+/** Prefer the shortest path that yields a defined kinship label (not generic fallback). */
+export function bestKinshipLabelFromPathsForLocale(
+  paths: KinshipStep[][],
+  peopleById: Map<string, KinshipPerson>,
+  locale: KinshipLabelLocale,
+): string {
+  if (paths.length === 0) return locale === "ur" ? "آپ" : "Same person";
+  const sorted = [...paths].sort((a, b) => a.length - b.length);
+  for (const path of sorted) {
+    const label = humanKinshipLabelFromSteps(
+      stepsToLabelSteps(path, peopleById),
+      locale,
+    );
+    if (label) return label;
+  }
+  const shortest = sorted[0]!;
+  return summarizeKinshipStepsForLocale(shortest, peopleById, locale);
+}
+
 export type EnumeratePathsOptions = {
   maxPaths?: number;
   maxDepth?: number;
@@ -193,6 +212,7 @@ export function computeRelationFinderResult(
 
   paths.sort((a, b) => a.length - b.length);
   const summaries = paths.map((p) => summarizeKinshipSteps(p, peopleById));
+  const primaryEn = bestKinshipLabelFromPathsForLocale(paths, peopleById, "en");
   const nodeSet = new Set<string>([from.id, to.id]);
   const edgeSet = new Set<string>();
   for (const path of paths) {
@@ -205,7 +225,7 @@ export function computeRelationFinderResult(
 
   const countLabel = paths.length === 1 ? "1 path" : `${paths.length} paths`;
   const truncNote = truncated ? " (showing first paths — large family; more may exist)" : "";
-  const message = `${summaries[0]} · ${countLabel}${truncNote}`;
+  const message = `${primaryEn} · ${countLabel}${truncNote}`;
 
   return {
     ok: true,
