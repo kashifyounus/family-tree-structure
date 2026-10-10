@@ -36,6 +36,10 @@ Use this guide when the tree feels crowded or relationship labels look inconsist
 
 If one child shows **Daughter** and another **Relative** on the same row, the second person is usually **not** a child of the focal couple in the data (cousin, niece, or collateral). Check their **parents** on the profile.
 
+## Find unlinked members
+
+**Reports → Not linked to anyone** lists people with no parents, marriage, or children. Tap a name to open their profile and add links (or delete duplicates).
+
 ## Restore after backup
 
 1. Account → **Archive settings** → paste JSON export → **Import** (replaces local archive — export first).

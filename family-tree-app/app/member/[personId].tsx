@@ -128,6 +128,7 @@ export default function MemberDetailScreen() {
         onSubmitLinkChild={profile.linkChildMember}
         onSubmitLinkChildren={profile.linkChildMembers}
         onSelectParentCouple={(row) => profile.onSelectParentCouple(row.unionId)}
+        relationSaving={profile.relationSaving}
       />
     </>
   );
