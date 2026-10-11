@@ -1,6 +1,10 @@
 import {
   PEDIGREE_CARD_H,
   PEDIGREE_CARD_W,
+  PEDIGREE_COLOR_CHILD,
+  PEDIGREE_COLOR_PARENT,
+  PEDIGREE_COLOR_PATH,
+  PEDIGREE_COLOR_SPOUSE,
   PEDIGREE_CONNECTOR_STROKE,
   PEDIGREE_COUPLE_GAP,
   PEDIGREE_GENERATION_GAP,
@@ -23,4 +27,8 @@ export const kuriosityPedigreeTheme = {
   focalFill: "#E8F5EE",
   /** Wife / mother’s-side wing accent on pedigree cards */
   maternalWingAccent: "#9B5670",
+  connectorParent: PEDIGREE_COLOR_PARENT,
+  connectorChild: PEDIGREE_COLOR_CHILD,
+  connectorSpouse: PEDIGREE_COLOR_SPOUSE,
+  connectorPath: PEDIGREE_COLOR_PATH,
 };

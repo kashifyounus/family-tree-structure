@@ -20,11 +20,11 @@ export const PEDIGREE_PARENT_OUTER_MARGIN = 20;
 export const PEDIGREE_PARENT_MID_GAP = 64;
 export const PEDIGREE_EDGE_INSET = 8;
 
-/** v7 connector colors */
-export const PEDIGREE_COLOR_PARENT = "#E6B428";
-export const PEDIGREE_COLOR_SPOUSE = "#C83C3C";
-export const PEDIGREE_COLOR_CHILD = "#328C50";
-export const PEDIGREE_COLOR_SIBLING = "#326EBE";
+/** v8 connector colors (Pakistani poster tree — green ancestry, orange descent, burgundy marriage) */
+export const PEDIGREE_COLOR_PARENT = "#2D6A4F";
+export const PEDIGREE_COLOR_SPOUSE = "#8B2E3C";
+export const PEDIGREE_COLOR_CHILD = "#E6A817";
+export const PEDIGREE_COLOR_SIBLING = "#2D6A4F";
 export const PEDIGREE_COLOR_PATH = "#7828A0";
 export const PEDIGREE_PATH_STROKE = 6;
 

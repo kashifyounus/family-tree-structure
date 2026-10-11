@@ -60,10 +60,11 @@ function styleForKind(
 }
 
 function seg(
-  partial: Omit<PedigreeSegment, "color" | "strokeWidth">,
+  partial: Omit<PedigreeSegment, "color" | "strokeWidth" | "dashed">,
 ): PedigreeSegment {
   const style = styleForKind(partial.kind);
-  return { ...partial, ...style };
+  const dashed = partial.kind === "spouse";
+  return { ...partial, ...style, ...(dashed ? { dashed: true } : {}) };
 }
 
 function bottomCenter(box: PedigreeNodeBox) {

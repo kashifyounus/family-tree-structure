@@ -29,6 +29,8 @@ export function editFieldsFromMember(member: MemberRecord): MemberProfileEditFie
   return {
     firstName: member.firstName,
     lastName: member.lastName,
+    urduFirstName: member.urduFirstName ?? "",
+    urduLastName: member.urduLastName ?? "",
     maidenName: "",
     suffix: "",
     nickname: member.nickname ?? "",

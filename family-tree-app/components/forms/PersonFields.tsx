@@ -52,6 +52,22 @@ export function PersonFields({
         onChangeText={(t) => onChange({ lastName: t })}
         errorText={fieldErrors.lastName ?? fieldErrors.chLast ?? fieldErrors.spLast}
       />
+      <FormTextInput
+        testID="person-urdu-first"
+        label="Urdu given name (optional)"
+        value={value.urduFirstName}
+        onChangeText={(t) => onChange({ urduFirstName: t })}
+        placeholder="مثال: حسن"
+        textAlign="right"
+      />
+      <FormTextInput
+        testID="person-urdu-last"
+        label="Urdu family name (optional)"
+        value={value.urduLastName}
+        onChangeText={(t) => onChange({ urduLastName: t })}
+        placeholder="خاندانی نام"
+        textAlign="right"
+      />
       <GenderField
         value={value.gender}
         onChange={(g) => onChange({ gender: g })}

@@ -6,6 +6,11 @@ import {
   PEDIGREE_BAND_COLORS,
   type PedigreeVisualBand,
 } from "../../../shared/pedigreeBandTheme";
+import {
+  PEDIGREE_COLOR_CHILD,
+  PEDIGREE_COLOR_PARENT,
+  PEDIGREE_COLOR_SPOUSE,
+} from "../../../shared/pedigreeLayoutTokens";
 
 const LEGEND_BANDS: PedigreeVisualBand[] = [
   "ggp",
@@ -42,6 +47,24 @@ export function TreeLegendBar({
             </AppText>
           </View>
         ))}
+        <View style={styles.chip}>
+          <View style={[styles.lineSwatch, { backgroundColor: PEDIGREE_COLOR_PARENT }]} />
+          <AppText variant="labelSmall" style={styles.chipText}>
+            {copy.tree.legendConnectorParent}
+          </AppText>
+        </View>
+        <View style={styles.chip}>
+          <View style={[styles.lineSwatch, { backgroundColor: PEDIGREE_COLOR_CHILD }]} />
+          <AppText variant="labelSmall" style={styles.chipText}>
+            {copy.tree.legendConnectorChild}
+          </AppText>
+        </View>
+        <View style={styles.chip}>
+          <View style={[styles.lineSwatch, styles.marriageDash]} />
+          <AppText variant="labelSmall" style={styles.chipText}>
+            {copy.tree.legendConnectorMarriage}
+          </AppText>
+        </View>
         {showCousinLink ? (
           <View style={styles.chip}>
             <View style={[styles.swatch, styles.cousinDash]} />
@@ -83,6 +106,15 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: { flexDirection: "row", alignItems: "center", gap: 4 },
   swatch: { width: 14, height: 8, borderRadius: 2 },
+  lineSwatch: { width: 18, height: 4, borderRadius: 2 },
+  marriageDash: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: PEDIGREE_COLOR_SPOUSE,
+    borderStyle: "dashed",
+    height: 0,
+    marginVertical: 2,
+  },
   cousinDash: {
     backgroundColor: "transparent",
     borderWidth: 2,
@@ -91,9 +123,9 @@ const styles = StyleSheet.create({
     width: 18,
   },
   sharedAnc: {
-    backgroundColor: "#E6B428",
+    backgroundColor: "transparent",
     borderWidth: 2,
-    borderColor: "#E6B428",
+    borderColor: PEDIGREE_COLOR_PARENT,
   },
   ghostSwatch: {
     backgroundColor: "transparent",

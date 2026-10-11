@@ -21,7 +21,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8, fitMode = 'pedigree', cousinOverlay = null, marriageLabelEn = 'Married', marriageLabelUr = '';
-let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE' };
+let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE', connectorParent:'#2D6A4F', connectorChild:'#E6A817', connectorSpouse:'#8B2E3C', connectorPath:'#7828A0' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
 
@@ -102,8 +102,9 @@ function drawMarriageBand(band){
   const x2 = band.x2;
   if(x2 <= x1 + 8) return;
   const cx = (x1 + x2) / 2;
+  const spouseColor = theme.connectorSpouse || '#8B2E3C';
   ctx.save();
-  ctx.strokeStyle = '#B83C3C';
+  ctx.strokeStyle = spouseColor;
   ctx.lineWidth = 4;
   ctx.setLineDash([10, 6]);
   ctx.beginPath();
@@ -111,7 +112,7 @@ function drawMarriageBand(band){
   ctx.lineTo(x2, midY);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = '#B83C3C';
+  ctx.fillStyle = spouseColor;
   ctx.font = '12px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -151,7 +152,7 @@ function drawSegments(){
   }
   ctx.setLineDash([]);
   for(const s of highlightSegments){
-    ctx.strokeStyle = s.color || '#7828A0';
+    ctx.strokeStyle = s.color || theme.connectorPath || '#7828A0';
     ctx.lineWidth = s.strokeWidth || 6;
     ctx.beginPath();
     ctx.moveTo(s.x1,s.y1);
@@ -273,7 +274,7 @@ function drawCard(n){
 
   const hi = highlightPersonIds && highlightPersonIds.indexOf(n.id) >= 0;
   if(n.isFocal || hi){
-    ctx.strokeStyle = hi ? '#7828A0' : (n.isSpouseCard ? '#B83C3C' : theme.primary);
+    ctx.strokeStyle = hi ? (theme.connectorPath || '#7828A0') : (n.isSpouseCard ? (theme.connectorSpouse || '#8B2E3C') : theme.primary);
     ctx.lineWidth = n.isFocal ? 3 : 2;
     roundRect(x-2,y-2,w+4,h+4,14);
     ctx.stroke();
@@ -284,7 +285,7 @@ function drawCard(n){
     ctx.fillText('★', x + w - 10, y + h - 8);
   }
   if(n.isSharedAncestor){
-    ctx.strokeStyle = '#E6B428';
+    ctx.strokeStyle = theme.connectorParent || '#2D6A4F';
     ctx.lineWidth = 2.5;
     roundRect(x-2,y-2,w+4,h+4,12);
     ctx.stroke();

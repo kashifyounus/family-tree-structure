@@ -1,5 +1,9 @@
 import type { FamilyGraph } from "@/lib/graph/types";
-import { PEDIGREE_ROW_STEP } from "../../../shared/pedigreeLayoutTokens";
+import {
+  PEDIGREE_COLOR_CHILD,
+  PEDIGREE_COLOR_SPOUSE,
+  PEDIGREE_ROW_STEP,
+} from "../../../shared/pedigreeLayoutTokens";
 import type { PedigreeSegment } from "../../../shared/pedigreeConnectors";
 import type { PedigreeCanvasNode } from "@/lib/graph/pedigreeCanvasPayload";
 
@@ -85,7 +89,7 @@ export function appendGhostBranchPlaceholders(
         x2: ghostX,
         y2: ego.y + ego.h / 2,
         kind: "spouse",
-        color: "#B83C3C",
+        color: PEDIGREE_COLOR_SPOUSE,
         strokeWidth: 3,
         dashed: true,
       });
@@ -127,7 +131,7 @@ function makeGhostNode(input: {
     nickname: null,
     tier: "small",
     visualBand: input.isMarriageGhost ? "spouse" : "ggp",
-    bandColor: input.isMarriageGhost ? "#B83C3C88" : "#E6B42866",
+    bandColor: input.isMarriageGhost ? `${PEDIGREE_COLOR_SPOUSE}88` : `${PEDIGREE_COLOR_CHILD}66`,
     roleLineEn: input.roleEn,
     roleLineUr: input.roleUr,
     isGhost: true,

@@ -115,6 +115,11 @@ export type PedigreeCanvasTheme = {
   connector: string;
   primary: string;
   surface: string;
+  focalFill: string;
+  connectorParent: string;
+  connectorChild: string;
+  connectorSpouse: string;
+  connectorPath: string;
 };
 
 export type PedigreeCanvasPayloadOptions = {
@@ -192,6 +197,11 @@ export const defaultPedigreeCanvasTheme: PedigreeCanvasTheme = {
   connector: kuriosityDesign.pedigree.connector,
   primary: kuriosityDesign.brand.primary,
   surface: kuriosityPedigreeTheme.cardSurface,
+  focalFill: kuriosityPedigreeTheme.focalFill,
+  connectorParent: kuriosityPedigreeTheme.connectorParent,
+  connectorChild: kuriosityPedigreeTheme.connectorChild,
+  connectorSpouse: kuriosityPedigreeTheme.connectorSpouse,
+  connectorPath: kuriosityPedigreeTheme.connectorPath,
 };
 
 function yearFrom(iso: string | null | undefined): string | null {

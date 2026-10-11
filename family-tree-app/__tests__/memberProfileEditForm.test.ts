@@ -11,8 +11,8 @@ describe("memberProfileEditForm", () => {
       firstName: "Ali",
       lastName: "Khan",
       nickname: null,
-      urduFirstName: null,
-      urduLastName: null,
+      urduFirstName: "علی",
+      urduLastName: "خان",
       gender: "MALE",
       birthDate: "1990-02-01",
       deathDate: null,
@@ -25,6 +25,8 @@ describe("memberProfileEditForm", () => {
     });
     expect(fields.biradari).toBe("Mughal");
     expect(fields.firstName).toBe("Ali");
+    expect(fields.urduFirstName).toBe("علی");
+    expect(fields.urduLastName).toBe("خان");
     expect(fields.livingCity).toBe("Karachi");
     expect(fields.livingProvince).toBe("Sindh");
     expect(fields.bio).toBe("Notes");
