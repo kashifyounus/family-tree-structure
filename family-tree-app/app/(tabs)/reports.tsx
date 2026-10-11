@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { PrimaryPillButton } from "@/components/home/PrimaryPillButton";
 import { HouseholdOverviewCard } from "@/components/reports/HouseholdOverviewCard";
@@ -28,6 +28,7 @@ import {
   type HouseholdReportView,
 } from "@/lib/reports/householdReport";
 import { REPORT_PRESETS } from "@/lib/reports/reportPresets";
+import { buildIsolatedMembersReport } from "@/lib/reports/isolatedMembersReport";
 import {
   resolveCloudFocalFamilyCode,
   resolveLocalFocalFamilyCode,
@@ -109,6 +110,15 @@ export default function ReportsScreen() {
     return onlineHouseholdView(online.household);
   }, [online]);
 
+  const isolatedMembers = useMemo(() => {
+    if (mode !== "local") return [];
+    try {
+      return buildIsolatedMembersReport();
+    } catch {
+      return [];
+    }
+  }, [mode, dataRevision]);
+
   const householdHusbandLabel = useCallback((name: string) => {
     const trimmed = name.trim();
     return trimmed ? copy.reports.householdForHusband(trimmed) : undefined;
@@ -171,6 +181,35 @@ export default function ReportsScreen() {
             label={copy.reports.customCta}
             onPress={() => router.push("/reports-custom")}
           />
+
+          <SectionCard
+            title={copy.reports.isolatedTitle}
+            subtitle={copy.reports.isolatedHint}
+          >
+            {isolatedMembers.length === 0 ? (
+              <AppText variant="bodySmall" className="text-muted-foreground">
+                {copy.reports.isolatedEmpty}
+              </AppText>
+            ) : (
+              isolatedMembers.slice(0, 40).map((row) => (
+                <Pressable
+                  key={row.id}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/member/[personId]",
+                      params: { personId: row.id },
+                    })
+                  }
+                  className="py-2 border-b border-border"
+                >
+                  <AppText variant="titleSmall">{row.displayName}</AppText>
+                  <AppText variant="labelSmall" className="text-muted-foreground">
+                    {row.familyCode}
+                  </AppText>
+                </Pressable>
+              ))
+            )}
+          </SectionCard>
 
           {localHousehold ? (
             <View className="mt-4">

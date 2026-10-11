@@ -46,6 +46,15 @@ export function hasKnownParent(graph: RuleGraph, childId: string): boolean {
   return Boolean(fatherId || motherId);
 }
 
+/** Both father and mother slots are filled with real (non-sentinel) people. */
+export function bothRealParentsFilled(
+  graph: RuleGraph,
+  childId: string,
+): boolean {
+  const { fatherId, motherId } = realParentRoles(graph, childId);
+  return Boolean(fatherId && motherId);
+}
+
 export function unknownPlaceholderIds(graph: RuleGraph): {
   maleId: string | null;
   femaleId: string | null;

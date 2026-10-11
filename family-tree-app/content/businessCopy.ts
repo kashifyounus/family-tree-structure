@@ -342,6 +342,8 @@ export const copy = {
     noParents: "No parents recorded yet.",
     addParents: "Add parents",
     changeParents: "Change parents",
+    parentsFullUseChange:
+      "This person already has two parents recorded. Use Change parents to pick a parent couple, or remove parent links first.",
     currentMarriage: "Current marriage",
     previousMarriage: "Previous marriage",
     spouseSaved: "Marriage saved. Both people are now linked.",
@@ -471,6 +473,10 @@ export const copy = {
       `${count} member${count === 1 ? "" : "s"} matched`,
     customAndOnly: "All selected filters must match (AND).",
     customEmpty: "No members match these filters. Try removing a filter.",
+    isolatedTitle: "Not linked to anyone",
+    isolatedHint:
+      "These members have no parents, marriage, or children recorded. Link them from their profile or remove duplicates.",
+    isolatedEmpty: "Everyone in your archive is linked to at least one relationship.",
     customTruncated: (total: number) =>
       `Showing the first 80 of ${total} matches.`,
     membersLiving: (members: number, living: number) =>

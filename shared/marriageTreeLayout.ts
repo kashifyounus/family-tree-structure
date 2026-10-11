@@ -6,6 +6,7 @@ import { includeCousinsUpToDegree } from "./genealogy/cousinInclusion";
 import { applyCousinNetworkPosterSpread } from "./genealogy/cousinNetworkPosterLayout";
 import { reconcileSharedAncestors } from "./genealogy/sharedAncestorMerge";
 import { placeRemainingIncludedPersons } from "./genealogy/collateralTreePlacement";
+import { placeDescendantSubtrees } from "./genealogy/descendantSubtreeLayout";
 
 import {
   PEDIGREE_CARD_BIG_W,
@@ -56,6 +57,8 @@ export type MarriageLayoutOptions = {
   maxAncestorGenerations?: number;
   /** Widen paternal/maternal wings after layout (cousin-network poster). */
   cousinNetworkPosterSpread?: boolean;
+  /** Generations below the marriage-row children to stack (per-parent columns). */
+  maxDescendantGenerations?: number;
 };
 
 export type MarriageLayoutResult = {
@@ -528,6 +531,7 @@ export function layoutMarriageCentricGraph(
         )
       : [];
 
+  const marriageRowChildIds: string[] = [];
   rowSpouseEntries.forEach((entry, unionIndex) => {
     const focalX = positions.get(focalId)?.x ?? originX;
     const spouseX = positions.get(entry.spouseId)?.x ?? originX;
@@ -549,15 +553,35 @@ export function layoutMarriageCentricGraph(
         (index - (children.length - 1) / 2) * H +
         unionIndex * 24;
       ensurePosition(positions, child.id, x, originY + V);
+      marriageRowChildIds.push(child.id);
+      const parentSource =
+        entry.spouseId === focalId || !positions.has(entry.spouseId)
+          ? focalId
+          : husbandId === focalId
+            ? husbandId
+            : focalId;
       edges.push({
-        id: `child-${focalId}-${child.id}-${entry.union.id}`,
-        source: focalId,
+        id: `child-${parentSource}-${child.id}-${entry.union.id}`,
+        source: parentSource,
         target: child.id,
         type: "child",
         label: entry.union.id,
       });
     });
   });
+
+  const descendantDepth = options?.maxDescendantGenerations ?? 1;
+  if (marriageRowChildIds.length > 0 && descendantDepth > 1) {
+    placeDescendantSubtrees(
+      positions,
+      edges,
+      included,
+      unions,
+      peopleById,
+      marriageRowChildIds,
+      descendantDepth - 1,
+    );
+  }
 
   placeRemainingIncludedPersons(
     positions,
