@@ -3,9 +3,11 @@ import {
   PEDIGREE_COLUMN_STEP,
   PEDIGREE_ROW_STEP,
 } from "../pedigreeLayoutTokens";
-import type {
-  MarriageLayoutEdge,
-  MarriageLayoutUnion,
+import {
+  sortByBirthOldestFirst,
+  type MarriageLayoutEdge,
+  type MarriageLayoutPerson,
+  type MarriageLayoutUnion,
 } from "../marriageTreeLayout";
 
 function parentsOf(
@@ -54,7 +56,7 @@ export function placeRemainingIncludedPersons(
   edges: MarriageLayoutEdge[],
   included: ReadonlySet<string>,
   unions: readonly MarriageLayoutUnion[],
-  peopleById: Map<string, { id: string }>,
+  peopleById: Map<string, MarriageLayoutPerson>,
   marriageRowY: number,
   focalId: string,
   focalPartnerIds: readonly string[],
@@ -89,15 +91,17 @@ export function placeRemainingIncludedPersons(
               .map((c) => c.childId)
               .filter((id) => included.has(id))
           : [personId];
-        const placedSibs = sibsInUnion.filter(
-          (id) => id !== personId && positions.has(id),
-        );
-        const index = placedSibs.length;
+        const orderedSibs = sortByBirthOldestFirst(
+          sibsInUnion
+            .map((id) => peopleById.get(id))
+            .filter((p): p is MarriageLayoutPerson => !!p),
+        ).map((p) => p.id);
+        const siblingIndex = Math.max(0, orderedSibs.indexOf(personId));
         const wing = maternal.has(personId) ? 1 : -1;
         const x =
           parentPos.x +
           wing * (PEDIGREE_COLUMN_STEP / 2) +
-          index * H * wing;
+          siblingIndex * H * wing;
         const y = parentPos.y + V;
         positions.set(personId, { x, y });
         edges.push({
@@ -116,8 +120,23 @@ export function placeRemainingIncludedPersons(
       if (placedSib) {
         const anchor = positions.get(placedSib)!;
         const wing = maternal.has(personId) ? 1 : -1;
-        const offset = (maternal.has(placedSib) ? 1 : -1) === wing ? H : -H;
-        positions.set(personId, { x: anchor.x + offset, y: anchor.y });
+        const u = unionForChild(personId, unions);
+        const sibsInUnion = u
+          ? u.childships
+              .map((c) => c.childId)
+              .filter((id) => included.has(id))
+          : [personId, placedSib];
+        const orderedSibs = sortByBirthOldestFirst(
+          sibsInUnion
+            .map((id) => peopleById.get(id))
+            .filter((p): p is MarriageLayoutPerson => !!p),
+        ).map((p) => p.id);
+        const siblingIndex = Math.max(0, orderedSibs.indexOf(personId));
+        const anchorIndex = Math.max(0, orderedSibs.indexOf(placedSib));
+        positions.set(personId, {
+          x: anchor.x + (siblingIndex - anchorIndex) * H * wing,
+          y: anchor.y,
+        });
         edges.push({
           id: `sibling-${placedSib}-${personId}-collateral`,
           source: placedSib,
@@ -132,13 +151,15 @@ export function placeRemainingIncludedPersons(
   }
 
   let stagger = 0;
+  const fallbackBaseX =
+    (positions.get(focalId)?.x ?? 0) + stagger * H * 2;
   for (const personId of included) {
     if (positions.has(personId)) continue;
     if (!peopleById.has(personId)) continue;
     const wing = maternal.has(personId) ? 1 : -1;
     positions.set(personId, {
-      x: stagger * H * wing,
-      y: marriageRowY + V * 2,
+      x: fallbackBaseX + stagger * H * wing,
+      y: marriageRowY + V * 3,
     });
     stagger += 1;
   }

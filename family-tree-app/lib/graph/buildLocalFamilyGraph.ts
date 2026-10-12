@@ -123,8 +123,9 @@ export function buildLocalFamilyGraph(
     ) ??
     undefined;
 
+  /** Poster wing spread only for cousin-heavy views — not plain sibling load. */
   const cousinNetworkPosterSpread =
-    generationsUp >= 2 || cousinDegree >= 1 || siblingSteps >= 1;
+    cousinDegree >= 1 || generationsUp >= 3;
 
   const {
     positions,

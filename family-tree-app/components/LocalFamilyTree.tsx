@@ -273,7 +273,6 @@ export function LocalFamilyTree({
         setExpansion((prev: TreeExpansionState) => ({
           ...prev,
           siblingSteps: prev.siblingSteps + 1,
-          cousinDegree: prev.cousinDegree + 1,
         }));
         break;
       case "marriage":

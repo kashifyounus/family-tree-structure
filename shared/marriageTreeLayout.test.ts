@@ -1,4 +1,8 @@
 import {
+  PEDIGREE_CARD_BIG_W,
+  PEDIGREE_MIN_L_JOG,
+} from "./pedigreeLayoutTokens";
+import {
   collectIncludedPersonIds,
   layoutMarriageCentricGraph,
   sortByBirthOldestFirst,
@@ -114,7 +118,12 @@ describe("marriageTreeLayout", () => {
       layoutMarriageCentricGraph("ego", people, unions, included);
     expect(positions.get("spouse")!.y).toBe(positions.get("ego")!.y);
     expect(positions.get("c2")!.y).toBeGreaterThan(positions.get("ego")!.y);
-    expect(positions.get("sib")!.x).toBeLessThan(positions.get("ego")!.x);
+    const egoX = positions.get("ego")!.x;
+    const sibX = positions.get("sib")!.x;
+    expect(sibX).toBeLessThan(egoX);
+    expect(sibX + PEDIGREE_CARD_BIG_W + PEDIGREE_MIN_L_JOG).toBeLessThanOrEqual(
+      egoX,
+    );
     expect(edges.some((e) => e.type === "spouse")).toBe(true);
     expect(focalUnionId).toBe("u1");
     expect(focalUnionIds).toContain("u1");

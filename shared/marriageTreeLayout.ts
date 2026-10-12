@@ -7,6 +7,7 @@ import { applyCousinNetworkPosterSpread } from "./genealogy/cousinNetworkPosterL
 import { reconcileSharedAncestors } from "./genealogy/sharedAncestorMerge";
 import { placeRemainingIncludedPersons } from "./genealogy/collateralTreePlacement";
 import { placeDescendantSubtrees } from "./genealogy/descendantSubtreeLayout";
+import { deoverlapPedigreeRowPositions } from "./genealogy/pedigreeRowDeoverlap";
 
 import {
   PEDIGREE_CARD_BIG_W,
@@ -132,7 +133,10 @@ function placeSiblingWing(
   siblingIds.forEach((sibId, index) => {
     let x: number;
     if (wing === "left") {
-      x = anchorX - (siblingIds.length - index) * columnStep;
+      x =
+        anchorX -
+        cardWidth -
+        (siblingIds.length - index) * columnStep;
     } else {
       x = anchorX + cardWidth + (index + 1) * columnStep;
     }
@@ -604,6 +608,8 @@ export function layoutMarriageCentricGraph(
       originY,
     );
   }
+
+  deoverlapPedigreeRowPositions(positions, included, originY);
 
   return {
     positions,
