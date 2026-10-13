@@ -8,6 +8,7 @@ import { reconcileSharedAncestors } from "./genealogy/sharedAncestorMerge";
 import { placeRemainingIncludedPersons } from "./genealogy/collateralTreePlacement";
 import { placeDescendantSubtrees } from "./genealogy/descendantSubtreeLayout";
 import { deoverlapPedigreeRowPositions } from "./genealogy/pedigreeRowDeoverlap";
+import { placeSiblingMarriageSubtrees } from "./genealogy/siblingMarriageSubtreeLayout";
 
 import {
   PEDIGREE_CARD_BIG_W,
@@ -281,6 +282,16 @@ export function collectIncludedPersonIds(
   }
 
   collectCollateralsForIncluded(siblingSteps);
+
+  /** Sibling families: spouses + descendants of focal's full/half siblings on the marriage row. */
+  if (siblingSteps > 0 && generationsDown > 0) {
+    const siblingVisited = new Set<string>();
+    for (const sibId of siblingsOf(focalId)) {
+      if (!included.has(sibId)) continue;
+      collectDescendants(sibId, 0, siblingVisited);
+    }
+  }
+
   includeCousinsUpToDegree(focalId, unions, included, cousinDegree);
 
   return included;
@@ -597,6 +608,20 @@ export function layoutMarriageCentricGraph(
     focalId,
     rowSpouseEntries.map((e) => e.spouseId),
   );
+
+  if (options?.maxDescendantGenerations && options.maxDescendantGenerations > 0) {
+    placeSiblingMarriageSubtrees(
+      positions,
+      edges,
+      included,
+      unions,
+      peopleById,
+      originY,
+      focalId,
+      rowSpouseEntries.map((e) => e.spouseId),
+      options.maxDescendantGenerations,
+    );
+  }
 
   if (options?.cousinNetworkPosterSpread) {
     applyCousinNetworkPosterSpread(

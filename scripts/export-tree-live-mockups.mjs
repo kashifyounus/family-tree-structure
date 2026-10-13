@@ -14,7 +14,11 @@ const HTML = join(ROOT, "docs/ui-samples/tree-live-mockup-board.html");
 const OUT = join(ROOT, "docs/ui-samples/hd");
 const ARTIFACTS = "/opt/cursor/artifacts/family-tree-mockups";
 
-const IDS = ["mockup-curated-default", "mockup-curated-partial"];
+const IDS = [
+  "mockup-curated-full-siblings",
+  "mockup-curated-default",
+  "mockup-curated-partial",
+];
 
 function main() {
   const gen = spawnSync(

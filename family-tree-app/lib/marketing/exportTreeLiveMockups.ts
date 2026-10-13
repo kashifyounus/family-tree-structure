@@ -42,6 +42,14 @@ const PRESETS: ExpansionPreset[] = [
     siblingSteps: 0,
     cousinDegree: 0,
   },
+  {
+    id: "curated-full-siblings",
+    label: "Full siblings — each with spouse & children (column layout)",
+    generationsUp: 2,
+    generationsDown: 2,
+    siblingSteps: 1,
+    cousinDegree: 0,
+  },
 ];
 
 function toKinshipPerson(
