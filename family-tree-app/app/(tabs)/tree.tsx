@@ -421,7 +421,10 @@ export default function TreeScreen() {
             ensurePersonIds={pathHighlightIds.length ? pathHighlightIds : undefined}
             seedGenerationsUp={pathGraphExpansion?.generationsUp}
             seedGenerationsDown={pathGraphExpansion?.generationsDown}
-            seedSiblingSteps={pathGraphExpansion?.siblingSteps}
+            seedSiblingSteps={
+              pathGraphExpansion?.siblingSteps ??
+              (archiveLane === "demo" ? 1 : undefined)
+            }
             seedCousinDegree={pathGraphExpansion?.cousinDegree}
           />
         ) : graphLoading ? (
