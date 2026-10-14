@@ -3,6 +3,8 @@ import type { Gender } from "@/lib/data/types";
 export type PersonFieldsValue = {
   firstName: string;
   lastName: string;
+  urduFirstName: string;
+  urduLastName: string;
   maidenName: string;
   suffix: string;
   nickname: string;
@@ -17,6 +19,8 @@ export type PersonFieldsValue = {
 export const emptyPersonFieldsValue = (gender: Gender = "MALE"): PersonFieldsValue => ({
   firstName: "",
   lastName: "",
+  urduFirstName: "",
+  urduLastName: "",
   maidenName: "",
   suffix: "",
   nickname: "",

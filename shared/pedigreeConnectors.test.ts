@@ -33,7 +33,8 @@ describe("pedigreeConnectors v4", () => {
     expect(spouse!.y1).toBe(spouse!.y2);
     expect(spouse!.x1).toBe(W);
     expect(spouse!.x2).toBe(W + PEDIGREE_FOCAL_COUPLE_GAP);
-    expect(spouse!.color).toBe("#C83C3C");
+    expect(spouse!.color).toBe("#8B2E3C");
+    expect(spouse!.dashed).toBe(true);
   });
 
   it("draws orthogonal parent→child with L-jog when misaligned", () => {

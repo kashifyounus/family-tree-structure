@@ -31,6 +31,8 @@ export type AddRelationKind = "spouse" | "child" | "parent";
 export type AddRelationCreatePayload = {
   firstName: string;
   lastName: string;
+  urduFirstName?: string;
+  urduLastName?: string;
   gender: Gender;
   marriageDate?: string;
   birthDate?: string;
@@ -165,6 +167,8 @@ export function AddRelationSheet({
     onSubmitCreate({
       firstName: person.firstName.trim(),
       lastName: person.lastName.trim(),
+      urduFirstName: person.urduFirstName.trim() || undefined,
+      urduLastName: person.urduLastName.trim() || undefined,
       gender: person.gender,
       nickname: person.nickname.trim() || undefined,
       birthPlace: person.birthPlace.trim() || undefined,

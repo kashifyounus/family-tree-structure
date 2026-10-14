@@ -266,6 +266,9 @@ export const copy = {
       };
       return labels[band] ?? band;
     },
+    legendConnectorParent: "Parents / siblings",
+    legendConnectorChild: "Children",
+    legendConnectorMarriage: "Marriage",
     legendCousinLink: "Cousin link",
     legendSharedAncestor: "Shared ancestor",
     legendGhostBranch: "Tap to load more",

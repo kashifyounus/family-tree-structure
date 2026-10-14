@@ -165,6 +165,8 @@ export function useMemberProfileScreen({
         personId: member.id,
         firstName: editFields.firstName,
         lastName: editFields.lastName.trim(),
+        urduFirstName: editFields.urduFirstName.trim(),
+        urduLastName: editFields.urduLastName.trim(),
         nickname: editFields.nickname.trim() || undefined,
         gender: editFields.gender,
         currentCity: places.currentCity,
