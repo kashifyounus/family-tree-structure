@@ -238,6 +238,10 @@ export const copy = {
     expandTree: "Load more",
     expandTreeLarge: "Load extended family",
     expandTreeMax: "Load full tree",
+    expandTreeMaxTitle: "Load full tree?",
+    expandTreeMaxBody:
+      "This expands every branch, cousins, and in-laws into one canvas. On large archives, prefer Load more until the tree looks right. Export a backup first in Account → Archive settings.",
+    expandTreeMaxContinue: "Load full tree",
     resetTreeView: "Reset to default view",
     showFineTune: "Fine-tune expansion",
     hideFineTune: "Hide fine-tune",

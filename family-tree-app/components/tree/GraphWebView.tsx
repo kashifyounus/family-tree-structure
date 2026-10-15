@@ -20,7 +20,7 @@ const EMBED_HTML = `<!DOCTYPE html>
 <script>
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8, fitMode = 'pedigree', cousinOverlay = null, marriageLabelEn = 'Married', marriageLabelUr = '';
+let nodes = [], segments = [], highlightSegments = [], highlightPersonIds = null, focalId = '', marriageBands = [], framingNodeIds = null, chevronOffset = 8, fitMode = 'pedigree', cousinOverlay = null, marriageLabelEn = 'Married', marriageLabelUr = '', bottomChromeInset = 0;
 let theme = { canvas:'#F6F1E7', connector:'#8A9E94', primary:'#1B4332', surface:'#FFFDF8', focalFill:'#E8F5EE', connectorParent:'#2D6A4F', connectorChild:'#E6A817', connectorSpouse:'#8B2E3C', connectorPath:'#7828A0' };
 let scale = 1, ox = 0, oy = 0;
 let dragging = false, lx = 0, ly = 0, moved = 0;
@@ -81,7 +81,8 @@ function fitView(){
     for(const n of viewNodes){ maxY = Math.max(maxY, n.y + n.h); }
     oy = canvas.height * 0.9 - maxY * scale;
   } else {
-    oy = canvas.height * 0.72 - fy * scale;
+    const viewH = Math.max(1, canvas.height - bottomChromeInset);
+    oy = viewH * 0.72 - fy * scale;
   }
 }
 
@@ -347,6 +348,9 @@ function onGraph(g){
   marriageLabelEn = g.marriageLabelEn || 'Married';
   marriageLabelUr = g.marriageLabelUr || '';
   if(g.theme) theme = Object.assign(theme, g.theme);
+  bottomChromeInset = Number(g.bottomChromeInset) || 0;
+  const hintEl = document.querySelector('.hint');
+  if(hintEl) hintEl.style.bottom = (10 + bottomChromeInset) + 'px';
   fitView();
   resize();
 }
@@ -440,6 +444,8 @@ type GraphWebViewProps = {
   pathHighlightPersonIds?: string[];
   highlightPersonIds?: string[];
   fitMode?: "pedigree" | "timeline";
+  /** Room for tree floating bar + legend (px), used when framing the pedigree. */
+  bottomChromeInset?: number;
   edgeToEdge?: boolean;
   onPersonPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
   onPersonLongPress?: (person: FamilyGraph["nodes"][0]["data"]["person"]) => void;
@@ -459,6 +465,7 @@ export function GraphWebView({
   pathHighlightPersonIds,
   highlightPersonIds,
   fitMode = "pedigree",
+  bottomChromeInset = 0,
   edgeToEdge = false,
   onPersonPress,
   onPersonLongPress,
@@ -473,8 +480,9 @@ export function GraphWebView({
           highlightPersonIds,
         }),
         fitMode,
+        bottomChromeInset,
       }),
-    [graph, pathHighlightPersonIds, highlightPersonIds, fitMode],
+    [graph, pathHighlightPersonIds, highlightPersonIds, fitMode, bottomChromeInset],
   );
 
   useEffect(() => {

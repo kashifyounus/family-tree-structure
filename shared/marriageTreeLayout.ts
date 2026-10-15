@@ -6,7 +6,7 @@ import { includeCousinsUpToDegree } from "./genealogy/cousinInclusion";
 import { applyCousinNetworkPosterSpread } from "./genealogy/cousinNetworkPosterLayout";
 import { reconcileSharedAncestors } from "./genealogy/sharedAncestorMerge";
 import { placeRemainingIncludedPersons } from "./genealogy/collateralTreePlacement";
-import { placeDescendantSubtrees } from "./genealogy/descendantSubtreeLayout";
+import { placeFocalChildFamilyColumns } from "./genealogy/focalChildFamilyColumnLayout";
 import { deoverlapPedigreeRowPositions } from "./genealogy/pedigreeRowDeoverlap";
 import { placeSiblingMarriageSubtrees } from "./genealogy/siblingMarriageSubtreeLayout";
 
@@ -587,14 +587,24 @@ export function layoutMarriageCentricGraph(
 
   const descendantDepth = options?.maxDescendantGenerations ?? 1;
   if (marriageRowChildIds.length > 0 && descendantDepth > 1) {
-    placeDescendantSubtrees(
+    const focalX = positions.get(focalId)?.x ?? originX;
+    const primarySpouseId = rowSpouseEntries[0]?.spouseId;
+    const spouseX = primarySpouseId
+      ? (positions.get(primarySpouseId)?.x ?? originX)
+      : originX;
+    const leftX = Math.min(focalX, spouseX);
+    const rightX = Math.max(focalX, spouseX);
+    const coupleMidCenter = (leftX + rightX + PEDIGREE_CARD_BIG_W) / 2;
+    placeFocalChildFamilyColumns(
       positions,
       edges,
       included,
       unions,
       peopleById,
+      originY,
       marriageRowChildIds,
-      descendantDepth - 1,
+      coupleMidCenter,
+      descendantDepth,
     );
   }
 

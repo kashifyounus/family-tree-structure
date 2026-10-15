@@ -6,6 +6,7 @@ import {
 } from "../../../shared/pedigreeLayoutTokens";
 import type { PedigreeSegment } from "../../../shared/pedigreeConnectors";
 import type { PedigreeCanvasNode } from "@/lib/graph/pedigreeCanvasPayload";
+import { resolveGhostBoxPosition } from "@/lib/graph/ghostLayout";
 
 const GHOST_W = 76;
 const GHOST_H = 44;
@@ -31,8 +32,16 @@ export function appendGhostBranchPlaceholders(
   for (const n of [...nodes]) {
     if (n.isGhost) continue;
     if (n.hasUnexpandedParents) {
-      const gx = n.x + (n.w - GHOST_W) / 2;
-      const gy = n.y - PEDIGREE_ROW_STEP + 12;
+      const startX = n.x + (n.w - GHOST_W) / 2;
+      const startY = n.y - PEDIGREE_ROW_STEP + 12;
+      const { x: gx, y: gy } = resolveGhostBoxPosition(
+        startX,
+        startY,
+        GHOST_W,
+        GHOST_H,
+        nodes,
+        "parents",
+      );
       nodes.push(makeGhostNode({
         id: `ghost-parents-${n.id}`,
         x: gx,
@@ -45,8 +54,16 @@ export function appendGhostBranchPlaceholders(
       segments.push(ghostStem(n.x + n.w / 2, n.y, gx + GHOST_W / 2, gy + GHOST_H, `ghost-up-${n.id}`));
     }
     if (n.hasUnexpandedSiblings && Math.abs(n.y - rowY) < 3) {
-      const gx = n.x - GHOST_W - 16;
-      const gy = n.y + (n.h - GHOST_H) / 2;
+      const startX = n.x - GHOST_W - 16;
+      const startY = n.y + (n.h - GHOST_H) / 2;
+      const { x: gx, y: gy } = resolveGhostBoxPosition(
+        startX,
+        startY,
+        GHOST_W,
+        GHOST_H,
+        nodes,
+        "siblings",
+      );
       nodes.push(makeGhostNode({
         id: `ghost-siblings-${n.id}`,
         x: gx,
