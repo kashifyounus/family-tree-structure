@@ -137,6 +137,15 @@ export function structuralKinshipLabelForLocale(
         locale,
       );
     }
+    if (partnersOf(childId, unions).includes(personId)) {
+      return labelSteps(
+        [
+          { relation: "parent", toGender: genderOf(peopleById, childId) },
+          { relation: "spouse", toGender: targetGender },
+        ],
+        locale,
+      );
+    }
   }
 
   for (const parentId of focalParents) {

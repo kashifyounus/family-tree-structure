@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Button, ButtonText } from "@/components/ui/button";
@@ -55,7 +55,19 @@ export function TreeGraphFloatingBar({
             variant="outline"
             className="rounded-full"
             disabled={!canLoadMore}
-            onPress={onLoadFull}
+            onPress={() => {
+              Alert.alert(
+                copy.tree.expandTreeMaxTitle,
+                copy.tree.expandTreeMaxBody,
+                [
+                  { text: copy.reports.cancel, style: "cancel" },
+                  {
+                    text: copy.tree.expandTreeMaxContinue,
+                    onPress: onLoadFull,
+                  },
+                ],
+              );
+            }}
           >
             <ButtonText>{copy.tree.expandTreeMax}</ButtonText>
           </Button>

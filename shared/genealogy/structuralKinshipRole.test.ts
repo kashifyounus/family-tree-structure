@@ -8,6 +8,7 @@ const people = new Map([
   ["w", { id: "w", gender: "FEMALE" as const }],
   ["c1", { id: "c1", gender: "FEMALE" as const }],
   ["c2", { id: "c2", gender: "MALE" as const }],
+  ["sil", { id: "sil", gender: "MALE" as const }],
   ["p", { id: "p", gender: "MALE" as const }],
   ["mom", { id: "mom", gender: "FEMALE" as const }],
 ]);
@@ -26,6 +27,11 @@ const unions: StructuralKinshipUnion[] = [
     partner2Id: "mom",
     childships: [{ childId: "f", relationshipType: "BIOLOGICAL" }],
   },
+  {
+    partner1Id: "c1",
+    partner2Id: "sil",
+    childships: [],
+  },
 ];
 
 describe("structuralKinshipRole", () => {
@@ -36,6 +42,12 @@ describe("structuralKinshipRole", () => {
     expect(
       structuralKinshipLabelForLocale("f", "c2", people, unions, "en"),
     ).toBe("Son");
+  });
+
+  it("labels child-in-law", () => {
+    expect(
+      structuralKinshipLabelForLocale("f", "sil", people, unions, "en"),
+    ).toBe("Son-in-law");
   });
 
   it("labels spouse and parent", () => {

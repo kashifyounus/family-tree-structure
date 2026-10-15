@@ -4,11 +4,13 @@ import {
   PEDIGREE_ROW_STEP,
 } from "../pedigreeLayoutTokens";
 import {
+  resolveMarriagePartners,
   sortByBirthOldestFirst,
   type MarriageLayoutEdge,
   type MarriageLayoutPerson,
   type MarriageLayoutUnion,
 } from "../marriageTreeLayout";
+import { PEDIGREE_COUPLE_OFFSET } from "../pedigreeLayoutTokens";
 
 function parentsOf(
   personId: string,
@@ -46,6 +48,18 @@ function unionForChild(
   unions: readonly MarriageLayoutUnion[],
 ): MarriageLayoutUnion | undefined {
   return unions.find((u) => u.childships.some((c) => c.childId === personId));
+}
+
+function partnersOfPerson(
+  personId: string,
+  unions: readonly MarriageLayoutUnion[],
+): string[] {
+  const out: string[] = [];
+  for (const u of unions) {
+    if (u.partner1Id === personId) out.push(u.partner2Id);
+    if (u.partner2Id === personId) out.push(u.partner1Id);
+  }
+  return out;
 }
 
 /**
@@ -143,6 +157,46 @@ export function placeRemainingIncludedPersons(
           target: personId,
           type: "sibling",
         });
+        progress = true;
+        continue;
+      }
+
+      const placedPartner = partnersOfPerson(personId, unions).find(
+        (id) => included.has(id) && positions.has(id),
+      );
+      if (placedPartner) {
+        const partnerPos = positions.get(placedPartner)!;
+        const partners = resolveMarriagePartners(
+          personId,
+          placedPartner,
+          peopleById,
+        );
+        const coupleStep = PEDIGREE_COUPLE_OFFSET;
+        if (personId === partners.husbandId) {
+          positions.set(personId, {
+            x: partnerPos.x - coupleStep,
+            y: partnerPos.y,
+          });
+        } else {
+          positions.set(personId, {
+            x: partnerPos.x + coupleStep,
+            y: partnerPos.y,
+          });
+        }
+        const union = unions.find(
+          (u) =>
+            (u.partner1Id === personId && u.partner2Id === placedPartner) ||
+            (u.partner2Id === personId && u.partner1Id === placedPartner),
+        );
+        if (union && !edges.some((e) => e.type === "spouse" && e.label === union.id)) {
+          edges.push({
+            id: `spouse-collateral-${union.id}`,
+            source: partners.husbandId,
+            target: partners.wifeId,
+            type: "spouse",
+            label: union.id,
+          });
+        }
         progress = true;
       }
     }

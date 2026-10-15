@@ -54,6 +54,9 @@ type LocalFamilyTreeProps = {
   seedCousinDegree?: number;
 };
 
+/** Legend + load-more bar height (px) — keeps focal family above bottom chrome when framing. */
+const TREE_GRAPH_BOTTOM_CHROME_INSET = 200;
+
 function initialTreeExpansion(
   seedGenerationsUp?: number,
   seedGenerationsDown?: number,
@@ -322,6 +325,9 @@ export function LocalFamilyTree({
           pathHighlightPersonIds={pathHighlightPersonIds}
           highlightPersonIds={highlightPersonIds}
           onGhostPress={onGhostPress}
+          bottomChromeInset={
+            immersive ? TREE_GRAPH_BOTTOM_CHROME_INSET : 0
+          }
         />
       ) : view === "graph" ? null : (
         <ScrollView

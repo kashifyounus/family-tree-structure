@@ -38,6 +38,7 @@ import {
 } from "../../../shared/unknownCoParent";
 import { appendGhostBranchPlaceholders } from "@/lib/graph/ghostBranchPlaceholders";
 import { copy } from "@/content/businessCopy";
+import { treeCardRoleLines } from "../../../shared/genealogy/treeCardRoleLines";
 
 export {
   PEDIGREE_CARD_W,
@@ -306,8 +307,11 @@ export function buildPedigreeCanvasPayload(
           ? { en: bandLabels.en, ur: bandLabels.ur }
           : roleLabelsFromFocal(graph.focalPersonId, n.id)
         : { en: "", ur: "" };
-    const roleLineEn = roleLabels.en;
-    const roleLineUr = roleLabels.ur || bandLabels.ur;
+    const { roleLineEn, roleLineUr } = treeCardRoleLines(
+      roleLabels.en,
+      roleLabels.ur,
+      bandLabels.ur,
+    );
     const detail = useDetailCards && (roleLineEn || roleLineUr);
     return {
       id: n.id,
